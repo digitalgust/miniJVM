@@ -5,7 +5,6 @@ import org.mini.util.SysLog;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.*;
 
 public class JsonPrinter {
@@ -38,9 +37,6 @@ public class JsonPrinter {
 
                 Method method = getMethodByName(fieldName, clazz);
                 if (method != null) {
-                    Type pt = method.getGenericReturnType();
-                    //System.out.println(method);
-                    Class childClazz = method.getReturnType();
                     try {
                         Object re = method.invoke(obj);
                         if (moreFields) sb.append(", ");
@@ -51,7 +47,18 @@ public class JsonPrinter {
                         e.printStackTrace();
                     }
                 } else {
-                    SysLog.warn("[JSON]" + clazz.getName() + " field '" + fieldName + "' getter not found.");
+                    try {
+                        if (!f.isAccessible())
+                            f.setAccessible(true);
+                        Object re = f.get(obj);
+                        if (moreFields) sb.append(", ");
+                        sb.append('"').append(fieldName).append("\": ");
+                        print(re, sb);
+                        moreFields = true;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        SysLog.warn("[JSON]" + clazz.getName() + " field '" + fieldName + "' getter not found.");
+                    }
                 }
             }
             sb.append("}");
@@ -142,7 +149,8 @@ public class JsonPrinter {
         String mName0 = "get" + tmp;
         String mName1 = "is" + tmp;
         Method[] methods = clazz.getMethods();
-        for (Method m : methods) {
+        for (int i = 0; i < methods.length; i++) {
+            Method m = methods[i];
             if (m.getParameterTypes().length == 0) {
                 if (m.getName().equals(mName0) || m.getName().equals(mName1)) {
                     return m;

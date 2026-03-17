@@ -54,7 +54,118 @@ void print_exception(Runtime *runtime) {
 #endif
 }
 
-#if _JVM_DEBUG_PROFILE
+
+#if _JVM_DEBUG_METHOD_PROFILE
+spinlock_t profile_method_lock = {0};
+s64 profile_last_print_time = 0;
+
+static int profile_method_compare(ArrayListValue a, ArrayListValue b) {
+    MethodInfo *m1 = (MethodInfo *) a;
+    MethodInfo *m2 = (MethodInfo *) b;
+    if (m2->profile_total_time > m1->profile_total_time) return 1;
+    if (m2->profile_total_time < m1->profile_total_time) return -1;
+    return 0;
+}
+
+void profile_method_get_all(MiniJVM *jvm, ArrayList *all) {
+    s32 i, j;
+    spin_lock(&profile_method_lock);
+    // Accessing classloaders without lock might be unsafe if loading happens,
+    // but strict locking might cause stutter. We assume stable state.
+    for (i = 0; i < jvm->classloaders->length; i++) {
+        PeerClassLoader *pcl = (PeerClassLoader *) arraylist_get_value(jvm->classloaders, i);
+        HashtableIterator hti;
+        hashtable_iterate(pcl->classes, &hti);
+        while (hashtable_iter_has_more(&hti)) {
+            JClass *clazz = (JClass *) hashtable_iter_next_value(&hti);
+            if (clazz->status >= CLASS_STATUS_PREPARED) {
+                MethodPool *p = &(clazz->methodPool);
+                for (j = 0; j < p->method_used; j++) {
+                    MethodInfo *mi = &(p->method[j]);
+                    if (mi->profile_count > 0) {
+                        arraylist_push_back(all, mi);
+                    }
+                }
+            }
+        }
+    }
+
+    arraylist_sort(all, profile_method_compare);
+
+    spin_unlock(&profile_method_lock);
+}
+
+void profile_method_print(MiniJVM *jvm) {
+    s64 now = nanoTime();
+    u64 profile_print_interal = 5000000000LL;
+    if (now - profile_last_print_time < profile_print_interal) {
+        // 1 sec
+        return;
+    }
+
+    if (spin_trylock(&profile_method_lock) != 0) {
+        return;
+    }
+    if (now - profile_last_print_time < profile_print_interal) {
+        spin_unlock(&profile_method_lock);
+        return;
+    }
+    profile_last_print_time = now;
+
+    ArrayList *all = arraylist_create(1024);
+    profile_method_get_all(jvm, all);
+
+    s32 i;
+    jvm_printf("--- Top 10 Hot Methods (Total Time) ---\n");
+    for (i = 0; i < 50 && i < all->length; i++) {
+        MethodInfo *m = (MethodInfo *) arraylist_get_value(all, i);
+        jvm_printf("call:%10lld|t:%10lld|max:%10lld|avg:%10lld|%s.%s%s\n",
+                   m->profile_count,
+                   m->profile_total_time / 1000000,
+                   m->profile_max_time / 1000000,
+                   (m->profile_count > 0) ? (m->profile_total_time / 1000000 / m->profile_count) : 0,
+                   utf8_cstr(m->_this_class->name),
+                   utf8_cstr(m->name),
+                   utf8_cstr(m->descriptor));
+    }
+
+    arraylist_destroy(all);
+    spin_unlock(&profile_method_lock);
+}
+
+
+void profile_method_reset(MiniJVM *jvm) {
+    s32 i, j;
+    spin_lock(&profile_method_lock);
+    // Accessing classloaders without lock might be unsafe if loading happens,
+    // but strict locking might cause stutter. We assume stable state.
+    for (i = 0; i < jvm->classloaders->length; i++) {
+        PeerClassLoader *pcl = (PeerClassLoader *) arraylist_get_value(jvm->classloaders, i);
+        HashtableIterator hti;
+        hashtable_iterate(pcl->classes, &hti);
+        while (hashtable_iter_has_more(&hti)) {
+            JClass *clazz = (JClass *) hashtable_iter_next_value(&hti);
+            if (clazz->status >= CLASS_STATUS_PREPARED) {
+                MethodPool *p = &(clazz->methodPool);
+                for (j = 0; j < p->method_used; j++) {
+                    MethodInfo *mi = &(p->method[j]);
+                    mi->profile_count = 0;
+                    mi->profile_total_time = 0;
+                    mi->profile_max_time = 0;
+                }
+            }
+        }
+    }
+    spin_unlock(&profile_method_lock);
+}
+#endif
+
+
+#if _JVM_DEBUG_BYTECODE_PROFILE
+
+spinlock_t pro_lock;
+ProfileDetail profile_instructs[INST_COUNT] = {0};
+
 
 void profile_init() {
     memset(&profile_instructs, 0, sizeof(ProfileDetail) * INST_COUNT);
@@ -77,6 +188,526 @@ void profile_print() {
         jvm_printf("%2x %15lld %8d %8lld %s\n",
                    i | 0xffffff00, pd->cost, pd->count, pd->count ? (pd->cost / pd->count) : 0, INST_NAME[i]);
     }
+}
+
+#endif
+
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+
+enum {
+    SLOW_CALL_NODE_FLAG_EXCLUDED = 1,
+    SLOW_CALL_SNAPSHOT_MAGIC = 0x53435632,
+    SLOW_CALL_SNAPSHOT_VERSION = 1,
+    SLOW_CALL_SNAPSHOT_HEADER_SIZE = 40,
+    SLOW_CALL_SNAPSHOT_NODE_SIZE = 40
+};
+
+static inline HashtableKey _slow_id_key(u32 id) {
+    return (HashtableKey) (intptr_t) ((u64) id + 1);
+}
+
+typedef struct _SlowCallAggNodeRec {
+    u32 node_id;
+    u32 parent_node_id;
+    u32 method_id;
+    u32 flags;
+    s64 total_ns;
+    s64 self_ns;
+    u32 call_count;
+} SlowCallAggNodeRec;
+
+typedef struct _SlowCallAggChildEntry {
+    u32 method_id;
+    u32 flags;
+    u32 agg_node_id;
+} SlowCallAggChildEntry;
+
+typedef struct _SlowCallAggChildMap {
+    u32 used;
+    u32 cap;
+    SlowCallAggChildEntry *entries;
+} SlowCallAggChildMap;
+
+static void _slow_snapshot_destroy(SlowCallSnapshot *snap) {
+    if (!snap) return;
+    if (snap->payload) {
+        bytebuf_destroy(snap->payload);
+    }
+    jvm_free(snap);
+}
+
+static s32 _slow_agg_child_map_expand(SlowCallAggChildMap *map) {
+    if (!map) return 0;
+    u32 new_cap = map->cap > 0 ? (map->cap << 1) : 8;
+    SlowCallAggChildEntry *new_entries = jvm_calloc(sizeof(SlowCallAggChildEntry) * new_cap);
+    if (!new_entries) return 0;
+    if (map->entries && map->used > 0) {
+        memcpy(new_entries, map->entries, sizeof(SlowCallAggChildEntry) * map->used);
+        jvm_free(map->entries);
+    }
+    map->entries = new_entries;
+    map->cap = new_cap;
+    return 1;
+}
+
+static s32 _slow_agg_expand_nodes(SlowCallAggNodeRec **nodes, SlowCallAggChildMap **child_maps, u32 *cap) {
+    if (!nodes || !child_maps || !cap) return 0;
+    u32 new_cap = *cap > 0 ? (*cap << 1) : 256;
+    SlowCallAggNodeRec *new_nodes = jvm_calloc(sizeof(SlowCallAggNodeRec) * new_cap);
+    SlowCallAggChildMap *new_maps = jvm_calloc(sizeof(SlowCallAggChildMap) * new_cap);
+    if (!new_nodes || !new_maps) {
+        if (new_nodes) jvm_free(new_nodes);
+        if (new_maps) jvm_free(new_maps);
+        return 0;
+    }
+    if (*nodes && *cap > 0) {
+        memcpy(new_nodes, *nodes, sizeof(SlowCallAggNodeRec) * (*cap));
+        jvm_free(*nodes);
+    }
+    if (*child_maps && *cap > 0) {
+        memcpy(new_maps, *child_maps, sizeof(SlowCallAggChildMap) * (*cap));
+        jvm_free(*child_maps);
+    }
+    *nodes = new_nodes;
+    *child_maps = new_maps;
+    *cap = new_cap;
+    return 1;
+}
+
+static u32 _slow_agg_find_or_add_child(SlowCallAggNodeRec *nodes,
+                                       u32 *used,
+                                       SlowCallAggChildMap *lookup_map,
+                                       u32 parent_agg_id,
+                                       const SlowCallNodeRec *raw) {
+    if (!nodes || !used || !lookup_map || !raw) return 0xFFFFFFFFu;
+    u32 i;
+    for (i = 0; i < lookup_map->used; i++) {
+        SlowCallAggChildEntry *entry = &lookup_map->entries[i];
+        if (entry->method_id == raw->method_id && entry->flags == raw->flags) {
+            return entry->agg_node_id;
+        }
+    }
+    if (lookup_map->used >= lookup_map->cap) {
+        if (!_slow_agg_child_map_expand(lookup_map)) {
+            return 0xFFFFFFFFu;
+        }
+    }
+    u32 agg_id = *used;
+    SlowCallAggNodeRec *agg = &nodes[agg_id];
+    agg->node_id = agg_id;
+    agg->parent_node_id = parent_agg_id;
+    agg->method_id = raw->method_id;
+    agg->flags = raw->flags;
+    agg->total_ns = 0;
+    agg->self_ns = 0;
+    agg->call_count = 0;
+    SlowCallAggChildEntry *new_entry = &lookup_map->entries[lookup_map->used++];
+    new_entry->method_id = raw->method_id;
+    new_entry->flags = raw->flags;
+    new_entry->agg_node_id = agg_id;
+    (*used)++;
+    return agg_id;
+}
+
+static void _slow_agg_free_child_maps(SlowCallAggChildMap *maps, u32 count) {
+    if (!maps) return;
+    u32 i;
+    for (i = 0; i < count; i++) {
+        if (maps[i].entries) {
+            jvm_free(maps[i].entries);
+            maps[i].entries = NULL;
+            maps[i].used = 0;
+            maps[i].cap = 0;
+        }
+    }
+}
+
+static s32 _slow_ctx_aggregate_nodes(SlowCallTraceCtx *ctx, SlowCallAggNodeRec **out_nodes, u32 *out_count) {
+    if (!ctx || !out_nodes || !out_count || !ctx->nodes || ctx->node_used == 0) return 0;
+    u32 max_node_id = ctx->next_node_id > 0 ? (ctx->next_node_id - 1) : 0;
+    s32 *raw_index_by_id = jvm_calloc(sizeof(s32) * (max_node_id + 1));
+    u32 *raw_to_agg = jvm_calloc(sizeof(u32) * (max_node_id + 1));
+    if (!raw_index_by_id || !raw_to_agg) {
+        if (raw_index_by_id) jvm_free(raw_index_by_id);
+        if (raw_to_agg) jvm_free(raw_to_agg);
+        return 0;
+    }
+    u32 i;
+    for (i = 0; i <= max_node_id; i++) {
+        raw_index_by_id[i] = -1;
+        raw_to_agg[i] = 0xFFFFFFFFu;
+    }
+    for (i = 0; i < ctx->node_used; i++) {
+        SlowCallNodeRec *raw = &ctx->nodes[i];
+        if (raw->node_id <= max_node_id) {
+            raw_index_by_id[raw->node_id] = (s32) i;
+        }
+    }
+    u32 agg_cap = ctx->node_used > 0 ? ctx->node_used : 1;
+    u32 agg_used = 0;
+    SlowCallAggNodeRec *agg_nodes = jvm_calloc(sizeof(SlowCallAggNodeRec) * agg_cap);
+    SlowCallAggChildMap *child_maps = jvm_calloc(sizeof(SlowCallAggChildMap) * agg_cap);
+    SlowCallAggChildMap root_map;
+    root_map.used = 0;
+    root_map.cap = 0;
+    root_map.entries = NULL;
+    if (!agg_nodes || !child_maps) {
+        if (agg_nodes) jvm_free(agg_nodes);
+        if (child_maps) jvm_free(child_maps);
+        jvm_free(raw_index_by_id);
+        jvm_free(raw_to_agg);
+        return 0;
+    }
+    for (i = 0; i <= max_node_id; i++) {
+        s32 raw_idx = raw_index_by_id[i];
+        if (raw_idx < 0) continue;
+        SlowCallNodeRec *raw = &ctx->nodes[raw_idx];
+        if (agg_used >= agg_cap) {
+            if (!_slow_agg_expand_nodes(&agg_nodes, &child_maps, &agg_cap)) {
+                _slow_agg_free_child_maps(child_maps, agg_cap);
+                if (root_map.entries) jvm_free(root_map.entries);
+                jvm_free(child_maps);
+                jvm_free(agg_nodes);
+                jvm_free(raw_index_by_id);
+                jvm_free(raw_to_agg);
+                return 0;
+            }
+        }
+        u32 parent_agg_id = 0xFFFFFFFFu;
+        SlowCallAggChildMap *lookup_map = &root_map;
+        if (raw->parent_node_id != 0xFFFFFFFFu && raw->parent_node_id <= max_node_id) {
+            u32 mapped = raw_to_agg[raw->parent_node_id];
+            if (mapped != 0xFFFFFFFFu) {
+                parent_agg_id = mapped;
+                lookup_map = &child_maps[mapped];
+            }
+        }
+        u32 agg_id = _slow_agg_find_or_add_child(agg_nodes, &agg_used, lookup_map, parent_agg_id, raw);
+        if (agg_id == 0xFFFFFFFFu) {
+            _slow_agg_free_child_maps(child_maps, agg_cap);
+            if (root_map.entries) jvm_free(root_map.entries);
+            jvm_free(child_maps);
+            jvm_free(agg_nodes);
+            jvm_free(raw_index_by_id);
+            jvm_free(raw_to_agg);
+            return 0;
+        }
+        SlowCallAggNodeRec *agg = &agg_nodes[agg_id];
+        agg->total_ns += raw->total_ns;
+        agg->self_ns += raw->self_ns;
+        if (agg->call_count < 0xFFFFFFFFu) {
+            agg->call_count++;
+        }
+        raw_to_agg[i] = agg_id;
+    }
+    _slow_agg_free_child_maps(child_maps, agg_cap);
+    if (root_map.entries) jvm_free(root_map.entries);
+    jvm_free(child_maps);
+    jvm_free(raw_index_by_id);
+    jvm_free(raw_to_agg);
+    if (agg_used == 0) {
+        jvm_free(agg_nodes);
+        return 0;
+    }
+    *out_nodes = agg_nodes;
+    *out_count = agg_used;
+    return 1;
+}
+
+static u16 _slow_alloc_class_id(MiniJVM *jvm) {
+    u32 i;
+    u16 start = jvm->slow_call_profile.next_class_id;
+    for (i = 0; i <= 0xFFFFu; i++) {
+        u16 cid = (u16) (start + i);
+        if (!hashtable_get(jvm->slow_call_profile.class_by_id, _slow_id_key((u32) cid))) {
+            jvm->slow_call_profile.next_class_id = (u16) (cid + 1);
+            return cid;
+        }
+    }
+    return 0xFFFFu;
+}
+
+static u16 _slow_get_or_alloc_class_id(MiniJVM *jvm, JClass *clazz) {
+    if (!jvm || !clazz) return 0xFFFFu;
+    if (clazz->slow_profile_class_id || hashtable_get(jvm->slow_call_profile.class_by_id, _slow_id_key(0))) {
+        if (hashtable_get(jvm->slow_call_profile.class_by_id, _slow_id_key((u32) clazz->slow_profile_class_id)) == clazz) {
+            return clazz->slow_profile_class_id;
+        }
+    }
+    u16 cid = _slow_alloc_class_id(jvm);
+    if (cid == 0xFFFFu) return cid;
+    clazz->slow_profile_class_id = cid;
+    hashtable_put(jvm->slow_call_profile.class_by_id, _slow_id_key((u32) cid), clazz);
+    return cid;
+}
+
+u32 profile_slow_call_get_method_id(MiniJVM *jvm, MethodInfo *method) {
+    if (!jvm || !method || !method->_this_class) return 0;
+    if (method->slow_profile_uni_method_id > 0) {
+        MethodInfo *mi = hashtable_get(jvm->slow_call_profile.method_by_id, _slow_id_key(method->slow_profile_uni_method_id));
+        if (mi == method) return method->slow_profile_uni_method_id;
+    }
+    u16 cid = _slow_get_or_alloc_class_id(jvm, method->_this_class);
+    if (cid == 0xFFFFu) return 0;
+    if (method->slow_profile_method_id == 0) {
+        MethodPool *pool = &method->_this_class->methodPool;
+        s32 i;
+        for (i = 0; i < pool->method_used; i++) {
+            if (&pool->method[i] == method) {
+                method->slow_profile_method_id = (u16) (i + 1);
+                break;
+            }
+        }
+    }
+    if (method->slow_profile_method_id == 0) return 0;
+    method->slow_profile_uni_method_id = ((u32) cid << 16) | method->slow_profile_method_id;
+    hashtable_put(jvm->slow_call_profile.method_by_id, _slow_id_key(method->slow_profile_uni_method_id), method);
+    return method->slow_profile_uni_method_id;
+}
+
+MethodInfo *profile_slow_call_get_method_by_id(MiniJVM *jvm, u32 method_id) {
+    if (!jvm || method_id == 0) return NULL;
+    return (MethodInfo *) hashtable_get(jvm->slow_call_profile.method_by_id, _slow_id_key(method_id));
+}
+
+void profile_slow_call_unregister_class(MiniJVM *jvm, JClass *clazz) {
+    if (!jvm || !clazz) return;
+    MethodPool *pool = &clazz->methodPool;
+    s32 i;
+    for (i = 0; i < pool->method_used; i++) {
+        MethodInfo *m = &pool->method[i];
+        if (m->slow_profile_uni_method_id > 0) {
+            hashtable_remove(jvm->slow_call_profile.method_by_id, _slow_id_key(m->slow_profile_uni_method_id), 0);
+            m->slow_profile_uni_method_id = 0;
+        }
+    }
+    hashtable_remove(jvm->slow_call_profile.class_by_id, _slow_id_key((u32) clazz->slow_profile_class_id), 0);
+}
+
+static void _slow_ctx_append_node(SlowCallTraceCtx *ctx, u32 node_id, u32 parent_node_id, u32 method_id, u32 flags, s64 total_ns, s64 self_ns) {
+    if (!ctx || method_id == 0 || total_ns <= 0) return;
+    if (ctx->node_used >= ctx->node_cap) {
+        u32 new_cap = ctx->node_cap > 0 ? (ctx->node_cap << 1) : 256;
+        SlowCallNodeRec *new_nodes = jvm_calloc(sizeof(SlowCallNodeRec) * new_cap);
+        if (!new_nodes) return;
+        if (ctx->nodes && ctx->node_used > 0) {
+            memcpy(new_nodes, ctx->nodes, sizeof(SlowCallNodeRec) * ctx->node_used);
+            jvm_free(ctx->nodes);
+        }
+        ctx->nodes = new_nodes;
+        ctx->node_cap = new_cap;
+    }
+    SlowCallNodeRec *n = &ctx->nodes[ctx->node_used++];
+    n->node_id = node_id;
+    n->parent_node_id = parent_node_id;
+    n->method_id = method_id;
+    n->flags = flags;
+    n->total_ns = total_ns;
+    n->self_ns = self_ns;
+}
+
+static SlowCallTraceCtx *_slow_ctx_create(MiniJVM *jvm, Runtime *root_runtime, MethodInfo *root_method, s64 threshold_ns, s64 start_ns) {
+    SlowCallTraceCtx *ctx = jvm_calloc(sizeof(SlowCallTraceCtx));
+    ctx->root_runtime = root_runtime;
+    ctx->root_method = root_method;
+    ctx->threshold_ns = threshold_ns;
+    ctx->start_ns = start_ns;
+    ctx->next_node_id = 1;
+    ctx->node_cap = 256;
+    ctx->nodes = jvm_calloc(sizeof(SlowCallNodeRec) * ctx->node_cap);
+    return ctx;
+}
+
+static void _slow_ctx_destroy(SlowCallTraceCtx *ctx) {
+    if (!ctx) return;
+    if (ctx->nodes) jvm_free(ctx->nodes);
+    jvm_free(ctx);
+}
+
+s32 is_valid_method_info(MiniJVM *jvm, MethodInfo *method) {
+    if (!jvm || !method || !jvm->classloaders) {
+        return 0;
+    }
+
+    s32 i, j;
+    for (i = 0; i < jvm->classloaders->length; i++) {
+        PeerClassLoader *pcl = (PeerClassLoader *) arraylist_get_value(jvm->classloaders, i);
+        HashtableIterator hti;
+        hashtable_iterate(pcl->classes, &hti);
+
+        while (hashtable_iter_has_more(&hti)) {
+            JClass *clazz = (JClass *) hashtable_iter_next_value(&hti);
+            if (clazz->status >= CLASS_STATUS_PREPARED) {
+                MethodPool *p = &(clazz->methodPool);
+                for (j = 0; j < p->method_used; j++) {
+                    MethodInfo *mi = &(p->method[j]);
+                    if (mi == method) {
+                        return 1;
+                    }
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+void profile_slow_call_watch_method(MiniJVM *jvm, MethodInfo *method, s64 threshold_ns) {
+    if (!jvm || !method) return;
+    if (!is_valid_method_info(jvm, method)) return;
+    if (threshold_ns <= 0) threshold_ns = 0;
+    method->slow_profile_threshold_ns = threshold_ns;
+}
+
+void profile_slow_call_unwatch_method(MiniJVM *jvm, MethodInfo *method) {
+    if (!jvm || !method) return;
+    if (!is_valid_method_info(jvm, method)) return;
+    method->slow_profile_threshold_ns = 0;
+}
+
+void profile_slow_call_clear_watch(MiniJVM *jvm) {
+    if (!jvm || !jvm->classloaders) return;
+    s32 i, j;
+    for (i = 0; i < jvm->classloaders->length; i++) {
+        PeerClassLoader *pcl = (PeerClassLoader *) arraylist_get_value(jvm->classloaders, i);
+        HashtableIterator hti;
+        hashtable_iterate(pcl->classes, &hti);
+        while (hashtable_iter_has_more(&hti)) {
+            JClass *clazz = (JClass *) hashtable_iter_next_value(&hti);
+            if (clazz->status >= CLASS_STATUS_PREPARED) {
+                MethodPool *p = &(clazz->methodPool);
+                for (j = 0; j < p->method_used; j++) {
+                    MethodInfo *mi = &(p->method[j]);
+                    mi->slow_profile_threshold_ns = 0;
+                }
+            }
+        }
+    }
+}
+
+void profile_slow_call_clear_cache(MiniJVM *jvm) {
+    if (!jvm || !jvm->slow_call_profile.stack_cache) return;
+    spin_lock(&jvm->slow_call_profile.lock);
+    while (jvm->slow_call_profile.stack_cache->length > 0) {
+        SlowCallSnapshot *item = (SlowCallSnapshot *) arraylist_pop_front(jvm->slow_call_profile.stack_cache);
+        _slow_snapshot_destroy(item);
+    }
+    spin_unlock(&jvm->slow_call_profile.lock);
+}
+
+void profile_slow_call_enter(Runtime *runtime, MethodInfo *method, s64 start_ns) {
+    if (!runtime || !method) return;
+    MiniJVM *jvm = runtime->jvm;
+    if (!jvm || !runtime->thrd_info) return;
+    if (runtime->thrd_info->slow_call_ctx) {
+        SlowCallTraceCtx *ctx = runtime->thrd_info->slow_call_ctx;
+        runtime->slow_profile_in_trace = 1;
+        runtime->slow_profile_node_id = ctx->next_node_id++;
+        return;
+    }
+    s64 threshold = method->slow_profile_threshold_ns;
+    if (threshold <= 0) return;
+    SlowCallTraceCtx *ctx = _slow_ctx_create(jvm, runtime, method, threshold, start_ns);
+    runtime->thrd_info->slow_call_ctx = ctx;
+    runtime->slow_profile_in_trace = 1;
+    runtime->slow_profile_node_id = 0;
+}
+
+void profile_slow_call_record(Runtime *runtime, MethodInfo *method, s64 spent_ns) {
+    if (!runtime || !runtime->thrd_info || !method) return;
+    SlowCallTraceCtx *ctx = runtime->thrd_info->slow_call_ctx;
+    if (!ctx || !runtime->slow_profile_in_trace) return;
+    MiniJVM *jvm = runtime->jvm;
+    if (!jvm || !jvm->slow_call_profile.stack_cache) return;
+    if (spent_ns < 0) {
+        spent_ns = 0;
+    }
+
+    s64 self_ns = spent_ns - runtime->slow_profile_child_spent;
+    if (self_ns < 0) self_ns = 0;
+    u32 method_id = profile_slow_call_get_method_id(jvm, method);
+    u32 parent_node_id = 0xFFFFFFFFu;
+    if (runtime->parent && runtime->parent->slow_profile_in_trace) {
+        parent_node_id = runtime->parent->slow_profile_node_id;
+    }
+    u32 flags = method->slow_profile_excluded ? SLOW_CALL_NODE_FLAG_EXCLUDED : 0;
+    _slow_ctx_append_node(ctx, runtime->slow_profile_node_id, parent_node_id, method_id, flags, spent_ns, self_ns);
+    runtime->slow_profile_in_trace = 0;
+
+    if (ctx->root_runtime != runtime) {
+        return;
+    }
+
+    runtime->thrd_info->slow_call_ctx = NULL;
+    if (spent_ns < ctx->threshold_ns) {
+        _slow_ctx_destroy(ctx);
+        return;
+    }
+
+    u64 ts_ms = currentTimeMillis();
+    u32 root_method_id = profile_slow_call_get_method_id(jvm, ctx->root_method);
+    SlowCallAggNodeRec *agg_nodes = NULL;
+    u32 agg_count = 0;
+    s32 use_agg = _slow_ctx_aggregate_nodes(ctx, &agg_nodes, &agg_count);
+    u32 node_count = use_agg ? agg_count : ctx->node_used;
+    ByteBuf *snapshot_buf = bytebuf_create((u32) (SLOW_CALL_SNAPSHOT_HEADER_SIZE + node_count * SLOW_CALL_SNAPSHOT_NODE_SIZE));
+    bytebuf_write_int(snapshot_buf, SLOW_CALL_SNAPSHOT_MAGIC);
+    bytebuf_write_short(snapshot_buf, (s16) SLOW_CALL_SNAPSHOT_VERSION);
+    bytebuf_write_short(snapshot_buf, 0);
+    bytebuf_write_long(snapshot_buf, (s64) ts_ms);
+    bytebuf_write_long(snapshot_buf, spent_ns);
+    bytebuf_write_long(snapshot_buf, ctx->threshold_ns);
+    bytebuf_write_int(snapshot_buf, (s32) root_method_id);
+    bytebuf_write_int(snapshot_buf, (s32) node_count);
+    u32 i;
+    if (use_agg) {
+        for (i = 0; i < node_count; i++) {
+            SlowCallAggNodeRec *n = &agg_nodes[i];
+            bytebuf_write_int(snapshot_buf, (s32) n->node_id);
+            bytebuf_write_int(snapshot_buf, (s32) n->parent_node_id);
+            bytebuf_write_int(snapshot_buf, (s32) n->method_id);
+            bytebuf_write_int(snapshot_buf, (s32) n->flags);
+            bytebuf_write_long(snapshot_buf, n->total_ns);
+            bytebuf_write_long(snapshot_buf, n->self_ns);
+            bytebuf_write_int(snapshot_buf, (s32) n->call_count);
+            bytebuf_write_int(snapshot_buf, 0);
+        }
+    } else {
+        for (i = 0; i < ctx->node_used; i++) {
+            SlowCallNodeRec *n = &ctx->nodes[i];
+            bytebuf_write_int(snapshot_buf, (s32) n->node_id);
+            bytebuf_write_int(snapshot_buf, (s32) n->parent_node_id);
+            bytebuf_write_int(snapshot_buf, (s32) n->method_id);
+            bytebuf_write_int(snapshot_buf, (s32) n->flags);
+            bytebuf_write_long(snapshot_buf, n->total_ns);
+            bytebuf_write_long(snapshot_buf, n->self_ns);
+            bytebuf_write_int(snapshot_buf, 1);
+            bytebuf_write_int(snapshot_buf, 0);
+        }
+    }
+
+    SlowCallSnapshot *snapshot = jvm_calloc(sizeof(SlowCallSnapshot));
+    snapshot->payload = snapshot_buf;
+    snapshot->ts_ms = ts_ms;
+    snapshot->spent_ns = spent_ns;
+    snapshot->root_method_id = root_method_id;
+    snapshot->node_count = node_count;
+
+    spin_lock(&jvm->slow_call_profile.lock);
+    while (jvm->slow_call_profile.stack_cache->length >= jvm->slow_call_profile.cache_limit) {
+        SlowCallSnapshot *old = (SlowCallSnapshot *) arraylist_pop_front(jvm->slow_call_profile.stack_cache);
+        _slow_snapshot_destroy(old);
+    }
+    arraylist_push_back(jvm->slow_call_profile.stack_cache, snapshot);
+    spin_unlock(&jvm->slow_call_profile.lock);
+    if (agg_nodes) {
+        jvm_free(agg_nodes);
+    }
+    _slow_ctx_destroy(ctx);
+}
+
+void profile_slow_call_remove_class_cache(MiniJVM *jvm, Utf8String *class_name) {
+    if (!jvm || !class_name) return;
 }
 
 #endif
@@ -265,6 +896,11 @@ MiniJVM *jvm_create() {
     jvm->max_heap_size = MAX_HEAP_SIZE_DEFAULT;
     jvm->heap_overload_percent = GARBAGE_OVERLOAD_DEFAULT;
     jvm->garbage_collect_period_ms = GARBAGE_PERIOD_MS_DEFAULT;
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    jvm->slow_call_profile.cache_limit = 50;
+    jvm->slow_call_profile.next_class_id = 0;
+    spin_init(&jvm->slow_call_profile.lock, 0);
+#endif
     g_jvm = jvm;
     return jvm;
 }
@@ -296,7 +932,13 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
         jvm->startup_dir = utf8_create_c("./");
     }
 
-#if _JVM_DEBUG_PROFILE
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    jvm->slow_call_profile.stack_cache = arraylist_create(0);
+    jvm->slow_call_profile.class_by_id = hashtable_create(DEFAULT_HASH_FUNC, DEFAULT_HASH_EQUALS_FUNC);
+    jvm->slow_call_profile.method_by_id = hashtable_create(DEFAULT_HASH_FUNC, DEFAULT_HASH_EQUALS_FUNC);
+#endif
+
+#if _JVM_DEBUG_BYTECODE_PROFILE
     profile_init();
 #endif
     //
@@ -359,7 +1001,8 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     classes_load_get_with_clinit(NULL, clsName, runtime);
     //for interrupted thread
     utf8_clear(clsName);
-    utf8_append_c(clsName, STR_CLASS_JAVA_LANG_INTERRUPTED); //must load this class ,because it will be used when thread interrupt ,but it can not load when that thread is marked as interrupted
+    utf8_append_c(clsName, STR_CLASS_JAVA_LANG_INTERRUPTED);
+    //must load this class ,because it will be used when thread interrupt ,but it can not load when that thread is marked as interrupted
     JClass *c2;
     c2 = classes_load_get_with_clinit(NULL, clsName, runtime);
     instance_create(runtime, c2);
@@ -426,6 +1069,22 @@ void jvm_destroy(MiniJVM *jvm) {
     gc_destroy(jvm);
 
     hashtable_destroy(jvm->table_jstring_const);
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    profile_slow_call_clear_watch(jvm);
+    profile_slow_call_clear_cache(jvm);
+    if (jvm->slow_call_profile.stack_cache) {
+        arraylist_destroy(jvm->slow_call_profile.stack_cache);
+        jvm->slow_call_profile.stack_cache = NULL;
+    }
+    if (jvm->slow_call_profile.class_by_id) {
+        hashtable_destroy(jvm->slow_call_profile.class_by_id);
+        jvm->slow_call_profile.class_by_id = NULL;
+    }
+    if (jvm->slow_call_profile.method_by_id) {
+        hashtable_destroy(jvm->slow_call_profile.method_by_id);
+        jvm->slow_call_profile.method_by_id = NULL;
+    }
+#endif
     //
     thread_lock_dispose(&jvm->threadlock);
     arraylist_destroy(jvm->thread_list);
@@ -547,7 +1206,7 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
                        (s64) (intptr_t) runtime->thrd_info->jthread, ret, (currentTimeMillis() - start));
 #endif
 
-#if _JVM_DEBUG_PROFILE
+#if _JVM_DEBUG_BYTECODE_PROFILE
             profile_print();
 #endif
         }

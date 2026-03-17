@@ -14,6 +14,7 @@
 #ifdef __cplusplus
 extern "C" {
 
+
 #endif
 
 
@@ -137,20 +138,15 @@ s32 sock_option(VmSock *vmsock, s32 opType, s32 opValue, s32 opValue2) {
             break;
         }
         case SOCK_OP_TYPE_LINGER: {
-            struct {
-                u16 l_onoff;
-                u16 l_linger;
-            } m_sLinger;
-            // (Allow lingering when closesocket() is called, but there is still data that has not been fully sent)
-            // If m_sLinger.l_onoff = 0, it functions the same as in 2.)
+            struct linger m_sLinger;
             m_sLinger.l_onoff = opValue;
-            m_sLinger.l_linger = opValue2; // The allowed lingering time is 5 seconds
-            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (const c8 *) &m_sLinger, sizeof(m_sLinger));
+            m_sLinger.l_linger = opValue2;
+            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_LINGER, (const c8 *) &m_sLinger, sizeof(m_sLinger));
             break;
         }
         case SOCK_OP_TYPE_KEEPALIVE: {
             s32 val = opValue;
-            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (const c8 *) &val, sizeof(val));
+            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_KEEPALIVE, (const c8 *) &val, sizeof(val));
             break;
         }
     }
@@ -209,22 +205,17 @@ s32 sock_get_option(VmSock *vmsock, s32 opType) {
             break;
         }
         case SOCK_OP_TYPE_LINGER: {
-            struct {
-                u16 l_onoff;
-                u16 l_linger;
-            } m_sLinger;
-            // (Allow lingering when closesocket() is called, but there is still data that has not been fully sent)
-            // If m_sLinger.l_onoff = 0, it behaves the same as in 2.)
+            struct linger m_sLinger;
             m_sLinger.l_onoff = 0;
-            m_sLinger.l_linger = 0; // The allowed lingering time is 5 seconds
+            m_sLinger.l_linger = 0;
             len = sizeof(m_sLinger);
-            getsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (void *) &m_sLinger, &len);
-            ret = *((s32 *) &m_sLinger);
+            getsockopt(vmsock->contex.fd, SOL_SOCKET, SO_LINGER, (void *) &m_sLinger, &len);
+            ret = m_sLinger.l_onoff ? m_sLinger.l_linger : 0;
             break;
         }
         case SOCK_OP_TYPE_KEEPALIVE: {
             len = sizeof(ret);
-            getsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (void *) &ret, &len);
+            getsockopt(vmsock->contex.fd, SOL_SOCKET, SO_KEEPALIVE, (void *) &ret, &len);
             break;
         }
     }
@@ -308,7 +299,7 @@ s32 org_mini_net_SocketNative_bind0(Runtime *runtime, JClass *clazz) {
         VmSock *vmsock = (VmSock *) vmarr->arr_body;
         mbedtls_net_context *ctx = &vmsock->contex;
         jthread_block_enter(runtime);
-        ret = mbedtls_net_bind(ctx, strlen(host->arr_body) == 0 ? NULL : host->arr_body, port->arr_body, proto);
+        ret = mbedtls_net_bind(ctx, strlen(host->arr_body) == 0 ? "0.0.0.0" : host->arr_body, port->arr_body, proto);
         if (ret >= 0)ret = mbedtls_net_set_nonblock(ctx); //set as non_block , for vm destroy
         jthread_block_exit(runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 5

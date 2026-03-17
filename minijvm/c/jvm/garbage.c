@@ -88,6 +88,7 @@ s32 gc_create(MiniJVM *jvm) {
     collector->dump_path = NULL;
     collector->dump_flags = 0;
     collector->dump_rc = 0;
+    collector->stw_total_ns = 0;
 
     s32 rc = thrd_create(&collector->garbage_thread, _gc_thread_run, collector);
     if (rc != thrd_success) {
@@ -426,6 +427,7 @@ s64 _garbage_collect(GcCollector *collector) {
     s64 mem_total = 0, mem_free = 0;
     s64 del = 0;
     s64 time, start;
+    s64 stw_start_ns = 0;
     MiniJVM *jvm = collector->jvm;
 
     start = time = currentTimeMillis();
@@ -433,6 +435,7 @@ s64 _garbage_collect(GcCollector *collector) {
     //prepar gc resource ,
     vm_share_lock(jvm);
     {
+        stw_start_ns = nanoTime();
         if (_gc_pause_the_world(jvm) != 0) {
             _gc_resume_the_world(jvm);
             vm_share_unlock(jvm);
@@ -485,6 +488,12 @@ s64 _garbage_collect(GcCollector *collector) {
 
         collector->isworldstoped = 0;
         _gc_resume_the_world(jvm);
+        if (stw_start_ns > 0) {
+            s64 stw_spent_ns = nanoTime() - stw_start_ns;
+            if (stw_spent_ns > 0) {
+                ATOMIC_ADD64(&collector->stw_total_ns, stw_spent_ns);
+            }
+        }
     }
     vm_share_unlock(jvm);
 

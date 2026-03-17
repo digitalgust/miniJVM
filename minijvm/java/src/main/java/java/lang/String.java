@@ -27,6 +27,7 @@
 package java.lang;
 
 import com.sun.cldc.i18n.Helper;
+import org.mini.vm.RefNative;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Formatter;
@@ -252,7 +253,13 @@ public final class String implements Comparable<String>, CharSequence {
      */
     public String(byte bytes[], int off, int len, String enc)
             throws UnsupportedEncodingException {
-        this(Helper.byteToCharArray(bytes, off, len, enc));
+        if ("utf-8".equalsIgnoreCase(enc)) {//speedup
+            RefNative.stringFromUtf8Bytes(this, bytes, off, len);
+        } else {
+            char[] value = (Helper.byteToCharArray(bytes, off, len, enc));
+            this.count = value.length;
+            this.value = value;
+        }
     }
 
     /**
@@ -418,7 +425,11 @@ public final class String implements Comparable<String>, CharSequence {
      * @since JDK1.1
      */
     public byte[] getBytes(String enc) throws UnsupportedEncodingException {
-        return Helper.charToByteArray(value, offset, count, enc);
+        if ("utf-8".equalsIgnoreCase(enc)) { //speedup
+            return RefNative.stringToUtf8Bytes(this);
+        } else {
+            return Helper.charToByteArray(value, offset, count, enc);
+        }
     }
 
     /**

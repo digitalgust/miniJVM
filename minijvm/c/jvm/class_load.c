@@ -15,6 +15,23 @@
 
 void _annotations_destroy(RuntimeVisibleAnnotationsAttr *annotations);
 
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+static s32 _slow_profile_need_exclude(Utf8String *class_name) {
+    if (!class_name) return 0;
+    if (utf8_indexof_c(class_name, "org/mini/g3d") == 0) return 0;
+    if (utf8_indexof_c(class_name, "org/mini/hmi") == 0) return 0;
+
+    if (utf8_indexof_c(class_name, "com/sun/") == 0) return 1;
+    if (utf8_indexof_c(class_name, "java/") == 0) return 1;
+    if (utf8_indexof_c(class_name, "javax/") == 0) return 1;
+    if (utf8_indexof_c(class_name, "org/mini/") == 0) return 1;
+    if (utf8_indexof_c(class_name, "sun/") == 0) return 1;
+    if (utf8_indexof_c(class_name, "Lambda_") == 0) return 1;
+    if (utf8_indexof_c(class_name, "org.xmlpull") == 0) return 1;
+    return 0;
+}
+#endif
+
 /* parse UTF-8 String */
 void *_parseCPString(JClass *_this, ByteBuf *buf, s32 index) {
     ConstantUTF8 *ptr = jvm_calloc(sizeof(ConstantUTF8));
@@ -551,6 +568,9 @@ s32 _class_method_info_destroy(JClass *clazz) {
     s32 i, j;
     for (i = 0; i < clazz->methodPool.method_used; i++) {
         MethodInfo *mi = &clazz->methodPool.method[i];
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+        mi->slow_profile_threshold_ns = 0;
+#endif
         for (j = 0; j < mi->attributes_count; j++) {
             AttributeInfo *attr = &mi->attributes[j];
             if (attr->info)jvm_free(attr->info); //Some things are not transferred
@@ -1779,6 +1799,9 @@ void _class_optimize(JClass *clazz) {
         ptr->name = class_get_utf8_string(clazz, ptr->name_index);
         ptr->descriptor = class_get_utf8_string(clazz, ptr->descriptor_index);
         ptr->_this_class = clazz;
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+        ptr->slow_profile_excluded = _slow_profile_need_exclude(clazz->name);
+#endif
         if (!ptr->paraType) {
             //First execution
             // eg:  (Ljava/lang/Object;IBLjava/lang/String;[[[ILjava/lang/Object;)Ljava/lang/String;Z
@@ -2023,6 +2046,17 @@ JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime) {
             // so we need clear its name to avoid gc remove a class with same name
             utf8_clear(tmp_for_del->name);
         }
+    }
+    if (tmpclazz) {
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+        if (runtime && runtime->jvm) {
+            MethodPool *mp = &tmpclazz->methodPool;
+            s32 mi;
+            for (mi = 0; mi < mp->method_used; mi++) {
+                profile_slow_call_get_method_id(runtime->jvm, &mp->method[mi]);
+            }
+        }
+#endif
     }
     return tmpclazz;
 }

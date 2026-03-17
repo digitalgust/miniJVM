@@ -7,6 +7,7 @@
 
 #ifdef __cplusplus
 extern "C" {
+
 #endif
 
 #include "jvm.h"
@@ -180,6 +181,8 @@ s32 jstring_get_count(Instance *jstr, Runtime *runtime);
 
 s32 jstring_get_offset(Instance *jstr, Runtime *runtime);
 
+void jstring_set_offset(Instance *jstr, s32 offset, Runtime *runtime);
+
 c8 *jstring_get_value_ptr(Instance *jstr, Runtime *runtime);
 
 Instance *jstring_get_value_array(Instance *jstr, Runtime *runtime);
@@ -319,7 +322,6 @@ static inline Runtime *_runtime_alloc() {
  * @return runtime
  */
 static inline Runtime *runtime_create_inl(Runtime *parent) {
-
     Runtime *runtime;
 
     if (!parent) {
@@ -351,7 +353,6 @@ static inline void runtime_destroy_inl(Runtime *runtime) {
         runtime->next = top_runtime->runtime_pool_header;
         top_runtime->runtime_pool_header = runtime;
     } else {
-
         Runtime *next = top_runtime->runtime_pool_header;
         while (next) {
             Runtime *r = next;

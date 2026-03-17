@@ -362,10 +362,3 @@ c8 *INST_NAME[] = {
     /* 0xEE */ "0xFE",
     /* 0xEF */ "0xFF",
 };
-#if _JVM_DEBUG_PROFILE
-
-spinlock_t pro_lock;
-ProfileDetail profile_instructs[INST_COUNT] = {0};
-
-
-#endif

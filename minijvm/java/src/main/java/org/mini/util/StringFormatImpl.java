@@ -488,15 +488,50 @@ public final class StringFormatImpl {
         final String val;
         final Number n = (Number) arg;
         if (arg instanceof Float) {
-            val = Float.toString(n.floatValue());
+            val = formatFloat(n.floatValue(), precision);
         } else if (arg instanceof Double) {
-            val = Double.toString(n.doubleValue());
+            val = formatFloat(n.doubleValue(), precision);
         } else {
             throw new IllegalFormatException(
                     "not a floating point number: " + (arg != null ? arg.getClass() : null)
             );
         }
-        appendify(a, val, flags, width, precision);
+        appendify(a, val, flags, width, 0);
+    }
+
+    static String formatFloat(final double value, final int precision) {
+        if (precision <= 0 || Double.isNaN(value) || Double.isInfinite(value)) {
+            return Double.toString(value);
+        }
+        final long maxFactor = Long.MAX_VALUE / 10L;
+        long factor = 1L;
+        for (int i = 0; i < precision; i++) {
+            if (factor > maxFactor) {
+                return Double.toString(value);
+            }
+            factor *= 10L;
+        }
+        final boolean negative = Double.doubleToLongBits(value) < 0L;
+        final double absValue = negative ? -value : value;
+        final double limit = ((double) Long.MAX_VALUE - 0.5d) / factor;
+        if (absValue > limit) {
+            return Double.toString(value);
+        }
+        final long rounded = (long) Math.floor(absValue * factor + 0.5d);
+        final long integerPart = rounded / factor;
+        final long fractionalPart = rounded % factor;
+        final StringBuilder sb = new StringBuilder();
+        if (negative) {
+            sb.append('-');
+        }
+        sb.append(integerPart);
+        sb.append('.');
+        final String frac = Long.toString(fractionalPart);
+        for (int i = frac.length(); i < precision; i++) {
+            sb.append('0');
+        }
+        sb.append(frac);
+        return sb.toString();
     }
 
     static void appendify(
@@ -1040,7 +1075,7 @@ public final class StringFormatImpl {
                         return build();
                 }
             }
-            throw new IllegalStateException();
+            return build();
         }
 
         private final void ensureLeftJustifySupported() {

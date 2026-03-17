@@ -108,4 +108,30 @@ public class RefNative {
     public static native void initNativeClassLoader(ClassLoader cloader, ClassLoader parent);
 
     public static native void destroyNativeClassLoader(ClassLoader cloader);
+
+    public static native void stringFromUtf8Bytes(String target, byte[] utf8Bytes, int offset, int length);
+
+    public static native byte[] stringToUtf8Bytes(String source);
+
+    public static native byte[] toCstyleBytes(String s);
+
+    public static native void resetProfile();
+
+    public static native String getProfileAll();
+
+    public static native void watchSlowCallMethod(int methodId, long thresholdNs);
+
+    public static native void unwatchSlowCallMethod(int methodId);
+
+    public static native void clearSlowCallWatch();
+
+    public static native void clearSlowCallCache();
+
+    public static native String[] getSlowCallSnapshotList();
+
+    public static native byte[] getSlowCallStackSnapshot(int index);
+
+    public static native String getMethodByUniId(int methodId);
+
+    public static native String getSlowCallWatchMethods();
 }

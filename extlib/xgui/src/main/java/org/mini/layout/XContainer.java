@@ -2,6 +2,7 @@ package org.mini.layout;
 
 import org.mini.glwrap.GLUtil;
 import org.mini.gui.GContainer;
+import org.mini.gui.GFrame;
 import org.mini.gui.GObject;
 import org.mini.gui.callback.GCallBack;
 import org.mini.layout.loader.XmlExtAssist;
@@ -116,6 +117,11 @@ public abstract class XContainer
             if (go != null) {
                 GContainer gc = getGui();
                 gc.add(go);
+                if (go instanceof GFrame) {
+                    GFrame gf = (GFrame) go;
+                    if (xo.isHidden()) gc.remove(gf);
+                    gc.addSubFrame(gf);
+                }
             }
         }
     }
