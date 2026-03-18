@@ -539,10 +539,14 @@ mi_decl_export void mi_process_info(size_t* elapsed_msecs, size_t* user_msecs, s
 {
   mi_subproc_t* subproc = _mi_subproc_main();
   mi_process_info_t pinfo;
+  int64_t current_commit_i64;
+  int64_t peak_commit_i64;
   _mi_memzero_var(pinfo);
   pinfo.elapsed        = _mi_clock_end(mi_process_start);
-  pinfo.current_commit = (size_t)(mi_atomic_loadi64_relaxed((_Atomic(int64_t)*)(&subproc->stats.committed.current)));
-  pinfo.peak_commit    = (size_t)(mi_atomic_loadi64_relaxed((_Atomic(int64_t)*)(&subproc->stats.committed.peak)));
+  current_commit_i64   = mi_atomic_loadi64_relaxed((_Atomic(int64_t)*)(&subproc->stats.committed.current));
+  peak_commit_i64      = mi_atomic_loadi64_relaxed((_Atomic(int64_t)*)(&subproc->stats.committed.peak));
+  pinfo.current_commit = (current_commit_i64 < 0 ? 0 : (size_t)current_commit_i64);
+  pinfo.peak_commit    = (peak_commit_i64 < 0 ? 0 : (size_t)peak_commit_i64);
   pinfo.current_rss    = pinfo.current_commit;
   pinfo.peak_rss       = pinfo.peak_commit;
   pinfo.utime          = 0;

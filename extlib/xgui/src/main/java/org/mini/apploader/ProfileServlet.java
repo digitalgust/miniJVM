@@ -54,6 +54,10 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
             } else if ("clearcache".equals(action)) {
                 org.mini.vm.RefNative.clearSlowCallCache();
                 invalidateSlowSnapshotCache(req);
+            } else if ("dump".equals(action)) {
+                String saveRoot = GCallBack.getInstance().getAppSaveRoot();
+                String dumpPath = new File(saveRoot, "dump.hprof").getAbsolutePath();
+                org.mini.vm.RefNative.dumpHeap(dumpPath, 0);
             }
             int selectedSlowIdx = -1;
             if ("viewslow".equals(action)) {
@@ -150,7 +154,7 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + "<html>\n"
                 + "<head>\n"
                 + "<meta charset='UTF-8'>\n"
-                + "<title>Method Performance Profile</title>\n"
+                + "<title>MiniJVM Performance Profile</title>\n"
                 + "<style>\n"
                 + "body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }\n"
                 + "h1 { color: #333; margin-bottom: 20px; }\n"
@@ -208,7 +212,11 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + "</style>\n"
                 + "</head>\n"
                 + "<body>\n"
-                + "<h1>Method Performance Profile</h1>\n"
+                + "<h1>MiniJVM Performance Profile</h1>\n"
+                + "<div class='btn-container'>\n"
+                + "<button id='toggleBtn' class='btn toggle-btn' onclick='toggleAutoRefresh()'>Stop</button>\n"
+                + "<span id='status' class='status running'>Running (5s refresh)</span>\n"
+                + "</div>\n"
                 + "<div class='tabs'>\n"
                 + "<button class='tab' id='tabBtn0' onclick='switchTab(0)'>Performance</button>\n"
                 + "<button class='tab' id='tabBtn1' onclick='switchTab(1)'>Slow Call Tree</button>\n"
@@ -217,9 +225,7 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + "</div>\n"
                 + "<div id='tab0' class='tab-content'>\n"
                 + "<div class='btn-container'>\n"
-                + "<button id='toggleBtn' class='btn toggle-btn' onclick='toggleAutoRefresh()'>Stop</button>\n"
                 + "<button class='btn reset-btn' onclick='resetProfile()'>Reset</button>\n"
-                + "<span id='status' class='status running'>Running (5s refresh)</span>\n"
                 + "</div>\n"
                 + "<h3>Performance Stats</h3>\n"
                 + "<table>\n"
@@ -257,6 +263,9 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + "</div>\n"
                 + "<div id='tab2' class='tab-content'>\n"
                 + "<h3>Download</h3>\n"
+                + "<div class='btn-container'>\n"
+                + "<button class='btn reset-btn' onclick='dumpHeapNow()'>Dump Heap</button>\n"
+                + "</div>\n"
                 + "<a href='/dump.hprof'>download heap dump</a>\n"
                 + "</div>\n"
                 + "<div id='tab3' class='tab-content'>\n"
@@ -317,6 +326,15 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + "    const url = new URL(window.location);\n"
                 + "    url.searchParams.set('tab', currentTab);\n"
                 + "    window.history.replaceState({}, '', url);\n"
+                + "}\n"
+                + "\n"
+                + "function clearOneShotActionFromURL() {\n"
+                + "    const url = new URL(window.location);\n"
+                + "    const action = url.searchParams.get('action');\n"
+                + "    if (action === 'clearcache' || action === 'reset' || action === 'dump') {\n"
+                + "        url.searchParams.delete('action');\n"
+                + "        window.history.replaceState({}, '', url);\n"
+                + "    }\n"
                 + "}\n"
                 + "\n"
                 + "function getSortFromURL() {\n"
@@ -449,6 +467,10 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + "\n"
                 + "function clearCache() {\n"
                 + "    window.location.href = '/pro?tab=1&action=clearcache';\n"
+                + "}\n"
+                + "\n"
+                + "function dumpHeapNow() {\n"
+                + "    window.location.href = '/pro?tab=2&action=dump';\n"
                 + "}\n"
                 + "\n"
                 + "function loadSlowState() {\n"
@@ -672,6 +694,7 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + "    }\n"
                 + "}\n"
                 + "\n"
+                + "clearOneShotActionFromURL();\n"
                 + "getTabFromURL();\n"
                 + "getAutoRefreshFromStorage();\n"
                 + "getSortFromURL();\n"
