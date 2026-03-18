@@ -562,24 +562,24 @@ s32 os_execute(Runtime *runtime, Instance *jstrArr, Instance *jlongArr, ArrayLis
     makePipe(out, runtime);
     SetHandleInformation(out[1], HANDLE_FLAG_INHERIT, 0);
     s32 outDescriptor = descriptor(out[1], runtime);
-    if (inDescriptor < 0) {
+    if (outDescriptor < 0) {
         exception_throw(JVM_EXCEPTION_IO, runtime, NULL);
         return RUNTIME_STATUS_EXCEPTION;
     }
-    jarray_set_field(jlongArr, 3, inDescriptor);
+    jarray_set_field(jlongArr, 3, outDescriptor);
     makePipe(err, runtime);
     SetHandleInformation(err[0], HANDLE_FLAG_INHERIT, 0);
     s32 errDescriptor = descriptor(err[0], runtime);
-    if (inDescriptor < 0) {
+    if (errDescriptor < 0) {
         exception_throw(JVM_EXCEPTION_IO, runtime, NULL);
         return RUNTIME_STATUS_EXCEPTION;
     }
-    jarray_set_field(jlongArr, 4, inDescriptor);
+    jarray_set_field(jlongArr, 4, errDescriptor);
 
     PROCESS_INFORMATION pi;
     memset(&pi, 0, sizeof(pi));
 
-    STARTUPINFO si;
+    STARTUPINFOA si;
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(si);
     si.dwFlags = STARTF_USESTDHANDLES;
@@ -587,16 +587,17 @@ s32 os_execute(Runtime *runtime, Instance *jstrArr, Instance *jlongArr, ArrayLis
     si.hStdInput = out[0];
     si.hStdError = err[1];
 
-    BOOL success = CreateProcess(0,
-                                 (LPSTR) (cmd),
-                                 0,
-                                 0,
-                                 1,
-                                 CREATE_NO_WINDOW | CREATE_UNICODE_ENVIRONMENT,
-                                 0,
-                                 0,
-                                 &si,
-                                 &pi);
+    c8 *app = cstrList && cstrList->length > 0 ? arraylist_get_value(cstrList, 0) : NULL;
+    BOOL success = CreateProcessA(app,
+                                  (LPSTR) (cmd),
+                                  0,
+                                  0,
+                                  1,
+                                  CREATE_NO_WINDOW,
+                                  0,
+                                  0,
+                                  &si,
+                                  &pi);
 
 
     CloseHandle(in[1]);
@@ -605,8 +606,12 @@ s32 os_execute(Runtime *runtime, Instance *jstrArr, Instance *jlongArr, ArrayLis
 
     if (!success) {
         Utf8String *cstr = utf8_create();
-        //get_last_error(cstr);
+        utf8_append_c(cstr, "cmd=");
+        utf8_append_c(cstr, cmd ? cmd : "");
+        utf8_append_c(cstr, " ");
+        get_last_error(cstr);
         exception_throw(JVM_EXCEPTION_IO, runtime, utf8_cstr(cstr));
+        utf8_destroy(cstr);
         return RUNTIME_STATUS_EXCEPTION;
     }
 

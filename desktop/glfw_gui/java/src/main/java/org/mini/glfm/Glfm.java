@@ -338,19 +338,21 @@ public class Glfm {
             if (osName.startsWith("Mac OS")) {
                 // Mac OS
                 if (more.length() > 0) {
-                    Runtime.getRuntime().exec("open " + url + " " + more);
+                    Runtime.getRuntime().exec(new String[]{"open", url, more});
                 } else {
-                    Runtime.getRuntime().exec("open " + url);
+                    Runtime.getRuntime().exec(new String[]{"open", url});
                 }
             } else if (osName.startsWith("Windows")) {
                 // Windows
-                Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
+                String winDir = System.getProperty("windir", "C:\\Windows");
+                String rundll32 = winDir + "\\System32\\rundll32.exe";
+                Runtime.getRuntime().exec(new String[]{rundll32, "url.dll,FileProtocolHandler", url});
             } else if (osName.startsWith("Linux")) {
                 // Linux
                 if (more.length() > 0) {
-                    Runtime.getRuntime().exec("xdg-open " + url + " " + more);
+                    Runtime.getRuntime().exec(new String[]{"xdg-open", url, more});
                 } else {
-                    Runtime.getRuntime().exec("xdg-open " + url);
+                    Runtime.getRuntime().exec(new String[]{"xdg-open", url});
                 }
             }
 

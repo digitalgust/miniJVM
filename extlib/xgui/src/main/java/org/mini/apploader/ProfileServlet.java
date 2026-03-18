@@ -78,6 +78,8 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
         String profileData = org.mini.vm.RefNative.getProfileAll();
         String watchData = org.mini.vm.RefNative.getSlowCallWatchMethods();
         String[] snapshotList = org.mini.vm.RefNative.getSlowCallSnapshotList();
+        String vmInfoRows = buildVmInfoRows();
+        String gcLogText = buildGcLogText();
 
         // Parse profile data for tab 0 (original performance view)
         String[] lines = profileData.split("\n");
@@ -200,6 +202,9 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + ".toggle-btn-mini { display:inline-block; width:16px; text-align:center; cursor:pointer; color:#666; user-select:none; }\n"
                 + ".toggle-spacer { display:inline-block; width:16px; }\n"
                 + ".chain-label { cursor:pointer; display:inline-block; padding-left:calc(var(--d,0) * 10px); }\n"
+                + ".vm-table { width:100%; max-width:900px; }\n"
+                + ".vm-table th { cursor:default; }\n"
+                + ".vm-log { width:100%; min-height:240px; box-sizing:border-box; background:#111; color:#9be29b; padding:10px; border-radius:4px; overflow:auto; }\n"
                 + "</style>\n"
                 + "</head>\n"
                 + "<body>\n"
@@ -208,6 +213,7 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + "<button class='tab' id='tabBtn0' onclick='switchTab(0)'>Performance</button>\n"
                 + "<button class='tab' id='tabBtn1' onclick='switchTab(1)'>Slow Call Tree</button>\n"
                 + "<button class='tab' id='tabBtn2' onclick='switchTab(2)'>Download</button>\n"
+                + "<button class='tab' id='tabBtn3' onclick='switchTab(3)'>VM Info</button>\n"
                 + "</div>\n"
                 + "<div id='tab0' class='tab-content'>\n"
                 + "<div class='btn-container'>\n"
@@ -252,6 +258,19 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + "<div id='tab2' class='tab-content'>\n"
                 + "<h3>Download</h3>\n"
                 + "<a href='/dump.hprof'>download heap dump</a>\n"
+                + "</div>\n"
+                + "<div id='tab3' class='tab-content'>\n"
+                + "<h3>VM Information</h3>\n"
+                + "<table class='vm-table'>\n"
+                + "<thead><tr><th>Key</th><th>Value</th></tr></thead>\n"
+                + "<tbody>\n"
+                + vmInfoRows
+                + "</tbody>\n"
+                + "</table>\n"
+                + "<h3>GC Logs</h3>\n"
+                + "<pre class='vm-log'>"
+                + gcLogText
+                + "</pre>\n"
                 + "</div>\n"
                 + "<script>\n"
                 + "let currentTab = 0;\n"
@@ -694,6 +713,53 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
             fis.close();
         }
         return true;
+    }
+
+    private String buildVmInfoRows() {
+        String[] propertyKeys = new String[]{
+                "java.version",
+                "java.vendor",
+                "java.vendor.url",
+                "java.class.path",
+                "java.library.path",
+                "os.name",
+                "os.version",
+                "os.arch",
+                "file.separator",
+                "path.separator",
+                "user.name",
+                "user.home",
+                "user.dir"
+        };
+        StringBuilder rows = new StringBuilder();
+        for (String key : propertyKeys) {
+            rows.append("<tr><td>")
+                    .append(escapeHtml(key))
+                    .append("</td><td>")
+                    .append(escapeHtml(System.getProperty(key, "")))
+                    .append("</td></tr>");
+        }
+        int ptrSize = org.mini.vm.RefNative.refIdSize();
+        Class[] classes = org.mini.vm.RefNative.getClasses();
+        Thread[] threads = org.mini.vm.RefNative.getThreads();
+        rows.append("<tr><td>vm.refIdSize</td><td>").append(ptrSize).append("</td></tr>");
+        rows.append("<tr><td>vm.loadedClassCount</td><td>").append(classes == null ? 0 : classes.length).append("</td></tr>");
+        rows.append("<tr><td>vm.threadCount</td><td>").append(threads == null ? 0 : threads.length).append("</td></tr>");
+        return rows.toString();
+    }
+
+    private String buildGcLogText() {
+        Object[] logs = org.mini.vm.VmUtil.gcHistory.toArray();
+        if (logs.length == 0) {
+            return "No GC logs";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = logs.length - 1; i >= 0; i--) {
+            Object obj = logs[i];
+            if (obj == null) continue;
+            sb.append(escapeHtml(String.valueOf(obj))).append('\n');
+        }
+        return sb.toString();
     }
 
     private String escapeHtml(String s) {

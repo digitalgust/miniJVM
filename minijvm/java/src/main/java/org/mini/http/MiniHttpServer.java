@@ -313,6 +313,7 @@ public class MiniHttpServer extends Thread {
                 + "2.    Upload file when selected a jar. <br/>\n"
                 + "    <input type='submit' name='Submit' value='Upload File' class='bt'/><br/>\n"
                 + "</form>\n"
+                + "<p><a href='/pro'>VM infomation</a>\n"
                 + "</body>\n"
                 + "</html>";
 

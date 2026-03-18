@@ -36,6 +36,51 @@ s64 _garbage_collect(GcCollector *collector);
 
 void _gc_print_obj_list(GcCollector *pType);
 
+static void _gc_push_history_to_java(GcCollector *collector, s64 iter, s64 mem_total, s64 time_stopWorld, s64 time_gc) {
+    if (!collector || !collector->runtime) return;
+    Runtime *runtime = collector->runtime;
+    Utf8String *className = utf8_create_c("org/mini/vm/VmUtil");
+    Utf8String *methodName = utf8_create_c("gcPushHistory");
+    Utf8String *methodType = utf8_create_c("(Ljava/lang/String;)V");
+    MethodInfo *mi = find_methodInfo_by_name(className, methodName, methodType, NULL, runtime);
+    if (mi) {
+        char msg[1024];
+        s64 ts_ms = currentTimeMillis();
+#if __JVM_PRI_ALLOC__
+        size_t elapsed_msecs = 0, user_msecs = 0, system_msecs = 0;
+        size_t current_rss = 0, peak_rss = 0;
+        size_t current_commit = 0, peak_commit = 0;
+        size_t page_faults = 0;
+        mi_process_info(&elapsed_msecs, &user_msecs, &system_msecs,
+                        &current_rss, &peak_rss,
+                        &current_commit, &peak_commit, &page_faults);
+        snprintf(msg, sizeof(msg),
+                 "%lld|gc obj: %lld->%lld heap: %lld->%lld jitcode: %lld stop_world: %lld gc:%lld rss=%zu peak_rss=%zu commit=%zu peak_commit=%zu page_faults=%zu",
+                 ts_ms, iter, collector->obj_count, mem_total, collector->obj_heap_size, collector->jit_heap_size, time_stopWorld, time_gc,
+                 current_rss, peak_rss, current_commit, peak_commit, page_faults);
+#else
+        snprintf(msg, sizeof(msg),
+                 "%lld|gc obj: %lld->%lld heap: %lld->%lld jitcode: %lld stop_world: %lld gc:%lld",
+                 ts_ms, iter, collector->obj_count, mem_total, collector->obj_heap_size, collector->jit_heap_size, time_stopWorld, time_gc);
+#endif
+        Utf8String *umsg = utf8_create_c(msg);
+        Instance *jmsg = jstring_create(umsg, runtime);
+        if (jmsg) {
+            instance_hold_to_thread(jmsg, runtime);
+            push_ref(runtime->stack, jmsg);
+            s32 ret = execute_method_impl(mi, runtime);
+            if (ret == RUNTIME_STATUS_EXCEPTION) {
+                print_exception(runtime);
+            }
+            instance_release_from_thread(jmsg, runtime);
+        }
+        utf8_destroy(umsg);
+    }
+    utf8_destroy(className);
+    utf8_destroy(methodName);
+    utf8_destroy(methodType);
+}
+
 /**
  * Creates a garbage collection thread.
  *
@@ -501,9 +546,7 @@ s64 _garbage_collect(GcCollector *collector) {
     jvm_printf("garbage_resume_the_world %lld\n", (currentTimeMillis() - time));
 #endif
 
-#if _JVM_DEBUG_LOG_LEVEL > 1
     s64 time_stopWorld = currentTimeMillis() - start;
-#endif
     time = currentTimeMillis();
     //
 
@@ -621,13 +664,15 @@ s64 _garbage_collect(GcCollector *collector) {
 #if __JVM_PRI_ALLOC__
     mi_collect(true);
 #endif
-#if _JVM_DEBUG_LOG_LEVEL > 1
     s64 time_gc = currentTimeMillis() - time;
+#if _JVM_DEBUG_LOG_LEVEL > 1
     jvm_printf("[INFO]gc obj: %lld->%lld   heap: %lld -> %lld  jitcode: %lld  stop_world: %lld  gc:%lld\n", iter, collector->obj_count, mem_total, collector->obj_heap_size, collector->jit_heap_size, time_stopWorld, time_gc);
 #if __JVM_PRI_ALLOC__
     pri_alloc_print_debug_info();
 #endif
 #endif
+//push msg to java
+    _gc_push_history_to_java(collector, iter, mem_total, time_stopWorld, time_gc);
 
 #ifdef MEM_ALLOC_LTALLOC
     jvm_squeeze(0);

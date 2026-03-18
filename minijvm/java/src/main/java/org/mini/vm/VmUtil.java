@@ -1,21 +1,43 @@
 package org.mini.vm;
 
-import org.mini.reflect.ReflectClass;
 import org.mini.reflect.ReflectMethod;
 import org.mini.zip.Zip;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import static org.mini.vm.ByteCodeAssembler.*;
 
 public class VmUtil {
+    public static List<String> gcHistory = new ArrayList<>();
+    public static int historySize = 100;
+    static final SimpleDateFormat gcTimeFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    public static void gcPushHistory(String msg) {
+        if (msg != null) {
+            int sep = msg.indexOf('|');
+            if (sep > 0) {
+                try {
+                    long ts = Long.parseLong(msg.substring(0, sep));
+                    msg = gcTimeFmt.format(new Date(ts)) + " " + msg.substring(sep + 1);
+                } catch (Exception e) {
+                }
+            }
+        }
+        gcHistory.add(msg);
+        if (gcHistory.size() > historySize) {
+            gcHistory.remove(0);
+        }
+    }
+
     /**
      * find a file bytes from classes paths
      *

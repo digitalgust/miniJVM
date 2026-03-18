@@ -309,22 +309,6 @@
             eif
         ret
 
-        sub openWebForUpload()
-            #执行java语句  AppManager.getInstance().getWebServer()==null
-            ins=invokeStatic("org.mini.apploader.AppManager","getInstance()Lorg.mini.apploader.AppManager;")
-            websrv=invokeJava(ins,"getWebServer()Lorg.mini.http.MiniHttpServer;")
-
-            #因为按下按钮后，脚本先于按钮的action执行，
-            #因此，webServer如果不为空，
-            #说明本次事件是要停止webserver,反之是要启动
-            if(isNull(websrv))
-                url="http://localhost:8088"
-                #println(url)
-                if(strlen(url)>0)
-                    openOtherApp(url,"URL",0)  # 第一个为 url，第二个为参数(URL表示打开网址),，第三个为检测是否App 存在，0为不检测，1为检测
-                eif
-            eif
-        ret
 
         sub showPlugDownload()
             setMenuMarkIndex("MENU_MAIN",1)
@@ -422,9 +406,6 @@
             setEnv("SCREEN_BRIGHTNESS",v)
         ret
 
-        sub dump()
-            invokeStatic("org.mini.vm.RefNative","dumpHeap(Ljava/lang/String;I)I","dump.hprof",0)
-        ret
         ]]>
         </script>
         <tr h="{STATEBAR_HEIGHT}" w="100%">
@@ -604,7 +585,30 @@
         </tr>
     </table>
     <frame name="DEV_FRAME" x="10%" y="10%" w="80%" h="80%" title="{STR_DEV_OPS}" hidden="1">
+        <script>
+            <![CDATA[
+        sub dump()
+            invokeStatic("org.mini.vm.RefNative","dumpHeap(Ljava/lang/String;I)I","dump.hprof",0)
+        ret
 
+        sub openWebForUpload()
+            #执行java语句  AppManager.getInstance().getWebServer()==null
+            ins=invokeStatic("org.mini.apploader.AppManager","getInstance()Lorg.mini.apploader.AppManager;")
+            websrv=invokeJava(ins,"getWebServer()Lorg.mini.http.MiniHttpServer;")
+
+            #因为按下按钮后，脚本先于按钮的action执行，
+            #因此，webServer如果不为空，
+            #说明本次事件是要停止webserver,反之是要启动
+            if(isNull(websrv))
+                url="http://localhost:18088"
+                #println(url)
+                if(strlen(url)>0)
+                    openOtherApp(url,"URL",0)  # 第一个为 url，第二个为参数(URL表示打开网址),，第三个为检测是否App 存在，0为不检测，1为检测
+                eif
+            eif
+        ret
+        ]]>
+        </script>
         <label name="LAB_FROM_URL" w="100%" h="30" align="left,vcenter">{STR_DOWN_APP_FROM_WEB}</label>
         <input name="INPUT_URL" w="100%" h="30" hint="plug jar url"></input>
         <br/>
