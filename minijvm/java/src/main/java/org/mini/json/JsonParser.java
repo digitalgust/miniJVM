@@ -3,6 +3,7 @@ package org.mini.json;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -276,7 +277,8 @@ public class JsonParser<T> {
     }
 
     private StdDeserializer findDeserializer(Class<?> c) {
-        for (SimpleModule module : this.modules) {
+        for (int i = 0, size = this.modules.size(); i < size; i++) {
+            SimpleModule module = this.modules.get(i);
             StdDeserializer ds = module.serializeLib.get(c);
             if (ds != null)
                 return ds;
@@ -308,9 +310,25 @@ public class JsonParser<T> {
     private static Method getMethodByName(String name, Class<?> clazz) {
         String mName = "set" + name.substring(0, 1).toUpperCase() + name.substring(1);
         Method[] methods = clazz.getMethods();
-        for (Method m : methods) {
+        for (int i = 0, length = methods.length; i < length; i++) {
+            Method m = methods[i];
             if (m.getName().equals(mName) && (m.getParameterTypes()).length == 1)
                 return m;
+        }
+        return null;
+    }
+
+    private static Field getFieldByName(String name, Class<?> clazz) {
+        Class<?> current = clazz;
+        while (current != null && current != Object.class) {
+            Field[] fields = current.getDeclaredFields();
+            for (int i = 0; i < fields.length; i++) {
+                Field field = fields[i];
+                if (field.getName().equals(name)) {
+                    return field;
+                }
+            }
+            current = current.getSuperclass();
         }
         return null;
     }
@@ -547,7 +565,8 @@ public class JsonParser<T> {
                     if (ins == null)
                         ins = clazz.newInstance();
                     fields = clazz.getFields();
-                    for (Field f : fields) {
+                    for (int i = 0, length = fields.length; i < length; i++) {
+                        Field f = fields[i];
                         Class<?> c = f.getType();
                         Object o = findInjectableValues(c);
                         if (o != null)
@@ -559,7 +578,7 @@ public class JsonParser<T> {
                         String fieldName = ((JsonString) jc).toString();
                         JsonCell childJson = map.get(jc);
                         Method method = getMethodByName(fieldName, clazz);
-                        if (method != null) {
+                        if (method != null && !Modifier.isStatic(method.getModifiers())) {
                             Type[] pt = method.getGenericParameterTypes();
                             Class<?> childClazz = method.getParameterTypes()[0];
                             try {
@@ -570,8 +589,23 @@ public class JsonParser<T> {
                             }
                             continue;
                         }
+                        Field field = getFieldByName(fieldName, clazz);
+                        if (field != null && !Modifier.isStatic(field.getModifiers())) {
+                            try {
+                                if (!field.isAccessible())
+                                    field.setAccessible(true);
+                                String fieldType = field.getGenericType().getTypeName();
+                                Object childObj = map2obj(childJson, field.getType(), fieldType);
+                                if (childObj instanceof Polymorphic)
+                                    childObj = map2obj(childJson, ((Polymorphic) childObj).getType(), fieldType);
+                                field.set(ins, childObj);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            continue;
+                        }
                         if (!(ins instanceof Polymorphic))
-                            SysLog.warn("[JSON]" + clazz.getName() + " field '" + fieldName + "' setter not found.");
+                            SysLog.warn("[JSON]" + clazz.getName() + " field '" + fieldName + "' setter or field not found.");
                     }
                     return ins;
                 case JsonCell.TYPE_LIST:
@@ -585,11 +619,10 @@ public class JsonParser<T> {
                         if (str != null && str.indexOf('[') >= 0)
                             str = str.substring(1);
                         Object array = Array.newInstance(clazz.getComponentType(), list.size());
-                        int i = 0;
-                        for (JsonCell cell : list) {
+                        for (int i = 0, size = list.size(); i < size; i++) {
+                            JsonCell cell = list.get(i);
                             Object object = map2obj(cell, clazz.getComponentType(), str);
                             Array.set(array, i, object);
-                            i++;
                         }
                         return array;
                     }
@@ -605,7 +638,8 @@ public class JsonParser<T> {
                         clazzQualified = Class.forName(className, true, this.classLoader);
                     }
                     collection = (Collection) clazz.newInstance();
-                    for (JsonCell cell : list) {
+                    for (int i = 0, size = list.size(); i < size; i++) {
+                        JsonCell cell = list.get(i);
                         Object object = map2obj(cell, clazzQualified, typevar);
                         if (object instanceof Polymorphic)
                             object = map2obj(cell, ((Polymorphic) object).getType(), typevar);
@@ -639,7 +673,7 @@ public class JsonParser<T> {
             classLoader = Thread.currentThread().getContextClassLoader();
         this.classLoader = classLoader;
         JsonCell json = parse(s, 0);
-        T t= (T) map2obj(json, clazz, types);
+        T t = (T) map2obj(json, clazz, types);
         return t;
     }
 

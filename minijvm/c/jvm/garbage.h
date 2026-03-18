@@ -51,6 +51,7 @@ struct _GcCollectorType {
     s32 dump_rc;
     s16 exit_flag;
     s16 exit_code;
+    volatile s64 stw_total_ns;
 };
 
 enum {

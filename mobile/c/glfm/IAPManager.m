@@ -16,6 +16,7 @@
 @interface IAPManager()<SKPaymentTransactionObserver,SKProductsRequestDelegate>{
    NSString           *_currentPurchasedID;
    IAPCompletionHandle _iAPCompletionHandle;
+   NSString           *_appAccountToken;
 }
 @end
 
@@ -48,6 +49,7 @@
         if ([SKPaymentQueue canMakePayments]) {
             _currentPurchasedID = purchID;
             _iAPCompletionHandle = handle;
+            _appAccountToken = nil;
             
             //从App Store中检索关于指定产品列表的本地化信息
             NSSet *nsset = [NSSet setWithArray:@[purchID]];
@@ -55,6 +57,22 @@
             request.delegate = self;
             [request start];
         }else{
+            [self handleActionWithType:IAPPurchNotArrow data:nil];
+        }
+    }
+}
+
+- (void)startPurchaseWithID:(NSString *)purchID appAccountToken:(NSString *)appAccountToken completeHandle:(IAPCompletionHandle)handle{
+    if (purchID) {
+        if ([SKPaymentQueue canMakePayments]) {
+            _currentPurchasedID = purchID;
+            _iAPCompletionHandle = handle;
+            _appAccountToken = appAccountToken;
+            NSSet *nsset = [NSSet setWithArray:@[purchID]];
+            SKProductsRequest *request = [[SKProductsRequest alloc] initWithProductIdentifiers:nsset];
+            request.delegate = self;
+            [request start];
+        } else {
             [self handleActionWithType:IAPPurchNotArrow data:nil];
         }
     }
@@ -135,7 +153,10 @@
     NSLog(@"产品productIdentifier：%@",[p productIdentifier]);
 #endif
      
-    SKPayment *payment = [SKPayment paymentWithProduct:p];
+    SKMutablePayment *payment = [SKMutablePayment paymentWithProduct:p];
+    if (_appAccountToken.length > 0) {
+        payment.applicationUsername = _appAccountToken;
+    }
     [[SKPaymentQueue defaultQueue] addPayment:payment];
 }
  
@@ -202,6 +223,5 @@
      }];
  }
 */
-
 
 

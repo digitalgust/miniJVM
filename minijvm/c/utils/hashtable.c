@@ -41,9 +41,9 @@ static int hash_table_allocate_table(Hashtable *hash_table, s64 size) {
 }
 
 
-s64 DEFAULT_HASH_FUNC(HashtableKey kmer) {
+u64 DEFAULT_HASH_FUNC(HashtableKey kmer) {
     // Use FNV-1a hash algorithm for better distribution
-    s64 hash = 14695981039346656037ULL; // FNV offset basis
+    u64 hash = 14695981039346656037ULL; // FNV offset basis
     unsigned char *str = (unsigned char *) &kmer;
     for (size_t i = 0; i < sizeof(HashtableKey); i++) {
         hash ^= str[i];

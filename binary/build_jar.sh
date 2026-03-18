@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Requirement: jdk1.8+ jar javac "
+echo "Requirement: jdk8+ jar javac "
 
 JAVAC=javac
 JAR=jar

@@ -568,6 +568,7 @@ public final class AppManager extends GApplication implements XuiAppHolder {
             log(s);
         } else {
             webServer = new MiniHttpServer(MiniHttpServer.DEFAULT_PORT, srvLogger);
+            webServer.setUserServlet(new ProfileServlet());
             webServer.setUploadCompletedHandle(files -> {
                 for (MiniHttpServer.UploadFile f : files) {
                     String s = getString(STR_UPLOAD_FILE) + " " + f.filename + " " + f.data.length;

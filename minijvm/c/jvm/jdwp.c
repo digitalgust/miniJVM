@@ -117,7 +117,7 @@ void jdwp_put_client(ArrayList *clients, JdwpClient *client) {
     arraylist_push_back(clients, client);
 }
 
-inline s32 jdwp_client_count(JdwpServer *jdwpserver) {
+s32 jdwp_client_count(JdwpServer *jdwpserver) {
     if (!jdwpserver)return 0;
     return jdwpserver->clients->length;
 }
@@ -1278,9 +1278,9 @@ void event_on_debug_step(JdwpServer *jdwpserver, Runtime *step_runtime) {
                 jdwp_packet_put(jdwpserver, req);
 
                 MethodInfo *methodInfo = ei.loc.methodID;
-                if (utf8_equals_c(methodInfo->name, "wait")) {
-                    s32 debug = 1;
-                }
+                // if (utf8_equals_c(methodInfo->name, "wait")) {
+                //     s32 debug = 1;
+                // }
 
                 // Apply suspend policy for step events
                 jdwp_apply_suspend_policy(jdwpserver, set->suspendPolicy, step_runtime);

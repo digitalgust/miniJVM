@@ -11,12 +11,12 @@
     <LocalDebuggerCommandArguments>-cp ../libex/minijvm_test.jar test.Foo3</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>-cp ../libex/minijvm_test.jar test.Foo3</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005 -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/glfw_gui.jar;../libex/xgui.jar org.mini.glfw.GlfwMain</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\..\binary\win_x64</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerCommandArguments>-cp ../libex/minijvm_test.jar test.Foo3</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005 -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/glfw_gui.jar;../libex/xgui.jar org.mini.glfw.GlfwMain</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\..\binary\win_x64</LocalDebuggerWorkingDirectory>
   </PropertyGroup>

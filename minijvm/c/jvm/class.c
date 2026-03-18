@@ -467,12 +467,12 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
          */
         for (i = 0; i < clazz->constantPool.methodRef->length; i++) {
             ConstantMethodRef *cmr = (ConstantMethodRef *) arraylist_get_value(clazz->constantPool.methodRef, i);
-            if (utf8_equals_c(cmr->name, "getClass")
-                &&
-                utf8_equals_c(cmr->clsName, "java/lang/Object")
-                    ) {
-                s32 debug = 1;
-            }
+            // if (utf8_equals_c(cmr->name, "getClass")
+            //     &&
+            //     utf8_equals_c(cmr->clsName, "java/lang/Object")
+            //         ) {
+            //     s32 debug = 1;
+            // }
 
             cmr->methodInfo = find_methodInfo_by_methodref(clazz, cmr->item.index, runtime);
             cmr->virtual_methods = pairlist_create(0);
@@ -527,7 +527,7 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
                 c8 *ptr = getStaticFieldPtr(fi);
                 // check variable type to determain long/s32/f64/f32
                 s32 datatype = fi->datatype_idx;
-                //非引用类型
+                //value type
                 switch (datatype) {
                     case DATATYPE_BOOLEAN:
                     case DATATYPE_BYTE: {

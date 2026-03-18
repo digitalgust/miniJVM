@@ -937,9 +937,16 @@ public class Stdlib extends Lib {
 
     private DataType buyAppleProductById(ArrayList<DataType> para) {
         try {
-            String str = Interpreter.popBackStr(para);
-            String scriptStr = Interpreter.popBackStr(para);
-            Glfm.glfmBuyAppleProductById(GCallBack.getInstance().getDisplay(), str, scriptStr);
+            if (para.size() == 2) {
+                String str = Interpreter.popBackStr(para);
+                String scriptStr = Interpreter.popBackStr(para);
+                Glfm.glfmBuyAppleProductById(GCallBack.getInstance().getDisplay(), str, scriptStr);
+            } else if (para.size() == 3) {
+                String str = Interpreter.popBackStr(para);
+                String orderUUID = Interpreter.popBackStr(para);
+                String scriptStr = Interpreter.popBackStr(para);
+                Glfm.glfmBuyAppleProductById(GCallBack.getInstance().getDisplay(), str, orderUUID, scriptStr);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -23,32 +23,33 @@
     <ProjectGuid>{1432443D-7D99-4C05-AF98-E0B885BCD583}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>mini_jvm</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
@@ -95,7 +96,8 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;..\..\minijvm\c\utils\https;..\..\minijvm\c\utils\https\mbedtls\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;..\..\minijvm\c\utils\https;..\..\minijvm\c\utils\https\mbedtls\include;..\..\minijvm\c\utils\mimalloc\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -110,7 +112,8 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;..\..\minijvm\c\utils\https;..\..\minijvm\c\utils\https\mbedtls\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\mimalloc\include;..\..\minijvm\c\utils\sljit;..\..\minijvm\c\utils\https;..\..\minijvm\c\utils\https\mbedtls\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,7 +132,8 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;..\..\minijvm\c\utils\https;..\..\minijvm\c\utils\https\mbedtls\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;..\..\minijvm\c\utils\https;..\..\minijvm\c\utils\https\mbedtls\include;..\..\minijvm\c\utils\mimalloc\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,7 +152,8 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;..\..\minijvm\c\utils\https;..\..\minijvm\c\utils\https\mbedtls\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\mimalloc\include;..\..\minijvm\c\utils\sljit;..\..\minijvm\c\utils\https;..\..\minijvm\c\utils\https\mbedtls\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -165,6 +170,7 @@
     <ClCompile Include="..\..\minijvm\c\jvm\class_load.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\garbage.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\global.c" />
+    <ClCompile Include="..\..\minijvm\c\jvm\heapdump_hprof.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\interpreter.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\jdwp.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\jit.c" />
@@ -255,6 +261,7 @@
     <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\xtea.c" />
     <ClCompile Include="..\..\minijvm\c\utils\https\ssl_client.c" />
     <ClCompile Include="..\..\minijvm\c\utils\linkedlist.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\mimalloc\src\static.c" />
     <ClCompile Include="..\..\minijvm\c\utils\miniz.c" />
     <ClCompile Include="..\..\minijvm\c\utils\miniz_wrapper.c" />
     <ClCompile Include="..\..\minijvm\c\utils\sljit\sljitLir.c" />

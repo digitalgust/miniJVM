@@ -29,6 +29,8 @@ abstract public class GContainer extends GObject {
     protected GObject current;  //每个容器都有自己的当前组件，current一定是直接子组件，焦点的获得和失去，是在鼠标或点击事件中从form开始逐层获得和失去
     float[] visableArea = new float[4];
 
+    protected List<GFrame> subFrames;
+
     //脚本相关
     private Interpreter interpreter;// 脚本引擎,用于对GUI组件进行修改
 
@@ -657,7 +659,7 @@ abstract public class GContainer extends GObject {
         return false;
     }
 
-    ///==========================
+    /// ==========================
     @Override
     public void keyEventGlfm(int key, int action, int mods) {
 //        if (!isEnable()) {
@@ -752,5 +754,22 @@ abstract public class GContainer extends GObject {
 
     public byte getActionType() {
         return actionType;
+    }
+
+    public synchronized void addSubFrame(GFrame frame) {
+        if (subFrames == null) {
+            subFrames = new ArrayList<>();
+        }
+        subFrames.add(frame);
+    }
+
+    public synchronized GFrame getSubFrame(String frameName) {
+        for (int i = 0; i < subFrames.size(); i++) {
+            GFrame frame = subFrames.get(i);
+            if (frame.getName().equals(frameName)) {
+                return frame;
+            }
+        }
+        return null;
     }
 }

@@ -2433,6 +2433,10 @@ void buyAppleProductById(GLFMDisplay *display, const char *cproductID, const cha
     printf("buyAppleProductById can't call on android\n");
 }
 
+void buyAppleProductByIdWithOrder(GLFMDisplay *display, const char *cproductID, const c8 *corderUUID, const char *base64HandleScript) {
+    printf("buyAppleProductById can't call on android\n");
+}
+
 JNIEXPORT void JNICALL
 Java_org_minijvm_activity_JvmNativeActivity_onKeyboardHeightChanged(JNIEnv *env, jobject thiz, jboolean jvisible, jint jheight) {
     if (platformDataGlobal && platformDataGlobal->display) {

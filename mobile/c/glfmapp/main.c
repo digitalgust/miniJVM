@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 #include "glfm.h"
 
 
@@ -30,6 +31,7 @@ static GLFMDisplay *glfm_display;
 // Main entry point
 void glfmMain(GLFMDisplay *display) {
     glfm_display=display;
+    setlocale(LC_ALL, "");
     //
     jvm_init_mem_alloc();
 

@@ -10,6 +10,7 @@ import org.mini.nanovg.Nanovg;
 import org.mini.reflect.DirectMemObj;
 import org.mini.reflect.ReflectArray;
 import org.mini.util.SysLog;
+import org.mini.vm.RefNative;
 
 import java.io.UnsupportedEncodingException;
 
@@ -34,18 +35,19 @@ public class GLUtil {
 
 
     public static byte[] toCstyleBytes(String s) {
-        if (s == null) {
-            return null;
-        }
-        if (s.length() == 0 || s.charAt(s.length() - 1) != '\000') {
-            s += '\000';
-        }
-        byte[] barr = null;
-        try {
-            barr = s.getBytes("utf-8");
-        } catch (UnsupportedEncodingException ex) {
-        }
-        return barr;
+//        if (s == null) {
+//            return null;
+//        }
+//        if (s.length() == 0 || s.charAt(s.length() - 1) != '\000') {
+//            s += '\000';
+//        }
+//        byte[] barr = null;
+//        try {
+//            barr = s.getBytes("utf-8");
+//        } catch (UnsupportedEncodingException ex) {
+//        }
+//        return barr;
+        return RefNative.toCstyleBytes(s);
     }
 
 

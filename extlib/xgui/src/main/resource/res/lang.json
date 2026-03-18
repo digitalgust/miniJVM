@@ -863,6 +863,30 @@
       "輝度はシステムに追従",
       "Helligkeit folgt System",
       "Яркость зависит от системы"
+    ],
+    "STR_DEV_OPS": [
+      "Developer options",
+      "开发者选项",
+      "開發人員選項",
+      "개발자 옵션",
+      "Options pour développeurs",
+      "Opciones de desarrollador",
+      "Opzioni sviluppatore",
+      "開発者向けオプション",
+      "Entwickleroptionen",
+      "Параметры разработки"
+    ],
+    "STR_DUMP": [
+      "Dump Heap",
+      "Dump 堆",
+      "Dump 堆",
+      "힙 덤프",
+      "Dump du tas",
+      "Dump del montón",
+      "Dump dell'heap",
+      "ヒープダンプ",
+      "Heap-Dump",
+      "Дамп кучи"
     ]
   }
 }

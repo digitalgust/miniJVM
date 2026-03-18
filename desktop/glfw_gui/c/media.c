@@ -7,7 +7,13 @@
 #include "jvm.h"
 #include "media.h"
 
-void JNI_OnLoad(MiniJVM *jvm) {
+#if defined(_WIN32)
+#define JNI_LIB_EXPORT __declspec(dllexport)
+#else
+#define JNI_LIB_EXPORT
+#endif
+
+JNI_LIB_EXPORT void JNI_OnLoad(MiniJVM *jvm) {
     memset(&refers, 0, sizeof(GlobeRefer));
     JniEnv *env = jvm->env;
     refers.jvm = jvm;
@@ -21,7 +27,7 @@ void JNI_OnLoad(MiniJVM *jvm) {
     env->native_reg_lib(jvm, ptr_NutilFuncTable(), count_NutilFuncTable());
 }
 
-void JNI_OnUnload(MiniJVM *jvm) {
+JNI_LIB_EXPORT void JNI_OnUnload(MiniJVM *jvm) {
     JniEnv *env = jvm->env;
     env->native_remove_lib(jvm, ptr_GlfwFuncTable());
     env->native_remove_lib(jvm, ptr_MiniAudioFuncTable());

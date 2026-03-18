@@ -63,18 +63,17 @@ JClass *classes_load_get_without_resolve(Instance *jloader, Utf8String *ustr, Ru
     if (!ustr)return NULL;
     MiniJVM *jvm = runtime->jvm;
     JClass *cl;
-    spin_lock(&jvm->lock_cloader);//fast lock
+    spin_lock(&jvm->lock_cloader); //fast lock
     if (utf8_index_of(ustr, '.') >= 0) utf8_replace_c(ustr, ".", "/");
     spin_unlock(&jvm->lock_cloader);
     cl = classes_get(jvm, jloader, ustr);
     if (!cl) {
-        vm_share_lock(jvm);//slow lock
+        vm_share_lock(jvm); //slow lock
         cl = classes_get(jvm, jloader, ustr);
         if (!cl) {
             cl = load_class(jloader, ustr, runtime);
         }
         vm_share_unlock(jvm);
-
     }
     return cl;
 }
@@ -118,6 +117,10 @@ s32 classes_remove(MiniJVM *jvm, JClass *clazz) {
         PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, clazz->jloader);
         if (pcl) {
             if (jdwp_client_count(jvm->jdwpserver))event_on_class_unload(jvm->jdwpserver, clazz);
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+            profile_slow_call_unregister_class(jvm, clazz);
+            profile_slow_call_remove_class_cache(jvm, clazz->name);
+#endif
             hashtable_remove(pcl->classes, clazz->name, 0);
             class_clear_cached_virtualmethod(jvm, clazz);
         }
@@ -135,11 +138,11 @@ JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr) {
         cl = class_create(runtime);
         cl->name = typename;
         cl->is_primitive = 1;
-        cl->jloader = NULL;//system classloader
+        cl->jloader = NULL; //system classloader
         classes_put(jvm, cl);
         class_build_vtable(cl);
         if (jdwp_client_count(jvm->jdwpserver) && cl)event_on_class_prepare(jvm->jdwpserver, runtime, cl);
-//        gc_obj_hold(jvm->collector, cl);
+        //        gc_obj_hold(jvm->collector, cl);
         vm_share_unlock(jvm);
 #if _JVM_DEBUG_LOG_LEVEL > 2
         jvm_printf("load class (%016llx load %016llx):  %s \n", (s64) (intptr_t) NULL, (s64) (intptr_t) cl, utf8_cstr(cl->name));
@@ -155,11 +158,13 @@ JClass *arraytype_get_by_desc(Runtime *runtime, Instance *jloader, Utf8String *d
         while (utf8_char_at(typename, 0) == '[') {
             utf8_remove(typename, 0);
         }
-        if (utf8_char_at(typename, 0) == 'L') {//class:  Ljava/lang/Object;
-            utf8_remove(typename, 0);//remove "L"
-            utf8_remove(typename, typename->length - 1);//remove ";"
+        if (utf8_char_at(typename, 0) == 'L') {
+            //class:  Ljava/lang/Object;
+            utf8_remove(typename, 0); //remove "L"
+            utf8_remove(typename, typename->length - 1); //remove ";"
             typec = classes_load_get_with_resolve(jloader, typename, runtime);
-        } else {//primitive : I
+        } else {
+            //primitive : I
             c8 *cname = getDataTypeFullName(utf8_char_at(typename, 0));
             utf8_clear(typename);
             utf8_append_c(typename, cname);
@@ -177,7 +182,7 @@ JClass *array_class_create_get(Runtime *runtime, Instance *jloader, Utf8String *
         JClass *clazz = classes_get(jvm, jloader, desc);
         if (!clazz) {
             vm_share_lock(jvm);
-            clazz = classes_get(jvm, jloader, desc);//maybe other thread created
+            clazz = classes_get(jvm, jloader, desc); //maybe other thread created
             if (!clazz) {
                 clazz = class_create(runtime);
                 clazz->mb.arr_type_index = getDataTypeIndex(utf8_char_at(desc, 1));
@@ -187,15 +192,13 @@ JClass *array_class_create_get(Runtime *runtime, Instance *jloader, Utf8String *
                 JClass *typec = arraytype_get_by_desc(runtime, jloader, desc);
                 clazz->jloader = typec->jloader;
 
-//                gc_obj_hold(jvm->collector, clazz);
+                //                gc_obj_hold(jvm->collector, clazz);
                 classes_put(jvm, clazz);
                 class_build_vtable(clazz);
                 if (jdwp_client_count(jvm->jdwpserver) && clazz)event_on_class_prepare(jvm->jdwpserver, runtime, clazz);
 #if _JVM_DEBUG_LOG_LEVEL > 2
                 jvm_printf("load class (%016llx load %016llx):  %s \n", (s64) (intptr_t) clazz->jloader, (s64) (intptr_t) clazz, utf8_cstr(clazz->name));
 #endif
-
-
             }
             vm_share_unlock(jvm);
         }
@@ -244,7 +247,8 @@ JClass *array_class_get_by_name(Runtime *runtime, Instance *jloader, Utf8String 
     JClass *clazz = NULL;
     if (name) {
         Utf8String *ustr = utf8_create_c("[");
-        if (!isDataReferByTag(utf8_char_at(name, 0))) {  //not : L [
+        if (!isDataReferByTag(utf8_char_at(name, 0))) {
+            //not : L [
             if (!isDataReferByTag(utf8_char_at(name, 0))) {
                 utf8_append_c(ustr, "L");
             }
@@ -257,7 +261,6 @@ JClass *array_class_get_by_name(Runtime *runtime, Instance *jloader, Utf8String 
         }
         clazz = array_class_create_get(runtime, jloader, ustr);
         utf8_destroy(ustr);
-
     }
     return clazz;
 }
@@ -336,14 +339,13 @@ void thread_stop_all(MiniJVM *jvm) {
 
         //jthread_suspend(r);
         r->thrd_info->no_pause = 1;
-        r->thrd_info->is_stop = 1;//stop thread that's sleeping state
+        r->thrd_info->is_stop = 1; //stop thread that's sleeping state
         MemoryBlock *tl = r->thrd_info->curThreadLock;
         if (tl) {
             jthread_lock(tl, r);
             jthread_notify(tl, r); //wake up thread that's waiting state
             jthread_unlock(tl, r);
         }
-
     }
     spin_unlock(&jvm->thread_list->spinlock);
 }
@@ -388,9 +390,9 @@ void vm_share_timedwait(MiniJVM *jvm, s64 ms) {
     t.tv_sec += ms / 1000;
     t.tv_nsec += (ms % 1000) * 1000000;
     s32 ret = cnd_timedwait(&jvm->threadlock.thread_cond, &jvm->threadlock.mutex_lock, &t);
-//    if (ret == ETIMEDOUT) {
-//        s32 debug = 1;
-//    }
+    //    if (ret == ETIMEDOUT) {
+    //        s32 debug = 1;
+    //    }
 }
 
 void vm_share_notify(MiniJVM *jvm) {
@@ -664,7 +666,8 @@ s32 jthread_init(MiniJVM *jvm, Instance *jthread) {
 s32 jthread_dispose(Instance *jthread, Runtime *runtime) {
     gc_move_objs_thread_2_gc(runtime);
     threadlist_remove(runtime);
-    if (jdwp_client_count(runtime->jvm->jdwpserver)) {//jdwpserver might stoped when
+    if (jdwp_client_count(runtime->jvm->jdwpserver)) {
+        //jdwpserver might stoped when
         event_on_thread_death(runtime->jvm->jdwpserver, runtime->thrd_info->jthread);
     }
     //destroy
@@ -694,7 +697,7 @@ s32 jthread_run(void *para) {
 #endif
     //gc_refer_reg(runtime, jthread);//20201019 gust comment it , duplicate reg
     if (jdwp_client_count(jvm->jdwpserver))event_on_thread_start(jvm->jdwpserver, runtime->thrd_info->jthread);
-    check_suspend_and_pause(runtime);//check suspend if gc is running
+    check_suspend_and_pause(runtime); //check suspend if gc is running
     runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
     push_ref(runtime->stack, (__refer) jthread);
     ret = execute_method_impl(method, runtime);
@@ -743,14 +746,16 @@ s32 jthread_run(void *para) {
 s32 jthread_run_finalize(Runtime *runtime) {
     if (!runtime)return -1;
     Instance *jthread = runtime->thrd_info->jthread;
-    if (jthread) {// if the thread status is NEW, then jthread is NULL
+    if (jthread) {
+        // if the thread status is NEW, then jthread is NULL
         jthread_dispose(jthread, runtime);
     }
     runtime_destroy(runtime);
     return 0;
 }
 
-thrd_t jthread_start(Instance *ins, Runtime *parent) {//
+thrd_t jthread_start(Instance *ins, Runtime *parent) {
+    //
     Runtime *runtime = jthread_get_stackframe_value(parent->jvm, ins);
     if (!runtime) {
         runtime = runtime_create(parent->jvm);
@@ -759,7 +764,7 @@ thrd_t jthread_start(Instance *ins, Runtime *parent) {//
     }
     runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
     runtime->thrd_info->jthread = ins;
-    runtime->thrd_info->context_classloader = parent->thrd_info->context_classloader;//copy context classloader
+    runtime->thrd_info->context_classloader = parent->thrd_info->context_classloader; //copy context classloader
 
     jthread_init(runtime->jvm, ins);
     thrd_create(&runtime->thrd_info->pthread, jthread_run, runtime);
@@ -815,7 +820,8 @@ void jthreadlock_destroy(MemoryBlock *mb) {
     }
 }
 
-s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) { //可能会重入，同一个线程多次锁同一对象
+s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) {
+    //可能会重入，同一个线程多次锁同一对象
     if (mb == NULL)return -1;
     if (!mb->thread_lock) {
         jthreadlock_create(runtime, mb);
@@ -837,11 +843,10 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) { //可能会重入，同一
             Runtime *lock_holder = owner_snap ? owner_snap->top_runtime : NULL;
             if (lock_holder && lock_holder != runtime &&
                 lock_holder->thrd_info->suspend_count > 0) {
-
-//                jvm_printf("[LOCK_CONTENTION] Thread %llx waiting for lock %llx held by suspended thread %llx\n",
-//                           (s64) (intptr_t) runtime->thrd_info->jthread,
-//                           (s64) (intptr_t) mb,
-//                           (s64) (intptr_t) lock_holder->thrd_info->jthread);
+                //                jvm_printf("[LOCK_CONTENTION] Thread %llx waiting for lock %llx held by suspended thread %llx\n",
+                //                           (s64) (intptr_t) runtime->thrd_info->jthread,
+                //                           (s64) (intptr_t) mb,
+                //                           (s64) (intptr_t) lock_holder->thrd_info->jthread);
 
                 // 临时恢复被挂起的线程直到它释放锁
                 temporarily_resume_for_lock_release(lock_holder, mb);
@@ -1095,14 +1100,14 @@ s32 check_suspend_and_pause(Runtime *runtime) {
 
             // 只有在单步模式下才启用防死锁机制
             if (is_stepping && thread_owns_lock(runtime, threadInfo->pending_release_lock)) {
-                // jvm_printf("[DEBUG] Thread %llx in stepping mode, defer suspension for lock %llx\n", 
-                //           (s64) (intptr_t) threadInfo->jthread, 
+                // jvm_printf("[DEBUG] Thread %llx in stepping mode, defer suspension for lock %llx\n",
+                //           (s64) (intptr_t) threadInfo->jthread,
                 //           (s64) (intptr_t) threadInfo->pending_release_lock);
                 return 0; // 单步模式：返回而不挂起
             } else if (!is_stepping) {
                 // 断点模式：清除pending_release_lock标记，强制挂起
                 threadInfo->pending_release_lock = NULL;
-                // jvm_printf("[DEBUG] Thread %llx in breakpoint mode, force suspension\n", 
+                // jvm_printf("[DEBUG] Thread %llx in breakpoint mode, force suspension\n",
                 //           (s64) (intptr_t) threadInfo->jthread);
             } else {
                 // 如果不再持有待释放的锁，清除标记
@@ -1115,7 +1120,7 @@ s32 check_suspend_and_pause(Runtime *runtime) {
         vm_share_notifyall(jvm);
         while (threadInfo->suspend_count) {
             vm_share_timedwait(jvm, 100);
-//            thrd_yield();
+            //            thrd_yield();
         }
         threadInfo->is_suspend = 0;
         //jvm_printf(".");
@@ -1138,10 +1143,10 @@ Instance *jarray_create_by_class(Runtime *runtime, s32 count, JClass *clazz) {
     arr->arr_length = count;
     if (arr->arr_length)arr->arr_body = (c8 *) (&arr[1]);
     gc_obj_reg(runtime, arr);
-//    jvm_printf("%s\n", utf8_cstr(clazz->name));
-//    if(utf8_equals_c(clazz->name,"[Lorg/mini/util/StringFormatImpl$FmtCmpnt;")){
-//        int debug = 1;
-//    }
+    //    jvm_printf("%s\n", utf8_cstr(clazz->name));
+    //    if(utf8_equals_c(clazz->name,"[Lorg/mini/util/StringFormatImpl$FmtCmpnt;")){
+    //        int debug = 1;
+    //    }
     return arr;
 }
 
@@ -1275,11 +1280,11 @@ Instance *instance_create(Runtime *runtime, JClass *clazz) {
         GCFLAG_WEAKREFERENCE_SET(ins->mb.gcflag);
     }
 
-    ins->obj_fields = ((c8 *) (&ins[0])) + instance_base_size();//jvm_calloc(clazz->field_instance_len);
-//    jvm_printf("%s\n", utf8_cstr(clazz->name));
-//    if (utf8_equals_c(clazz->name, "java/lang/String")) {
-//        s32 debug = 1;
-//    }
+    ins->obj_fields = ((c8 *) (&ins[0])) + instance_base_size(); //jvm_calloc(clazz->field_instance_len);
+    //    jvm_printf("%s\n", utf8_cstr(clazz->name));
+    //    if (utf8_equals_c(clazz->name, "java/lang/String")) {
+    //        s32 debug = 1;
+    //    }
     gc_obj_reg(runtime, ins);
     return ins;
 }
@@ -1390,7 +1395,7 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
         JClass *clazz = src->mb.clazz;
         s32 fileds_len = clazz->field_instance_len;
         if (fileds_len) {
-            dst->obj_fields = (c8 *) dst + instance_base_size();//
+            dst->obj_fields = (c8 *) dst + instance_base_size(); //
             memcpy(dst->obj_fields, src->obj_fields, fileds_len);
             if (deep_copy) {
                 s32 i, len;
@@ -1414,7 +1419,7 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
         }
     } else if (src->mb.type == MEM_TYPE_ARR) {
         s32 size = src->arr_length * DATA_TYPE_BYTES[src->mb.arr_type_index];
-        dst->arr_body = (c8 *) dst + instance_base_size();//
+        dst->arr_body = (c8 *) dst + instance_base_size(); //
         if (isDataReferByIndex(src->mb.arr_type_index) && deep_copy) {
             s32 i;
             s64 val;
@@ -1466,7 +1471,7 @@ Instance *insOfJavaLangClass_create_get(Runtime *runtime, JClass *clazz) {
 
 JClass *insOfJavaLangClass_get_classHandle(Runtime *runtime, Instance *insOfJavaLangClass) {
     return (JClass *) (intptr_t) getFieldLong(
-            getInstanceFieldPtr(insOfJavaLangClass, runtime->jvm->shortcut.class_classHandle));
+        getInstanceFieldPtr(insOfJavaLangClass, runtime->jvm->shortcut.class_classHandle));
 }
 
 void insOfJavaLangClass_set_classHandle(Runtime *runtime, Instance *insOfJavaLangClass, JClass *handle) {
@@ -1479,7 +1484,7 @@ Instance *jstring_create(Utf8String *src, Runtime *runtime) {
     if (!src)return NULL;
     JClass *jstr_clazz = classes_load_get_with_clinit_c(NULL, STR_CLASS_JAVA_LANG_STRING, runtime);
     Instance *jstring = instance_create(runtime, jstr_clazz);
-    instance_hold_to_thread(jstring, runtime);//hold for no gc
+    instance_hold_to_thread(jstring, runtime); //hold for no gc
 
     jstring->mb.clazz = jstr_clazz;
     instance_init(jstring, runtime);
@@ -1488,16 +1493,17 @@ Instance *jstring_create(Utf8String *src, Runtime *runtime) {
     s32 c8len = (src->length + 1) * DATA_TYPE_BYTES[DATATYPE_JCHAR];
     u16 *buf = jvm_calloc(c8len);
     s32 len = utf8_2_unicode(src, buf, c8len / DATA_TYPE_BYTES[DATATYPE_JCHAR]);
-    if (len >= 0) {//可能解析出错
+    if (len >= 0) {
+        //可能解析出错
         Instance *arr = jstring_get_value_array(jstring, runtime);
         if (!arr || arr->arr_length < len) {
-            arr = jarray_create_by_type_index(runtime, len, DATATYPE_JCHAR);//u16 type is 5
-            setFieldRefer(ptr, (__refer) arr);//设置数组
+            arr = jarray_create_by_type_index(runtime, len, DATATYPE_JCHAR); //u16 type is 5
+            setFieldRefer(ptr, (__refer) arr); //设置数组
         }
         memcpy(arr->arr_body, buf, len * DATA_TYPE_BYTES[DATATYPE_JCHAR]);
     }
     jvm_free(buf);
-    jstring_set_count(jstring, len, runtime);//设置长度
+    jstring_set_count(jstring, len, runtime); //设置长度
     instance_release_from_thread(jstring, runtime);
     return jstring;
 }
@@ -1520,6 +1526,10 @@ void jstring_set_count(Instance *jstr, s32 count, Runtime *runtime) {
 
 s32 jstring_get_offset(Instance *jstr, Runtime *runtime) {
     return getFieldInt(getInstanceFieldPtr(jstr, runtime->jvm->shortcut.string_offset));
+}
+
+void jstring_set_offset(Instance *jstr, s32 offset, Runtime *runtime) {
+    setFieldInt(getInstanceFieldPtr(jstr, runtime->jvm->shortcut.string_offset), offset);
 }
 
 c8 *jstring_get_value_ptr(Instance *jstr, Runtime *runtime) {
@@ -1549,7 +1559,7 @@ u16 jstring_char_at(Instance *jstr, s32 index, Runtime *runtime) {
 
 s32 jstring_index_of(Instance *jstr, u16 ch, s32 startAt, Runtime *runtime) {
     c8 *fieldPtr = jstring_get_value_ptr(jstr, runtime);
-    Instance *ptr = (Instance *) getFieldRefer(fieldPtr);//c8[]数组实例
+    Instance *ptr = (Instance *) getFieldRefer(fieldPtr); //c8[]数组实例
     if (ptr && ptr->arr_body && startAt >= 0) {
         u16 *jchar_arr = (u16 *) ptr->arr_body;
         s32 count = jstring_get_count(jstr, runtime);
@@ -1565,15 +1575,16 @@ s32 jstring_index_of(Instance *jstr, u16 ch, s32 startAt, Runtime *runtime) {
 }
 
 s32 jstring_equals(Instance *jstr1, Instance *jstr2, Runtime *runtime) {
-    if (!jstr1 && !jstr2) { //两个都是null
+    if (!jstr1 && !jstr2) {
+        //两个都是null
         return 1;
     } else if (!jstr1) {
         return 0;
     } else if (!jstr2) {
         return 0;
     }
-    Instance *arr1 = jstring_get_value_array(jstr1, runtime);//取得 c8[] value
-    Instance *arr2 = jstring_get_value_array(jstr2, runtime);//取得 c8[] value
+    Instance *arr1 = jstring_get_value_array(jstr1, runtime); //取得 c8[] value
+    Instance *arr2 = jstring_get_value_array(jstr2, runtime); //取得 c8[] value
     s32 count1 = 0, offset1 = 0, count2 = 0, offset2 = 0;
     //0长度字符串可能value[] 是空值，也可能不是空值但count是0
     if (arr1) {
@@ -1614,6 +1625,7 @@ s32 jstring_2_utf8(Instance *jstr, Utf8String *utf8, Runtime *runtime) {
     }
     return 0;
 }
+
 //===============================    例外  ==================================
 
 Instance *exception_create(s32 exception_type, Runtime *runtime) {
@@ -1659,6 +1671,7 @@ void exception_throw(s32 exception_type, Runtime *runtime, c8 const *errmsg) {
     Instance *ex = exception_create_str(exception_type, runtime, errmsg);
     push_ref(runtime->stack, ex);
 }
+
 //===============================    lambda  ==================================
 
 
@@ -1726,8 +1739,8 @@ Instance *method_handles_lookup_create(Runtime *runtime, JClass *caller) {
     }
     return NULL;
 }
-//===============================    实例操作  ==================================
 
+//===============================    实例操作  ==================================
 
 
 c8 *getFieldPtr_byName_c(Instance *instance, c8 const *pclassName, c8 const *pfieldName, c8 const *pfieldType, Runtime *runtime) {
@@ -1747,7 +1760,6 @@ c8 *getFieldPtr_byName_c(Instance *instance, c8 const *pclassName, c8 const *pfi
 
 c8 *getFieldPtr_byName(Instance *instance, Utf8String *clsName, Utf8String *fieldName, Utf8String *fieldType,
                        Runtime *runtime) {
-
     c8 *ptr = NULL;
     FieldInfo *fi = find_fieldInfo_by_name(clsName, fieldName, fieldType, instance->mb.clazz->jloader, runtime);
 
@@ -1785,10 +1797,10 @@ s32 getLineNumByIndex(CodeAttribute *ca, s32 offset) {
 void memoryblock_destroy(__refer ref) {
     MemoryBlock *mb = (MemoryBlock *) ref;
     if (!mb)return;
-//    if (utf8_equals_c(mb->clazz->name, "test/GuiTest$CallBack")) {
-//        garbage_dump_runtime();
-//        int debug = 1;
-//    }
+    //    if (utf8_equals_c(mb->clazz->name, "test/GuiTest$CallBack")) {
+    //        garbage_dump_runtime();
+    //        int debug = 1;
+    //    }
     if (mb->type == MEM_TYPE_INS) {
         instance_destroy((Instance *) mb);
     } else if (mb->type == MEM_TYPE_ARR) {
@@ -1810,6 +1822,13 @@ JavaThreadInfo *threadinfo_create() {
 void threadinfo_destroy(JavaThreadInfo *threadInfo) {
     arraylist_destroy(threadInfo->lineNo);
     arraylist_destroy(threadInfo->stacktrack);
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    if (threadInfo->slow_call_ctx) {
+        if (threadInfo->slow_call_ctx->nodes) jvm_free(threadInfo->slow_call_ctx->nodes);
+        jvm_free(threadInfo->slow_call_ctx);
+        threadInfo->slow_call_ctx = NULL;
+    }
+#endif
     jthreadlock_destroy(&threadInfo->pack);
     jvm_free(threadInfo->jdwp_step);
     spin_destroy(&threadInfo->lock);
@@ -1817,14 +1836,12 @@ void threadinfo_destroy(JavaThreadInfo *threadInfo) {
 }
 
 s64 currentTimeMillis() {
-
     struct timespec tv;
     timespec_get(&tv, TIME_UTC);
     return ((s64) tv.tv_sec) * MILL_2_SEC_SCALE + tv.tv_nsec / NANO_2_MILLS_SCALE;
 }
 
 s64 nanoTime() {
-
     struct timespec tv;
     timespec_get(&tv, TIME_UTC);
 
@@ -1880,7 +1897,8 @@ void instance_release_from_thread(Instance *ins, Runtime *runtime) {
     }
 }
 
-CStringArr *cstringarr_create(Instance *jstr_arr) { //byte[][] to c8**
+CStringArr *cstringarr_create(Instance *jstr_arr) {
+    //byte[][] to c8**
     if (!jstr_arr)return NULL;
     CStringArr *cstr_arr = jvm_calloc(sizeof(CStringArr));
     cstr_arr->arr_length = jstr_arr->arr_length;
@@ -1932,7 +1950,6 @@ void referarr_2_jlongarr(ReferArr *ref_arr, Instance *jlong_arr) {
  * load file less than 4G bytes
  */
 s32 _loadFileContents(c8 const *file, ByteBuf *buf) {
-
     FILE *pFile;
     long lSize;
     c8 *buffer;
@@ -1980,7 +1997,8 @@ ByteBuf *load_file_from_classpath(PeerClassLoader *cloader, Utf8String *path) {
     s32 i, iret;
     for (i = 0; i < cloader->classpath->length; i++) {
         Utf8String *pClassPath = arraylist_get_value(cloader->classpath, i);
-        if (isDir(pClassPath)) { //form file
+        if (isDir(pClassPath)) {
+            //form file
             Utf8String *filepath = utf8_create_copy(pClassPath);
             utf8_pushback(filepath, '/');
             utf8_append(filepath, path);
@@ -1993,7 +2011,8 @@ ByteBuf *load_file_from_classpath(PeerClassLoader *cloader, Utf8String *path) {
                 bytebuf_destroy(bytebuf);
                 bytebuf = NULL;
             }
-        } else { //from jar
+        } else {
+            //from jar
             bytebuf = bytebuf_create(16);
             iret = zip_loadfile(utf8_cstr(pClassPath), utf8_cstr(path), bytebuf);
             //回收
@@ -2158,9 +2177,9 @@ void thread_add_held_lock(Runtime *runtime, MemoryBlock *lock) {
     // 使用 arraylist_index_of 检查是否已经存在（防止重复添加）
     if (arraylist_index_of(threadInfo->held_locks, arraylist_compare_ptr, lock) == -1) {
         arraylist_push_back(threadInfo->held_locks, lock);
-//        jvm_printf("[LOCK_TRACK] Thread %llx acquired lock %llx, total locks: %d\n",
-//                   (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock,
-//                   threadInfo->held_locks->length);
+        //        jvm_printf("[LOCK_TRACK] Thread %llx acquired lock %llx, total locks: %d\n",
+        //                   (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock,
+        //                   threadInfo->held_locks->length);
     }
 }
 
@@ -2177,15 +2196,15 @@ void thread_remove_held_lock(Runtime *runtime, MemoryBlock *lock) {
 
     // 使用 arraylist_remove 直接移除
     if (arraylist_remove(threadInfo->held_locks, lock)) {
-//        jvm_printf("[LOCK_TRACK] Thread %llx released lock %llx, remaining locks: %d\n",
-//                   (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock,
-//                   threadInfo->held_locks->length);
+        //        jvm_printf("[LOCK_TRACK] Thread %llx released lock %llx, remaining locks: %d\n",
+        //                   (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock,
+        //                   threadInfo->held_locks->length);
 
         // 检查是否是待释放的锁，如果是则主动检查挂起
         if (threadInfo->pending_release_lock == lock) {
             threadInfo->pending_release_lock = NULL;
-//            jvm_printf("[ACTIVE_SUSPEND] Thread %llx released pending lock %llx, checking suspension\n",
-//                       (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
+            //            jvm_printf("[ACTIVE_SUSPEND] Thread %llx released pending lock %llx, checking suspension\n",
+            //                       (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
             // 主动检查是否需要挂起
             check_suspend_and_pause(runtime);
         }
@@ -2228,8 +2247,8 @@ Runtime *find_thread_holding_lock(MiniJVM *jvm, MemoryBlock *lock) {
 void temporarily_resume_for_lock_release(Runtime *suspended_thread, MemoryBlock *lock) {
     JavaThreadInfo *threadInfo = suspended_thread->thrd_info;
 
-//    jvm_printf("[LOCK_RESOLVE] Temporarily resuming thread %llx to release lock %llx\n",
-//               (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
+    //    jvm_printf("[LOCK_RESOLVE] Temporarily resuming thread %llx to release lock %llx\n",
+    //               (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
 
     // 保存原有的挂起状态
     s32 original_suspend_count = threadInfo->suspend_count;
@@ -2250,19 +2269,19 @@ void temporarily_resume_for_lock_release(Runtime *suspended_thread, MemoryBlock 
 
         // 检查是否已经主动挂起
         if (threadInfo->suspend_count > 0) {
-//            jvm_printf("[LOCK_RESOLVE] Thread %llx actively suspended after releasing lock %llx\n",
-//                       (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
+            //            jvm_printf("[LOCK_RESOLVE] Thread %llx actively suspended after releasing lock %llx\n",
+            //                       (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
             return; // 已经主动挂起，无需继续等待
         }
     }
 
-//    if (cycles >= max_wait_cycles) {
-//        jvm_printf("[WARNING] Thread %llx did not release lock %llx within timeout\n",
-//                   (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
-//    } else {
-//        jvm_printf("[LOCK_RESOLVE] Thread %llx successfully released lock %llx\n",
-//                   (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
-//    }
+    //    if (cycles >= max_wait_cycles) {
+    //        jvm_printf("[WARNING] Thread %llx did not release lock %llx within timeout\n",
+    //                   (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
+    //    } else {
+    //        jvm_printf("[LOCK_RESOLVE] Thread %llx successfully released lock %llx\n",
+    //                   (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
+    //    }
 
     // 恢复原有的挂起状态（如果没有主动挂起）
     if (threadInfo->suspend_count == 0) {

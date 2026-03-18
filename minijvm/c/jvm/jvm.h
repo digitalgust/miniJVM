@@ -4,8 +4,10 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
 
+
+
+#endif
 
 
 //
@@ -25,17 +27,19 @@ extern "C" {
 #include "../utils/hashset.h"
 
 //=======================  micro define  =============================
-//_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
+//_JVM_DEBUG  01=thread info, 02=garage  , 03=class_load & jit info, 04=method call,  06=all bytecode
 #define _JVM_DEBUG_LOG_LEVEL 0
 //_JVM_DEBUG_GARBAGE_DUMP 01=count instance , 02=print every object create/destroy
 #define _JVM_DEBUG_GARBAGE_DUMP 0
-#define _JVM_DEBUG_PROFILE 0
+#define _JVM_DEBUG_METHOD_PROFILE 0
+#define _JVM_DEBUG_BYTECODE_PROFILE 0
+#define _JVM_DEBUG_SLOW_CALL_PROFILE _JVM_DEBUG_METHOD_PROFILE
 #define _JVM_DEBUG_GARBAGE 0
 
 
 #define GARBAGE_OVERLOAD_DEFAULT 80  // overload of max heap size ,will active garbage collection
 #define GARBAGE_PERIOD_MS_DEFAULT 10 * 1000
-#define MAX_HEAP_SIZE_DEFAULT  256 * 1024 * 1024
+#define MAX_HEAP_SIZE_DEFAULT  384 * 1024 * 1024
 #define MAX_STACK_SIZE_DEFAULT 4096
 
 
@@ -252,7 +256,7 @@ enum {
     /* 0xC8 */ op_goto_w,
     /* 0xC9 */ op_jsr_w,
     /* 0xCA */ op_breakpoint,
-    /* 0xCB */ op_getstatic_ref,//
+    /* 0xCB */ op_getstatic_ref, //
     /* 0xCC */ op_getstatic_long,
     /* 0xCD */ op_getstatic_int,
     /* 0xCE */ op_getstatic_short,
@@ -322,6 +326,7 @@ enum {
     CONSTANT_METHOD_TYPE = 16,
     CONSTANT_INVOKE_DYNAMIC = 18,
 };
+
 //=======================  typedef  =============================
 
 #if __JVM_LITTLE_ENDIAN__
@@ -330,6 +335,7 @@ typedef union _Short2Char {
         s16 s;
         u16 us;
     };
+
     struct {
         c8 c0;
         c8 c1;
@@ -339,6 +345,7 @@ typedef union _Short2Char {
 typedef union _Int2Float {
     s32 i;
     f32 f;
+
     struct {
         c8 c0;
         c8 c1;
@@ -350,13 +357,16 @@ typedef union _Int2Float {
 typedef union _Long2Double {
     f64 d;
     __refer r;
+
     union {
         s64 l;
+
         struct {
             s32 i0;
             s32 i1;
         } i2l;
     };
+
     struct {
         c8 c0;
         c8 c1;
@@ -371,6 +381,7 @@ typedef union _Long2Double {
 #elif __JVM_BIG_ENDIAN__
 typedef union _Short2Char {
     s16 s;
+
     struct {
         c8 c1;
         c8 c0;
@@ -380,6 +391,7 @@ typedef union _Short2Char {
 typedef union _Int2Float {
     s32 i;
     f32 f;
+
     struct {
         c8 c3;
         c8 c2;
@@ -391,13 +403,16 @@ typedef union _Int2Float {
 typedef union _Long2Double {
     f64 d;
     __refer r;
+
     union {
         s64 l;
+
         struct {
             s32 i1;
             s32 i0;
         } i2l;
     };
+
     struct {
         c8 c7;
         c8 c6;
@@ -513,9 +528,9 @@ extern const c8 STR_INS_JAVA_LANG_OBJECT[];
 extern const c8 STR_INS_JAVA_LANG_STACKTRACEELEMENT[];
 extern const c8 STR_VM_JAVA_LIBRARY_PATH[];
 extern const c8 STR_VM_SUN_BOOT_CLASS_PATH[];
-extern const c8 STR_VM_JAVA_CLASS_VERSION[];//"java.class.version"
-extern const c8 STR_VM_USER_LANGUAGE[];//"user.language"
-extern const c8 STR_VM_UUID[];//"uuid"
+extern const c8 STR_VM_JAVA_CLASS_VERSION[]; //"java.class.version"
+extern const c8 STR_VM_USER_LANGUAGE[]; //"user.language"
+extern const c8 STR_VM_UUID[]; //"uuid"
 extern const c8 STR_VM_JAVA_CLASS_PATH[];
 extern const c8 STR_JNI_LIB_NOT_FOUND[];
 extern const c8 STR_JNI_ONLOAD_NOT_FOUND[];
@@ -528,14 +543,15 @@ enum {
     METHOD_INVOKE_VIRTUAL,
     METHOD_INVOKE_SPECIAL
 };
+
 /**
  * 内存中几个主要对象的类型，他们是不同的数据结构，但是每种类型的第一个字节都是用来标识此内存对象的类型
  */
 enum {
     MEM_TYPE_NODEF = 0, //0
     MEM_TYPE_CLASS = 1, //1
-    MEM_TYPE_INS = 2,   //2
-    MEM_TYPE_ARR = 4   //3
+    MEM_TYPE_INS = 2, //2
+    MEM_TYPE_ARR = 4 //3
 };
 
 
@@ -570,7 +586,7 @@ enum {
 extern s32 DATA_TYPE_BYTES[DATATYPE_COUNT];
 extern c8 *DATA_TYPE_STR;
 
-//访问标志
+//access flag
 enum {
     ACC_PUBLIC = 0x0001,
     ACC_PRIVATE = 0x0002,
@@ -585,7 +601,8 @@ enum {
     ACC_ABSTRACT = 0x0400,
     ACC_STRICT = 0x0800,
 };
-//类状态
+
+//class status
 enum {
     CLASS_STATUS_RAW,
     CLASS_STATUS_LOADED,
@@ -594,7 +611,8 @@ enum {
     CLASS_STATUS_CLINITING,
     CLASS_STATUS_CLINITED,
 };
-//线程
+
+//thread status
 enum {
     THREAD_STATUS_NEW,
     THREAD_STATUS_RUNNING,
@@ -604,7 +622,7 @@ enum {
     THREAD_STATUS_ZOMBIE,
 };
 
-//指令指行返回状态
+//method execute status
 enum {
     RUNTIME_STATUS_NORMAL,
     RUNTIME_STATUS_EXCEPTION,
@@ -612,13 +630,14 @@ enum {
     RUNTIME_STATUS_INTERRUPT,
 };
 
-//指令指行返回状态
+//jvm status
 enum {
     JVM_STATUS_UNKNOW,
     JVM_STATUS_INITING,
     JVM_STATUS_RUNNING,
     JVM_STATUS_STOPED,
 };
+
 //======================= global var =============================
 
 extern c8 *INST_NAME[];
@@ -626,7 +645,7 @@ extern c8 *INST_NAME[];
 extern JniEnv jnienv;
 
 //==============profile============
-#if _JVM_DEBUG_PROFILE
+#if _JVM_DEBUG_BYTECODE_PROFILE
 
 #define INST_COUNT 0xEF
 typedef struct _ProfileDetail {
@@ -642,6 +661,42 @@ void profile_init();
 void profile_put(u8 instruct_code, s64 cost_add, s64 count_add);
 
 void profile_print();
+
+#endif
+
+#if _JVM_DEBUG_METHOD_PROFILE
+
+void profile_method_print(MiniJVM *jvm);
+
+void profile_method_reset(MiniJVM *jvm);
+
+void profile_method_get_all(MiniJVM *jvm, ArrayList *all);
+
+#endif
+
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+
+s32 is_valid_method_info(MiniJVM *jvm, MethodInfo *method);
+
+void profile_slow_call_watch_method(MiniJVM *jvm, MethodInfo *method, s64 threshold_ns);
+
+void profile_slow_call_unwatch_method(MiniJVM *jvm, MethodInfo *method);
+
+void profile_slow_call_clear_watch(MiniJVM *jvm);
+
+void profile_slow_call_clear_cache(MiniJVM *jvm);
+
+void profile_slow_call_enter(Runtime *runtime, MethodInfo *method, s64 start_ns);
+
+void profile_slow_call_record(Runtime *runtime, MethodInfo *method, s64 spent_ns);
+
+void profile_slow_call_remove_class_cache(MiniJVM *jvm, Utf8String *class_name);
+
+u32 profile_slow_call_get_method_id(MiniJVM *jvm, MethodInfo *method);
+
+MethodInfo *profile_slow_call_get_method_by_id(MiniJVM *jvm, u32 method_id);
+
+void profile_slow_call_unregister_class(MiniJVM *jvm, JClass *clazz);
 
 #endif
 
@@ -664,15 +719,14 @@ void profile_print();
 #define GCFLAG_JTHREAD_CLEAR(reg_v) (reg_v = ((~0x08) & reg_v))
 
 typedef struct _MemoryBlock {
-
     JClass *clazz;
     struct _MemoryBlock *next; //reg for gc
-    struct _MemoryBlock *hold_next;  //hold by thread
-    struct _MemoryBlock *tmp_next;  //for gc finalize
+    struct _MemoryBlock *hold_next; //hold by thread
+    struct _MemoryBlock *tmp_next; //for gc finalize
     ThreadLock *volatile thread_lock;
 
-    s32 heap_size;//objsize of jclass or jarray or jclass , but not memoryblock
-    u8 type;//type of array or object runtime,class
+    s32 heap_size; //objsize of jclass or jarray or jclass , but not memoryblock
+    u8 type; //type of array or object runtime,class
     u8 garbage_mark;
     u8 gcflag; //flag for weak / finalize / reg / classloader
     u8 arr_type_index;
@@ -768,7 +822,6 @@ typedef struct _ConstantInteger {
 typedef struct _ConstantFloat {
     ConstantItem item;
     f32 value;
-
 } ConstantFloat;
 
 typedef struct _ConstantLong {
@@ -788,7 +841,6 @@ typedef struct _ConstantClassRef {
     //
     Utf8String *name;
     JClass *clazz;
-
 } ConstantClassRef;
 
 typedef struct _ConstantStringRef {
@@ -850,19 +902,20 @@ typedef struct _ConstantPool {
     ArrayList *methodRef;
     ArrayList *interfaceMethodRef;
 } ConstantPool;
+
 //============================================
 
 typedef struct _InterfacePool {
     ConstantClassRef *clasz;
     s32 clasz_used;
 } InterfacePool;
+
 //============================================
 
 typedef struct _AttributeInfo {
     u16 attribute_name_index;
     s32 attribute_length;
     u8 *info;
-
 } AttributeInfo;
 
 //============================================
@@ -900,25 +953,27 @@ struct _CodeAttribute {
     u8 *code; // [code_length];
     u8 *bytecode_for_jit; // [code_length];
     spinlock_t compile_lock;
+
     struct _Jit {
         jit_func func;
         s32 len;
         volatile s32 state;
         volatile s32 interpreted_count;
-        SwitchTable *switchtable;//a table that compile switch ,fill in jump address
+        SwitchTable *switchtable; //a table that compile switch ,fill in jump address
         struct _ExceptionJumpTable {
-            __refer exception_handle_jump_ptr;//a ptr list for exception jump, size= exceptiontable.length
+            __refer exception_handle_jump_ptr; //a ptr list for exception jump, size= exceptiontable.length
             s32 bc_pos;
         } *ex_jump_table;
+
         __refer interrupt_handle_jump_ptr;
     } jit;
+
     u16 exception_table_length;
     ExceptionTable *exception_table; //[exception_table_length];
     u16 line_number_table_length;
     LineNumberTable *line_number_table;
     u16 local_var_table_length;
     LocalVarTable *local_var_table;
-
 };
 
 //============================================
@@ -962,14 +1017,16 @@ typedef struct _ElementValue ElementValue;
 // Element value structure for annotation elements
 struct _ElementValue {
     u8 tag;
+
     union {
-        u16 const_value_index;  // For primitive types and strings
+        u16 const_value_index; // For primitive types and strings
         struct {
             u16 type_name_index;
             u16 const_name_index;
         } enum_const_value;
-        u16 class_info_index;   // For class types
-        struct _Annotation *annotation_value;  // For annotation types
+
+        u16 class_info_index; // For class types
+        struct _Annotation *annotation_value; // For annotation types
         struct {
             u16 num_values;
             ElementValue *values;
@@ -1011,7 +1068,7 @@ struct _FieldInfo {
     Utf8String *signature;
     RuntimeVisibleAnnotationsAttr *annotationsAttr;
     JClass *_this_class;
-    u16 offset;//字段的偏移地址，静态字段存放在class中
+    u16 offset; //字段的偏移地址，静态字段存放在class中
     u16 offset_instance;
     //
     u8 datatype_idx;
@@ -1025,6 +1082,7 @@ typedef struct _FieldPool {
     FieldInfo *field;
     s32 field_used;
 } FieldPool;
+
 //============================================
 
 struct _MethodInfo {
@@ -1042,7 +1100,7 @@ struct _MethodInfo {
     java_native_fun native_func;
     Pairlist *breakpoint;
     Pairlist *pos_2_label; //for jit
-    Pairlist *jump_2_pos;  //for jit
+    Pairlist *jump_2_pos; //for jit
     s16 para_slots;
     s16 para_count_with_this;
     s16 return_slots;
@@ -1062,6 +1120,17 @@ struct _MethodInfo {
     u8 is_static;
     u8 is_getter;
     u8 is_setter;
+#if _JVM_DEBUG_METHOD_PROFILE
+    s64 profile_total_time;
+    s64 profile_count;
+    s64 profile_max_time;
+#endif
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    s64 slow_profile_threshold_ns;
+    u8 slow_profile_excluded;
+    u16 slow_profile_method_id;
+    u32 slow_profile_uni_method_id;
+#endif
 };
 
 typedef struct _ItableEntry {
@@ -1080,12 +1149,12 @@ typedef struct _MethodPool {
     MethodInfo *method;
     s32 method_used;
 } MethodPool;
+
 //============================================
 
 typedef struct _AttributePool {
     AttributeInfo *attribute;
     s32 attribute_used;
-
 } AttributePool;
 
 
@@ -1097,18 +1166,18 @@ typedef struct _AttributePool {
 struct _ClassType {
     MemoryBlock mb;
     JClass *superclass;
-    __refer *constant_item_ptr;//存放常量池项目地址
-    s32 constant_item_count;//总数
+    __refer *constant_item_ptr; //存放常量池项目地址
+    s32 constant_item_count; //总数
 
     //类变量及实例变量的参数
-    s32 field_instance_start;//实例变量模板起始起址，继承自父类的变量放在前面
+    s32 field_instance_start; //实例变量模板起始起址，继承自父类的变量放在前面
     s32 field_instance_len; //非静态变量长度
     s32 field_static_len; //静态变量内存长度
     c8 *field_static; //静态变量内存地址
 
     //
     Instance *ins_class; //object of java.lang.Class
-    Instance *jloader;// java classloader
+    Instance *jloader; // java classloader
 
     //public:
     s32 (*_load_class_from_bytes)(struct _ClassType *_this, ByteBuf *buf);
@@ -1130,16 +1199,19 @@ struct _ClassType {
     AttributePool attributePool;
 
     //for array class
-    Pairlist *arr_class_type;//for object array create speedup,left is utf8 index of class, right is arr class
-    ArrayList *insFieldPtrIndex;//for optmize , save object pointer field index
+    Pairlist *arr_class_type; //for object array create speedup,left is utf8 index of class, right is arr class
+    ArrayList *insFieldPtrIndex; //for optmize , save object pointer field index
     ArrayList *staticFieldPtrIndex; //save static field index
     ArrayList *supers; //cache superclass and interfaces , for checkcast and instanceof
 
     //
     s8 status;
-    u8 is_primitive;//primitive data type int/long/short/char/short/byte/float/double
-    u8 is_jcloader;//is java classoader
-    u8 is_weakref;//
+    u8 is_primitive; //primitive data type int/long/short/char/short/byte/float/double
+    u8 is_jcloader; //is java classoader
+    u8 is_weakref; //
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    u16 slow_profile_class_id;
+#endif
     MethodInfo **vtable;
     s32 vtable_length;
     struct _Itable *itable;
@@ -1179,7 +1251,7 @@ void class_build_vtable(JClass *clazz);
 
 void printClassFileFormat(
 
-        ClassFileFormat *cff
+    ClassFileFormat *cff
 );
 
 s32 _class_method_info_destroy(JClass *clazz);
@@ -1206,13 +1278,14 @@ void class_clear_refer(PeerClassLoader *cloader, JClass *clazz);
 
 struct _InstanceType {
     MemoryBlock mb;
+
     //
     union {
         c8 *obj_fields; //object fieldRef body
-        c8 *arr_body;//array body
+        c8 *arr_body; //array body
     };
-    s32 arr_length;
 
+    s32 arr_length;
 };
 
 
@@ -1329,40 +1402,45 @@ JClass *getClassByConstantClassRef(JClass *clazz, s32 index, Runtime *runtime);
 
 //======================= runtime =============================
 
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+typedef struct _SlowCallTraceCtx SlowCallTraceCtx;
+#endif
+
 struct _JavaThreadInfo {
-//    MiniJVM *jvm;
+    //    MiniJVM *jvm;
     Instance *jthread;
     Instance *context_classloader;
     Runtime *top_runtime;
     MemoryBlock pack;
-    MemoryBlock *tmp_holder;//for jni hold java object
-    MemoryBlock *objs_header;//link to new instance, until garbage accept
-    MemoryBlock *objs_tailer;//link to last instance, until garbage accept
-    MemoryBlock *curThreadLock;//if thread is locked ,the filed save the lock
-    ArrayList *held_locks;//list of locks held by this thread for precise debugging (JDWP only)
-    MemoryBlock *pending_release_lock;//lock that needs to be released for suspension (JDWP only)
+    MemoryBlock *tmp_holder; //for jni hold java object
+    MemoryBlock *objs_header; //link to new instance, until garbage accept
+    MemoryBlock *objs_tailer; //link to last instance, until garbage accept
+    MemoryBlock *curThreadLock; //if thread is locked ,the filed save the lock
+    ArrayList *held_locks; //list of locks held by this thread for precise debugging (JDWP only)
+    MemoryBlock *pending_release_lock; //lock that needs to be released for suspension (JDWP only)
 
-    ArrayList *stacktrack;  //save methodrawindex, the pos 0 is the throw point
-    ArrayList *lineNo;  //save methodrawindex, the pos 0 is the throw point
+    ArrayList *stacktrack; //save methodrawindex, the pos 0 is the throw point
+    ArrayList *lineNo; //save methodrawindex, the pos 0 is the throw point
 
-    s64 objs_heap_of_thread;// heap use for objs_header, if translate to gc ,the var need clear to 0
+    s64 objs_heap_of_thread; // heap use for objs_header, if translate to gc ,the var need clear to 0
     spinlock_t lock;
-    u16 volatile suspend_count;//for jdwp suspend ,>0 suspend, ==0 resume
-    u16 volatile no_pause;  //can't pause when clinit
+    u16 volatile suspend_count; //for jdwp suspend ,>0 suspend, ==0 resume
+    u16 volatile no_pause; //can't pause when clinit
     u8 volatile thread_status;
     u8 volatile is_suspend;
     u8 volatile is_unparked;
-    u8 volatile is_blocking;// some of native method will enter blocking state
+    u8 volatile is_blocking; // some of native method will enter blocking state
     u8 volatile is_stop; //thread is marked as stop status, need set is_interrupt=1 also
     u8 volatile is_interrupt; //thread is marked as interrupt, set by Thread.interrupt();
-    u8 type;// gc /jdwp /normal
+    u8 type; // gc /jdwp /normal
 
     thrd_t pthread;
     //调试器相关字段
     JdwpStep *jdwp_step;
-
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    SlowCallTraceCtx *slow_call_ctx;
+#endif
 };
-
 
 
 /* Stack Frame */
@@ -1383,6 +1461,7 @@ typedef struct _StackEntry {
         s32 ivalue;
         u32 uivalue;
     };
+
     union {
         __refer rvalue;
         Instance *ins;
@@ -1404,8 +1483,8 @@ struct _Runtime {
     u8 *pc;
     JavaThreadInfo *thrd_info;
     MemoryBlock *lock;
-    Runtime *son;//sub method's runtime
-    Runtime *parent;//father method's runtime
+    Runtime *son; //sub method's runtime
+    Runtime *parent; //father method's runtime
     RuntimeStack *stack;
     LocalVarItem *localvar;
     __refer jit_exception_jump_ptr;
@@ -1414,8 +1493,8 @@ struct _Runtime {
 
     //
     union {
-        Runtime *runtime_pool_header;// cache runtimes for performance
-        Runtime *next;  //for runtime pools linklist
+        Runtime *runtime_pool_header; // cache runtimes for performance
+        Runtime *next; //for runtime pools linklist
     };
 
     JniEnv *jnienv;
@@ -1441,6 +1520,13 @@ struct _Runtime {
     s32 idx;
     s32 offset;
     s32 count;
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    s64 slow_profile_start_at;
+    s64 slow_profile_child_spent;
+    s64 slow_profile_gc_pause_at_enter;
+    u32 slow_profile_node_id;
+    u8 slow_profile_in_trace;
+#endif
 };
 
 //======================= stack =============================
@@ -1490,7 +1576,7 @@ static inline s32 stack_size(RuntimeStack *stack) {
 
 /* push Integer */
 static inline void push_int(RuntimeStack *stack, s32 value) {
-    stack->sp->ivalue = value;//clear 64bit
+    stack->sp->ivalue = value; //clear 64bit
     ++stack->sp;
 }
 
@@ -1570,7 +1656,6 @@ static inline void push_entry(RuntimeStack *stack, StackEntry *entry) {
 static inline void pop_entry(RuntimeStack *stack, StackEntry *entry) {
     stack->sp--;
     *entry = *stack->sp;
-
 }
 
 static inline void pop_empty(RuntimeStack *stack) {
@@ -1879,7 +1964,6 @@ struct _JNIENV {
     void (*jthread_set_daemon_value)(Instance *ins, Runtime *runtime, s32 daemon);
 
     s32 (*get_jvm_state)(MiniJVM *jvm);
-
 };
 
 typedef struct _ShortCut {
@@ -1961,13 +2045,51 @@ struct _ThreadLock {
     JavaThreadInfo *owner_thread; // 锁的所有者线程
     int count; // 重入计数
 };
+
+typedef struct _SlowCallProfile {
+    ArrayList *stack_cache;
+    spinlock_t lock;
+    s32 cache_limit;
+    Hashtable *class_by_id;
+    Hashtable *method_by_id;
+    u16 next_class_id;
+} SlowCallProfile;
+
+typedef struct _SlowCallNodeRec {
+    u32 node_id;
+    u32 parent_node_id;
+    u32 method_id;
+    u32 flags;
+    s64 total_ns;
+    s64 self_ns;
+} SlowCallNodeRec;
+
+typedef struct _SlowCallSnapshot {
+    ByteBuf *payload;
+    u64 ts_ms;
+    s64 spent_ns;
+    u32 root_method_id;
+    u32 node_count;
+} SlowCallSnapshot;
+
+struct _SlowCallTraceCtx {
+    Runtime *root_runtime;
+    MethodInfo *root_method;
+    s64 threshold_ns;
+    s64 start_ns;
+    u32 next_node_id;
+    u32 node_used;
+    u32 node_cap;
+    SlowCallNodeRec *nodes;
+};
+
 //======================= Jvm =============================
 struct _MiniJVM {
     PeerClassLoader *boot_classloader;
     ArrayList *classloaders;
     spinlock_t lock_cloader;
 
-    Hashtable *table_jstring_const;//for cache same string
+    Hashtable *table_jstring_const; //for cache same string
 
     ThreadLock threadlock;
 
@@ -1978,12 +2100,12 @@ struct _MiniJVM {
     Hashtable *sys_prop;
 
     GcCollector *collector;
-    ArrayList *shutdown_hook;//shutdown hook ,it contains thread instance
+    ArrayList *shutdown_hook; //shutdown hook ,it contains thread instance
 
     ShortCut shortcut;
 
     JdwpServer *jdwpserver;
-    s32 jdwp_enable;// 0:disable java debug , 1:enable java debug and disable jit
+    s32 jdwp_enable; // 0:disable java debug , 1:enable java debug and disable jit
     s32 jdwp_suspend_on_start;
     s32 jdwp_port;
     s64 max_heap_size;
@@ -1993,8 +2115,10 @@ struct _MiniJVM {
     JniEnv *env;
 
     s32 jvm_state;
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    SlowCallProfile slow_call_profile;
+#endif
 };
-
 
 
 c8 *getMajorVersionString(u16 major_number);

@@ -10,6 +10,9 @@
 
 #ifdef __cplusplus
 extern "C" {
+
+
+
 #endif
 
 static c8 *JDWP_CLASS_REFERENCE = "org/mini/reflect/ReflectClass";
@@ -46,7 +49,7 @@ s32 org_mini_vm_RefNative_obj2id(Runtime *runtime, JClass *clazz) {
 s32 org_mini_vm_RefNative_id2obj(Runtime *runtime, JClass *clazz) {
     Long2Double l2d;
     l2d.l = localvar_getLong(runtime->localvar, 0);
-    __refer r = (__refer) (intptr_t) l2d.l;//这里不能直接转化，可能在外部发生了数据精度丢失，只能从低位强转
+    __refer r = (__refer) (intptr_t) l2d.l; //这里不能直接转化，可能在外部发生了数据精度丢失，只能从低位强转
     push_ref(runtime->stack, r);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -56,7 +59,6 @@ s32 org_mini_vm_RefNative_id2obj(Runtime *runtime, JClass *clazz) {
 }
 
 s32 org_mini_vm_RefNative_getClasses(Runtime *runtime, JClass *clazz) {
-
     Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_CLASS);
     Instance *jarr = NULL;
 
@@ -83,7 +85,7 @@ s32 org_mini_vm_RefNative_getClasses(Runtime *runtime, JClass *clazz) {
         }
     }
     vm_share_unlock(jvm);
-    push_ref(runtime->stack, jarr);//Put it into the stack first, then associate it with the collector to prevent multithreaded recycling
+    push_ref(runtime->stack, jarr); //Put it into the stack first, then associate it with the collector to prevent multithreaded recycling
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("org_mini_vm_RefNative_getClasses\n");
@@ -115,12 +117,12 @@ s32 org_mini_vm_RefNative_newWithoutInit(Runtime *runtime, JClass *clazz) {
     JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 0));
     Instance *ins = NULL;
     s32 ret = 0;
-    if (cl && !cl->mb.arr_type_index) {//class exists and not array class
+    if (cl && !cl->mb.arr_type_index) {
+        //class exists and not array class
         ins = instance_create(runtime, cl);
     }
     if (ins) {
         push_ref(stack, (__refer) ins);
-
     } else {
         Instance *exception = exception_create(JVM_EXCEPTION_INSTANTIATION, runtime);
         push_ref(stack, (__refer) exception);
@@ -187,8 +189,8 @@ s32 org_mini_vm_RefNative_getLocalVal(Runtime *runtime, JClass *clazz) {
                 break;
             case '8':
                 l2d.l = localvar_getLong(runtime->localvar, slot);
-//                l2d.i2l.i1 = localvar_getInt(r->localvar, slot);
-//                l2d.i2l.i0 = localvar_getInt(r->localvar, slot + 1);
+                //                l2d.i2l.i1 = localvar_getInt(r->localvar, slot);
+                //                l2d.i2l.i0 = localvar_getInt(r->localvar, slot + 1);
                 break;
             case '4':
             case '2':
@@ -350,7 +352,7 @@ void _list_iter_getthread(ArrayListValue value, void *para) {
 }
 
 s32 org_mini_vm_RefNative_getThreads(Runtime *runtime, JClass *clazz) {
-//    garbage_thread_lock();
+    //    garbage_thread_lock();
     Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_THREAD);
     Instance *jarr = jarray_create_by_type_name(runtime, runtime->jvm->thread_list->length, ustr, NULL);
     utf8_destroy(ustr);
@@ -359,16 +361,16 @@ s32 org_mini_vm_RefNative_getThreads(Runtime *runtime, JClass *clazz) {
     para.i = 0;
     para.jarr = jarr;
     arraylist_iter_safe(runtime->jvm->thread_list, _list_iter_getthread, &para);
-//    s32 i = 0;
-//    for (i = 0; i < thread_list->length; i++) {
-//        Runtime *r = threadlist_get(i);
-//        if(r) {
-//            l2d.r = r->threadInfo->jthread;
-//            jarray_set_field(jarr, i, &l2d);
-//        }
-//    }
-    push_ref(runtime->stack, jarr);//Put it into the stack first, then associate it with the collector to prevent multi-threaded recycling
-//    garbage_thread_unlock();
+    //    s32 i = 0;
+    //    for (i = 0; i < thread_list->length; i++) {
+    //        Runtime *r = threadlist_get(i);
+    //        if(r) {
+    //            l2d.r = r->threadInfo->jthread;
+    //            jarray_set_field(jarr, i, &l2d);
+    //        }
+    //    }
+    push_ref(runtime->stack, jarr); //Put it into the stack first, then associate it with the collector to prevent multi-threaded recycling
+    //    garbage_thread_unlock();
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("org_mini_vm_RefNative_getThreads\n");
 #endif
@@ -458,9 +460,9 @@ s32 org_mini_vm_RefNative_stopThread(Runtime *runtime, JClass *clazz) {
         push_int(runtime->stack, 0);
 
         //putin an exception to target thread
-//        JClass *vmstopEx = classes_load_get_with_clinit_c(runtime->clazz->jloader, STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION, runtime);
-//        Instance *instance = exception_create(JVM_EXCEPTION_VMSTOP, runtime);
-//        push_ref(trun->stack, instance);
+        //        JClass *vmstopEx = classes_load_get_with_clinit_c(runtime->clazz->jloader, STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION, runtime);
+        //        Instance *instance = exception_create(JVM_EXCEPTION_VMSTOP, runtime);
+        //        push_ref(trun->stack, instance);
     } else
         push_int(runtime->stack, 1);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -538,7 +540,7 @@ s32 org_mini_vm_RefNative_defineClass(Runtime *runtime, JClass *clazz) {
     setFieldRefer(getInstanceFieldPtr(clIns, runtime->jvm->shortcut.class_classLoader), cloader);
 
     push_ref(runtime->stack, clIns);
-//    push_ref(runtime->stack, NULL);
+    //    push_ref(runtime->stack, NULL);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("org_mini_vm_RefNative_defineClass %d\n", runtime->jvm->collector->_garbage_thread_status);
@@ -568,7 +570,6 @@ s32 org_mini_vm_RefNative_findLoadedClass0(Runtime *runtime, JClass *clazz) {
 }
 
 s32 org_mini_vm_RefNative_findResource0(Runtime *runtime, JClass *clazz) {
-
     push_ref(runtime->stack, NULL);
 
     return 0;
@@ -627,6 +628,263 @@ s32 org_mini_vm_RefNative_getCallerClass(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+s32 org_mini_vm_RefNative_resetProfile(Runtime *runtime, JClass *clazz) {
+#if _JVM_DEBUG_METHOD_PROFILE
+    profile_method_reset(runtime->jvm);
+#endif
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    jvm_printf("org_mini_vm_RefNative_resetProfile\n");
+#endif
+    return 0;
+}
+
+s32 org_mini_vm_RefNative_getProfileAll(Runtime *runtime, JClass *clazz) {
+    Utf8String *result = utf8_create_c("");
+
+#if _JVM_DEBUG_METHOD_PROFILE
+    ArrayList *all = arraylist_create(1024);
+    profile_method_get_all(runtime->jvm, all);
+
+    s32 i;
+    for (i = 0; i < 100 && i < all->length; i++) {
+        MethodInfo *m = (MethodInfo *) arraylist_get_value(all, i);
+        Utf8String *line = utf8_create();
+        utf8_append_s64(line, m->profile_count, 10);
+        utf8_append_c(line, "|");
+        utf8_append_s64(line, m->profile_total_time / 1000000, 10);
+        utf8_append_c(line, "|");
+        utf8_append_s64(line, m->profile_max_time / 1000000, 10);
+        utf8_append_c(line, "|");
+        utf8_append_s64(line, (m->profile_count > 0) ? (m->profile_total_time / 1000000 / m->profile_count) : 0, 10);
+        utf8_append_c(line, "|");
+        utf8_append_s64(line, profile_slow_call_get_method_id(runtime->jvm, m), 10);
+        utf8_append_c(line, "|");
+        utf8_append(line, m->_this_class->name);
+        utf8_append_c(line, ".");
+        utf8_append(line, m->name);
+        utf8_append(line, m->descriptor);
+        utf8_append_c(line, "\n");
+
+        utf8_append(result, line);
+        utf8_destroy(line);
+    }
+
+    arraylist_destroy(all);
+#endif
+
+    Instance *jstr = jstring_create(result, runtime);
+    push_ref(runtime->stack, jstr);
+    utf8_destroy(result);
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    jvm_printf("org_mini_vm_RefNative_getProfileAll\n");
+#endif
+    return 0;
+}
+
+s32 org_mini_vm_RefNative_watchSlowCallMethod(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    u32 method_id = (u32) localvar_getInt(runtime->localvar, pos++);
+    s64 threshold_ns = localvar_getLong(runtime->localvar, pos);
+
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    MethodInfo *method = profile_slow_call_get_method_by_id(runtime->jvm, method_id);
+
+    if (is_valid_method_info(runtime->jvm, method)) {
+        profile_slow_call_watch_method(runtime->jvm, method, threshold_ns);
+    }
+#endif
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    jvm_printf("org_mini_vm_RefNative_watchSlowCallMethod\n");
+#endif
+    return 0;
+}
+
+s32 org_mini_vm_RefNative_unwatchSlowCallMethod(Runtime *runtime, JClass *clazz) {
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    s32 pos = 0;
+    u32 method_id = (u32) localvar_getInt(runtime->localvar, pos++);
+    MethodInfo *method = profile_slow_call_get_method_by_id(runtime->jvm, method_id);
+
+    if (is_valid_method_info(runtime->jvm, method)) {
+        profile_slow_call_unwatch_method(runtime->jvm, method);
+    }
+#endif
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    jvm_printf("org_mini_vm_RefNative_unwatchSlowCallMethod\n");
+#endif
+    return 0;
+}
+
+s32 org_mini_vm_RefNative_clearSlowCallWatch(Runtime *runtime, JClass *clazz) {
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    profile_slow_call_clear_watch(runtime->jvm);
+#endif
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    jvm_printf("org_mini_vm_RefNative_clearSlowCallWatch\n");
+#endif
+    return 0;
+}
+
+s32 org_mini_vm_RefNative_clearSlowCallCache(Runtime *runtime, JClass *clazz) {
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    profile_slow_call_clear_cache(runtime->jvm);
+#endif
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    jvm_printf("org_mini_vm_RefNative_clearSlowCallCache\n");
+#endif
+    return 0;
+}
+
+s32 org_mini_vm_RefNative_getSlowCallSnapshotList(Runtime *runtime, JClass *clazz) {
+    ArrayList *cache = NULL;
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    cache = runtime->jvm->slow_call_profile.stack_cache;
+
+    if (!cache) {
+        push_ref(runtime->stack, NULL);
+        return 0;
+    }
+
+    Utf8String *type_str = utf8_create_c(STR_INS_JAVA_LANG_STRING);
+    Instance *jarr = jarray_create_by_type_name(runtime, cache->length, type_str, NULL);
+    utf8_destroy(type_str);
+    spin_lock(&runtime->jvm->slow_call_profile.lock);
+    s32 i;
+    for (i = 0; i < cache->length; i++) {
+        SlowCallSnapshot *item = (SlowCallSnapshot *) arraylist_get_value(cache, i);
+        if (item) {
+            Utf8String *line = utf8_create();
+            utf8_append_s64(line, i, 10);
+            utf8_append_c(line, "|");
+            utf8_append_s64(line, item->ts_ms, 10);
+            utf8_append_c(line, "|");
+            utf8_append_s64(line, item->spent_ns, 10);
+            utf8_append_c(line, "|");
+            utf8_append_s64(line, item->root_method_id, 10);
+            utf8_append_c(line, "|");
+            utf8_append_s64(line, item->node_count, 10);
+            Instance *jstr = jstring_create(line, runtime);
+            jarray_set_field(jarr, i, (s64) (intptr_t) jstr);
+            utf8_destroy(line);
+        }
+    }
+    spin_unlock(&runtime->jvm->slow_call_profile.lock);
+#else
+    Utf8String *type_str = utf8_create_c(STR_INS_JAVA_LANG_STRING);
+    Instance *jarr = jarray_create_by_type_name(runtime, 0, type_str, NULL);
+    utf8_destroy(type_str);
+#endif
+
+    push_ref(runtime->stack, jarr);
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    jvm_printf("org_mini_vm_RefNative_getSlowCallSnapshotList\n");
+#endif
+    return 0;
+}
+
+s32 org_mini_vm_RefNative_getSlowCallStackSnapshot(Runtime *runtime, JClass *clazz) {
+    s32 idx = localvar_getInt(runtime->localvar, 0);
+    ArrayList *cache = NULL;
+    Instance *jbyte_arr = NULL;
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    cache = runtime->jvm->slow_call_profile.stack_cache;
+    if (!cache || idx < 0 || idx >= cache->length) {
+        push_ref(runtime->stack, NULL);
+        return 0;
+    }
+    spin_lock(&runtime->jvm->slow_call_profile.lock);
+    SlowCallSnapshot *item = (SlowCallSnapshot *) arraylist_get_value(cache, idx);
+    if (item && item->payload && item->payload->wp > 0) {
+        jbyte_arr = jarray_create_by_type_index(runtime, item->payload->wp, DATATYPE_BYTE);
+        memcpy(jbyte_arr->arr_body, item->payload->buf, item->payload->wp);
+    }
+    spin_unlock(&runtime->jvm->slow_call_profile.lock);
+#endif
+    push_ref(runtime->stack, jbyte_arr);
+    return 0;
+}
+
+s32 org_mini_vm_RefNative_getMethodByUniId(Runtime *runtime, JClass *clazz) {
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    u32 method_id = (u32) localvar_getInt(runtime->localvar, 0);
+    MethodInfo *m = profile_slow_call_get_method_by_id(runtime->jvm, method_id);
+    if (!m) {
+        push_ref(runtime->stack, NULL);
+        return 0;
+    }
+    Utf8String *line = utf8_create();
+    utf8_append(line, m->_this_class->name);
+    utf8_append_c(line, ".");
+    utf8_append(line, m->name);
+    //utf8_append(line, m->descriptor);
+    Instance *jstr = jstring_create(line, runtime);
+    utf8_destroy(line);
+    push_ref(runtime->stack, jstr);
+#else
+    push_ref(runtime->stack, NULL);
+#endif
+    return 0;
+}
+
+s32 org_mini_vm_RefNative_getSlowCallWatchMethods(Runtime *runtime, JClass *clazz) {
+    MiniJVM *jvm = runtime->jvm;
+    if (!jvm || !jvm->classloaders) {
+        push_ref(runtime->stack, NULL);
+        return 0;
+    }
+
+    Utf8String *result = utf8_create_c("");
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    s32 i, j;
+
+    for (i = 0; i < jvm->classloaders->length; i++) {
+        PeerClassLoader *pcl = (PeerClassLoader *) arraylist_get_value(jvm->classloaders, i);
+        HashtableIterator hti;
+        hashtable_iterate(pcl->classes, &hti);
+
+        while (hashtable_iter_has_more(&hti)) {
+            JClass *clazz_obj = (JClass *) hashtable_iter_next_value(&hti);
+            if (clazz_obj->status >= CLASS_STATUS_PREPARED) {
+                MethodPool *p = &(clazz_obj->methodPool);
+                for (j = 0; j < p->method_used; j++) {
+                    MethodInfo *m = &(p->method[j]);
+                    if (m->slow_profile_threshold_ns > 0) {
+                        Utf8String *line = utf8_create();
+                        utf8_append_s64(line, profile_slow_call_get_method_id(runtime->jvm, m), 10);
+                        utf8_append_c(line, "|");
+                        utf8_append_s64(line, m->slow_profile_threshold_ns / 1000000, 10);
+                        utf8_append_c(line, "|");
+                        utf8_append(line, clazz_obj->name);
+                        utf8_append_c(line, ".");
+                        utf8_append(line, m->name);
+                        utf8_append(line, m->descriptor);
+                        utf8_append_c(line, "\n");
+
+                        utf8_append(result, line);
+                        utf8_destroy(line);
+                    }
+                }
+            }
+        }
+    }
+#endif
+
+    Instance *jstr = jstring_create(result, runtime);
+    push_ref(runtime->stack, jstr);
+    utf8_destroy(result);
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    jvm_printf("org_mini_vm_RefNative_getSlowCallWatchMethods\n");
+#endif
+    return 0;
+}
+
 s32 org_mini_vm_RefNative_addJarToClasspath(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     Instance *jstr = localvar_getRefer(runtime->localvar, pos++);
@@ -637,6 +895,107 @@ s32 org_mini_vm_RefNative_addJarToClasspath(Runtime *runtime, JClass *clazz) {
     classloader_add_jar_path(runtime->jvm->boot_classloader, ustr);
     utf8_destroy(ustr);
 
+    return 0;
+}
+
+s32 org_mini_vm_RefNative_stringFromUtf8Bytes(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    Instance *target = localvar_getRefer(runtime->localvar, pos++);
+    Instance *utf8Bytes = localvar_getRefer(runtime->localvar, pos++);
+    s32 offset = localvar_getInt(runtime->localvar, pos++);
+    s32 length = localvar_getInt(runtime->localvar, pos++);
+
+    if (!target || !utf8Bytes) {
+        return 0;
+    }
+
+    if (offset < 0 || length <= 0 || offset + length > utf8Bytes->arr_length) {
+        return 0;
+    }
+
+    c8 *bytes = (c8 *) utf8Bytes->arr_body + offset;
+
+    Utf8String *ustr = utf8_create_part_c(bytes, 0, length);
+
+    Instance *arr = jstring_get_value_array(target, runtime);
+
+    s32 c8len = (ustr->length + 1) * DATA_TYPE_BYTES[DATATYPE_JCHAR];
+    u16 *buf = jvm_calloc(c8len);
+    s32 unicode_len = utf8_2_unicode(ustr, buf, c8len / DATA_TYPE_BYTES[DATATYPE_JCHAR]);
+
+    if (!arr || arr->arr_length < unicode_len) {
+        Instance *new_arr = jarray_create_by_type_index(runtime, unicode_len, DATATYPE_JCHAR);
+        c8 *ptr = jstring_get_value_ptr(target, runtime);
+        setFieldRefer(ptr, (__refer) new_arr);
+        arr = new_arr;
+    }
+    memcpy(arr->arr_body, buf, unicode_len * DATA_TYPE_BYTES[DATATYPE_JCHAR]);
+    jstring_set_offset(target, 0, runtime);
+    jstring_set_count(target, unicode_len, runtime);
+
+    jvm_free(buf);
+
+    utf8_destroy(ustr);
+
+    return 0;
+}
+
+s32 org_mini_vm_RefNative_stringToUtf8Bytes(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    Instance *source = localvar_getRefer(runtime->localvar, pos++);
+
+    if (!source) {
+        push_ref(runtime->stack, NULL);
+        return 0;
+    }
+
+    Utf8String *ustr = utf8_create();
+    jstring_2_utf8(source, ustr, runtime);
+
+    s32 len = ustr->length;
+    Instance *jarr = jarray_create_by_type_index(runtime, len, DATATYPE_BYTE);
+
+    if (jarr && jarr->arr_body) {
+        c8 *bytes = (c8 *) jarr->arr_body;
+        memcpy(bytes, ustr->data, len);
+    }
+
+    utf8_destroy(ustr);
+
+    push_ref(runtime->stack, jarr);
+    return 0;
+}
+
+s32 org_mini_vm_RefNative_toCstyleBytes(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    Instance *source = localvar_getRefer(runtime->localvar, pos++);
+
+    if (!source) {
+        push_ref(runtime->stack, NULL);
+        return 0;
+    }
+
+    Utf8String *ustr = utf8_create();
+    jstring_2_utf8(source, ustr, runtime);
+
+    s32 need_zero_tail = 1;
+    if (ustr->length > 0 && ((u8 *) ustr->data)[ustr->length - 1] == 0) {
+        need_zero_tail = 0;
+    }
+    s32 len = ustr->length + (need_zero_tail ? 1 : 0);
+    Instance *jarr = jarray_create_by_type_index(runtime, len, DATATYPE_BYTE);
+    if (jarr && jarr->arr_body) {
+        c8 *bytes = (c8 *) jarr->arr_body;
+        if (ustr->length > 0) {
+            memcpy(bytes, ustr->data, ustr->length);
+        }
+        if (need_zero_tail) {
+            bytes[len - 1] = 0;
+        }
+    }
+
+    utf8_destroy(ustr);
+    push_ref(runtime->stack, jarr);
     return 0;
 }
 
@@ -771,8 +1130,7 @@ s32 org_mini_reflect_ReflectClass_mapClass(Runtime *runtime, JClass *clazz) {
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_REFERENCE, "status", "I", runtime);
         //VERIFIED = 1;PREPARED = 2;INITIALIZED = 4;ERROR = 8;
         if (ptr)
-            setFieldInt(ptr, target->status >= CLASS_STATUS_CLINITED ?
-                             7 : (target->status >= CLASS_STATUS_PREPARED ? 3 : 1));
+            setFieldInt(ptr, target->status >= CLASS_STATUS_CLINITED ? 7 : (target->status >= CLASS_STATUS_PREPARED ? 3 : 1));
         //
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_REFERENCE, "source", STR_INS_JAVA_LANG_STRING, runtime);
         if (ptr) {
@@ -890,7 +1248,7 @@ s32 org_mini_reflect_ReflectField_mapField(Runtime *runtime, JClass *clazz) {
 Instance *localVarTable2java(JClass *clazz, LocalVarTable *lvt, Runtime *runtime) {
     JClass *cl = classes_load_get_with_clinit_c(NULL, JDWP_CLASS_LOCALVARTABLE, runtime);
     Instance *ins = instance_create(runtime, cl);
-    instance_hold_to_thread(ins, runtime);// hold by manual
+    instance_hold_to_thread(ins, runtime); // hold by manual
     instance_init(ins, runtime);
 
     if (ins && lvt) {
@@ -914,7 +1272,7 @@ Instance *localVarTable2java(JClass *clazz, LocalVarTable *lvt, Runtime *runtime
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_LOCALVARTABLE, "length", "I", runtime);
         if (ptr)setFieldInt(ptr, lvt->length);
     }
-    instance_release_from_thread(ins, runtime);//release by manual
+    instance_release_from_thread(ins, runtime); //release by manual
     return ins;
 }
 
@@ -990,7 +1348,6 @@ s32 org_mini_reflect_ReflectMethod_mapMethod(Runtime *runtime, JClass *clazz) {
                         LocalVarTable *lvt = &ca->local_var_table[i];
                         s64 val = (intptr_t) localVarTable2java(methodInfo->_this_class, lvt, runtime);
                         jarray_set_field(jarr, i, val);
-
                     }
                 }
             }
@@ -1004,7 +1361,6 @@ s32 org_mini_reflect_ReflectMethod_mapMethod(Runtime *runtime, JClass *clazz) {
             setFieldRefer(ptr, annotations);
             utf8_destroy(annotationStr);
         }
-
     }
     return 0;
 }
@@ -1073,42 +1429,43 @@ s32 org_mini_reflect_ReflectMethod_invokeMethod(Runtime *runtime, JClass *clazz)
             utf8_char ch = utf8_char_at(methodInfo->returnType, 0);
             switch (ch) {
                 case 'I': {
-                    execute_method(shortcut->int_valueOf, runtime);//boxing double to Double
+                    execute_method(shortcut->int_valueOf, runtime); //boxing double to Double
                     break;
                 }
                 case 'J': {
-                    execute_method(shortcut->long_valueOf, runtime);//boxing double to Double
+                    execute_method(shortcut->long_valueOf, runtime); //boxing double to Double
                     break;
                 }
                 case 'B': {
-                    execute_method(shortcut->byte_valueOf, runtime);//boxing double to Double
+                    execute_method(shortcut->byte_valueOf, runtime); //boxing double to Double
                     break;
                 }
                 case 'S': {
-                    execute_method(shortcut->short_valueOf, runtime);//boxing double to Double
+                    execute_method(shortcut->short_valueOf, runtime); //boxing double to Double
                     break;
                 }
                 case 'C': {
-                    execute_method(shortcut->character_valueOf, runtime);//boxing double to Double
+                    execute_method(shortcut->character_valueOf, runtime); //boxing double to Double
                     break;
                 }
                 case 'F': {
-                    execute_method(shortcut->float_valueOf, runtime);//boxing double to Double
+                    execute_method(shortcut->float_valueOf, runtime); //boxing double to Double
                     break;
                 }
                 case 'D': {
-                    execute_method(shortcut->double_valueOf, runtime);//boxing double to Double
+                    execute_method(shortcut->double_valueOf, runtime); //boxing double to Double
                     break;
                 }
                 case 'Z': {
-                    execute_method(shortcut->boolean_valueOf, runtime);//boxing double to Double
+                    execute_method(shortcut->boolean_valueOf, runtime); //boxing double to Double
                     break;
                 }
                 case 'V': {
                     push_ref(runtime->stack, NULL);
                     break;
                 }
-                default: {// L   [
+                default: {
+                    // L   [
                     //do nothing
                 }
             }
@@ -1147,7 +1504,8 @@ s32 org_mini_reflect_StackFrame_mapRuntime(Runtime *runtime, JClass *clazz) {
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_RUNTIME, "methodId", "J", runtime);
         if (ptr)setFieldLong(ptr, (u64) (intptr_t) target->method);
         //
-        if (target->method && !(target->method->is_static)) {//top runtime method is null
+        if (target->method && !(target->method->is_static)) {
+            //top runtime method is null
             ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_RUNTIME, "localThis", "J", runtime);
             if (ptr)setFieldLong(ptr, (s64) (intptr_t) localvar_getRefer(target->localvar, 0));
         }
@@ -1186,7 +1544,7 @@ s32 org_mini_reflect_ReflectMethod_getExceptionTypes0(Runtime *runtime, JClass *
     pos += 2;
     MethodInfo *m = l2d.r;
     JClass *cl = m->_this_class;
-    
+
     // Check if method has exceptions table
     if (m->exceptions_index_in_attributes == -1 || m->exceptions_index_in_attributes >= m->attributes_count) {
         // No exceptions table, return empty array
@@ -1196,7 +1554,7 @@ s32 org_mini_reflect_ReflectMethod_getExceptionTypes0(Runtime *runtime, JClass *
         push_ref(runtime->stack, jarr);
         return 0;
     }
-    
+
     u16 *info = (u16 *) m->attributes[m->exceptions_index_in_attributes].info;
     s32 len = info[0];
     Utf8String *ustr = utf8_create_c(STR_INS_JAVA_LANG_CLASS);
@@ -1235,7 +1593,6 @@ s32 org_mini_reflect_ReflectArray_mapArray(Runtime *runtime, JClass *clazz) {
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_ARRAY, "typeTag", "B", runtime);
         if (ptr)setFieldByte(ptr, (s8) utf8_char_at(target->mb.clazz->name, 1));
         //
-
     }
     return 0;
 }
@@ -1642,8 +1999,10 @@ s32 com_misc_Unsafe_objectFieldOffset(Runtime *runtime, JClass *clazz) {
     Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
     pos++;
     FieldInfo *fi = (__refer) (intptr_t) localvar_getLong(runtime->localvar, pos);
-    push_long(runtime->stack, !fi ? -1 : (s64) (intptr_t)
-            fi->offset_instance);
+    push_long(runtime->stack, !fi
+                                  ? -1
+                                  : (s64) (intptr_t)
+                                  fi->offset_instance);
     return 0;
 }
 
@@ -1652,8 +2011,10 @@ s32 com_misc_Unsafe_staticFieldOffset(Runtime *runtime, JClass *clazz) {
     Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
     pos++;
     FieldInfo *fi = (__refer) (intptr_t) localvar_getLong(runtime->localvar, pos);
-    push_long(runtime->stack, !fi || !(fi->access_flags & ACC_STATIC) ? -1 : (s64) (intptr_t)
-            fi->offset);
+    push_long(runtime->stack, !fi || !(fi->access_flags & ACC_STATIC)
+                                  ? -1
+                                  : (s64) (intptr_t)
+                                  fi->offset);
     return 0;
 }
 
@@ -1758,7 +2119,7 @@ s32 com_misc_Unsafe_pack(Runtime *runtime, JClass *clazz) {
     s64 waitmills = absolute ? (time - currentTimeMillis()) : time / NANO_2_MILLS_SCALE;
 
     s32 ret = 0;
-    Runtime *rt = runtime;// current thread
+    Runtime *rt = runtime; // current thread
     jthread_lock(&rt->thrd_info->pack, rt);
     if (rt->thrd_info->is_unparked) {
         rt->thrd_info->is_unparked = 0;
@@ -1791,79 +2152,94 @@ s32 com_misc_Unsafe_unpack(Runtime *runtime, JClass *clazz) {
 
 
 static java_native_method METHODS_REFLECT_TABLE[] = {
-        {"org/mini/vm/RefNative",          "refIdSize",                "()I",                                                                              org_mini_vm_RefNative_refIdSize},
-        {"org/mini/vm/RefNative",          "obj2id",                   "(Ljava/lang/Object;)J",                                                            org_mini_vm_RefNative_obj2id},
-        {"org/mini/vm/RefNative",          "id2obj",                   "(J)Ljava/lang/Object;",                                                            org_mini_vm_RefNative_id2obj},
-        {"org/mini/vm/RefNative",          "getClasses",               "()[Ljava/lang/Class;",                                                             org_mini_vm_RefNative_getClasses},
-        {"org/mini/vm/RefNative",          "getBootstrapClassByName",  "(Ljava/lang/String;)Ljava/lang/Class;",                                            org_mini_vm_RefNative_getBootstrapClassByName},
-        {"org/mini/vm/RefNative",          "newWithoutInit",           "(Ljava/lang/Class;)Ljava/lang/Object;",                                            org_mini_vm_RefNative_newWithoutInit},
-        {"org/mini/vm/RefNative",          "setLocalVal",              "(JIBJI)I",                                                                         org_mini_vm_RefNative_setLocalVal},
-        {"org/mini/vm/RefNative",          "getLocalVal",              "(JILorg/mini/jdwp/type/ValueType;)I",                                              org_mini_vm_RefNative_getLocalVal},
-        {"org/mini/vm/RefNative",          "getThreads",               "()[Ljava/lang/Thread;",                                                            org_mini_vm_RefNative_getThreads},
-        {"org/mini/vm/RefNative",          "getStatus",                "(Ljava/lang/Thread;)I",                                                            org_mini_vm_RefNative_getStatus},
-        {"org/mini/vm/RefNative",          "suspendThread",            "(Ljava/lang/Thread;)I",                                                            org_mini_vm_RefNative_suspendThread},
-        {"org/mini/vm/RefNative",          "resumeThread",             "(Ljava/lang/Thread;)I",                                                            org_mini_vm_RefNative_resumeThread},
-        {"org/mini/vm/RefNative",          "getSuspendCount",          "(Ljava/lang/Thread;)I",                                                            org_mini_vm_RefNative_getSuspendCount},
-        {"org/mini/vm/RefNative",          "getFrameCount",            "(Ljava/lang/Thread;)I",                                                            org_mini_vm_RefNative_getFrameCount},
-        {"org/mini/vm/RefNative",          "stopThread",               "(Ljava/lang/Thread;Ljava/lang/Object;)I",                                          org_mini_vm_RefNative_stopThread},
-        {"org/mini/vm/RefNative",          "getStackFrame",            "(Ljava/lang/Thread;)J",                                                            org_mini_vm_RefNative_getStackFrame},
-        {"org/mini/vm/RefNative",          "getGarbageMarkCounter",    "()I",                                                                              org_mini_vm_RefNative_getGarbageMarkCounter},
-        {"org/mini/vm/RefNative",          "getGarbageStatus",         "()I",                                                                              org_mini_vm_RefNative_getGarbageStatus},
-        {"org/mini/vm/RefNative",          "dumpHeap",                 "(Ljava/lang/String;I)I",                                                           org_mini_vm_RefNative_dumpHeap},
-        {"org/mini/vm/RefNative",          "getCallerClass",           "()Ljava/lang/Class;",                                                              org_mini_vm_RefNative_getCallerClass},
-        {"org/mini/vm/RefNative",          "defineClass",              "(Ljava/lang/ClassLoader;Ljava/lang/String;[BII)Ljava/lang/Class;",                 org_mini_vm_RefNative_defineClass},
-        {"org/mini/vm/RefNative",          "findLoadedClass0",         "(Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/Class;",                     org_mini_vm_RefNative_findLoadedClass0},
-        {"org/mini/vm/RefNative",          "findResource0",            "(Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/net/URL;",                        org_mini_vm_RefNative_findResource0},
-        {"org/mini/vm/RefNative",          "initNativeClassLoader",    "(Ljava/lang/ClassLoader;Ljava/lang/ClassLoader;)V",                                org_mini_vm_RefNative_initNativeClassLoader},
-        {"org/mini/vm/RefNative",          "destroyNativeClassLoader", "(Ljava/lang/ClassLoader;)V",                                                       org_mini_vm_RefNative_destroyNativeClassLoader},
-        {"org/mini/vm/RefNative",          "addJarToClasspath",        "(Ljava/lang/String;)V",                                                            org_mini_vm_RefNative_addJarToClasspath},
-        {"org/mini/vm/RefNative",          "heap_calloc",              "(I)J",                                                                             org_mini_vm_RefNative_heap_calloc},
-        {"org/mini/vm/RefNative",          "heap_free",                "(J)V",                                                                             org_mini_vm_RefNative_heap_free},
-        {"org/mini/vm/RefNative",          "heap_put_byte",            "(JIB)V",                                                                           org_mini_vm_RefNative_heap_put_byte},
-        {"org/mini/vm/RefNative",          "heap_get_byte",            "(JI)B",                                                                            org_mini_vm_RefNative_heap_get_byte},
-        {"org/mini/vm/RefNative",          "heap_put_short",           "(JIS)V",                                                                           org_mini_vm_RefNative_heap_put_short},
-        {"org/mini/vm/RefNative",          "heap_get_short",           "(JI)S",                                                                            org_mini_vm_RefNative_heap_get_short},
-        {"org/mini/vm/RefNative",          "heap_put_int",             "(JII)V",                                                                           org_mini_vm_RefNative_heap_put_int},
-        {"org/mini/vm/RefNative",          "heap_get_int",             "(JI)I",                                                                            org_mini_vm_RefNative_heap_get_int},
-        {"org/mini/vm/RefNative",          "heap_put_long",            "(JIJ)V",                                                                           org_mini_vm_RefNative_heap_put_long},
-        {"org/mini/vm/RefNative",          "heap_get_long",            "(JI)J",                                                                            org_mini_vm_RefNative_heap_get_long},
-        {"org/mini/vm/RefNative",          "heap_put_float",           "(JIF)V",                                                                           org_mini_vm_RefNative_heap_put_int},
-        {"org/mini/vm/RefNative",          "heap_get_float",           "(JI)F",                                                                            org_mini_vm_RefNative_heap_get_int},
-        {"org/mini/vm/RefNative",          "heap_put_double",          "(JID)V",                                                                           org_mini_vm_RefNative_heap_put_long},
-        {"org/mini/vm/RefNative",          "heap_get_double",          "(JI)D",                                                                            org_mini_vm_RefNative_heap_get_long},
-        {"org/mini/vm/RefNative",          "heap_put_ref",             "(JILjava/lang/Object;)V",                                                          org_mini_vm_RefNative_heap_put_ref},
-        {"org/mini/vm/RefNative",          "heap_get_ref",             "(JI)Ljava/lang/Object;",                                                           org_mini_vm_RefNative_heap_get_ref},
-        {"org/mini/vm/RefNative",          "heap_copy",                "(JIJII)V",                                                                         org_mini_vm_RefNative_heap_copy},
-        {"org/mini/vm/RefNative",          "heap_bin_search",          "(JIJI)I",                                                                          org_mini_vm_RefNative_heap_bin_search},
-        {"org/mini/vm/RefNative",          "heap_fill",                "(JIJI)V",                                                                          org_mini_vm_RefNative_heap_fill},
-        {"org/mini/vm/RefNative",          "heap_endian",              "()I",                                                                              org_mini_vm_RefNative_heap_little_endian},
-        {"org/mini/reflect/ReflectClass",  "mapClass",                 "(J)V",                                                                             org_mini_reflect_ReflectClass_mapClass},
-        {"org/mini/reflect/ReflectField",  "mapField",                 "(J)V",                                                                             org_mini_reflect_ReflectField_mapField},
-        {"org/mini/reflect/ReflectField",  "getFieldVal",              "(Ljava/lang/Object;J)J",                                                           org_mini_reflect_ReflectField_getFieldVal},
-        {"org/mini/reflect/ReflectField",  "setFieldVal",              "(Ljava/lang/Object;JJ)V",                                                          org_mini_reflect_ReflectField_setFieldVal},
-        {"org/mini/reflect/ReflectMethod", "mapMethod",                "(J)V",                                                                             org_mini_reflect_ReflectMethod_mapMethod},
-        {"org/mini/reflect/ReflectMethod", "invokeMethod",             "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;",                        org_mini_reflect_ReflectMethod_invokeMethod},
-        {"org/mini/reflect/ReflectMethod", "getExceptionTypes0",       "(J)[Ljava/lang/Class;",                                                            org_mini_reflect_ReflectMethod_getExceptionTypes0},
-        {"org/mini/reflect/ReflectMethod", "findMethod0",              "(Ljava/lang/ClassLoader;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)J", org_mini_reflect_ReflectMethod_findMethod0},
-        {"org/mini/reflect/StackFrame",    "mapRuntime",               "(J)V",                                                                             org_mini_reflect_StackFrame_mapRuntime},
-        {"org/mini/reflect/ReflectArray",  "mapArray",                 "(Ljava/lang/Object;)V",                                                            org_mini_reflect_ReflectArray_mapArray},
-        {"org/mini/reflect/ReflectArray",  "getLength",                "(Ljava/lang/Object;)I",                                                            org_mini_reflect_ReflectArray_getLength},
-        {"org/mini/reflect/ReflectArray",  "getTypeTag",               "(Ljava/lang/Object;)B",                                                            org_mini_reflect_ReflectArray_getTypeTag},
-        {"org/mini/reflect/ReflectArray",  "getBodyPtr",               "(Ljava/lang/Object;)J",                                                            org_mini_reflect_ReflectArray_getArrayBodyPtr},
-        {"org/mini/reflect/ReflectArray",  "newArray",                 "(Ljava/lang/Class;I)Ljava/lang/Object;",                                           org_mini_reflect_ReflectArray_newArray},
-        {"org/mini/reflect/ReflectArray",  "multiNewArray",            "(Ljava/lang/Class;[I)Ljava/lang/Object;",                                          org_mini_reflect_ReflectArray_multiNewArray},
-        {"org/mini/reflect/DirectMemObj",  "setVal",                   "(IJ)V",                                                                            org_mini_reflect_DirectMemObj_setVal},
-        {"org/mini/reflect/DirectMemObj",  "getVal",                   "(I)J",                                                                             org_mini_reflect_DirectMemObj_getVal},
-        {"org/mini/reflect/DirectMemObj",  "copyTo0",                  "(ILjava/lang/Object;II)V",                                                         org_mini_reflect_DirectMemObj_copyTo0},
-        {"org/mini/reflect/DirectMemObj",  "copyFrom0",                "(ILjava/lang/Object;II)V",                                                         org_mini_reflect_DirectMemObj_copyFrom0},
-        {"sun/misc/Unsafe",                "objectFieldOffset",        "(J)J",                                                                             com_misc_Unsafe_objectFieldOffset},
-        {"sun/misc/Unsafe",                "objectFieldBase",          "(Ljava/lang/Object;)J",                                                            com_misc_Unsafe_objectFieldBase},
-        {"sun/misc/Unsafe",                "staticFieldOffset",        "(J)J",                                                                             com_misc_Unsafe_staticFieldOffset},
-        {"sun/misc/Unsafe",                "compareAndSwapInt",        "(Ljava/lang/Object;JII)Z",                                                         com_misc_Unsafe_compareAndSwapInt},
-        {"sun/misc/Unsafe",                "compareAndSwapLong",       "(Ljava/lang/Object;JJJ)Z",                                                         com_misc_Unsafe_compareAndSwapLong},
-        {"sun/misc/Unsafe",                "compareAndSwapObject",     "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z",                       com_misc_Unsafe_compareAndSwapObject},
-        {"sun/misc/Unsafe",                "park",                     "(ZJ)V",                                                                            com_misc_Unsafe_pack},
-        {"sun/misc/Unsafe",                "unpark",                   "(Ljava/lang/Object;)V",                                                            com_misc_Unsafe_unpack},
+    {"org/mini/vm/RefNative", "refIdSize", "()I", org_mini_vm_RefNative_refIdSize},
+    {"org/mini/vm/RefNative", "obj2id", "(Ljava/lang/Object;)J", org_mini_vm_RefNative_obj2id},
+    {"org/mini/vm/RefNative", "id2obj", "(J)Ljava/lang/Object;", org_mini_vm_RefNative_id2obj},
+    {"org/mini/vm/RefNative", "getClasses", "()[Ljava/lang/Class;", org_mini_vm_RefNative_getClasses},
+    {"org/mini/vm/RefNative", "getBootstrapClassByName", "(Ljava/lang/String;)Ljava/lang/Class;", org_mini_vm_RefNative_getBootstrapClassByName},
+    {"org/mini/vm/RefNative", "newWithoutInit", "(Ljava/lang/Class;)Ljava/lang/Object;", org_mini_vm_RefNative_newWithoutInit},
+    {"org/mini/vm/RefNative", "setLocalVal", "(JIBJI)I", org_mini_vm_RefNative_setLocalVal},
+    {"org/mini/vm/RefNative", "getLocalVal", "(JILorg/mini/jdwp/type/ValueType;)I", org_mini_vm_RefNative_getLocalVal},
+    {"org/mini/vm/RefNative", "getThreads", "()[Ljava/lang/Thread;", org_mini_vm_RefNative_getThreads},
+    {"org/mini/vm/RefNative", "getStatus", "(Ljava/lang/Thread;)I", org_mini_vm_RefNative_getStatus},
+    {"org/mini/vm/RefNative", "suspendThread", "(Ljava/lang/Thread;)I", org_mini_vm_RefNative_suspendThread},
+    {"org/mini/vm/RefNative", "resumeThread", "(Ljava/lang/Thread;)I", org_mini_vm_RefNative_resumeThread},
+    {"org/mini/vm/RefNative", "getSuspendCount", "(Ljava/lang/Thread;)I", org_mini_vm_RefNative_getSuspendCount},
+    {"org/mini/vm/RefNative", "getFrameCount", "(Ljava/lang/Thread;)I", org_mini_vm_RefNative_getFrameCount},
+    {"org/mini/vm/RefNative", "stopThread", "(Ljava/lang/Thread;Ljava/lang/Object;)I", org_mini_vm_RefNative_stopThread},
+    {"org/mini/vm/RefNative", "getStackFrame", "(Ljava/lang/Thread;)J", org_mini_vm_RefNative_getStackFrame},
+    {"org/mini/vm/RefNative", "getGarbageMarkCounter", "()I", org_mini_vm_RefNative_getGarbageMarkCounter},
+    {"org/mini/vm/RefNative", "getGarbageStatus", "()I", org_mini_vm_RefNative_getGarbageStatus},
+    {"org/mini/vm/RefNative", "dumpHeap", "(Ljava/lang/String;I)I", org_mini_vm_RefNative_dumpHeap},
+    {"org/mini/vm/RefNative", "getCallerClass", "()Ljava/lang/Class;", org_mini_vm_RefNative_getCallerClass},
+    {"org/mini/vm/RefNative", "defineClass", "(Ljava/lang/ClassLoader;Ljava/lang/String;[BII)Ljava/lang/Class;", org_mini_vm_RefNative_defineClass},
+    {"org/mini/vm/RefNative", "findLoadedClass0", "(Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/Class;", org_mini_vm_RefNative_findLoadedClass0},
+    {"org/mini/vm/RefNative", "findResource0", "(Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/net/URL;", org_mini_vm_RefNative_findResource0},
+    {"org/mini/vm/RefNative", "initNativeClassLoader", "(Ljava/lang/ClassLoader;Ljava/lang/ClassLoader;)V", org_mini_vm_RefNative_initNativeClassLoader},
+    {"org/mini/vm/RefNative", "destroyNativeClassLoader", "(Ljava/lang/ClassLoader;)V", org_mini_vm_RefNative_destroyNativeClassLoader},
+    {"org/mini/vm/RefNative", "addJarToClasspath", "(Ljava/lang/String;)V", org_mini_vm_RefNative_addJarToClasspath},
+    {"org/mini/vm/RefNative", "stringFromUtf8Bytes", "(Ljava/lang/String;[BII)V", org_mini_vm_RefNative_stringFromUtf8Bytes},
+    {"org/mini/vm/RefNative", "stringToUtf8Bytes", "(Ljava/lang/String;)[B", org_mini_vm_RefNative_stringToUtf8Bytes},
+    {"org/mini/vm/RefNative", "toCstyleBytes", "(Ljava/lang/String;)[B", org_mini_vm_RefNative_toCstyleBytes},
+    {"org/mini/vm/RefNative", "resetProfile", "()V", org_mini_vm_RefNative_resetProfile},
+    {"org/mini/vm/RefNative", "getProfileAll", "()Ljava/lang/String;", org_mini_vm_RefNative_getProfileAll},
+    {"org/mini/vm/RefNative", "watchSlowCallMethod", "(IJ)V", org_mini_vm_RefNative_watchSlowCallMethod},
+    {"org/mini/vm/RefNative", "unwatchSlowCallMethod", "(I)V", org_mini_vm_RefNative_unwatchSlowCallMethod},
+    {"org/mini/vm/RefNative", "clearSlowCallWatch", "()V", org_mini_vm_RefNative_clearSlowCallWatch},
+    {"org/mini/vm/RefNative", "clearSlowCallCache", "()V", org_mini_vm_RefNative_clearSlowCallCache},
+    {"org/mini/vm/RefNative", "getSlowCallSnapshotList", "()[Ljava/lang/String;", org_mini_vm_RefNative_getSlowCallSnapshotList},
+    {"org/mini/vm/RefNative", "getSlowCallStackSnapshot", "(I)[B", org_mini_vm_RefNative_getSlowCallStackSnapshot},
+    {"org/mini/vm/RefNative", "getMethodByUniId", "(I)Ljava/lang/String;", org_mini_vm_RefNative_getMethodByUniId},
+    {"org/mini/vm/RefNative", "getSlowCallWatchMethods", "()Ljava/lang/String;", org_mini_vm_RefNative_getSlowCallWatchMethods},
+    {"org/mini/vm/RefNative", "heap_calloc", "(I)J", org_mini_vm_RefNative_heap_calloc},
+    {"org/mini/vm/RefNative", "heap_free", "(J)V", org_mini_vm_RefNative_heap_free},
+    {"org/mini/vm/RefNative", "heap_put_byte", "(JIB)V", org_mini_vm_RefNative_heap_put_byte},
+    {"org/mini/vm/RefNative", "heap_get_byte", "(JI)B", org_mini_vm_RefNative_heap_get_byte},
+    {"org/mini/vm/RefNative", "heap_put_short", "(JIS)V", org_mini_vm_RefNative_heap_put_short},
+    {"org/mini/vm/RefNative", "heap_get_short", "(JI)S", org_mini_vm_RefNative_heap_get_short},
+    {"org/mini/vm/RefNative", "heap_put_int", "(JII)V", org_mini_vm_RefNative_heap_put_int},
+    {"org/mini/vm/RefNative", "heap_get_int", "(JI)I", org_mini_vm_RefNative_heap_get_int},
+    {"org/mini/vm/RefNative", "heap_put_long", "(JIJ)V", org_mini_vm_RefNative_heap_put_long},
+    {"org/mini/vm/RefNative", "heap_get_long", "(JI)J", org_mini_vm_RefNative_heap_get_long},
+    {"org/mini/vm/RefNative", "heap_put_float", "(JIF)V", org_mini_vm_RefNative_heap_put_int},
+    {"org/mini/vm/RefNative", "heap_get_float", "(JI)F", org_mini_vm_RefNative_heap_get_int},
+    {"org/mini/vm/RefNative", "heap_put_double", "(JID)V", org_mini_vm_RefNative_heap_put_long},
+    {"org/mini/vm/RefNative", "heap_get_double", "(JI)D", org_mini_vm_RefNative_heap_get_long},
+    {"org/mini/vm/RefNative", "heap_put_ref", "(JILjava/lang/Object;)V", org_mini_vm_RefNative_heap_put_ref},
+    {"org/mini/vm/RefNative", "heap_get_ref", "(JI)Ljava/lang/Object;", org_mini_vm_RefNative_heap_get_ref},
+    {"org/mini/vm/RefNative", "heap_copy", "(JIJII)V", org_mini_vm_RefNative_heap_copy},
+    {"org/mini/vm/RefNative", "heap_bin_search", "(JIJI)I", org_mini_vm_RefNative_heap_bin_search},
+    {"org/mini/vm/RefNative", "heap_fill", "(JIJI)V", org_mini_vm_RefNative_heap_fill},
+    {"org/mini/vm/RefNative", "heap_endian", "()I", org_mini_vm_RefNative_heap_little_endian},
+    {"org/mini/reflect/ReflectClass", "mapClass", "(J)V", org_mini_reflect_ReflectClass_mapClass},
+    {"org/mini/reflect/ReflectField", "mapField", "(J)V", org_mini_reflect_ReflectField_mapField},
+    {"org/mini/reflect/ReflectField", "getFieldVal", "(Ljava/lang/Object;J)J", org_mini_reflect_ReflectField_getFieldVal},
+    {"org/mini/reflect/ReflectField", "setFieldVal", "(Ljava/lang/Object;JJ)V", org_mini_reflect_ReflectField_setFieldVal},
+    {"org/mini/reflect/ReflectMethod", "mapMethod", "(J)V", org_mini_reflect_ReflectMethod_mapMethod},
+    {"org/mini/reflect/ReflectMethod", "invokeMethod", "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;", org_mini_reflect_ReflectMethod_invokeMethod},
+    {"org/mini/reflect/ReflectMethod", "getExceptionTypes0", "(J)[Ljava/lang/Class;", org_mini_reflect_ReflectMethod_getExceptionTypes0},
+    {"org/mini/reflect/ReflectMethod", "findMethod0", "(Ljava/lang/ClassLoader;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)J", org_mini_reflect_ReflectMethod_findMethod0},
+    {"org/mini/reflect/StackFrame", "mapRuntime", "(J)V", org_mini_reflect_StackFrame_mapRuntime},
+    {"org/mini/reflect/ReflectArray", "mapArray", "(Ljava/lang/Object;)V", org_mini_reflect_ReflectArray_mapArray},
+    {"org/mini/reflect/ReflectArray", "getLength", "(Ljava/lang/Object;)I", org_mini_reflect_ReflectArray_getLength},
+    {"org/mini/reflect/ReflectArray", "getTypeTag", "(Ljava/lang/Object;)B", org_mini_reflect_ReflectArray_getTypeTag},
+    {"org/mini/reflect/ReflectArray", "getBodyPtr", "(Ljava/lang/Object;)J", org_mini_reflect_ReflectArray_getArrayBodyPtr},
+    {"org/mini/reflect/ReflectArray", "newArray", "(Ljava/lang/Class;I)Ljava/lang/Object;", org_mini_reflect_ReflectArray_newArray},
+    {"org/mini/reflect/ReflectArray", "multiNewArray", "(Ljava/lang/Class;[I)Ljava/lang/Object;", org_mini_reflect_ReflectArray_multiNewArray},
+    {"org/mini/reflect/DirectMemObj", "setVal", "(IJ)V", org_mini_reflect_DirectMemObj_setVal},
+    {"org/mini/reflect/DirectMemObj", "getVal", "(I)J", org_mini_reflect_DirectMemObj_getVal},
+    {"org/mini/reflect/DirectMemObj", "copyTo0", "(ILjava/lang/Object;II)V", org_mini_reflect_DirectMemObj_copyTo0},
+    {"org/mini/reflect/DirectMemObj", "copyFrom0", "(ILjava/lang/Object;II)V", org_mini_reflect_DirectMemObj_copyFrom0},
+    {"sun/misc/Unsafe", "objectFieldOffset", "(J)J", com_misc_Unsafe_objectFieldOffset},
+    {"sun/misc/Unsafe", "objectFieldBase", "(Ljava/lang/Object;)J", com_misc_Unsafe_objectFieldBase},
+    {"sun/misc/Unsafe", "staticFieldOffset", "(J)J", com_misc_Unsafe_staticFieldOffset},
+    {"sun/misc/Unsafe", "compareAndSwapInt", "(Ljava/lang/Object;JII)Z", com_misc_Unsafe_compareAndSwapInt},
+    {"sun/misc/Unsafe", "compareAndSwapLong", "(Ljava/lang/Object;JJJ)Z", com_misc_Unsafe_compareAndSwapLong},
+    {"sun/misc/Unsafe", "compareAndSwapObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z", com_misc_Unsafe_compareAndSwapObject},
+    {"sun/misc/Unsafe", "park", "(ZJ)V", com_misc_Unsafe_pack},
+    {"sun/misc/Unsafe", "unpark", "(Ljava/lang/Object;)V", com_misc_Unsafe_unpack},
+    {"org/mini/vm/RefNative", "resetProfile", "()V", org_mini_vm_RefNative_resetProfile},
+    {"org/mini/vm/RefNative", "getProfileAll", "()Ljava/lang/String;", org_mini_vm_RefNative_getProfileAll},
 
 };
 

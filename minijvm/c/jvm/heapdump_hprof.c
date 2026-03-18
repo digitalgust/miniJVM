@@ -3,9 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "bytebuf.h"
-#include "hashset.h"
-#include "utf8_string.h"
+#include "jvm.h"
 
 extern s32 _gc_pause_the_world(MiniJVM *jvm);
 

@@ -10,6 +10,7 @@ import org.mini.apploader.AppManager;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GDesktop;
 import org.mini.gui.callback.GFont;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
@@ -1555,6 +1556,36 @@ public class GToolkit {
         form.add(gobj);
     }
 
+    /**
+     * showFrame("parentName.frameName");
+     *
+     * @param framePath
+     */
+    public static void showSubrame(String framePath) {
+        GForm form = GCallBack.getInstance().getDesktop().getForm();
+        GContainer parent = null;
+        String frameName = null;
+        if (framePath != null) {
+            if (framePath.contains(".")) {
+                int dotIndex = framePath.indexOf(".");
+                String parentName = framePath.substring(0, dotIndex);
+                frameName = framePath.substring(dotIndex + 1);
+                GObject go = form.findByName(parentName);
+                if (go != null && go instanceof GContainer) {
+                    parent = (GContainer) go;
+                } else {
+                    parent = form;
+                }
+            } else {
+                parent = form;
+                frameName = framePath;
+            }
+        }
+        GFrame frame = parent.getSubFrame(frameName);
+        form.add(frame);
+        form.setCurrent(frame);
+        frame.setVisible(true);
+    }
 
     /**
      * set component attachment by compName

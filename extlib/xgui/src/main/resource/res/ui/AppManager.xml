@@ -21,15 +21,15 @@
             else
                 getPolicy(false) #异步调用
 
-                setVisible("LAB_FROM_URL",false)
-                setVisible("INPUT_URL",false)
-                setVisible("BT_DOWN",false)
-                setVisible("LAB_FROM_LOCAL",false)
-                setVisible("BT_LOCALFILE",false)
-                setVisible("LAB_WEBSRV",false)
-                setVisible("BT_STARTWEB",false)
-                setVisible("BT_STARTWEB",false)
-                setVisible("INPUT_LOG",false)
+                #setVisible("LAB_FROM_URL",false)
+                #setVisible("INPUT_URL",false)
+                #setVisible("BT_DOWN",false)
+                #setVisible("LAB_FROM_LOCAL",false)
+                #setVisible("BT_LOCALFILE",false)
+                #setVisible("LAB_WEBSRV",false)
+                #setVisible("BT_STARTWEB",false)
+                #setVisible("BT_STARTWEB",false)
+                #setVisible("INPUT_LOG",false)
             eif
 
             #设置屏幕常亮
@@ -309,22 +309,6 @@
             eif
         ret
 
-        sub openWebForUpload()
-            #执行java语句  AppManager.getInstance().getWebServer()==null
-            ins=invokeStatic("org.mini.apploader.AppManager","getInstance()Lorg.mini.apploader.AppManager;")
-            websrv=invokeJava(ins,"getWebServer()Lorg.mini.http.MiniHttpServer;")
-
-            #因为按下按钮后，脚本先于按钮的action执行，
-            #因此，webServer如果不为空，
-            #说明本次事件是要停止webserver,反之是要启动
-            if(isNull(websrv))
-                url="http://localhost:8088"
-                #println(url)
-                if(strlen(url)>0)
-                    openOtherApp(url,"URL",0)  # 第一个为 url，第二个为参数(URL表示打开网址),，第三个为检测是否App 存在，0为不检测，1为检测
-                eif
-            eif
-        ret
 
         sub showPlugDownload()
             setMenuMarkIndex("MENU_MAIN",1)
@@ -361,6 +345,10 @@
             invokeStatic("org.mini.gui.GToolkit","setFeel(I)V",feel)
         ret
 
+        sub showDevPanel()
+            showSubFrame("FORM_PLUGMGR.DEV_FRAME");
+        ret
+
         sub showPrivacy()
             if(isGithub())
                 ret
@@ -372,7 +360,6 @@
             body=getQueryPara()
             showSlot("SLOT_MGR",3)
             openPagePost(s3,body,"")
-            invokeStatic("org.mini.vm.RefNative","dumpHeap(Ljava/lang/String;I)I","dump.hprof",0)
         ret
 
         sub showAbout()
@@ -418,6 +405,7 @@
             setScreenBrightness(v)
             setEnv("SCREEN_BRIGHTNESS",v)
         ret
+
         ]]>
         </script>
         <tr h="{STATEBAR_HEIGHT}" w="100%">
@@ -514,25 +502,11 @@
                             <br/>
                             <label w="100%" h="20"></label>
 
+                            <button name="BT_DEV" w="100%" h="40" align="left,vcenter" onclick="showDevPanel()" preicon="📄">{STR_DEV_OPS}</button>
                             <button name="BT_PRIVACY" w="100%" h="40" align="left,vcenter" onclick="showPrivacy()" preicon="📄">{STR_PRIVACY}</button>
                             <br/>
                             <button name="BT_ABOUT" w="100%" h="40" align="left,vcenter" onclick="showAbout()" preicon="📄">{STR_ABOUT}</button>
                             <br/>
-
-                            <label name="LAB_FROM_URL" w="100%" h="30" align="left,vcenter">{STR_DOWN_APP_FROM_WEB}</label>
-                            <input name="INPUT_URL" w="100%" h="30" hint="plug jar url"></input>
-                            <br/>
-                            <button name="BT_DOWN" w="100%" h="30" preicon="📥">{STR_DOWNLOAD}</button>
-                            <label w="100%" h="20"></label>
-                            <label name="LAB_FROM_LOCAL" w="100%" h="30" align="left,vcenter">{STR_INSTALL_FROM_LOCAL}</label>
-                            <br/>
-                            <button name="BT_LOCALFILE" w="100%" h="30" preicon="📁">{BROWSE_FILE}</button>
-                            <label w="100%" h="20"></label>
-                            <label name="LAB_WEBSRV" w="100%" h="30" align="left,vcenter">{STR_START_WEB_SRV_FOR_UPLOAD}</label>
-                            <button name="BT_STARTWEB" onclick="openWebForUpload()" w="100%" h="30" preicon="📤">{STR_START}</button>
-                            <label w="100%" h="20"></label>
-                            <br/>
-                            <!--                            <input name="INPUT_LOG" w="100%" h="200" edit="0" multiline="1">{STR_MESSAGE}</input>-->
                             <label></label>
                         </viewport>
                     </panel>
@@ -610,4 +584,47 @@
             </td>
         </tr>
     </table>
+    <frame name="DEV_FRAME" x="10%" y="10%" w="80%" h="80%" title="{STR_DEV_OPS}" hidden="1">
+        <script>
+            <![CDATA[
+        sub dump()
+            invokeStatic("org.mini.vm.RefNative","dumpHeap(Ljava/lang/String;I)I","dump.hprof",0)
+        ret
+
+        sub openWebForUpload()
+            #执行java语句  AppManager.getInstance().getWebServer()==null
+            ins=invokeStatic("org.mini.apploader.AppManager","getInstance()Lorg.mini.apploader.AppManager;")
+            websrv=invokeJava(ins,"getWebServer()Lorg.mini.http.MiniHttpServer;")
+
+            #因为按下按钮后，脚本先于按钮的action执行，
+            #因此，webServer如果不为空，
+            #说明本次事件是要停止webserver,反之是要启动
+            if(isNull(websrv))
+                url="http://localhost:18088"
+                #println(url)
+                if(strlen(url)>0)
+                    openOtherApp(url,"URL",0)  # 第一个为 url，第二个为参数(URL表示打开网址),，第三个为检测是否App 存在，0为不检测，1为检测
+                eif
+            eif
+        ret
+        ]]>
+        </script>
+        <label name="LAB_FROM_URL" w="100%" h="30" align="left,vcenter">{STR_DOWN_APP_FROM_WEB}</label>
+        <input name="INPUT_URL" w="100%" h="30" hint="plug jar url"></input>
+        <br/>
+        <button name="BT_DOWN" w="100%" h="30" preicon="📥">{STR_DOWNLOAD}</button>
+        <label w="100%" h="20"></label>
+        <label name="LAB_FROM_LOCAL" w="100%" h="30" align="left,vcenter">{STR_INSTALL_FROM_LOCAL}</label>
+        <br/>
+        <button name="BT_LOCALFILE" w="100%" h="30" preicon="📁">{BROWSE_FILE}</button>
+        <label w="100%" h="20"></label>
+        <label name="LAB_WEBSRV" w="100%" h="30" align="left,vcenter">{STR_START_WEB_SRV_FOR_UPLOAD}</label>
+        <button name="BT_STARTWEB" onclick="openWebForUpload()" w="100%" h="30" preicon="📤">{STR_START}</button>
+        <label w="100%" h="20"></label>
+        <button name="BT_DUMP" onclick="dump()" w="100%" h="30" preicon="📤">{STR_DUMP}</button>
+        <label w="100%" h="20"></label>
+        <br/>
+        <input name="INPUT_LOG" w="100%" h="200" edit="0" multiline="1">{STR_MESSAGE}</input>
+
+    </frame>
 </form>

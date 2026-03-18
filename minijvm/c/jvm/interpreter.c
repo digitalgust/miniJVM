@@ -509,6 +509,9 @@ static inline s32 _optimize_inline_setter(JClass *clazz, s32 cfrIdx, Runtime *ru
 
 
 s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
+#if _JVM_DEBUG_METHOD_PROFILE || _JVM_DEBUG_SLOW_CALL_PROFILE
+    s64 start_time = nanoTime();
+#endif
     //local var for control
     s32 ret;
     Runtime *r;
@@ -521,10 +524,22 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     //start
     ret = RUNTIME_STATUS_NORMAL;
     r = runtime_create_inl(pruntime);
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    r->slow_profile_start_at = start_time;
+    r->slow_profile_child_spent = 0;
+    if (r->jvm && r->jvm->collector) {
+        r->slow_profile_gc_pause_at_enter = ATOMIC_ADD64(&r->jvm->collector->stw_total_ns, 0);
+    } else {
+        r->slow_profile_gc_pause_at_enter = 0;
+    }
+#endif
 
     clazz = method->_this_class;
     r->clazz = clazz;
     r->method = method;
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    profile_slow_call_enter(r, method, start_time);
+#endif
     while (clazz->status < CLASS_STATUS_CLINITING) {
         class_clinit(clazz, r);
     }
@@ -634,7 +649,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif   //_JVM_DEBUG_LOG_LEVEL > 1
 
 
-#if _JVM_DEBUG_PROFILE
+#if _JVM_DEBUG_BYTECODE_PROFILE
                     u8 cur_inst = *r->pc;
                     s64 spent = 0;
                     s64 start_at = nanoTime();
@@ -3885,7 +3900,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 } else {
                                     r->m = (MethodInfo *) pairlist_get(r->cmr->virtual_methods, r->ins->mb.clazz);
                                 }
-#if _JVM_DEBUG_PROFILE
+#if _JVM_DEBUG_BYTECODE_PROFILE
                                 spent = nanoTime() - start_at;
 #endif
                                 if (!r->m) {
@@ -3908,7 +3923,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_invokespecial_fast: {
                             r->cmr = class_get_constant_method_ref(clazz, *((u16 *) (r->pc + 1)));
                             r->m = r->cmr->methodInfo;
-#if _JVM_DEBUG_PROFILE
+#if _JVM_DEBUG_BYTECODE_PROFILE
                             spent = nanoTime() - start_at;
 #endif
                             stack->sp = sp;
@@ -3925,7 +3940,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_invokestatic_fast: {
                             r->cmr = class_get_constant_method_ref(clazz, *((u16 *) (r->pc + 1)));
                             r->m = r->cmr->methodInfo;
-#if _JVM_DEBUG_PROFILE
+#if _JVM_DEBUG_BYTECODE_PROFILE
                             spent = nanoTime() - start_at;
 #endif
                             stack->sp = sp;
@@ -3948,7 +3963,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 goto label_null_throw;
                             } else {
                                 r->m = (MethodInfo *) pairlist_get(r->cmr->virtual_methods, r->ins->mb.clazz);
-#if _JVM_DEBUG_PROFILE
+#if _JVM_DEBUG_BYTECODE_PROFILE
                                 spent = nanoTime() - start_at;
 #endif
                                 if (!r->m) {
@@ -3973,7 +3988,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->bootMethod = &clazz->bootstrapMethodAttr->bootstrap_methods[r->cid->bootstrap_method_attr_index]; //Boot
                             r->m = r->bootMethod->make;
 
-#if _JVM_DEBUG_PROFILE
+#if _JVM_DEBUG_BYTECODE_PROFILE
                             spent = nanoTime() - start_at;
 #endif
                             // run make to generate instance of Lambda Class
@@ -3994,7 +4009,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     /* ================================== r->pc end =============================*/
 
-#if _JVM_DEBUG_PROFILE
+#if _JVM_DEBUG_BYTECODE_PROFILE
                     //time
                     if (!spent) spent = nanoTime() - start_at;
                     profile_put(cur_inst, spent, 1);
@@ -4053,7 +4068,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
                     sp = stack->sp;
-#if _JVM_DEBUG_PROFILE
+#if _JVM_DEBUG_BYTECODE_PROFILE
                     //time
                     if (!spent) spent = nanoTime() - start_at;
                     profile_put(cur_inst, spent, 1);
@@ -4061,7 +4076,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     continue;
 
                 label_exit_while:
-#if _JVM_DEBUG_PROFILE
+#if _JVM_DEBUG_BYTECODE_PROFILE
                     //time
                     if (!spent) spent = nanoTime() - start_at;
                     profile_put(cur_inst, spent, 1);
@@ -4140,6 +4155,37 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
         }
     }
 #endif
+#if _JVM_DEBUG_METHOD_PROFILE || _JVM_DEBUG_SLOW_CALL_PROFILE
+    s64 spent = nanoTime() - start_time;
+#if _JVM_DEBUG_SLOW_CALL_PROFILE
+    s64 slow_spent = spent;
+    if (r->jvm && r->jvm->collector) {
+        s64 gc_pause_now = ATOMIC_ADD64(&r->jvm->collector->stw_total_ns, 0);
+        s64 gc_pause_spent = gc_pause_now - r->slow_profile_gc_pause_at_enter;
+        if (gc_pause_spent > 0) {
+            slow_spent -= gc_pause_spent;
+            if (slow_spent < 0) {
+                slow_spent = 0;
+            }
+        }
+    }
+    if (r->parent) {
+        r->parent->slow_profile_child_spent += slow_spent;
+    }
+    profile_slow_call_record(r, method, slow_spent);
+#endif
+#if _JVM_DEBUG_METHOD_PROFILE
+    ATOMIC_ADD64(&method->profile_total_time, spent);
+    ATOMIC_ADD64(&method->profile_count, 1);
+    // update max time
+    s64 max = method->profile_max_time;
+    while(spent > max) {
+        if(ATOMIC_CAS64(&method->profile_max_time, max, spent)) break;
+        max = method->profile_max_time;
+    }
+    //profile_method_print(pruntime->jvm);
+#endif
+#endif
     runtime_destroy_inl(r);
     pruntime->son = NULL; //must clear , required for getLastSon()
 
@@ -4148,6 +4194,5 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     jvm_printf("} // %s.%s%s\n", utf8_cstr(method->_this_class->name),
                utf8_cstr(method->name), utf8_cstr(method->descriptor));
 #endif
-
     return ret;
 }

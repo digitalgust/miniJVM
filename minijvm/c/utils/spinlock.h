@@ -46,6 +46,8 @@ typedef struct _SpinLock spinlock_t;
 #define ATOMIC_DEC(ptr) InterlockedDecrement((volatile LONG *)(ptr))
 #define ATOMIC_ADD(ptr, val) InterlockedAdd((volatile LONG *)(ptr), (val))
 #define ATOMIC_SUB(ptr, val) InterlockedAdd((volatile LONG *)(ptr), -(val))
+#define ATOMIC_ADD64(ptr, val) InterlockedAdd64((volatile LONG64 *)(ptr), (val))
+#define ATOMIC_CAS64(ptr, oldv, newv) (InterlockedCompareExchange64((volatile LONG64 *)(ptr), (newv), (oldv)) == (oldv))
 #define MEMORY_BARRIER() MemoryBarrier()
 #elif defined(__GNUC__)
 // GCC/Clang
@@ -54,6 +56,8 @@ typedef struct _SpinLock spinlock_t;
 #define ATOMIC_DEC(ptr) __sync_sub_and_fetch(ptr, 1)
 #define ATOMIC_ADD(ptr, val) __sync_add_and_fetch(ptr, val)
 #define ATOMIC_SUB(ptr, val) __sync_sub_and_fetch(ptr, val)
+#define ATOMIC_ADD64(ptr, val) __sync_add_and_fetch(ptr, val)
+#define ATOMIC_CAS64(ptr, oldv, newv) __sync_bool_compare_and_swap(ptr, oldv, newv)
 #define MEMORY_BARRIER() __sync_synchronize()
 #else
 // Generic implementation using mutex for unsupported platforms
@@ -62,6 +66,19 @@ static pthread_mutex_t atomic_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static inline int atomic_cas(volatile s32 *ptr, s32 old_val, s32 new_val) {
     int result;
+    pthread_mutex_lock(&atomic_mutex);
+    if (*ptr == old_val) {
+        *ptr = new_val;
+        result = 1;
+    } else {
+        result = 0;
+    }
+    pthread_mutex_unlock(&atomic_mutex);
+    return result;
+}
+
+static inline s64 atomic_cas64(volatile s64 *ptr, s64 old_val, s64 new_val) {
+    s64 result;
     pthread_mutex_lock(&atomic_mutex);
     if (*ptr == old_val) {
         *ptr = new_val;
@@ -100,6 +117,15 @@ static inline s32 atomic_add(volatile s32 *ptr, s32 val) {
     return result;
 }
 
+static inline s64 atomic_add64(volatile s64 *ptr, s64 val) {
+    s64 result;
+    pthread_mutex_lock(&atomic_mutex);
+    *ptr += val;
+    result = *ptr;
+    pthread_mutex_unlock(&atomic_mutex);
+    return result;
+}
+
 static inline s32 atomic_sub(volatile s32 *ptr, s32 val) {
     s32 result;
     pthread_mutex_lock(&atomic_mutex);
@@ -114,6 +140,8 @@ static inline s32 atomic_sub(volatile s32 *ptr, s32 val) {
 #define ATOMIC_DEC(ptr) atomic_dec(ptr)
 #define ATOMIC_ADD(ptr, val) atomic_add(ptr, val)
 #define ATOMIC_SUB(ptr, val) atomic_sub(ptr, val)
+#define ATOMIC_ADD64(ptr, val) atomic_add64(ptr, val)
+#define ATOMIC_CAS64(ptr, oldv, newv) atomic_cas64(ptr, oldv, newv)
 #define MEMORY_BARRIER()               \
     pthread_mutex_lock(&atomic_mutex); \
     pthread_mutex_unlock(&atomic_mutex)

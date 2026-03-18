@@ -101,6 +101,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("deleteText".toLowerCase(), this::deleteText);//
             methodNames.put("getCaretPos".toLowerCase(), this::getCaretPos);//
             methodNames.put("showTitle".toLowerCase(), this::showTitle);//
+            methodNames.put("showSubFrame".toLowerCase(), this::showSubFrame);//
             methodNames.put("setBgImg".toLowerCase(), this::setBgImg);//
             methodNames.put("setVisible".toLowerCase(), this::setVisible);//
             methodNames.put("getVisible".toLowerCase(), this::getVisible);//
@@ -910,6 +911,12 @@ public class GuiScriptLib extends Lib {
             boolean show = Interpreter.popBackBool(para);
             ((GFrame) gobj).setTitleShow(show);
         }
+        return null;
+    }
+
+    private DataType showSubFrame(ArrayList<DataType> para) {
+        String framePath = Interpreter.popBackStr(para);
+        GToolkit.showSubrame(framePath);
         return null;
     }
 

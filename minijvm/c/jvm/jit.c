@@ -66,9 +66,9 @@ static void FAILE(s32 cond, c8 *text) {
 static s32 CHECK(struct sljit_compiler *compiler) {
     if (sljit_get_compiler_error(compiler) != SLJIT_ERR_COMPILED) {
         printf("Compiler error: %d\n", sljit_get_compiler_error(compiler));
-        return -1; // 返回错误状态而不是直接释放
+        return -1; // return err status but not release
     }
-    return 0; // 成功
+    return 0; // sc
 }
 
 static void print_reg(s64 a, s64 b, s64 c) {
@@ -1067,10 +1067,10 @@ s32 multiarray(Runtime *runtime, Utf8String *desc, s32 count) {
 
 
 s32 invokevirtual(Runtime *runtime, s32 idx) {
-    if (utf8_equals_c(runtime->method->_this_class->name, "org/mini/json/JsonParser")
-        && utf8_equals_c(runtime->method->name, "map2obj")) {
-        s32 debug = 1;
-    }
+    // if (utf8_equals_c(runtime->method->_this_class->name, "org/mini/json/JsonParser")
+    //     && utf8_equals_c(runtime->method->name, "map2obj")) {
+    //     s32 debug = 1;
+    // }
     s32 ret = 0;
     ConstantMethodRef *cmr = class_get_constant_method_ref(runtime->clazz, idx);
     RuntimeStack *stack = runtime->stack;
@@ -3007,6 +3007,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 _gen_load_sp_ip(C);
                 _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, 0, JVM_EXCEPTION_CLASSCAST, -1);
 
+                _gen_ip_modify_imm(C, 3);
                 ip += 3;
                 break;
             }
@@ -3049,6 +3050,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 // =====================================================================
 
                 _gen_stack_pop_ref(C, SLJIT_R0, 0);
+                _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, 0);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                 sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P), SLJIT_IMM, SLJIT_FUNC_ADDR(jthread_lock));
 
@@ -3063,6 +3065,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 // =====================================================================
 
                 _gen_stack_pop_ref(C, SLJIT_R0, 0);
+                _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, 0);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                 sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P), SLJIT_IMM, SLJIT_FUNC_ADDR(jthread_unlock));
 
@@ -3252,10 +3255,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
             case op_goto_w: {
                 s32 offset = *((s32 *) (ip + 1));
-                _gen_ip_modify_imm(C, code_idx + offset);
                 _gen_goto(C, method, code_idx, offset);
 
-                _gen_ip_modify_imm(C, 5);
                 ip += 5;
                 break;
             }
@@ -3350,7 +3351,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
     //Execute code
     ca->jit.func = (jit_func) genfunc;
     runtime->jvm->collector->jit_heap_size += ca->jit.len;
-#if _JVM_DEBUG_LOG_LEVEL > 1
+#if _JVM_DEBUG_LOG_LEVEL > 2
     jvm_printf("jit compile method %s.%s%s ,func length:%d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), utf8_cstr(method->descriptor), ca->jit.len);
 #endif
 

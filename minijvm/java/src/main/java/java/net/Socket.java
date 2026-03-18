@@ -12,6 +12,7 @@ import java.io.OutputStream;
 public class Socket extends SocketImpl {
 
     boolean isConnected = false;
+    boolean nonBlock = false;
 
     protected Socket(byte[] sockfd) throws IOException {
         fd = sockfd;
@@ -77,7 +78,20 @@ public class Socket extends SocketImpl {
 
             @Override
             public void write(byte[] b, int offset, int len) throws IOException {
-                SocketNative.write(fd, b, offset, len);
+                int sentTotal = 0;
+                while (sentTotal < len) {
+                    int sent = SocketNative.write(fd, b, offset + sentTotal, len - sentTotal);
+                    if (sent < 0) {
+                        throw new IOException("socket write error");
+                    }
+                    if (sent == 0) {
+                        if (nonBlock) {
+                            throw new IOException("socket write would block");
+                        }
+                        continue;
+                    }
+                    sentTotal += sent;
+                }
             }
 
         };
@@ -129,6 +143,7 @@ public class Socket extends SocketImpl {
         if (fd != null) {
             SocketNative.setOption0(fd, SocketNative.SO_NONBLOCK, on ? 1 : 0, 0);
         }
+        nonBlock = on;
     }
 
     public void setTcpNoDelay(boolean on) throws SocketException {
