@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.8)
-project(jni_gui)
+cmake_minimum_required(VERSION 3.10)
+project(jni_gui LANGUAGES C)
 
 
 #set(CMAKE_CXX_STANDARD 11)
@@ -17,7 +17,7 @@ set(SOURCE_FILES
         media.c
         jni_nanovg.c
         )
-add_executable(test_gui ${SOURCE_FILES})
+#add_executable(test_gui ${SOURCE_FILES})
 
 add_library(gui SHARED ${SOURCE_FILES})
 set_target_properties(gui PROPERTIES OUTPUT_NAME gui)
@@ -52,7 +52,7 @@ ELSEIF (UNIX)
     find_library(MY_LIB libglfw3.a "${CMAKE_SOURCE_DIR}/deps/lib/centos_x64/")
     MARK_AS_ADVANCED(MY_LIB)
     TARGET_LINK_LIBRARIES(gui ${MY_LIB})
-    TARGET_LINK_LIBRARIES(gui X11 Xi pthread Xcursor Xrandr GL Xinerama)
+    TARGET_LINK_LIBRARIES(gui X11 Xi pthread Xcursor Xrandr GL Xinerama m)
     SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../../../binary/centos_x64)
 ELSEIF (MINGW)
     IF (CMAKE_SIZEOF_VOID_P EQUAL 4)
@@ -88,5 +88,4 @@ ELSEIF (WIN32)
 ENDIF ()
 
 message(${LIBRARY_OUTPUT_PATH})
-
 
