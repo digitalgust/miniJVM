@@ -37,9 +37,9 @@ CSRC="../minijvm/c"
 #
 #
 
-SRCLIST=`find ${CSRC}  -type f  -name "*.c" -not -path "${CSRC}/utils/sljit/*"  -not -path "${CSRC}/cmake-*" -not -path "${CSRC}/.*"`
+SRCLIST=`find ${CSRC}  -type f  -name "*.c" -not -path "${CSRC}/utils/sljit/*" -not -path "${CSRC}/utils/mimalloc/src/*" -not -path "${CSRC}/cmake-*" -not -path "${CSRC}/.*"`
 #echo ${SRCLIST}
-${GCC}  -o mini_jvm -I${CSRC}/jvm -I${CSRC}/utils/ -I${CSRC}/utils/sljit/ -I${CSRC}/utils/https/ -I${CSRC}/utils/https/mbedtls/include/  $SRCLIST ${CSRC}/utils/sljit/sljitLir.c   -pthread  -lpthread -lm -ldl
+${GCC}  -o mini_jvm -I${CSRC}/jvm -I${CSRC}/utils/ -I${CSRC}/utils/sljit/ -I${CSRC}/utils/https/ -I${CSRC}/utils/https/mbedtls/include/  -I${CSRC}/utils/mimalloc/include/  $SRCLIST ${CSRC}/utils/sljit/sljitLir.c  ${CSRC}/utils/mimalloc/src/static.c -pthread  -lpthread -lm -ldl
 
 
 echo "compile glfw_gui"
@@ -55,4 +55,3 @@ else
     ${GCC} -shared -fPIC -o ${LIBFILE} -I../minijvm/c/jvm -I${CSRC}/ -I${CSRC}/deps/include -L${CSRC}/deps/lib/${LIBDIR}   $SRCLIST -pthread -lglfw3 -lX11 -lXi -lpthread -lXcursor -lXrandr -lGL -lXinerama
 fi
 mv mini_jvm ${LIBFILE} ${BINDIR}/
-
