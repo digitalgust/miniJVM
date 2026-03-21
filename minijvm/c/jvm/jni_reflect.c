@@ -909,27 +909,58 @@ s32 org_mini_vm_RefNative_stringFromUtf8Bytes(Runtime *runtime, JClass *clazz) {
         return 0;
     }
 
-    if (offset < 0 || length <= 0 || offset + length > utf8Bytes->arr_length) {
+    if (offset < 0 || length < 0 || offset + length > utf8Bytes->arr_length) {
+        return 0;
+    }
+
+    Instance *arr = jstring_get_value_array(target, runtime);
+    if (length == 0) {
+        if (!arr) {
+            Instance *new_arr = jarray_create_by_type_index(runtime, 0, DATATYPE_JCHAR);
+            if (!new_arr) {
+                return 0;
+            }
+            c8 *ptr = jstring_get_value_ptr(target, runtime);
+            setFieldRefer(ptr, (__refer) new_arr);
+        }
+        jstring_set_offset(target, 0, runtime);
+        jstring_set_count(target, 0, runtime);
         return 0;
     }
 
     c8 *bytes = (c8 *) utf8Bytes->arr_body + offset;
-
     Utf8String *ustr = utf8_create_part_c(bytes, 0, length);
-
-    Instance *arr = jstring_get_value_array(target, runtime);
+    if (!ustr) {
+        return 0;
+    }
 
     s32 c8len = (ustr->length + 1) * DATA_TYPE_BYTES[DATATYPE_JCHAR];
     u16 *buf = jvm_calloc(c8len);
+    if (!buf) {
+        utf8_destroy(ustr);
+        return 0;
+    }
     s32 unicode_len = utf8_2_unicode(ustr, buf, c8len / DATA_TYPE_BYTES[DATATYPE_JCHAR]);
+    if (unicode_len < 0) {
+        jvm_free(buf);
+        utf8_destroy(ustr);
+        return 0;
+    }
 
     if (!arr || arr->arr_length < unicode_len) {
         Instance *new_arr = jarray_create_by_type_index(runtime, unicode_len, DATATYPE_JCHAR);
+        if (!new_arr) {
+            jvm_free(buf);
+            utf8_destroy(ustr);
+            return 0;
+        }
         c8 *ptr = jstring_get_value_ptr(target, runtime);
         setFieldRefer(ptr, (__refer) new_arr);
         arr = new_arr;
     }
-    memcpy(arr->arr_body, buf, unicode_len * DATA_TYPE_BYTES[DATATYPE_JCHAR]);
+    if (unicode_len > 0) {
+        memcpy(arr->arr_body, buf, unicode_len * DATA_TYPE_BYTES[DATATYPE_JCHAR]);
+    }
     jstring_set_offset(target, 0, runtime);
     jstring_set_count(target, unicode_len, runtime);
 
