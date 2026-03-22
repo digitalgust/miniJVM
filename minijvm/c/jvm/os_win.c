@@ -709,15 +709,14 @@ s32 os_load_lib_and_init(const c8 *libname, Runtime *runtime) {
 }
 
 
-#define LOCAL_PATH_SIZE 512
 
 void os_get_lang(Utf8String *buf) {
-    const int size = LOCAL_PATH_SIZE;
-    wchar_t localeName[LOCAL_PATH_SIZE];
+    const int size = MAX_PATH;
+    wchar_t localeName[MAX_PATH];
 
-    if (GetUserDefaultLocaleName(localeName, size)) {
+    if (GetUserDefaultLocaleName(localeName, MAX_PATH)) {
         //使用windows api 把 wchar_t 转 char
-        char str[256];
+        char str[MAX_PATH];
         int result = WideCharToMultiByte(CP_UTF8, 0, localeName, -1, str, size, NULL, NULL);
         if (result == 0) {
             // Handle error
