@@ -1082,19 +1082,20 @@ s32 invokevirtual(Runtime *runtime, s32 idx) {
         MethodInfo *m = NULL;
         if (cmr->methodInfo && cmr->methodInfo->_vtable_index >= 0 && ins->mb.clazz->vtable) {
             m = ins->mb.clazz->vtable[cmr->methodInfo->_vtable_index];
-        } else if (cmr->methodInfo && cmr->methodInfo->_itable_index >= 0 && ins->mb.clazz->itable) {
-            Itable *itable = ins->mb.clazz->itable;
-            JClass *interfaceClass = cmr->methodInfo->_this_class;
-            s32 i;
-            for (i = 0; i < ins->mb.clazz->itable_length; i++) {
-                if (itable->interfaces[i] == interfaceClass) {
-                    if (cmr->methodInfo->_itable_index < itable->entries[i].method_count) {
-                        m = itable->entries[i].methods[cmr->methodInfo->_itable_index];
-                    }
-                    break;
-                }
-            }
         }
+//        else if (cmr->methodInfo && cmr->methodInfo->_itable_index >= 0 && ins->mb.clazz->itable) {
+//            Itable *itable = ins->mb.clazz->itable;
+//            JClass *interfaceClass = cmr->methodInfo->_this_class;
+//            s32 i;
+//            for (i = 0; i < ins->mb.clazz->itable_length; i++) {
+//                if (itable->interfaces[i] == interfaceClass) {
+//                    if (cmr->methodInfo->_itable_index < itable->entries[i].method_count) {
+//                        m = itable->entries[i].methods[cmr->methodInfo->_itable_index];
+//                    }
+//                    break;
+//                }
+//            }
+//        }
 
         if (!m) {
             m = (MethodInfo *) pairlist_get(cmr->virtual_methods, ins->mb.clazz);

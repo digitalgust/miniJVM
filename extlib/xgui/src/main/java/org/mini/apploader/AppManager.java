@@ -627,28 +627,34 @@ public final class AppManager extends GApplication implements XuiAppHolder {
                     appOri = orientation;
                     String osname = System.getProperty("os.name");
                     if ("iOS".equalsIgnoreCase(osname) || "Android".equalsIgnoreCase(osname)) {
+                        long display = GCallBack.getInstance().getDisplay();
                         float w = GCallBack.getInstance().getDeviceWidth();
                         float h = GCallBack.getInstance().getDeviceHeight();
                         GCallBack.getInstance().getInsets(inset);
+                        int ori = Glfm.glfmGetInterfaceOrientation(display);
                         //System.out.println("[INFO] INSET:" + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
 
-                        if ("h".equals(appOri) && w < h) {
+                        boolean shouldWait;
+                        if ("h".equals(appOri)) {
+                            if ("iOS".equalsIgnoreCase(osname)) {
+                                boolean isLandscapeByOri = (ori & Glfm.GLFMInterfaceOrientationLandscapeLeft) != 0
+                                        || (ori & Glfm.GLFMInterfaceOrientationLandscapeRight) != 0;
+                                boolean isLandscapeBySize = w >= h;
+                                shouldWait = !isLandscapeByOri && !isLandscapeBySize;
+                            } else {
+                                shouldWait = w < h;
+                            }
+                        } else {
+                            shouldWait = false;
+                        }
+
+                        if (shouldWait) {
+                            //System.out.println("wait orientation " + retry + " w=" + w + " h=" + h + " ori=" + ori);
                             if (retry++ < 180) { // wait for turn orientation
                                 GDesktop.addCmd(this);
                                 return;
                             }
                         }
-//                        if ("h".equals(appOri)) {
-//                            int ori = Glfm.glfmGetInterfaceOrientation(GCallBack.getInstance().getDisplay());
-//                            if ((ori & Glfm.GLFMInterfaceOrientationLandscapeLeft) == 0
-//                                    && (ori & Glfm.GLFMInterfaceOrientationLandscapeRight) == 0
-//                            ) {
-//                                if (retry++ < 120) { // wait for turn orientation
-//                                    GDesktop.addCmd(this);
-//                                }
-//                                return;
-//                            }
-//                        }
                     }
 
                     String jarName = curSelectedJarName;

@@ -799,47 +799,74 @@ MethodInfo *find_methodInfo_by_name_c(c8 const *pclsName, c8 const *pmethodName,
     return mi;
 }
 
+static MethodInfo *find_declared_method(JClass *clazz, Utf8String *methodName, Utf8String *methodType) {
+    MethodPool *fp = &(clazz->methodPool);
+    s32 i;
+    for (i = 0; i < fp->method_used; i++) {
+        MethodInfo *tmp = &fp->method[i];
+        if (utf8_equals(methodName, tmp->name) == 1
+            && utf8_equals(methodType, tmp->descriptor) == 1) {
+            if (!tmp->_this_class) {
+                tmp->_this_class = clazz;
+            }
+            return tmp;
+        }
+    }
+    return NULL;
+}
+
+static MethodInfo *find_method_in_interface_tree(JClass *clazz, Utf8String *methodName, Utf8String *methodType, Runtime *runtime, s32 requireCode) {
+    MethodInfo *mi = find_declared_method(clazz, methodName, methodType);
+    s32 i;
+    if (mi != NULL) {
+        if (!requireCode || mi->converted_code != NULL) {
+            return mi;
+        }
+    }
+
+    for (i = 0; i < clazz->interfacePool.clasz_used; i++) {
+        ConstantClassRef *ccr = (clazz->interfacePool.clasz + i);
+        Utf8String *icl_name = class_get_constant_utf8(clazz, ccr->stringIndex)->utfstr;
+        JClass *icl = classes_load_get_without_resolve(clazz->jloader, icl_name, runtime);
+        mi = find_method_in_interface_tree(icl, methodName, methodType, runtime, requireCode);
+        if (mi != NULL) {
+            return mi;
+        }
+    }
+    return NULL;
+}
+
 MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName, Utf8String *methodType, Instance *jloader, Runtime *runtime) {
     MethodInfo *mi = NULL;
-    JClass *other = classes_load_get_without_resolve(jloader, clsName, runtime);
+    JClass *start = classes_load_get_without_resolve(jloader, clsName, runtime);
+    JClass *other = start;
     if (!other) {
         jvm_printf("method not exist :%s.%s%s\n", utf8_cstr(clsName), utf8_cstr(methodName), utf8_cstr(methodType));
         return NULL;
     }
 
+    if (start->cff.access_flags & ACC_INTERFACE) {
+        return find_method_in_interface_tree(start, methodName, methodType, runtime, 0);
+    }
+
     while (mi == NULL && other) {
-        MethodPool *fp = &(other->methodPool);
+        mi = find_declared_method(other, methodName, methodType);
+        other = getSuperClass(other);
+    }
+
+    other = start;
+    while (mi == NULL && other) {
         s32 i;
-        for (i = 0; i < fp->method_used; i++) {
-            MethodInfo *tmp = &fp->method[i];
-            if (utf8_equals(methodName, tmp->name) == 1
-                && utf8_equals(methodType, tmp->descriptor) == 1) {
-                mi = tmp;
-                if (!mi->_this_class) {
-                    mi->_this_class = other;
-                }
+        for (i = 0; i < other->interfacePool.clasz_used; i++) {
+            ConstantClassRef *ccr = (other->interfacePool.clasz + i);
+            Utf8String *icl_name = class_get_constant_utf8(other, ccr->stringIndex)->utfstr;
+            JClass *icl = classes_load_get_without_resolve(jloader, icl_name, runtime);
+            mi = find_method_in_interface_tree(icl, methodName, methodType, runtime, 1);
+            if (mi != NULL) {
                 break;
             }
         }
-        //find interface default method implementation JDK8
-        if (mi == NULL) {
-            for (i = 0; i < other->interfacePool.clasz_used; i++) {
-                ConstantClassRef *ccr = (other->interfacePool.clasz + i);
-                Utf8String *icl_name = class_get_constant_utf8(other, ccr->stringIndex)->utfstr;
-                classes_load_get_without_resolve(jloader, icl_name, runtime);
-                MethodInfo *imi = find_methodInfo_by_name(icl_name, methodName, methodType, jloader, runtime);
-                if (imi != NULL && imi->converted_code != NULL) {
-                    mi = imi;
-                    break;
-                }
-            }
-        }
-        //find superclass
-        s32 sonIsInterface = other->cff.access_flags & ACC_INTERFACE;
         other = getSuperClass(other);
-        if (sonIsInterface && !(other->cff.access_flags & ACC_INTERFACE)) {//interface can not find method from java.lang.Object
-            other = NULL;
-        }
     }
     return mi;
 }
