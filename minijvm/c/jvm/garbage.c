@@ -671,7 +671,7 @@ s64 _garbage_collect(GcCollector *collector) {
     pri_alloc_print_debug_info();
 #endif
 #endif
-//push msg to java
+    //push msg to java
     _gc_push_history_to_java(collector, iter, mem_total, time_stopWorld, time_gc);
 
 #ifdef MEM_ALLOC_LTALLOC
@@ -692,34 +692,69 @@ static void _list_iter_thread_pause(ArrayListValue value, void *para) {
     jthread_suspend((Runtime *) value);
 }
 
+/**
+ * count paused thread
+ * @param value
+ * @param para
+ */
+static void _list_iter_thread_check_pause(ArrayListValue value, void *para) {
+    Runtime *runtime = (Runtime *) value;
+    if (runtime->thrd_info->thread_status == THREAD_STATUS_NEW || runtime->thrd_info->thread_status == THREAD_STATUS_ZOMBIE) {
+        return;
+    }
+    if (runtime->thrd_info->is_suspend || /// While executing bytecode, if suspend_count is not 0, pause bytecode execution and set is_suspend = 1
+        runtime->thrd_info->is_blocking) {
+        // During certain IO waits, JNI sets is_blocking = 1
+        return;
+    }
+    s32 *all_thread_paused = (s32 *) para;
+    *all_thread_paused = 0; //mark this thread is not suspend
+    vm_share_notifyall(runtime->jvm);
+}
+
+static void _list_iter_thread_move_objs_2_gc(ArrayListValue value, void *para) {
+    Runtime *runtime = (Runtime *) value;
+    gc_move_objs_thread_2_gc(runtime);
+}
+
 s32 _gc_pause_the_world(MiniJVM *jvm) {
     GcCollector *collector = jvm->collector;
     ArrayList *thread_list = jvm->thread_list;
     s32 i;
     //jvm_printf("thread size:%d\n", thread_list->length);
-    if (thread_list->length) {
-        arraylist_iter_safe(thread_list, _list_iter_thread_pause, NULL);
+    arraylist_iter_safe(thread_list, _list_iter_thread_pause, NULL);
 
-        //此处可能存在多线程交互，比如某个线程结束等情况，导致for错误
-        spin_lock(&thread_list->spinlock);
-        {
-            for (i = 0; i < thread_list->length; i++) {
-                Runtime *runtime = arraylist_get_value(thread_list, i);
-                if (_gc_wait_thread_suspend(jvm, runtime) == -1) {
-                    return -1;
-                }
-                gc_move_objs_thread_2_gc(runtime);
+    s32 all_thread_paused = 1;
+    while (1) {
+        all_thread_paused = 1;
+        arraylist_iter_safe(thread_list, _list_iter_thread_check_pause, &all_thread_paused);
 
-#if _JVM_DEBUG_GARBAGE_DUMP > 1
-                Utf8String *stack = utf8_create();
-                getRuntimeStack(runtime, stack);
-                jvm_printf("%s\n", utf8_cstr(stack));
-                utf8_destroy(stack);
-#endif
-            }
+        vm_share_timedwait(jvm, 20);
+        if (all_thread_paused) {
+            break;
         }
-        spin_unlock(&thread_list->spinlock);
     }
+
+    arraylist_iter_safe(thread_list, _list_iter_thread_move_objs_2_gc, NULL);
+    //此处可能存在多线程交互，比如某个线程结束等情况，导致for错误，crush
+    //         spin_lock(&thread_list->spinlock);
+    //         {
+    //             for (i = 0; i < thread_list->length; i++) {
+    //                 Runtime *runtime = arraylist_get_value(thread_list, i);
+    //                 if (_gc_wait_thread_suspend(jvm, runtime) == -1) {
+    //                     return -1;
+    //                 }
+    //                 gc_move_objs_thread_2_gc(runtime);
+    //
+    // #if _JVM_DEBUG_GARBAGE_DUMP > 1
+    //                 Utf8String *stack = utf8_create();
+    //                 getRuntimeStack(runtime, stack);
+    //                 jvm_printf("%s\n", utf8_cstr(stack));
+    //                 utf8_destroy(stack);
+    // #endif
+    //             }
+    //         }
+    //         spin_unlock(&thread_list->spinlock);
     gc_move_objs_thread_2_gc(collector->runtime); // maybe someone new object in finalize...
 
     return 0;

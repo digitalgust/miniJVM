@@ -20,6 +20,7 @@ public class XFrame
     protected float titleBgPicAlpha = GObject.DEFAULT_BG_ALPHA;
     protected String viewBgPic;
     protected float viewBgPicAlpha = GObject.DEFAULT_BG_ALPHA;
+    protected String onTickScript;
     boolean closable = true;
     boolean titleShow = true;
 
@@ -45,6 +46,8 @@ public class XFrame
             viewBgPic = attValue;
         } else if (attName.equals("viewbgpicalpha")) {
             viewBgPicAlpha = Float.valueOf(attValue);
+        } else if (attName.equals("ontick")) {
+            onTickScript = attValue;
         }
     }
 
@@ -114,6 +117,7 @@ public class XFrame
             frame.getView().setBgImg(getAssist().loadImage(viewBgPic));
             frame.getView().setBgImgAlpha(viewBgPicAlpha);
             frame.setTitleShow(titleShow);
+            frame.setOnTickScript(onTickScript);
         } else {
             frame.setLocation(x, y);
             frame.setSize(width, height);

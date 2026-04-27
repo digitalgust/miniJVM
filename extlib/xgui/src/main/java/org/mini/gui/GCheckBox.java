@@ -93,7 +93,7 @@ public class GCheckBox extends GObject {
         nvgFillColor(vg, getColor());
 
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        nvgTextJni(vg, x + boxSize + 2f, y + h * 0.5f + 0.5f, text_arr, 0, text_arr.length);
+        nvgTextJni(vg, x + boxSize + 2f, y + h * 0.5f + 1f, text_arr, 0, text_arr.length);
 
         bg = nvgBoxGradient(vg, x + 1, y + (int) (h * 0.5f) - boxSize * 0.5f + 1, boxSize, boxSize, 3, 3, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 92));
         nvgBeginPath(vg);

@@ -27,7 +27,7 @@ public class Int extends DataType {
     }
 
     public long getVal() {
-        return (int) value;
+        return value;
     }
 
     public void setVal(long i) {

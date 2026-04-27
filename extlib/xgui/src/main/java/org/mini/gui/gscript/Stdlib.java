@@ -18,6 +18,8 @@ import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 import java.util.Random;
 import java.util.ArrayList;
@@ -34,6 +36,7 @@ public class Stdlib extends Lib {
     //随机数基石
     private static Random random = new Random(); //定义一个随机值
     Interpreter inp;
+    SimpleDateFormat timeFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 
     public Stdlib(Interpreter inp) {
@@ -43,6 +46,7 @@ public class Stdlib extends Lib {
         methodNames.put("setEnv".toLowerCase(), this::setEnv);//
         methodNames.put("def".toLowerCase(), this::def); // 存入全局变量
         methodNames.put("isDef".toLowerCase(), this::isDef); // 是否存在某全局变量
+        methodNames.put("funcExist".toLowerCase(), this::funcExist); // 是否存在某函数
         methodNames.put("isBool".toLowerCase(), this::isBool); //
         methodNames.put("isInt".toLowerCase(), this::isInt); //
         methodNames.put("isStr".toLowerCase(), this::isStr); //
@@ -116,6 +120,8 @@ public class Stdlib extends Lib {
         methodNames.put("float2int".toLowerCase(), this::float2int);
         methodNames.put("isFloat".toLowerCase(), this::isFloat);
         methodNames.put("isDouble".toLowerCase(), this::isDouble);
+        methodNames.put("getTime".toLowerCase(), this::getTime);
+        methodNames.put("formatTime".toLowerCase(), this::formatTime);
     }
 
 
@@ -307,6 +313,11 @@ public class Stdlib extends Lib {
             return Interpreter.getCachedBool(false);
         }
         return Interpreter.getCachedBool(true);
+    }
+
+    private Bool funcExist(ArrayList<DataType> para) {
+        String name = Interpreter.popBackStr(para);
+        return Interpreter.getCachedBool(inp.containsFunc(name));
     }
 
     /**
@@ -1120,5 +1131,17 @@ public class Stdlib extends Lib {
             }
         }
         return Interpreter.getCachedBool(b);
+    }
+
+
+    private DataType getTime(ArrayList<DataType> para) {
+        return Interpreter.getCachedInt(System.currentTimeMillis());
+    }
+
+
+    private synchronized DataType formatTime(ArrayList<DataType> para) {
+        long t = Interpreter.popBackLong(para);
+        Date date = new Date(t);
+        return Interpreter.getCachedStr(timeFormatter.format(date));
     }
 }
