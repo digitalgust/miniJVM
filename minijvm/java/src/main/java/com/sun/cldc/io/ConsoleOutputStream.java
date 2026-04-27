@@ -36,11 +36,11 @@ public class ConsoleOutputStream extends OutputStream {
     /**
      * Writes the specified byte to this output stream.
      *
-     * @param      b   the <code>byte</code>.
+     * @param      c   the <code>byte</code>.
      * @exception  IOException  if an I/O error occurs. In particular,
      *             an <code>IOException</code> may be thrown if the
      *             output stream has been closed.
      */
-     public native synchronized void write(int c) throws IOException;
+     public native void write(int c) throws IOException;
 }
 

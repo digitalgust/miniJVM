@@ -3006,19 +3006,20 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 if (r->cmr->methodInfo) {
                                     if (r->cmr->methodInfo->_vtable_index >= 0 && r->ins->mb.clazz->vtable) {
                                         m = r->ins->mb.clazz->vtable[r->cmr->methodInfo->_vtable_index];
-                                    } else if (r->cmr->methodInfo->_itable_index >= 0 && r->ins->mb.clazz->itable) {
-                                        Itable *itable = r->ins->mb.clazz->itable;
-                                        JClass *interfaceClass = r->cmr->methodInfo->_this_class;
-                                        s32 i;
-                                        for (i = 0; i < r->ins->mb.clazz->itable_length; i++) {
-                                            if (itable->interfaces[i] == interfaceClass) {
-                                                if (r->cmr->methodInfo->_itable_index < itable->entries[i].method_count) {
-                                                    m = itable->entries[i].methods[r->cmr->methodInfo->_itable_index];
-                                                }
-                                                break;
-                                            }
-                                        }
                                     }
+                                    // else if (r->cmr->methodInfo->_itable_index >= 0 && r->ins->mb.clazz->itable) {
+                                    //     Itable *itable = r->ins->mb.clazz->itable;
+                                    //     JClass *interfaceClass = r->cmr->methodInfo->_this_class;
+                                    //     s32 i;
+                                    //     for (i = 0; i < r->ins->mb.clazz->itable_length; i++) {
+                                    //         if (itable->interfaces[i] == interfaceClass) {
+                                    //             if (r->cmr->methodInfo->_itable_index < itable->entries[i].method_count) {
+                                    //                 m = itable->entries[i].methods[r->cmr->methodInfo->_itable_index];
+                                    //             }
+                                    //             break;
+                                    //         }
+                                    //     }
+                                    // }
                                 }
 
                                 if (m) {
@@ -3880,20 +3881,21 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 if (r->cmr->methodInfo) {
                                     if (r->cmr->methodInfo->_vtable_index >= 0 && r->ins->mb.clazz->vtable) {
                                         m = r->ins->mb.clazz->vtable[r->cmr->methodInfo->_vtable_index];
-                                    } else if (r->cmr->methodInfo->_itable_index >= 0 && r->ins->mb.clazz->itable) {
-                                        //LinkedHashSet forEach() call here, the forEach method is in java.util.Iterator ,default method
-                                        Itable *itable = r->ins->mb.clazz->itable;
-                                        JClass *interfaceClass = r->cmr->methodInfo->_this_class;
-                                        s32 i;
-                                        for (i = 0; i < r->ins->mb.clazz->itable_length; i++) {
-                                            if (itable->interfaces[i] == interfaceClass) {
-                                                if (r->cmr->methodInfo->_itable_index < itable->entries[i].method_count) {
-                                                    m = itable->entries[i].methods[r->cmr->methodInfo->_itable_index];
-                                                }
-                                                break;
-                                            }
-                                        }
                                     }
+//                                    else if (r->cmr->methodInfo->_itable_index >= 0 && r->ins->mb.clazz->itable) {
+//                                        //LinkedHashSet forEach() call here, the forEach method is in java.util.Iterator ,default method
+//                                        Itable *itable = r->ins->mb.clazz->itable;
+//                                        JClass *interfaceClass = r->cmr->methodInfo->_this_class;
+//                                        s32 i;
+//                                        for (i = 0; i < r->ins->mb.clazz->itable_length; i++) {
+//                                            if (itable->interfaces[i] == interfaceClass) {
+//                                                if (r->cmr->methodInfo->_itable_index < itable->entries[i].method_count) {
+//                                                    m = itable->entries[i].methods[r->cmr->methodInfo->_itable_index];
+//                                                }
+//                                                break;
+//                                            }
+//                                        }
+//                                    }
                                 }
                                 if (m) {
                                     r->m = m;

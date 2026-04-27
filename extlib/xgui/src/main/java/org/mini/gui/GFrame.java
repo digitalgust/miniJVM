@@ -40,6 +40,7 @@ public class GFrame extends GContainer {
 
     protected int frameMode;
     protected boolean closable = true;
+    protected String onTickScript;
 
 
     public GFrame(GForm form) {
@@ -169,6 +170,14 @@ public class GFrame extends GContainer {
      */
     public void setClosable(boolean closable) {
         this.closable = closable;
+    }
+
+    public String getOnTickScript() {
+        return onTickScript;
+    }
+
+    public void setOnTickScript(String onTickScript) {
+        this.onTickScript = onTickScript;
     }
 
 
@@ -409,6 +418,19 @@ public class GFrame extends GContainer {
 
         @Override
         public boolean paint(long vg) {
+            //此处调用ontick方法
+            if (onTickScript != null) {
+                Interpreter inp = parseInpByCall(onTickScript);
+                String funcName = parseInstByCall(onTickScript);
+                if (inp != null && funcName != null) {
+                    try {
+                        inp.callSub(funcName);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            
             if (getH() < 1f) return false;
 
             super.paint(vg);

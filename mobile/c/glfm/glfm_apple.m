@@ -866,6 +866,10 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
             [invocation setTarget:[UIDevice currentDevice]];
             [invocation setArgument:&orientation atIndex:2];
             [invocation invoke];
+            [UIViewController attemptRotationToDeviceOrientation];
+            [self.view setNeedsLayout];
+            [self.view layoutIfNeeded];
+            [self.glfmView requestRefresh];
         }
     }
 }
@@ -2420,7 +2424,32 @@ void glfmSetSupportedInterfaceOrientation(GLFMDisplay *display, GLFMInterfaceOri
                 } else {
                     // Fallback on earlier versions
                     //================================= gust add =======================
-                    [vc setInterfaceOrientation:supportedOrientations];
+                    UIInterfaceOrientation current = [[UIApplication sharedApplication] statusBarOrientation];
+                    UIInterfaceOrientation target = UIInterfaceOrientationPortrait;
+
+                    const BOOL allowPortrait = (supportedOrientations & GLFMInterfaceOrientationPortrait) != 0;
+                    const BOOL allowPortraitUpsideDown = (supportedOrientations & GLFMInterfaceOrientationPortraitUpsideDown) != 0;
+                    const BOOL allowLandscapeLeft = (supportedOrientations & GLFMInterfaceOrientationLandscapeLeft) != 0;
+                    const BOOL allowLandscapeRight = (supportedOrientations & GLFMInterfaceOrientationLandscapeRight) != 0;
+
+                    if ((current == UIInterfaceOrientationPortrait && allowPortrait) ||
+                        (current == UIInterfaceOrientationPortraitUpsideDown && allowPortraitUpsideDown) ||
+                        (current == UIInterfaceOrientationLandscapeLeft && allowLandscapeLeft) ||
+                        (current == UIInterfaceOrientationLandscapeRight && allowLandscapeRight)) {
+                        target = current;
+                    } else if (allowLandscapeRight) {
+                        target = UIInterfaceOrientationLandscapeRight;
+                    } else if (allowLandscapeLeft) {
+                        target = UIInterfaceOrientationLandscapeLeft;
+                    } else if (allowPortrait) {
+                        target = UIInterfaceOrientationPortrait;
+                    } else if (allowPortraitUpsideDown) {
+                        target = UIInterfaceOrientationPortraitUpsideDown;
+                    } else {
+                        target = UIInterfaceOrientationPortrait;
+                    }
+
+                    [vc setInterfaceOrientation:target];
                     //================================= gust add =======================
 //                    [vc.glfmView requestRefresh];
 //                    UIViewController *dummyVC = GLFM_AUTORELEASE([[UIViewController alloc] init]);

@@ -1098,7 +1098,7 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
     private String shortenMethodLabel(String full) {
         if (full == null || full.isEmpty()) return full;
         if (full.startsWith("id_")) return full;
-        int lp = full.indexOf('(');
+        int lp = -1;//full.indexOf('(');
         String sig = lp >= 0 ? full.substring(0, lp) : full;
         int lastDot = sig.lastIndexOf('.');
         if (lastDot <= 0 || lastDot >= sig.length() - 1) {

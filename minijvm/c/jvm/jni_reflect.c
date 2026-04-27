@@ -822,7 +822,7 @@ s32 org_mini_vm_RefNative_getMethodByUniId(Runtime *runtime, JClass *clazz) {
     utf8_append(line, m->_this_class->name);
     utf8_append_c(line, ".");
     utf8_append(line, m->name);
-    //utf8_append(line, m->descriptor);
+    utf8_append(line, m->descriptor);
     Instance *jstr = jstring_create(line, runtime);
     utf8_destroy(line);
     push_ref(runtime->stack, jstr);

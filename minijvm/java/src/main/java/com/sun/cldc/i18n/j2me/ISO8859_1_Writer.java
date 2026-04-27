@@ -45,7 +45,7 @@ public class ISO8859_1_Writer extends StreamWriter {
      *
      * @exception  IOException  If an I/O error occurs
      */
-    synchronized public void write(int c) throws IOException {
+    public void write(int c) throws IOException {
         if (c > 255) {
             c = '?'; // was --> throw new RuntimeException("Unknown character "+c);
         }

@@ -421,6 +421,37 @@ public class Interpreter {
         lib.setInterpreter(this);
     }
 
+    /**
+     * 检查当前解释器内是否存在指定函数（脚本sub或已注册库函数）
+     *
+     * @param funcName 函数名，可带或不带括号
+     * @return true=存在, false=不存在
+     */
+    public boolean containsFunc(String funcName) {
+        if (funcName == null) {
+            return false;
+        }
+        String subName = funcName.trim().toLowerCase();
+        int p = subName.indexOf('(');
+        if (p >= 0) {
+            subName = subName.substring(0, p).trim();
+        }
+        if (subName.length() == 0) {
+            return false;
+        }
+        if (subAddr.get(subName) != null) {
+            return true;
+        }
+        for (int i = 0; i < extSubList.size(); i++) {
+            Lib ext = extSubList.get(i);
+            Func func = ext.getFuncByName(subName);
+            if (func != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     //--------------------------------------------------------------------------
     //                                  private method
     //--------------------------------------------------------------------------
