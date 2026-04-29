@@ -329,7 +329,18 @@ int org_mini_nanovg_Nanovg_stbi_load_from_memory(Runtime *runtime, JClass *clazz
     }
     s32 preq_comp = env->localvar_getInt(runtime->localvar, pos++);
 
+    if (pbuffer == 0 || plen <= 0) {
+        jvm_printf("[NATIVE][stbi_load_from_memory] invalid input pbuffer=%p plen=%d req_comp=%d\n",
+                   (void *) (intptr_t) pbuffer, plen, preq_comp);
+    }
     stbi_uc*/*ptr*/ _re_val = stbi_load_from_memory((stbi_uc const*/*ptr*/)(pbuffer), (int)plen, (int*)(ptr_px), (int*)(ptr_py), (int*)(ptr_pcomp), (int)preq_comp);
+    if (_re_val == NULL) {
+        jvm_printf("[NATIVE][stbi_load_from_memory] decode failed pbuffer=%p plen=%d req_comp=%d x=%d y=%d comp=%d\n",
+                   (void *) (intptr_t) pbuffer, plen, preq_comp,
+                   ptr_px ? *((int *) ptr_px) : -1,
+                   ptr_py ? *((int *) ptr_py) : -1,
+                   ptr_pcomp ? *((int *) ptr_pcomp) : -1);
+    }
     s64 ret_value = (s64)(intptr_t)_re_val;env->push_long(runtime->stack, ret_value);
     
     return 0;

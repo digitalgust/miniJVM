@@ -74,8 +74,9 @@ public class GLUtil {
     }
 
     public static byte[] image_parse_from_file_content(byte[] fileCont, int start, int len, int[] w_h_d) {
-        if (fileCont == null) {
-            SysLog.error("image parse file content is null");
+        if (fileCont == null || fileCont.length <= 0) {
+            SysLog.error("image_parse_from_file_content fileCont is null");
+            return null;
         }
         int[] x = {0}, y = {0}, n = {0};
         long ptr = ReflectArray.getBodyPtr(fileCont);
@@ -159,6 +160,10 @@ public class GLUtil {
     }
 
     public static void image_get_size(byte[] fileCont, int[] w_h_d) {
+        if (fileCont == null || fileCont.length <= 0) {
+            SysLog.error("image_get_size fileCont is null or empty");
+            return;
+        }
         int[] x = {0}, y = {0}, n = {0};
         long ptr = ReflectArray.getBodyPtr(fileCont);
         long data = Nanovg.stbi_load_from_memory(ptr, fileCont.length, x, y, n, 0);

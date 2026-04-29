@@ -23,10 +23,122 @@
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
+#include <dbghelp.h>
 
+#pragma comment(lib, "Dbghelp.lib")
 
 #include <rpc.h>
 #include <rpcdce.h>
+
+extern void _on_jvm_sig_print(s32 no);
+
+typedef DWORD(WINAPI *PFN_SymSetOptions)(DWORD SymOptions);
+typedef BOOL(WINAPI *PFN_SymInitialize)(HANDLE hProcess, PCSTR UserSearchPath, BOOL fInvadeProcess);
+typedef BOOL(WINAPI *PFN_SymFromAddr)(HANDLE hProcess, DWORD64 Address, PDWORD64 Displacement, PSYMBOL_INFO Symbol);
+typedef BOOL(WINAPI *PFN_MiniDumpWriteDump)(HANDLE hProcess, DWORD ProcessId, HANDLE hFile, MINIDUMP_TYPE DumpType,
+                                            PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
+                                            PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
+                                            PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
+
+static HMODULE g_dbghelp_module = NULL;
+
+static HMODULE _load_dbghelp_module() {
+    if (!g_dbghelp_module) {
+        g_dbghelp_module = LoadLibraryA("Dbghelp.dll");
+    }
+    return g_dbghelp_module;
+}
+
+static void _print_native_stack_win() {
+    HMODULE dbghelp = _load_dbghelp_module();
+    PFN_SymSetOptions pSymSetOptions = dbghelp ? (PFN_SymSetOptions) GetProcAddress(dbghelp, "SymSetOptions") : NULL;
+    PFN_SymInitialize pSymInitialize = dbghelp ? (PFN_SymInitialize) GetProcAddress(dbghelp, "SymInitialize") : NULL;
+    PFN_SymFromAddr pSymFromAddr = dbghelp ? (PFN_SymFromAddr) GetProcAddress(dbghelp, "SymFromAddr") : NULL;
+    HANDLE process = GetCurrentProcess();
+    if (pSymSetOptions) pSymSetOptions(SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
+    if (pSymInitialize) pSymInitialize(process, NULL, TRUE);
+
+    void *frames[64] = {0};
+    USHORT frame_count = CaptureStackBackTrace(0, 64, frames, NULL);
+    jvm_printf("[NATIVE]stack frame count=%u\n", (unsigned) frame_count);
+
+    SYMBOL_INFO *symbol = (SYMBOL_INFO *) calloc(1, sizeof(SYMBOL_INFO) + 256);
+    if (!symbol) {
+        jvm_printf("[NATIVE]alloc SYMBOL_INFO failed\n");
+        return;
+    }
+    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+    symbol->MaxNameLen = 255;
+
+    for (USHORT i = 0; i < frame_count; i++) {
+        DWORD64 address = (DWORD64) (uintptr_t) frames[i];
+        DWORD64 displacement = 0;
+        if (pSymFromAddr && pSymFromAddr(process, address, &displacement, symbol)) {
+            jvm_printf("[NATIVE][%02u] %s + 0x%llx (0x%llx)\n",
+                       (unsigned) i, symbol->Name, (unsigned long long) displacement, (unsigned long long) address);
+        } else {
+            jvm_printf("[NATIVE][%02u] 0x%llx\n", (unsigned) i, (unsigned long long) address);
+        }
+    }
+    free(symbol);
+}
+
+static void _write_minidump_win(EXCEPTION_POINTERS *ep) {
+    HMODULE dbghelp = _load_dbghelp_module();
+    PFN_MiniDumpWriteDump pMiniDumpWriteDump = dbghelp ? (PFN_MiniDumpWriteDump) GetProcAddress(dbghelp, "MiniDumpWriteDump") : NULL;
+    if (!pMiniDumpWriteDump) {
+        jvm_printf("[NATIVE]MiniDumpWriteDump not available in Dbghelp.dll\n");
+        return;
+    }
+
+    HANDLE process = GetCurrentProcess();
+    DWORD pid = GetCurrentProcessId();
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+    char dump_path[MAX_PATH] = {0};
+    snprintf(dump_path, sizeof(dump_path), "jvm_crash_%04d%02d%02d_%02d%02d%02d.dmp",
+             st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+
+    HANDLE file = CreateFileA(dump_path, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file == INVALID_HANDLE_VALUE) {
+        jvm_printf("[NATIVE]create minidump file failed err=%lu\n", GetLastError());
+        return;
+    }
+
+    MINIDUMP_EXCEPTION_INFORMATION mei;
+    mei.ThreadId = GetCurrentThreadId();
+    mei.ExceptionPointers = ep;
+    mei.ClientPointers = FALSE;
+    BOOL ok = pMiniDumpWriteDump(process, pid, file, MiniDumpWithIndirectlyReferencedMemory, &mei, NULL, NULL);
+    CloseHandle(file);
+    if (ok) {
+        jvm_printf("[NATIVE]minidump written: %s\n", dump_path);
+    } else {
+        jvm_printf("[NATIVE]MiniDumpWriteDump failed err=%lu\n", GetLastError());
+    }
+}
+
+static LONG WINAPI _on_jvm_unhandled_exception(EXCEPTION_POINTERS *ep) {
+    if (ep && ep->ExceptionRecord) {
+        jvm_printf("[NATIVE]Unhandled exception code=0x%08lx addr=%p flags=0x%08lx\n",
+                   ep->ExceptionRecord->ExceptionCode,
+                   ep->ExceptionRecord->ExceptionAddress,
+                   ep->ExceptionRecord->ExceptionFlags);
+    } else {
+        jvm_printf("[NATIVE]Unhandled exception (no exception record)\n");
+    }
+    _print_native_stack_win();
+    _write_minidump_win(ep);
+    _on_jvm_sig_print(SIGSEGV);
+    fflush(stderr);
+    fflush(stdout);
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
+void os_setup_crash_handler() {
+    SetUnhandledExceptionFilter(_on_jvm_unhandled_exception);
+}
 
 #if __JVM_OS_MINGW__
 
