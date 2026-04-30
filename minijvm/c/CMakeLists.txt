@@ -74,7 +74,7 @@ ELSEIF (MINGW)
 ENDIF ()
 
 SET(EXECUTABLE_TMP_PATH ${PROJECT_SOURCE_DIR}/../../binary/tmp)
-add_custom_command(TARGET mini_jvm COMMAND ${CMAKE_COMMAND} -E make_directory ${EXECUTABLE_TMP_PATH})
+#add_custom_command(TARGET mini_jvm COMMAND ${CMAKE_COMMAND} -E make_directory ${EXECUTABLE_TMP_PATH})
 
 
 function(copyfile pathsrc pathtgt)
