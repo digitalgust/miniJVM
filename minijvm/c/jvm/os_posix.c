@@ -26,6 +26,9 @@
 
 #endif
 
+void os_setup_crash_handler() {
+}
+
 void safeClose(s32 *fd) {
     if (*fd != -1)
         close(*fd);

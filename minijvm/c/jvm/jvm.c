@@ -906,10 +906,13 @@ MiniJVM *jvm_create() {
 }
 
 s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
+    extern void os_setup_crash_handler();
     if (!jvm) {
         jvm_printf("jvm not found.");
         return -1;
     }
+
+    os_setup_crash_handler();
 
     signal(SIGABRT, _on_jvm_sig);
     signal(SIGFPE, _on_jvm_sig);
