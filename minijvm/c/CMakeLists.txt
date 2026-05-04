@@ -60,7 +60,16 @@ ENDIF ()
 
 #Set link library.
 IF (APPLE)
-    SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../../binary/mac_x64)
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
+        set(MAC_BIN_DIR mac_arm64)
+    elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|i[3-6]86)$")
+        set(MAC_BIN_DIR mac_x64)
+    else ()
+        message(WARNING "Unknown macOS processor '${CMAKE_SYSTEM_PROCESSOR}', defaulting to mac_x64")
+        set(MAC_BIN_DIR mac_x64)
+    endif ()
+    SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../../binary/${MAC_BIN_DIR})
+    SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../../binary/${MAC_BIN_DIR})
 ELSEIF (UNIX)
     TARGET_LINK_LIBRARIES(mini_jvm dl)
     SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../../binary/centos_x64)
@@ -89,7 +98,6 @@ endfunction()
 #copyfile("${PROJECT_SOURCE_DIR}/../../extlib/jni_gui/java/dist/glfw_gui.jar" "${PROJECT_SOURCE_DIR}/../../binary/libex/glfw_gui.jar")
 #copyfile("${PROJECT_SOURCE_DIR}/../../extlib/luaj/dist/luaj.jar" "${PROJECT_SOURCE_DIR}/../../binary/libex/luaj.jar")
 #copyfile("${PROJECT_SOURCE_DIR}/../../test/minijvm_test/target/minijvm_test.jar" "${PROJECT_SOURCE_DIR}/../../binary/libex/minijvm_test.jar")
-
 
 
 

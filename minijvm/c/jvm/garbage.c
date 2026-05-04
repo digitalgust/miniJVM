@@ -672,7 +672,9 @@ s64 _garbage_collect(GcCollector *collector) {
 #endif
 #endif
     //push msg to java
-    _gc_push_history_to_java(collector, iter, mem_total, time_stopWorld, time_gc);
+    if (get_jvm_state(jvm) != JVM_STATUS_STOPED) { // the _gc_push_history_to_java() will new instance , so the gc can't stop forever
+        _gc_push_history_to_java(collector, iter, mem_total, time_stopWorld, time_gc);
+    }
 
 #ifdef MEM_ALLOC_LTALLOC
     jvm_squeeze(0);
