@@ -95,10 +95,10 @@ Preferred IDEs: Eclipse, NetBeans, or JetBrains IntelliJ IDEA.
 1. Run **/binary/build_jar.sh** or **/binary/build_jar.bat** to generate JARs.
    Alternatively:
 
-   > Build the Maven project in `/minijvm/java`, then copy the output to **/mobile/assets/resfiles/minijvm_rt.jar**
-   > Build the Maven project in `/mobile/java/glfm_gui`, then copy the output to **/mobile/assets/resfiles/glfm_gui.jar**
-   > Build the Maven project in `/mobile/java/ExApp`, then copy the output to **/mobile/assets/resfiles/ExApp.jar**
-   > Optionally modify **/mobile/java/ExApp/src/main/java/test/MyApp.java**; add resources to **/mobile/java/ExApp/src/main/resource/res/** (audio, images, etc.); configure **/mobile/java/ExApp/src/main/config.txt** for icon, version, boot class, and other app settings.
+   - Build the Maven project in `/minijvm/java`, then copy the output to **/mobile/assets/resfiles/minijvm_rt.jar**
+   - Build the Maven project in `/mobile/java/glfm_gui`, then copy the output to **/mobile/assets/resfiles/glfm_gui.jar**
+   - Build the Maven project in `/mobile/java/ExApp`, then copy the output to **/mobile/assets/resfiles/ExApp.jar**
+   - Optionally modify **/mobile/java/ExApp/src/main/java/test/MyApp.java**; add resources to **/mobile/java/ExApp/src/main/resource/res/** (audio, images, etc.); configure **/mobile/java/ExApp/src/main/config.txt** for icon, version, boot class, and other app settings.
 
 2. In Xcode, open **/mobile/iosapp**; configure your developer account in Signing & Capabilities; build and install to a device; then verify the app before running it (Settings -> General -> Device Management -> {developer account} -> Verify App -> Trust).
 3. In Android Studio, open **/mobile/androidapp** and build/install to an Android device.
@@ -112,15 +112,15 @@ Preferred IDEs: Eclipse, NetBeans, or JetBrains IntelliJ IDEA.
 
 1. Run **/binary/build_jar.sh** or **/binary/build_jar.bat** to generate JARs.
    Alternatively:
-   > Build Java bootstrap classes in **/minijvm/java**; build the JAR with Maven and copy it to `/binary/lib/minijvm_rt.jar`
-   > Build GUI classes in **/desktop/glfw_gui/java**; build the JAR with Maven and copy it to `/binary/libex/glfw_gui.jar`
-   > Build console test classes in **/test/minijvm_test**; build the JAR with Maven and copy it to `/binary/libex/minijvm_test.jar`
-   > Build GUI test app classes in **/mobile/java/ExApp**; build the JAR with Maven and copy it to `/binary/{platform}/apps/ExApp.jar`
+   - Build Java bootstrap classes in **/minijvm/java**; build the JAR with Maven and copy it to `/binary/lib/minijvm_rt.jar`
+   - Build GUI classes in **/desktop/glfw_gui/java**; build the JAR with Maven and copy it to `/binary/libex/glfw_gui.jar`
+   - Build console test classes in **/test/minijvm_test**; build the JAR with Maven and copy it to `/binary/libex/minijvm_test.jar`
+   - Build GUI test app classes in **/mobile/java/ExApp**; build the JAR with Maven and copy it to `/binary/{platform}/apps/ExApp.jar`
 
 2. Run **/binary/build_mac_linux.sh**, **/binary/build_wini686.bat**, or **/binary/build_winx64.bat** to generate binaries.
    Alternatively:
-   > Build the GUI JNI C dynamic library in `/desktop/glfw_gui/c` with CMake
-   > Build miniJVM in `/minijvm/c` with CMake
+   - Build the GUI JNI C dynamic library in `/desktop/glfw_gui/c` with CMake
+   - Build miniJVM in `/minijvm/c` with CMake
 
 3. Run the test script: `/binary/{platform}/test.sh` or `test.bat`.
 
@@ -158,6 +158,7 @@ struct _MiniJVM {
 ## Profiling
 
 Use the built-in profiling page to monitor method execution cost in real time.
+The following methods also apply to all platforms, including iOS and Android devices or emulators.
 
 1. Enable profiling in `jvm.h`:
 
