@@ -13,13 +13,42 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <locale.h>
+#if __JVM_OS_VS__ || __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__
+#include <direct.h>
+#else
+#include <unistd.h>
+#endif
 
 #include "utils/d_type.h"
+#include "utils/bytebuf.h"
 #include "jvm/jvm_util.h"
 #include "jvm/jvm.h"
 #include "jvm/garbage.h"
 
 extern s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src);
+extern s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src);
+
+static void set_working_dir_to_startup_dir(Utf8String *startup_dir) {
+    if (!startup_dir || startup_dir->length <= 0) {
+        return;
+    }
+    ByteBuf *platform_path = bytebuf_create(0);
+    if (!platform_path) {
+        return;
+    }
+    if (conv_utf8_2_platform_encoding(platform_path, startup_dir) >= 0 && platform_path->buf) {
+#if __JVM_OS_VS__ || __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__
+        if (_chdir(platform_path->buf) != 0) {
+            jvm_printf("[WARN]set cwd failed:%s\n", platform_path->buf);
+        }
+#else
+        if (chdir(platform_path->buf) != 0) {
+            jvm_printf("[WARN]set cwd failed:%s\n", platform_path->buf);
+        }
+#endif
+    }
+    bytebuf_destroy(platform_path);
+}
 
 /*
  *  mini_jvm  -Xmx128M -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005 -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/glfw_gui.jar;../libex/xgui.jar org.mini.glfw.GlfwMain
@@ -61,6 +90,7 @@ int main(int argc, char **argv) {
 #if _JVM_DEBUG_LOG_LEVEL > 0
     jvm_printf("App dir:%s\n", utf8_cstr(startup_dir));
 #endif
+    set_working_dir_to_startup_dir(startup_dir);// fix macos startup dir with user home but not binary dir
     //default value
     {
         utf8_append(bootcp, startup_dir);

@@ -4,7 +4,7 @@
 Thumbs.db
 /build
 target
-
+ai
 dist
 
 cmake-build-debug
