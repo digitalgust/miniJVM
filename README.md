@@ -1,20 +1,22 @@
 ![](/doc/img/mini_jvm_64.png)
 <img src="https://github.com/digitalgust/miniJVM/actions/workflows/github-actions-demo.yml/badge.svg"/>
 <a href="https://discord.gg/Gy7wqkdTzz"><img src="https://img.shields.io/discord/1501437740968054875?label=discord&logo=discord&style=flat-square" alt="discord"></a>
-<span id="linkhome"/>
+<span id="linkhome"/>    
+
+[DeepWiki miniJVM Documentation](https://deepwiki.com/digitalgust/miniJVM)
 
 # miniJVM
 
 Build iOS and Android apps in Java with a cross-platform, lightweight Java Virtual Machine. Run the same Java code on mobile and desktop with small binaries and a low memory footprint.
 
-[Features](#linkfeatures)
-[Architecture](#linkarch)
-[Build for iOS/Android](#linkbuildmobile)
-[Build for Windows/Linux/macOS](#linkbuilddesktop)
-[How to debug source](#linkdebug)
-[Using miniJVM in a project](#linkembed)
-[Documentation](https://github.com/digitalgust/miniJVM/tree/master/doc/api.md)
-[License](#linklicense)
+- [Features](#linkfeatures)
+- [Architecture](#linkarch)
+- [Build for iOS/Android](#linkbuildmobile)
+- [Build for Windows/Linux/macOS](#linkbuilddesktop)
+- [How to debug source](#linkdebug)
+- [Using miniJVM in a project](#linkembed)
+- [Documentation](https://github.com/digitalgust/miniJVM/tree/master/doc/api.md)
+- [License](#linklicense)
 
 <span id="linkfeatures"/>
 
