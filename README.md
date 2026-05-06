@@ -178,7 +178,7 @@ Use the built-in profiling page to monitor method execution cost in real time.
 - Dump the current heap memory, download the dump file, and open it in VisualVM to analyze memory usage.
 - View runtime VM information, including garbage collector activity; data refreshes every 5 seconds.
 
-<div align=center><img width="540" height="350" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/doc/img/profiling.png"/></div>
+<div align=center><img width="540" height="350" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/doc/img/profile.png"/></div>
 
 ## Projects Based on miniJVM
 
