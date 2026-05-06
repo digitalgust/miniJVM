@@ -68,19 +68,19 @@ miniJVM on the web, built by Starcommander. [Source](https://github.com/Starcomm
 
 ## Changelog
 
-2026.03 Added a profiling performance monitoring page to observe real-time execution time for each JVM method call.
-2023.09 Reworked GLFW and GLFM graphics JNI bindings; moved GUI Java classes to the `xgui` package.
-2022.11 Added documentation.
-2021.03 Added the `j2c` module, which converts miniJVM Java source to C and builds native apps for desktop and mobile.
-2020.12 Added build scripts and released v2.1.
-2020.10 Refactored source and removed binaries from the repository.
-2020.10 Added HTTPS support.
-2020.03 Added XML layout for the GUI system; fixed JDWP debugging for JetBrains IDEs.
-2019.12 Integrated the cross-platform AWTK UI system - see [awtk-minijvm](https://github.com/digitalgust/miniJVM/tree/master/desktop/awtk_gui).
-2019.12 Enabled JIT based on the SLJIT project.
-2019.10 JIT in development.
-2018.12 Optimized performance.
-2017.09 Project started.
+- 2026.03 Added a profiling performance monitoring page to observe real-time execution time for each JVM method call.
+- 2023.09 Reworked GLFW and GLFM graphics JNI bindings; moved GUI Java classes to the `xgui` package.
+- 2022.11 Added documentation.
+- 2021.03 Added the `j2c` module, which converts miniJVM Java source to C and builds native apps for desktop and mobile.
+- 2020.12 Added build scripts and released v2.1.
+- 2020.10 Refactored source and removed binaries from the repository.
+- 2020.10 Added HTTPS support.
+- 2020.03 Added XML layout for the GUI system; fixed JDWP debugging for JetBrains IDEs.
+- 2019.12 Integrated the cross-platform AWTK UI system - see [awtk-minijvm](https://github.com/digitalgust/miniJVM/tree/master/desktop/awtk_gui).
+- 2019.12 Enabled JIT based on the SLJIT project.
+- 2019.10 JIT in development.
+- 2018.12 Optimized performance.
+- 2017.09 Project started.
 
 <span id="linkbuildmobile"/>
 
@@ -182,38 +182,38 @@ Use the built-in profiling page to monitor method execution cost in real time.
 
 ## Projects Based on miniJVM
 
-[Awtk-minijvm](https://github.com/zlgopen/awtk-minijvm): [AWTK](https://github.com/zlgopen/awtk) cross-platform native UI bound to miniJVM.
-[LWJGUI-Mobile](https://github.com/orange451/LWJGUI-Mobile): Java LWJGL UI library.
-[BiBiX](https://github.com/digitalgust/BiBiX): Java instant messenger.
-[miniJVM web demo](https://java-on-web.org/examples/): miniJVM web demo.
+- [Awtk-minijvm](https://github.com/zlgopen/awtk-minijvm): [AWTK](https://github.com/zlgopen/awtk) cross-platform native UI bound to miniJVM.
+- [LWJGUI-Mobile](https://github.com/orange451/LWJGUI-Mobile): Java LWJGL UI library.
+- [BiBiX](https://github.com/digitalgust/BiBiX): Java instant messenger.
+- [miniJVM web demo](https://java-on-web.org/examples/): miniJVM web demo.
 
 <span id="linkref"/>
 
 ## Referenced Projects and Technologies
 
-[Oracle CLDC](http://www.oracle.com/technetwork/java/cldc-141990.html): CLDC API reference.
-[OpenJDK](https://openjdk.java.net/): Java API reference.
-[Miniz](https://github.com/richgel999/miniz): Reads JAR files.
-[Glfm](https://github.com/brackeen/glfm): Cross-platform (Android/iOS) GUI.
-[Nanovg](https://github.com/memononen/nanovg): GUI rendering.
-[Stb](https://github.com/nothings/stb): GUI TrueType fonts and images.
-[Glad](https://github.com/Dav1dde/glad): OpenGL/GLES header replacement.
-[Glfw](https://github.com/glfw/glfw): Cross-platform desktop GUI.
-[Dirent](https://github.com/tronkko/dirent): Linux-style file and directory APIs on Windows VC.
-[Tinycthread](https://github.com/tinycthread/tinycthread): Cross-platform threads.
-[JRegex](https://github.com/digitalgust/minijvm_third_lib/tree/master/jregex): Java string regex matching.
-[Janino](http://janino-compiler.github.io/janino/): Compiles Java source files.
-[MiniAudio](https://github.com/dr-soft/miniaudio): Java audio playback and capture.
-[Sljit](https://github.com/zherczeg/sljit): Platform-independent low-level JIT compiler.
-[Mbedtls](https://github.com/ARMmbed/mbedtls): HTTPS support via mbedtls.
-[Avian](https://github.com/ReadyTalk/avian): Java API reference.
+- [Oracle CLDC](http://www.oracle.com/technetwork/java/cldc-141990.html): CLDC API reference.
+- [OpenJDK](https://openjdk.java.net/): Java API reference.
+- [Miniz](https://github.com/richgel999/miniz): Reads JAR files.
+- [Glfm](https://github.com/brackeen/glfm): Cross-platform (Android/iOS) GUI.
+- [Nanovg](https://github.com/memononen/nanovg): GUI rendering.
+- [Stb](https://github.com/nothings/stb): GUI TrueType fonts and images.
+- [Glad](https://github.com/Dav1dde/glad): OpenGL/GLES header replacement.
+- [Glfw](https://github.com/glfw/glfw): Cross-platform desktop GUI.
+- [Dirent](https://github.com/tronkko/dirent): Linux-style file and directory APIs on Windows VC.
+- [Tinycthread](https://github.com/tinycthread/tinycthread): Cross-platform threads.
+- [JRegex](https://github.com/digitalgust/minijvm_third_lib/tree/master/jregex): Java string regex matching.
+- [Janino](http://janino-compiler.github.io/janino/): Compiles Java source files.
+- [MiniAudio](https://github.com/dr-soft/miniaudio): Java audio playback and capture.
+- [Sljit](https://github.com/zherczeg/sljit): Platform-independent low-level JIT compiler.
+- [Mbedtls](https://github.com/ARMmbed/mbedtls): HTTPS support via mbedtls.
+- [Avian](https://github.com/ReadyTalk/avian): Java API reference.
 
 ## Recommended Development IDEs
 
-C / ObjC: JetBrains CLion, Xcode, Visual Studio
-Swift: Xcode
-Java: JetBrains IntelliJ IDEA, NetBeans
-Android: Android Studio
+- C / ObjC: JetBrains CLion, Xcode, Visual Studio
+- Swift: Xcode
+- Java: JetBrains IntelliJ IDEA, NetBeans
+- Android: Android Studio
 
 <span id="linkembed"/>
 
@@ -252,9 +252,9 @@ int main(int argc, char **argv) {
 
 ### Janino Java Compiler
 
-Project: [Janino](http://janino-compiler.github.io/janino/)
-Janino is a very small and very fast Java compiler.
-Janino can compile source files to class files like `javac`, and it can also compile a Java expression, a block, a class body, one `.java` file, or multiple `.java` files in memory, then load and execute the generated bytecode directly in the same JVM. Janino is not a full Java compiler; see [limitations](http://janino-compiler.github.io/janino/#limitations), for example:
+- Project: [Janino](http://janino-compiler.github.io/janino/)
+- Janino is a very small and very fast Java compiler.
+- Janino can compile source files to class files like `javac`, and it can also compile a Java expression, a block, a class body, one `.java` file, or multiple `.java` files in memory, then load and execute the generated bytecode directly in the same JVM. Janino is not a full Java compiler; see [limitations](http://janino-compiler.github.io/janino/#limitations), for example:
 
 ```
 List<String> list = new ArrayList();
@@ -262,9 +262,9 @@ list.add("abc");
 String s = (String) list.get(0); // cannot omit the (String) cast.
 ```
 
-Download JARs:
-[janino.jar](https://github.com/digitalgust/digitalgust.github.io/blob/main/lib/janino.jar?raw=true)
-[commons-compiler.jar](https://github.com/digitalgust/digitalgust.github.io/blob/main/lib/commons-compiler.jar?raw=true)
+- Download JARs:
+- [janino.jar](https://github.com/digitalgust/digitalgust.github.io/blob/main/lib/janino.jar?raw=true)
+- [commons-compiler.jar](https://github.com/digitalgust/digitalgust.github.io/blob/main/lib/commons-compiler.jar?raw=true)
 
 ```
 # compile /binary/res/BpDeepTest.java
@@ -273,11 +273,11 @@ mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/janino.jar:../libex/c
 
 ### LuaJ
 
-Project: [LuaJ](https://github.com/luaj/luaj)
-miniJVM adaptation: [Luaj minijvm](https://github.com/digitalgust/minijvm_third_lib)
-LuaJ is a lightweight, fast, Java-centric Lua interpreter for JME and JSE. It includes string, table, package, math, io, os, debug, coroutine, and luajava libraries, plus JSR-223 bindings, full metatag support, weak tables, and direct Lua-to-Java bytecode compilation.
-Download JAR:
-[luaj.jar](https://github.com/digitalgust/digitalgust.github.io/blob/main/lib/luaj.jar?raw=true)
+- Project: [LuaJ](https://github.com/luaj/luaj)
+- miniJVM adaptation: [Luaj minijvm](https://github.com/digitalgust/minijvm_third_lib)
+- LuaJ is a lightweight, fast, Java-centric Lua interpreter for JME and JSE. It includes string, table, package, math, io, os, debug, coroutine, and luajava libraries, plus JSR-223 bindings, full metatag support, weak tables, and direct Lua-to-Java bytecode compilation.
+- Download JAR:
+- [luaj.jar](https://github.com/digitalgust/digitalgust.github.io/blob/main/lib/luaj.jar?raw=true)
 
 ```
 mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
