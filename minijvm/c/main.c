@@ -13,13 +13,15 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <locale.h>
+
+#include "utils/d_type.h"
+
 #if __JVM_OS_VS__ || __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__
 #include <direct.h>
 #else
 #include <unistd.h>
 #endif
 
-#include "utils/d_type.h"
 #include "utils/bytebuf.h"
 #include "jvm/jvm_util.h"
 #include "jvm/jvm.h"
