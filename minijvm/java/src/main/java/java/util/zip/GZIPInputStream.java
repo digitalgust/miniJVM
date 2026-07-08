@@ -15,12 +15,15 @@ import org.mini.zip.Zip;
 /**
  * @author Gust
  */
-public class GZIPInputStream {
+public class GZIPInputStream extends InputStream {
 
-    InputStream in;
-    ByteArrayInputStream bais;
+    private final InputStream in;
+    private final ByteArrayInputStream bais;
 
     public GZIPInputStream(InputStream in) throws IOException {
+        if (in == null) {
+            throw new NullPointerException();
+        }
         this.in = in;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         int b;
@@ -28,15 +31,31 @@ public class GZIPInputStream {
             baos.write(b);
         }
         byte[] e = Zip.gzipExtract0(baos.toByteArray());
+        if (e == null) {
+            throw new IOException("Invalid GZIP data.");
+        }
         bais = new ByteArrayInputStream(e);
     }
 
+    @Override
     public int read() throws IOException {
         return bais.read();
     }
 
-    public void close() throws IOException {
-        in.close();
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        return bais.read(b, off, len);
     }
 
+    @Override
+    public int available() throws IOException {
+        return bais.available();
+    }
+
+    @Override
+    public void close() throws IOException {
+        bais.close();
+        in.close();
+    }
 }
+

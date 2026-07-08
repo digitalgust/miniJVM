@@ -31,7 +31,10 @@ public abstract class HttpURLConnection extends URLConnection {
     protected ByteArrayOutputStream outData;
 
     protected int status;
+    protected String responseMessage;
     protected Map<String, List<String>> rcvHeader = new HashMap<>();
+    protected List<String> headerKeys = new ArrayList<>();
+    protected List<String> headerValues = new ArrayList<>();
     protected String cacheFilePath; // Store cache file path instead of data
 
     String method = HTTP_GET;
@@ -79,36 +82,37 @@ public abstract class HttpURLConnection extends URLConnection {
             Connection con = Connector.open(url.toString());
             if (con instanceof HttpConnection) {
                 connection = (HttpConnection) con;
+                applyRequestHeaders();
                 if (method.equals(HTTP_POST)) {
                     connection.setRequestMethod(HttpConnection.POST);
-                    byte[] data = outData.toByteArray();
-                    for (String k : outHeader.keySet()) {
-                        List<String> vals = outHeader.get(k);
-                        StringBuilder sb = new StringBuilder();
-                        for (String v : vals) {
-                            sb.append(v).append(',');
-                        }
-                        if (sb.length() > 0) {
-                            sb.deleteCharAt(sb.length() - 1);
-                        }
-                        connection.setRequestProperty(k, sb.toString());
-                    }
+                    byte[] data = outData != null ? outData.toByteArray() : new byte[0];
                     connection.setRequestProperty("Content-Length", String.valueOf(data.length));
-                    connection.openDataOutputStream().write(data);
+                    OutputStream output = connection.openDataOutputStream();
+                    output.write(data);
                 } else {
                     connection.setRequestMethod(HttpConnection.GET);
                 }
                 status = connection.getResponseCode();
-                if (status != HttpConnection.HTTP_OK) {
-                    throw new IOException("Http status: " + status);
-                }
+                responseMessage = connection.getResponseMessage();
+                headerKeys.clear();
+                headerValues.clear();
+                rcvHeader.clear();
                 for (int i = 0; true; i++) {
                     String k = connection.getHeaderFieldKey(i);
-                    if (k == null) break;
-                    String v = connection.getHeaderField(k);
-                    List<String> list = new ArrayList<>();
-                    list.add(v);
-                    rcvHeader.put(k.toLowerCase(), list);
+                    String v = connection.getHeaderField(i);
+                    if (k == null && v == null) {
+                        break;
+                    }
+                    headerKeys.add(k);
+                    headerValues.add(v);
+                    if (k != null) {
+                        List<String> list = rcvHeader.get(k.toLowerCase());
+                        if (list == null) {
+                            list = new ArrayList<>();
+                            rcvHeader.put(k.toLowerCase(), list);
+                        }
+                        list.add(v);
+                    }
                 }
                 InputStream is = connection.openDataInputStream();
                 // Save response to temporary file
@@ -178,6 +182,40 @@ public abstract class HttpURLConnection extends URLConnection {
         return (rcvHeader);
     }
 
+    public int getResponseCode() throws IOException {
+        connect();
+        return status;
+    }
+
+    public String getResponseMessage() throws IOException {
+        connect();
+        return responseMessage;
+    }
+
+    public String getHeaderField(int index) {
+        try {
+            connect();
+        } catch (IOException e) {
+            return null;
+        }
+        if (index < 0 || index >= headerValues.size()) {
+            return null;
+        }
+        return headerValues.get(index);
+    }
+
+    public String getHeaderFieldKey(int index) {
+        try {
+            connect();
+        } catch (IOException e) {
+            return null;
+        }
+        if (index < 0 || index >= headerKeys.size()) {
+            return null;
+        }
+        return headerKeys.get(index);
+    }
+
     public void setRequestProperty(String key, String value) {
         List<String> list = outHeader.get(key);
         if (list == null) {
@@ -188,7 +226,7 @@ public abstract class HttpURLConnection extends URLConnection {
     }
 
     public void addRequestProperty(String key, String value) {
-        List<String> list = outHeader.get(key.toLowerCase());
+        List<String> list = outHeader.get(key);
         if (list == null) {
             list = new ArrayList<>();
             outHeader.put(key, list);
@@ -217,6 +255,23 @@ public abstract class HttpURLConnection extends URLConnection {
             }
         }
         throw new IllegalArgumentException("method not support");
+    }
+
+    private void applyRequestHeaders() throws IOException {
+        for (String key : outHeader.keySet()) {
+            List<String> values = outHeader.get(key);
+            if (values == null || values.isEmpty()) {
+                continue;
+            }
+            StringBuilder joined = new StringBuilder();
+            for (int i = 0; i < values.size(); i++) {
+                if (i > 0) {
+                    joined.append(',');
+                }
+                joined.append(values.get(i));
+            }
+            connection.setRequestProperty(key, joined.toString());
+        }
     }
 
     public abstract void disconnect();

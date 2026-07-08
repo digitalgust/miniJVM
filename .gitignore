@@ -6,6 +6,9 @@ Thumbs.db
 target
 ai
 dist
+testcase
+test/Win32
+test/x64
 
 cmake-build-debug
 cmake-build-release
@@ -13,6 +16,8 @@ cmake-build-release
 .vscode
 .svn
 
+/lib/*.jar
+/libex/*.jar
 /minijvm/c/build
 /minijvm/java/target/
 /desktop/jni_gui/java/target/

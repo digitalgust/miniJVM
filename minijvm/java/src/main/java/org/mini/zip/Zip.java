@@ -20,6 +20,23 @@ import java.io.UnsupportedEncodingException;
  */
 public class Zip {
 
+    public static byte[] zlibExtract(byte[] data, int expectedLength) {
+        if (data == null) {
+            return null;
+        }
+        if (expectedLength < 0) {
+            throw new IllegalArgumentException("expectedLength < 0");
+        }
+        return zlibExtract0(data, expectedLength);
+    }
+
+    public static byte[] zlibCompress(byte[] data) {
+        if (data == null) {
+            return null;
+        }
+        return zlibCompress0(data);
+    }
+
     /**
      * read file from zipFile
      *
@@ -139,6 +156,10 @@ public class Zip {
     public native static byte[] gzipExtract0(byte[] zipData);
 
     public native static byte[] gzipCompress0(byte[] data);
+
+    public native static byte[] zlibExtract0(byte[] zipData, int expectedLength);
+
+    public native static byte[] zlibCompress0(byte[] data);
 
     static native byte[] getEntry0(byte[] zippath, byte[] path);
 

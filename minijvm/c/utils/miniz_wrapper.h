@@ -37,6 +37,10 @@ s32 gzip_compress(char *data, int size, ByteBuf *gzip_data);
 
 s32 gzip_extract(char *gzip_data, int size, ByteBuf *data);
 
+s32 zlib_extract(char *zlib_data, int size, int expected_size, ByteBuf *data);
+
+s32 zlib_compress(char *data, int size, ByteBuf *zlib_data);
+
 #ifdef __cplusplus
 }
 #endif

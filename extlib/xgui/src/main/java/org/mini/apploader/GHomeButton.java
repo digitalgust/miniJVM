@@ -169,8 +169,8 @@ public class GHomeButton extends GPanel implements GActionListener, GCallbackUI 
         if (app != AppManager.getInstance()) {
             app.pauseApp();
             AppManager.getInstance().active();
-            AppManager.getInstance().mainPanelShowLeft();
         }
+        AppManager.getInstance().mainPanelShowLeft();
     }
 
     public void setDrawMarkSecond(int second) {

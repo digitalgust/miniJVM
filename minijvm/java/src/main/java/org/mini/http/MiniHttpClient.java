@@ -218,15 +218,31 @@ public class MiniHttpClient extends Thread {
         try {
             fis = new FileInputStream(file);
             int flen = (int) file.length();
+            if (flen <= 0) {
+                return new byte[0];
+            }
             byte[] data = new byte[flen];
             int read = 0;
-            while ((read += fis.read(data, read, flen - read)) < flen) ;
-            return data;
+            while (read < flen) {
+                int n = fis.read(data, read, flen - read);
+                if (n <= 0) {
+                    break;
+                }
+                read += n;
+            }
+            if (read == flen) {
+                return data;
+            }
+            byte[] actual = new byte[read];
+            System.arraycopy(data, 0, actual, 0, read);
+            return actual;
         } catch (Exception e) {
             return null;
         } finally {
             try {
-                fis.close();
+                if (fis != null) {
+                    fis.close();
+                }
             } catch (Exception e) {
             }
         }

@@ -27,7 +27,9 @@ public class HttpHandler extends URLStreamHandler {
         @Override
         public void disconnect() {
             try {
-                connection.close();
+                if (connection != null){
+                    connection.close();
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

@@ -35,6 +35,12 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 res.getOutputStream().write(html.getBytes("UTF-8"));
                 return true;
             }
+            if ("jstack".equals(action)) {
+                String text = buildJstackText();
+                res.setResponseHeader("Content-Type", "text/plain; charset=UTF-8");
+                res.getOutputStream().write(text.getBytes("UTF-8"));
+                return true;
+            }
             if ("reset".equals(action)) {
                 org.mini.vm.RefNative.resetProfile();
             } else if ("watch".equals(action)) {
@@ -209,6 +215,9 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + ".vm-table { width:100%; max-width:900px; }\n"
                 + ".vm-table th { cursor:default; }\n"
                 + ".vm-log { width:100%; min-height:240px; box-sizing:border-box; background:#111; color:#9be29b; padding:10px; border-radius:4px; overflow:auto; }\n"
+                + ".jstack-toolbar { display:flex; align-items:center; gap:12px; }\n"
+                + ".jstack-status { color:#555; font-size:12px; }\n"
+                + ".jstack-log { white-space:pre-wrap; word-break:break-word; }\n"
                 + "</style>\n"
                 + "</head>\n"
                 + "<body>\n"
@@ -222,10 +231,11 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + "<button class='tab' id='tabBtn1' onclick='switchTab(1)'>Slow Call Tree</button>\n"
                 + "<button class='tab' id='tabBtn2' onclick='switchTab(2)'>Download</button>\n"
                 + "<button class='tab' id='tabBtn3' onclick='switchTab(3)'>VM Info</button>\n"
+                + "<button class='tab' id='tabBtn4' onclick='switchTab(4)'>Jstack</button>\n"
                 + "</div>\n"
                 + "<div id='tab0' class='tab-content'>\n"
                 + "<div class='btn-container'>\n"
-                + "<button class='btn reset-btn' onclick='resetProfile()'>Reset</button>\n"
+                + "<button class='btn reset-btn' onclick='resetProfile()'>Reset</button> Before profiling methods MUST \"#define _JVM_DEBUG_METHOD_PROFILE 1\" in jvm.h , and recompile minijvm \n"
                 + "</div>\n"
                 + "<h3>Performance Stats</h3>\n"
                 + "<table>\n"
@@ -281,6 +291,14 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + gcLogText
                 + "</pre>\n"
                 + "</div>\n"
+                + "<div id='tab4' class='tab-content'>\n"
+                + "<h3>Jstack</h3>\n"
+                + "<div class='btn-container jstack-toolbar'>\n"
+                + "<button class='btn reset-btn' onclick='loadJstack(true)'>Refresh Jstack</button>\n"
+                + "<span id='jstackStatus' class='jstack-status'>Click the Jstack tab to capture current thread stacks.</span>\n"
+                + "</div>\n"
+                + "<pre id='jstackOutput' class='vm-log jstack-log'>Click the Jstack tab to capture current thread stacks.</pre>\n"
+                + "</div>\n"
                 + "<script>\n"
                 + "let currentTab = 0;\n"
                 + "let autoRefresh = true;\n"
@@ -290,6 +308,7 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + "let slowSnapshotIdx = -1;\n"
                 + "let slowSnapshotKey = '';\n"
                 + "let slowExpandedNodes = new Set();\n"
+                + "let jstackLoading = false;\n"
                 + "\n"
                 + "function switchTab(index) {\n"
                 + "    currentTab = index;\n"
@@ -306,6 +325,9 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + "            contents[i].classList.remove('active');\n"
                 + "        }\n"
                 + "    });\n"
+                + "    if (index === 4) {\n"
+                + "        loadJstack(true);\n"
+                + "    }\n"
                 + "}\n"
                 + "\n"
                 + "function getTabFromURL() {\n"
@@ -680,10 +702,35 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + "    restoreSlowExpandedRows();\n"
                 + "}\n"
                 + "\n"
+                + "async function loadJstack(forceRefresh) {\n"
+                + "    const output = document.getElementById('jstackOutput');\n"
+                + "    const status = document.getElementById('jstackStatus');\n"
+                + "    if (!output || !status || jstackLoading) return;\n"
+                + "    jstackLoading = true;\n"
+                + "    status.textContent = 'Capturing thread stacks...';\n"
+                + "    if (forceRefresh) {\n"
+                + "        output.textContent = 'Loading...';\n"
+                + "    }\n"
+                + "    try {\n"
+                + "        const resp = await fetch('/pro?action=jstack', { method: 'GET', cache: 'no-store' });\n"
+                + "        if (!resp.ok) throw new Error('http ' + resp.status);\n"
+                + "        const text = await resp.text();\n"
+                + "        output.textContent = text && text.length > 0 ? text : 'No thread stack data';\n"
+                + "        status.textContent = 'Captured at ' + new Date().toLocaleTimeString();\n"
+                + "    } catch (e) {\n"
+                + "        output.textContent = 'Failed to load jstack: ' + e;\n"
+                + "        status.textContent = 'Capture failed';\n"
+                + "    } finally {\n"
+                + "        jstackLoading = false;\n"
+                + "    }\n"
+                + "}\n"
+                + "\n"
                 + "function startAutoRefresh() {\n"
                 + "    if (refreshInterval) clearInterval(refreshInterval);\n"
                 + "    refreshInterval = setInterval(function() {\n"
-                + "        window.location.reload();\n"
+                + "        if (currentTab !== 4) {\n"
+                + "            window.location.reload();\n"
+                + "        }\n"
                 + "    }, 5000);\n"
                 + "}\n"
                 + "\n"
@@ -769,6 +816,15 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
         rows.append("<tr><td>vm.loadedClassCount</td><td>").append(classes == null ? 0 : classes.length).append("</td></tr>");
         rows.append("<tr><td>vm.threadCount</td><td>").append(threads == null ? 0 : threads.length).append("</td></tr>");
         return rows.toString();
+    }
+
+    private String buildJstackText() {
+        System.gc();
+        String dump = org.mini.vm.VmUtil.allThreadDump;
+        if (dump == null || dump.length() == 0) {
+            return "No STW thread dump available yet. Wait for the next GC cycle.";
+        }
+        return dump;
     }
 
     private String buildGcLogText() {

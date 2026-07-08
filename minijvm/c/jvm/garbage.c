@@ -36,12 +36,60 @@ s64 _garbage_collect(GcCollector *collector);
 
 void _gc_print_obj_list(GcCollector *pType);
 
-static void _gc_push_history_to_java(GcCollector *collector, s64 iter, s64 mem_total, s64 time_stopWorld, s64 time_gc) {
+static void _gc_append_thread_name(Runtime *runtime, Utf8String *ustr) {
+    if (!runtime || !runtime->thrd_info || !runtime->thrd_info->jthread) return;
+    Instance *jarr_name = jthread_get_name_value(runtime->jvm, runtime->thrd_info->jthread);
+    if (jarr_name && jarr_name->arr_body && jarr_name->arr_length > 0) {
+        unicode_2_utf8((u16 *) jarr_name->arr_body, ustr, jarr_name->arr_length);
+    }
+}
+
+static Utf8String *_gc_build_thread_dump(GcCollector *collector) {
+    if (!collector || !collector->jvm || !collector->jvm->thread_list) return NULL;
+    MiniJVM *jvm = collector->jvm;
+    Utf8String *dump = utf8_create();
+    s32 len;
+    s32 i;
+    if (!dump) return NULL;
+
+    spin_lock(&jvm->thread_list->spinlock);
+    len = jvm->thread_list->length;
+    spin_unlock(&jvm->thread_list->spinlock);
+
+    for (i = 0; i < len; i++) {
+        Runtime *runtime = threadlist_get(jvm, i);
+        if (!runtime || !runtime->thrd_info) {
+            continue;
+        }
+        utf8_append_c(dump, "[Thread #");
+        utf8_append_s64(dump, i, 10);
+        utf8_append_c(dump, " name=");
+        _gc_append_thread_name(runtime, dump);
+        utf8_append_c(dump, " status=");
+        utf8_append_s64(dump, runtime->thrd_info->thread_status, 10);
+        utf8_append_c(dump, " suspend=");
+        utf8_append_s64(dump, runtime->thrd_info->suspend_count, 10);
+        utf8_append_c(dump, " blocking=");
+        utf8_append_s64(dump, runtime->thrd_info->is_blocking, 10);
+        utf8_append_c(dump, " daemon=");
+        utf8_append_s64(dump, runtime->thrd_info->jthread ? jthread_get_daemon_value(runtime->thrd_info->jthread, runtime) : 0, 10);
+        utf8_append_c(dump, "]\n");
+        if (runtime->thrd_info->thread_status == THREAD_STATUS_ZOMBIE) {
+            utf8_append_c(dump, "    <zombie>\n\n");
+            continue;
+        }
+        getRuntimeStack(runtime, dump);
+        utf8_append_c(dump, "\n");
+    }
+    return dump;
+}
+
+static void _gc_push_history_to_java(GcCollector *collector, s64 iter, s64 mem_total, s64 time_stopWorld, s64 time_gc, Utf8String *threads_dump) {
     if (!collector || !collector->runtime) return;
     Runtime *runtime = collector->runtime;
     Utf8String *className = utf8_create_c("org/mini/vm/VmUtil");
     Utf8String *methodName = utf8_create_c("gcPushHistory");
-    Utf8String *methodType = utf8_create_c("(Ljava/lang/String;)V");
+    Utf8String *methodType = utf8_create_c("(Ljava/lang/String;Ljava/lang/String;)V");
     MethodInfo *mi = find_methodInfo_by_name(className, methodName, methodType, NULL, runtime);
     if (mi) {
         char msg[1024];
@@ -66,11 +114,19 @@ static void _gc_push_history_to_java(GcCollector *collector, s64 iter, s64 mem_t
         Utf8String *umsg = utf8_create_c(msg);
         Instance *jmsg = jstring_create(umsg, runtime);
         if (jmsg) {
+            Instance *jthreads = threads_dump ? jstring_create(threads_dump, runtime) : NULL;
             instance_hold_to_thread(jmsg, runtime);
+            if (jthreads) {
+                instance_hold_to_thread(jthreads, runtime);
+            }
             push_ref(runtime->stack, jmsg);
+            push_ref(runtime->stack, jthreads);
             s32 ret = execute_method_impl(mi, runtime);
             if (ret == RUNTIME_STATUS_EXCEPTION) {
                 print_exception(runtime);
+            }
+            if (jthreads) {
+                instance_release_from_thread(jthreads, runtime);
             }
             instance_release_from_thread(jmsg, runtime);
         }
@@ -473,6 +529,7 @@ s64 _garbage_collect(GcCollector *collector) {
     s64 del = 0;
     s64 time, start;
     s64 stw_start_ns = 0;
+    Utf8String *threads_dump = NULL;
     MiniJVM *jvm = collector->jvm;
 
     start = time = currentTimeMillis();
@@ -522,6 +579,7 @@ s64 _garbage_collect(GcCollector *collector) {
             collector->dump_rc = hprof_write_heap(collector, path);
             collector->dump_flag = 3;
         }
+        threads_dump = _gc_build_thread_dump(collector);
 #if _JVM_DEBUG_GARBAGE
         jvm_printf("garbage_big_search %lld\n", (currentTimeMillis() - time));
         time = currentTimeMillis();
@@ -673,7 +731,10 @@ s64 _garbage_collect(GcCollector *collector) {
 #endif
     //push msg to java
     if (get_jvm_state(jvm) != JVM_STATUS_STOPED) { // the _gc_push_history_to_java() will new instance , so the gc can't stop forever
-        _gc_push_history_to_java(collector, iter, mem_total, time_stopWorld, time_gc);
+        _gc_push_history_to_java(collector, iter, mem_total, time_stopWorld, time_gc, threads_dump);
+    }
+    if (threads_dump) {
+        utf8_destroy(threads_dump);
     }
 
 #ifdef MEM_ALLOC_LTALLOC

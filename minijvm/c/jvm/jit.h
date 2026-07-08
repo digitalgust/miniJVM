@@ -21,6 +21,13 @@ extern "C" {
 #define JIT_COMPILE_EXEC_COUNT 5000
 #define JIT_DEBUG 0
 
+/* JIT opt: v5=INLINE_STATIC v6=INLINE_SAFEPOINT */
+#define JIT_OPT_FUSION 1
+#define JIT_OPT_FIELD 1
+#define JIT_OPT_FUSION_EXT 1   /* idiv/irem local fusion */
+#define JIT_OPT_FUSION_CMP 1   /* iload+iload+if_icmplt loop-head fusion */
+#define JIT_OPT_INLINE_SAFEPOINT 1
+
 #define SLJIT_CONFIG_AUTO 1
 #define JIT_CODE_DUMP 0
 
@@ -61,6 +68,8 @@ void jit_init(CodeAttribute *ca);
 void jit_destroy(Jit *jit);
 
 void construct_jit(MethodInfo *method, Runtime *runtime);
+
+s32 jit_invoke_from_jit(MethodInfo *method, Runtime *runtime);
 
 void jit_set_exception_jump_addr(Runtime *runtime, CodeAttribute *ca, s32 index);
 

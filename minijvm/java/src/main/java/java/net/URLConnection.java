@@ -21,6 +21,8 @@ public abstract class URLConnection {
     protected boolean doInput = true;
     protected boolean doOutput = false;
     protected boolean useCaches = false;
+    protected int connectTimeout;
+    protected int readTimeout;
     protected static final long CACHE_EXPIRE_TIME = 1000 * 60 * 60 * 24;
     protected static final int MAX_CACHE_SIZE = 200;
     protected static final String CACHE_FILE_PREFIX = "http_cache_";
@@ -89,7 +91,7 @@ public abstract class URLConnection {
     }
 
     public void setDoOutput(boolean v) {
-        doInput = v;
+        doOutput = v;
     }
 
     public void setUseCaches(boolean v) {
@@ -101,6 +103,28 @@ public abstract class URLConnection {
 
     public boolean getUseCaches() {
         return useCaches;
+    }
+
+    public void setConnectTimeout(int timeout) {
+        if (timeout < 0) {
+            throw new IllegalArgumentException("timeout < 0");
+        }
+        connectTimeout = timeout;
+    }
+
+    public int getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    public void setReadTimeout(int timeout) {
+        if (timeout < 0) {
+            throw new IllegalArgumentException("timeout < 0");
+        }
+        readTimeout = timeout;
+    }
+
+    public int getReadTimeout() {
+        return readTimeout;
     }
 
     public String getHeaderField(String name) {
