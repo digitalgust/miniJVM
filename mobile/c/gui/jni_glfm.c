@@ -1438,6 +1438,51 @@ int org_mini_glfm_utils_Gutil_mat4x4_trans_rotate_scale(Runtime *runtime, JClass
 }
 
 
+static inline u8 gutil_clamp_u8(s32 value) {
+    if (value <= 0) return 0;
+    if (value >= 0xff) return 0xff;
+    return (u8) value;
+}
+
+static inline u8 gutil_apply_global_alpha(u8 alpha, f32 globalAlpha) {
+    if (globalAlpha <= 0.f) return 0;
+    if (globalAlpha >= 1.f) return alpha;
+    return gutil_clamp_u8((s32) (alpha * globalAlpha + 0.5f));
+}
+
+static inline void gutil_blend_straight_bgra(u8 *dst, u8 srcB, u8 srcG, u8 srcR, u8 srcA) {
+    if (srcA == 0) {
+        return;
+    }
+    if (srcA == 0xff) {
+        dst[0] = srcB;
+        dst[1] = srcG;
+        dst[2] = srcR;
+        dst[3] = 0xff;
+        return;
+    }
+
+    s32 dstA = dst[3] & 0xff;
+    if (dstA == 0) {
+        dst[0] = srcB;
+        dst[1] = srcG;
+        dst[2] = srcR;
+        dst[3] = srcA;
+        return;
+    }
+
+    s32 invSrcA = 0xff - srcA;
+    s32 outA = srcA + ((dstA * invSrcA + 0x7f) / 0xff);
+    s32 outPremulB = srcB * srcA + (((dst[0] & 0xff) * dstA * invSrcA) + 0x7f) / 0xff;
+    s32 outPremulG = srcG * srcA + (((dst[1] & 0xff) * dstA * invSrcA) + 0x7f) / 0xff;
+    s32 outPremulR = srcR * srcA + (((dst[2] & 0xff) * dstA * invSrcA) + 0x7f) / 0xff;
+
+    dst[0] = gutil_clamp_u8((outPremulB + (outA >> 1)) / outA);
+    dst[1] = gutil_clamp_u8((outPremulG + (outA >> 1)) / outA);
+    dst[2] = gutil_clamp_u8((outPremulR + (outA >> 1)) / outA);
+    dst[3] = (u8) outA;
+}
+
 s32 org_mini_glfm_utils_Gutil_img_fill(Runtime *runtime, JClass *clazz) {
     static const s32 BYTES_PER_PIXEL = 4;
     s32 pos = 0;
@@ -1473,11 +1518,8 @@ s32 org_mini_glfm_utils_Gutil_img_fill(Runtime *runtime, JClass *clazz) {
             s32 *icanvas = (s32 *) canvas;
             for (i = ioffset, imax = ioffset + ilen; i < imax; i++)icanvas[i] = color.i;
         } else {
-            f32 falpha = ((f32) a) / 0xff;
             for (i = offset, imax = offset + len; i < imax; i += BYTES_PER_PIXEL) {
-                canvas[i + 0] = b * falpha + (1.0f - falpha) * canvas[i + 0];
-                canvas[i + 1] = g * falpha + (1.0f - falpha) * canvas[i + 1];
-                canvas[i + 2] = r * falpha + (1.0f - falpha) * canvas[i + 2];
+                gutil_blend_straight_bgra(canvas + i, b, g, r, a);
             }
         }
     }
@@ -1593,9 +1635,9 @@ s32 org_mini_glfm_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
                     s32 imgx, canvasx;
                     for (imgx = imgArea.x1, canvasx = intersection.x1; imgx < imgArea.x2; imgx++, canvasx++) {
                         s32 imgColByteStart = imgRowByteStart + imgx * CELL_BYTES;
-                        u8 b, g, r, a;
-                        a = img[imgColByteStart + 3];
-                        if (a == 0) {
+                        u8 b, g, r;
+                        u8 srcA = gutil_apply_global_alpha(img[imgColByteStart + 3], alpha);
+                        if (srcA == 0) {
                             continue;
                         }
 
@@ -1608,21 +1650,8 @@ s32 org_mini_glfm_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
                             g = img[imgColByteStart + 1];
                             r = img[imgColByteStart + 2];
                         }
-                        if (a == 0xff) {
-                            s32 cvsColByteStart = cvsRowByteStart + canvasx * CELL_BYTES;
-                            canvas[cvsColByteStart + 0] = b;
-                            canvas[cvsColByteStart + 1] = g;
-                            canvas[cvsColByteStart + 2] = r;
-                            canvas[cvsColByteStart + 3] = a;
-//                            *((s32 *) (canvas + cvsColByteStart)) = *((s32 *) (img + imgColByteStart));
-                        } else {
-                            f32 falpha = (f32) a / 0xff;
-                            s32 cvsColByteStart = cvsRowByteStart + canvasx * CELL_BYTES;
-                            canvas[cvsColByteStart + 0] = b * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 0];
-                            canvas[cvsColByteStart + 1] = g * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 1];
-                            canvas[cvsColByteStart + 2] = r * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 2];
-                            canvas[cvsColByteStart + 3] = a * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 3];
-                        }
+                        s32 cvsColByteStart = cvsRowByteStart + canvasx * CELL_BYTES;
+                        gutil_blend_straight_bgra(canvas + cvsColByteStart, b, g, r, srcA);
                     }
                 }
                 process = 1;
@@ -1643,26 +1672,15 @@ s32 org_mini_glfm_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
                     s32 dy = round(imgx * M10 + imgy * M11 + M12 + (M11 < -0.0f ? M11 : 0));
                     if (dx >= clip.x && dx < clip.x + clip.w && dy >= clip.y && dy < clip.y + clip.h) {
                         s32 imgColByteStart = imgRowByteStart + imgx * CELL_BYTES;
-                        u8 a = img[imgColByteStart + 3];
-                        if (a == 0) {
+                        u8 srcA = gutil_apply_global_alpha(img[imgColByteStart + 3], alpha);
+                        if (srcA == 0) {
                             continue;
                         }
                         u8 b = isBitmapFontDraw ? fontRGB.c2 : img[imgColByteStart + 0];
                         u8 g = isBitmapFontDraw ? fontRGB.c1 : img[imgColByteStart + 1];
                         u8 r = isBitmapFontDraw ? fontRGB.c0 : img[imgColByteStart + 2];
                         s32 cvsColByteStart = dy * cvsRowBytes + dx * CELL_BYTES;
-                        if (a == 0xff) {
-                            canvas[cvsColByteStart + 0] = b;
-                            canvas[cvsColByteStart + 1] = g;
-                            canvas[cvsColByteStart + 2] = r;
-                            canvas[cvsColByteStart + 3] = a;
-                        } else {
-                            f32 falpha = (f32) a / 0xff;
-                            canvas[cvsColByteStart + 0] = b * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 0];
-                            canvas[cvsColByteStart + 1] = g * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 1];
-                            canvas[cvsColByteStart + 2] = r * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 2];
-                            canvas[cvsColByteStart + 3] = a * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 3];
-                        }
+                        gutil_blend_straight_bgra(canvas + cvsColByteStart, b, g, r, srcA);
                     }
                 }
             }
