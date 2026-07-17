@@ -46,7 +46,7 @@ static mi_decl_cache_align _Atomic(mi_meta_page_t*)  mi_meta_pages = MI_ATOMIC_V
 
 #if MI_DEBUG > 1
 static mi_meta_page_t* mi_meta_page_of_ptr(void* p, size_t* block_idx) {
-  mi_meta_page_t* mpage = (mi_meta_page_t*)((uint8_t*)mi_align_down_ptr(p,MI_META_PAGE_ALIGN) + _mi_os_secure_guard_page_size());
+  mi_meta_page_t* mpage = (mi_meta_page_t*)((uint8_t*)_mi_align_down_ptr(p,MI_META_PAGE_ALIGN) + _mi_os_secure_guard_page_size());
   if (block_idx != NULL) {
     *block_idx = ((uint8_t*)p - (uint8_t*)mpage) / MI_META_BLOCK_SIZE;
   }
@@ -118,7 +118,7 @@ mi_decl_noinline void* _mi_meta_zalloc( size_t size, mi_memid_t* pmemid )
   mi_meta_page_t* mpage = mpage0;
   while (mpage != NULL) {
     size_t block_idx;
-    if (mi_bbitmap_try_find_and_clearN(&mpage->blocks_free, block_count, 0, &block_idx)) {
+    if (mi_bbitmap_try_find_and_clearN(&mpage->blocks_free, 0, block_count, &block_idx)) {
       // found and claimed `block_count` blocks
       *pmemid = _mi_memid_create_meta(mpage, block_idx, block_count);
       return mi_meta_block_start(mpage,block_idx);
@@ -136,7 +136,7 @@ mi_decl_noinline void* _mi_meta_zalloc( size_t size, mi_memid_t* pmemid )
   mpage = mi_meta_page_zalloc();
   if (mpage != NULL) {
     size_t block_idx;
-    if (mi_bbitmap_try_find_and_clearN(&mpage->blocks_free, block_count, 0, &block_idx)) {
+    if (mi_bbitmap_try_find_and_clearN(&mpage->blocks_free, 0, block_count, &block_idx)) {
       // found and claimed `block_count` blocks
       *pmemid = _mi_memid_create_meta(mpage, block_idx, block_count);
       return mi_meta_block_start(mpage,block_idx);

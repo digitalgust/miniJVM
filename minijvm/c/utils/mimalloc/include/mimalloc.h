@@ -8,7 +8,7 @@ terms of the MIT license. A copy of the license can be found in the file
 #ifndef MIMALLOC_H
 #define MIMALLOC_H
 
-#define MI_MALLOC_VERSION 3208   // major + minor + 2 digits patch
+#define MI_MALLOC_VERSION 30302   // major + 2 digits minor + 2 digits patch
 
 // ------------------------------------------------------
 // Compiler specific attributes
@@ -114,7 +114,7 @@ mi_decl_export void* mi_expand(void* p, size_t newsize)                         
 mi_decl_export void mi_free(void* p) mi_attr_noexcept;
 mi_decl_nodiscard mi_decl_export mi_decl_restrict char* mi_strdup(const char* s) mi_attr_noexcept mi_attr_malloc;
 mi_decl_nodiscard mi_decl_export mi_decl_restrict char* mi_strndup(const char* s, size_t n) mi_attr_noexcept mi_attr_malloc;
-mi_decl_nodiscard mi_decl_export mi_decl_restrict char* mi_realpath(const char* fname, char* resolved_name) mi_attr_noexcept mi_attr_malloc;
+mi_decl_nodiscard mi_decl_export mi_decl_restrict char* mi_realpath(const char* fname, char* resolved_name) mi_attr_noexcept;
 
 // ------------------------------------------------------
 // Extended allocation functions
@@ -133,6 +133,9 @@ mi_decl_nodiscard mi_decl_export void* mi_reallocf(void* p, size_t newsize)     
 mi_decl_nodiscard mi_decl_export size_t mi_usable_size(const void* p) mi_attr_noexcept;
 mi_decl_nodiscard mi_decl_export size_t mi_good_size(size_t size)     mi_attr_noexcept;
 
+// `mi_free_small` is for special applications like language runtimes.
+// it should only be used to free objects from `mi_(heap_)(m|z)alloc_small` and is potentially a tiny bit faster than `mi_free`
+mi_decl_export void mi_free_small(void* p) mi_attr_noexcept;  
 
 // -------------------------------------------------------------------------------------
 // Aligned allocation
@@ -242,7 +245,8 @@ mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_heap_malloc(mi_heap_t
 mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_heap_zalloc(mi_heap_t* heap, size_t size)  mi_attr_noexcept mi_attr_malloc mi_attr_alloc_size(2);
 mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_heap_calloc(mi_heap_t* heap, size_t count, size_t size)  mi_attr_noexcept mi_attr_malloc mi_attr_alloc_size2(2, 3);
 mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_heap_mallocn(mi_heap_t* heap, size_t count, size_t size) mi_attr_noexcept mi_attr_malloc mi_attr_alloc_size2(2, 3);
-mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_heap_malloc_small(mi_heap_t* theap, size_t size)   mi_attr_noexcept mi_attr_malloc mi_attr_alloc_size(2);
+mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_heap_malloc_small(mi_heap_t* heap, size_t size) mi_attr_noexcept mi_attr_malloc mi_attr_alloc_size(2);
+mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_heap_zalloc_small(mi_heap_t* heap, size_t size) mi_attr_noexcept mi_attr_malloc mi_attr_alloc_size(2);
 
 mi_decl_nodiscard mi_decl_export void* mi_heap_realloc(mi_heap_t* heap, void* p, size_t newsize)              mi_attr_noexcept mi_attr_alloc_size(3);
 mi_decl_nodiscard mi_decl_export void* mi_heap_reallocn(mi_heap_t* heap, void* p, size_t count, size_t size)  mi_attr_noexcept mi_attr_alloc_size2(3, 4);
@@ -250,7 +254,7 @@ mi_decl_nodiscard mi_decl_export void* mi_heap_reallocf(mi_heap_t* theap, void* 
 
 mi_decl_nodiscard mi_decl_export mi_decl_restrict char* mi_heap_strdup(mi_heap_t* heap, const char* s)            mi_attr_noexcept mi_attr_malloc;
 mi_decl_nodiscard mi_decl_export mi_decl_restrict char* mi_heap_strndup(mi_heap_t* heap, const char* s, size_t n) mi_attr_noexcept mi_attr_malloc;
-mi_decl_nodiscard mi_decl_export mi_decl_restrict char* mi_heap_realpath(mi_heap_t* heap, const char* fname, char* resolved_name) mi_attr_noexcept mi_attr_malloc;
+mi_decl_nodiscard mi_decl_export mi_decl_restrict char* mi_heap_realpath(mi_heap_t* heap, const char* fname, char* resolved_name) mi_attr_noexcept;
 
 mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_heap_malloc_aligned(mi_heap_t* heap, size_t size, size_t alignment) mi_attr_noexcept mi_attr_malloc mi_attr_alloc_size(2) mi_attr_alloc_align(3);
 mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_heap_malloc_aligned_at(mi_heap_t* heap, size_t size, size_t alignment, size_t offset) mi_attr_noexcept mi_attr_malloc mi_attr_alloc_size(2);
@@ -343,7 +347,7 @@ mi_decl_nodiscard mi_decl_export mi_heap_t* mi_heap_new_in_arena(mi_arena_id_t a
 // Used for example for separate interpreters in one process.
 // ------------------------------------------------------
 
-typedef void* mi_subproc_id_t;                        
+typedef struct { void* _mi_subproc_id; } mi_subproc_id_t;  // abstract type
 mi_decl_export mi_subproc_id_t mi_subproc_main(void);
 mi_decl_export mi_subproc_id_t mi_subproc_current(void);
 mi_decl_export mi_subproc_id_t mi_subproc_new(void);
@@ -376,6 +380,7 @@ mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_theap_malloc(mi_theap
 mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_theap_zalloc(mi_theap_t* theap, size_t size) mi_attr_noexcept mi_attr_malloc mi_attr_alloc_size(2);
 mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_theap_calloc(mi_theap_t* theap, size_t count, size_t size) mi_attr_noexcept mi_attr_malloc mi_attr_alloc_size2(2, 3);
 mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_theap_malloc_small(mi_theap_t* theap, size_t size) mi_attr_noexcept mi_attr_malloc mi_attr_alloc_size(2);
+mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_theap_zalloc_small(mi_theap_t* theap, size_t size) mi_attr_noexcept mi_attr_malloc mi_attr_alloc_size(2);
 mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_theap_malloc_aligned(mi_theap_t* theap, size_t size, size_t alignment) mi_attr_noexcept mi_attr_malloc mi_attr_alloc_size(2) mi_attr_alloc_align(3);
 mi_decl_nodiscard mi_decl_export                  void* mi_theap_realloc(mi_theap_t* theap, void* p, size_t newsize)              mi_attr_noexcept mi_attr_alloc_size(3);
 
@@ -402,6 +407,8 @@ mi_decl_export bool  mi_manage_memory(void* start, size_t size, bool is_committe
 //mi_decl_export bool  mi_theap_reload(mi_theap_t* theap, mi_arena_id_t arena);
 //mi_decl_export void  mi_theap_unload(mi_theap_t* theap);
 
+// unsafe: assumes the page belonging to `p` is only accessed by the calling thread.
+mi_decl_export bool mi_unsafe_heap_page_is_under_utilized(mi_heap_t* heap, void* p, size_t perc_threshold) mi_attr_noexcept;
 
 // ------------------------------------------------------
 // Deprecated
@@ -421,7 +428,6 @@ mi_decl_export void mi_stats_merge(void)      mi_attr_noexcept;
 mi_decl_export void mi_stats_print(void* out) mi_attr_noexcept;  // backward compatibility: `out` is ignored and should be NULL
 
 mi_decl_export void mi_stats_print_out(mi_output_fun* out, void* arg) mi_attr_noexcept;  // not deprecated but declared in `mimalloc-stats.h` now.
-
 
 
 // ------------------------------------------------------
@@ -477,6 +483,7 @@ typedef enum mi_option_e {
   mi_option_allow_thp,                  // allow transparent huge pages? (=1) (on Android =0 by default). Set to 0 to disable THP for the process.
   mi_option_minimal_purge_size,         // set minimal purge size (in KiB) (=0). By default set to either 64 or 2048 if THP is enabled.
   mi_option_arena_max_object_size,      // set maximal object size that can be allocated in an arena (in KiB) (=2GiB on 64-bit). 
+  mi_option_arena_is_numa_local,        // experimental
   _mi_option_last,
   // legacy option names
   mi_option_large_os_pages = mi_option_allow_large_os_pages,
@@ -519,18 +526,20 @@ mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_pvalloc(size_t size) 
 mi_decl_nodiscard mi_decl_export mi_decl_restrict void* mi_aligned_alloc(size_t alignment, size_t size) mi_attr_noexcept mi_attr_malloc mi_attr_alloc_size(2) mi_attr_alloc_align(1);
 
 mi_decl_nodiscard mi_decl_export void* mi_reallocarray(void* p, size_t count, size_t size) mi_attr_noexcept mi_attr_alloc_size2(2,3);
-mi_decl_nodiscard mi_decl_export int   mi_reallocarr(void* p, size_t count, size_t size) mi_attr_noexcept;
+mi_decl_nodiscard mi_decl_export int   mi_reallocarr(void* ptrp, size_t count, size_t size) mi_attr_noexcept;
 mi_decl_nodiscard mi_decl_export void* mi_aligned_recalloc(void* p, size_t newcount, size_t size, size_t alignment) mi_attr_noexcept;
 mi_decl_nodiscard mi_decl_export void* mi_aligned_offset_recalloc(void* p, size_t newcount, size_t size, size_t alignment, size_t offset) mi_attr_noexcept;
-
-mi_decl_nodiscard mi_decl_export mi_decl_restrict unsigned short* mi_wcsdup(const unsigned short* s) mi_attr_noexcept mi_attr_malloc;
-mi_decl_nodiscard mi_decl_export mi_decl_restrict unsigned char*  mi_mbsdup(const unsigned char* s)  mi_attr_noexcept mi_attr_malloc;
-mi_decl_export int mi_dupenv_s(char** buf, size_t* size, const char* name)                      mi_attr_noexcept;
-mi_decl_export int mi_wdupenv_s(unsigned short** buf, size_t* size, const unsigned short* name) mi_attr_noexcept;
 
 mi_decl_export void mi_free_size(void* p, size_t size)                           mi_attr_noexcept;
 mi_decl_export void mi_free_size_aligned(void* p, size_t size, size_t alignment) mi_attr_noexcept;
 mi_decl_export void mi_free_aligned(void* p, size_t alignment)                   mi_attr_noexcept;
+mi_decl_export int  mi_dupenv_s(char** buf, size_t* size, const char* name)      mi_attr_noexcept;
+
+// wide characters
+#include <wchar.h>  // wchar_t
+mi_decl_export int mi_wdupenv_s(wchar_t** buf, size_t* size, const wchar_t* name)       mi_attr_noexcept;
+mi_decl_nodiscard mi_decl_export mi_decl_restrict wchar_t* mi_wcsdup(const wchar_t* s)  mi_attr_noexcept mi_attr_malloc;
+mi_decl_nodiscard mi_decl_export mi_decl_restrict unsigned char* mi_mbsdup(const unsigned char* s)  mi_attr_noexcept mi_attr_malloc;
 
 // The `mi_new` wrappers implement C++ semantics on out-of-memory instead of directly returning `NULL`.
 // (and call `std::get_new_handler` and potentially raise a `std::bad_alloc` exception).

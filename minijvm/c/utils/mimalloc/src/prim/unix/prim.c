@@ -25,7 +25,7 @@ terms of the MIT license. A copy of the license can be found in the file
 #include "mimalloc/prim.h"
 
 #include <sys/mman.h>  // mmap
-#include <unistd.h>    // sysconf
+#include <unistd.h>    // sysconf, sleep
 #include <fcntl.h>     // open, close, read, access
 #include <stdlib.h>    // getenv, arc4random_buf
 
@@ -185,8 +185,16 @@ static void unix_detect_physical_memory( size_t page_size, size_t* physical_memo
     MI_UNUSED(page_size);
     struct sysinfo info; _mi_memzero_var(info);
     const int err = sysinfo(&info);
-    if (err==0 && info.totalram > 0 && info.totalram <= SIZE_MAX) {
-      *physical_memory_in_kib = (size_t)info.totalram / MI_KiB;
+    if (err==0 && info.mem_unit > 0 && info.totalram <= SIZE_MAX) {
+      if (info.mem_unit==MI_KiB) {
+        *physical_memory_in_kib = (size_t)info.totalram;
+      }
+      else {
+        size_t total = 0;
+        if (!mi_mul_overflow((size_t)info.totalram, (size_t)info.mem_unit, &total)) {
+          *physical_memory_in_kib = (total / MI_KiB);
+        }
+      }
     }
   #elif defined(_SC_PHYS_PAGES)  // do not use by default as it might cause allocation (by using `fopen` to parse /proc/meminfo) (issue #1100)
     const long pphys = sysconf(_SC_PHYS_PAGES);
@@ -213,19 +221,13 @@ void _mi_prim_mem_init( mi_os_mem_config_t* config )
 
   // disable transparent huge pages for this process?
   #if (defined(__linux__) || defined(__ANDROID__)) && defined(PR_GET_THP_DISABLE)
-  #if defined(MI_NO_THP)
-  if (true)
-  #else
   if (!mi_option_is_enabled(mi_option_allow_thp)) // disable THP if requested through an option
-  #endif
   {
     config->has_transparent_huge_pages = false;
-    int val = 0;
-    if (prctl(PR_GET_THP_DISABLE, &val, 0, 0, 0) != 0) {
+    if (prctl(PR_GET_THP_DISABLE, 0, 0, 0, 0) == 0) {   // -1 on error, 1 if already disabled
       // Most likely since distros often come with always/madvise settings.
-      val = 1;
       // Disabling only for mimalloc process rather than touching system wide settings
-      (void)prctl(PR_SET_THP_DISABLE, &val, 0, 0, 0);
+      (void)prctl(PR_SET_THP_DISABLE, 1, 0, 0, 0);
     }
   }
   #endif
@@ -247,15 +249,17 @@ int _mi_prim_free(void* addr, size_t size ) {
 // mmap
 //---------------------------------------------
 
+// return errno on failure
 static int unix_madvise(void* addr, size_t size, int advice) {
   #if defined(__sun)
-  int res = madvise((caddr_t)addr, size, advice);  // Solaris needs cast (issue #520)
-  #elif defined(__QNX__)
-  int res = posix_madvise(addr, size, advice);
-  #else
-  int res = madvise(addr, size, advice);
-  #endif
+  const int res = madvise((caddr_t)addr, size, advice);  // Solaris needs cast (issue #520)
   return (res==0 ? 0 : errno);
+  #elif defined(__QNX__)
+  return posix_madvise(addr, size, advice);              // posix returns errno
+  #else
+  const int res = madvise(addr, size, advice);           // linux returns -1 on failure and sets errno
+  return (res==0 ? 0 : errno);
+  #endif
 }
 
 static void* unix_mmap_prim(void* addr, size_t size, int protect_flags, int flags, int fd) {
@@ -436,10 +440,6 @@ int _mi_prim_alloc(void* hint_addr, size_t size, size_t try_alignment, bool comm
   mi_assert_internal(size > 0 && (size % _mi_os_page_size()) == 0);
   mi_assert_internal(commit || !allow_large);
   mi_assert_internal(try_alignment > 0);
-  if (hint_addr == NULL && size >= 8*MI_UNIX_LARGE_PAGE_SIZE && try_alignment > 1 && _mi_is_power_of_two(try_alignment) && try_alignment < MI_UNIX_LARGE_PAGE_SIZE) {
-    try_alignment = MI_UNIX_LARGE_PAGE_SIZE; // try to align along large page size for larger allocations
-  }
-
   *is_zero = true;
   int protect_flags = (commit ? (PROT_WRITE | PROT_READ) : PROT_NONE);
   *addr = unix_mmap(hint_addr, size, try_alignment, protect_flags, false, allow_large, is_large);
@@ -452,7 +452,7 @@ int _mi_prim_alloc(void* hint_addr, size_t size, size_t try_alignment, bool comm
 //---------------------------------------------
 
 static void unix_mprotect_hint(int err) {
-  #if defined(__linux__) && (MI_SECURE>=2) // guard page around every mimalloc page
+  #if defined(__linux__) && (MI_SECURE>=5) // guard page around every mimalloc page
   if (err == ENOMEM) {
     _mi_warning_message("The next warning may be caused by a low memory map limit.\n"
                         "  On Linux this is controlled by the vm.max_map_count -- maybe increase it?\n"
@@ -533,8 +533,8 @@ int _mi_prim_reset(void* start, size_t size) {
   // default `MADV_DONTNEED` is used though.
   static _Atomic(size_t) advice = MI_ATOMIC_VAR_INIT(MADV_FREE);
   int oadvice = (int)mi_atomic_load_relaxed(&advice);
-  while ((err = unix_madvise(start, size, oadvice)) != 0 && errno == EAGAIN) { errno = 0;  };
-  if (err != 0 && errno == EINVAL && oadvice == MADV_FREE) {
+  while ((err = unix_madvise(start, size, oadvice)) != 0 && err == EAGAIN) { /* try again */ };
+  if (err == EINVAL && oadvice == MADV_FREE) {
     // if MADV_FREE is not supported, fall back to MADV_DONTNEED from now on
     mi_atomic_store_release(&advice, (size_t)MADV_DONTNEED);
     err = unix_madvise(start, size, MADV_DONTNEED);
@@ -988,4 +988,8 @@ void _mi_prim_thread_associate_default_theap(mi_theap_t* theap) {
 
 bool _mi_prim_thread_is_in_threadpool(void) {
   return false;
+}
+
+void _mi_prim_thread_yield(void) {
+  sleep(0);
 }

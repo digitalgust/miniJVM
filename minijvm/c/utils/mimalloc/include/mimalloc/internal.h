@@ -131,6 +131,7 @@ void          _mi_strlcat(char* dest, const char* src, size_t dest_size);
 size_t        _mi_strlen(const char* s);
 size_t        _mi_strnlen(const char* s, size_t max_len);
 char*         _mi_strnstr(char* s, size_t max_len, const char* pat);
+bool          _mi_streq(const char* s, const char* t);
 bool          _mi_getenv(const char* name, char* result, size_t result_size);
 
 // "options.c"
@@ -175,10 +176,12 @@ mi_subproc_t* _mi_subproc_from_id(mi_subproc_id_t subproc_id);
 mi_threadid_t _mi_thread_id(void) mi_attr_noexcept;
 size_t        _mi_thread_seq_id(void) mi_attr_noexcept;
 bool          _mi_is_heap_main(const mi_heap_t* heap);
+bool          _mi_is_theap_main(const mi_theap_t* theap);
 void          _mi_theap_guarded_init(mi_theap_t* theap);
 void          _mi_theap_options_init(mi_theap_t* theap);
 mi_theap_t*   _mi_theap_default_safe(void);             // ensure the returned theap is initialized
-
+mi_theap_t*   _mi_theap_main_safe(void);
+   
 // os.c
 void          _mi_os_init(void);                                            // called from process init
 void*         _mi_os_alloc(size_t size, mi_memid_t* memid);
@@ -284,13 +287,16 @@ size_t        _mi_bin(size_t size);                      // for stats
 
 // "theap.c"
 mi_theap_t*   _mi_theap_create(mi_heap_t* heap, mi_tld_t* tld);
-void          _mi_theap_delete(mi_theap_t* theap);
+void          _mi_theap_delete(mi_theap_t* theap, bool acquire_tld_theaps_lock);
 void          _mi_theap_default_set(mi_theap_t* theap);
 void          _mi_theap_cached_set(mi_theap_t* theap);
 void          _mi_theap_collect_retired(mi_theap_t* theap, bool force);
+void          _mi_theap_collect_abandon(mi_theap_t* theap);
 bool          _mi_theap_area_visit_blocks(const mi_heap_area_t* area, mi_page_t* page, mi_block_visit_fun* visitor, void* arg);
 void          _mi_theap_page_reclaim(mi_theap_t* theap, mi_page_t* page);
-void          _mi_theap_free(mi_theap_t* theap);
+bool          _mi_theap_free(mi_theap_t* theap, bool acquire_heap_theaps_lock, bool acquire_tld_theaps_lock);
+void          _mi_theap_incref(mi_theap_t* theap);
+void          _mi_theap_decref(mi_theap_t* theap);
 
 // "heap.c"
 void          _mi_heap_area_init(mi_heap_area_t* area, mi_page_t* page);
@@ -298,7 +304,7 @@ mi_decl_cold  mi_theap_t* _mi_heap_theap_get_or_init(const mi_heap_t* heap);  //
 mi_decl_cold  mi_theap_t* _mi_heap_theap_get_peek(const mi_heap_t* heap);     // get the theap for a heap without initializing (and return NULL in that case)
 void          _mi_heap_move_pages(mi_heap_t* heap_from, mi_heap_t* heap_to);  // in "arena.c"
 void          _mi_heap_destroy_pages(mi_heap_t* heap_from);                   // in "arena.c"
-
+void          _mi_heap_force_destroy(mi_heap_t* heap);                        // allow destroying the main heap
 
 // "stats.c"
 void          _mi_stats_init(void);
@@ -412,7 +418,7 @@ typedef struct mi_option_desc_s {
   Inlined definitions
 ----------------------------------------------------------- */
 #define MI_UNUSED(x)     (void)(x)
-#ifndef NDEBUG
+#if (MI_DEBUG>1)
 #define MI_UNUSED_RELEASE(x)
 #else
 #define MI_UNUSED_RELEASE(x)  MI_UNUSED(x)
@@ -428,6 +434,7 @@ typedef struct mi_option_desc_s {
 
 #define MI_INIT74(x)  MI_INIT64(x),MI_INIT8(x),x(),x()
 #define MI_INIT5(x)   MI_INIT4(x),x()
+#define MI_INIT6(x)   MI_INIT4(x),x(),x()
 
 #include <string.h>
 // initialize a local variable to zero; use memset as compilers optimize constant sized memset's
@@ -439,9 +446,8 @@ static inline bool _mi_is_power_of_two(uintptr_t x) {
 }
 
 // Is a pointer aligned?
-static inline bool _mi_is_aligned(void* p, size_t alignment) {
-  mi_assert_internal(alignment != 0);
-  return (((uintptr_t)p % alignment) == 0);
+static inline bool _mi_is_aligned(const void* p, size_t alignment) {
+  return (alignment==0 || ((uintptr_t)p % alignment) == 0);
 }
 
 // Align upwards
@@ -456,12 +462,10 @@ static inline uintptr_t _mi_align_up(uintptr_t sz, size_t alignment) {
   }
 }
 
-
 // Align a pointer upwards
-static inline uint8_t* _mi_align_up_ptr(void* p, size_t alignment) {
-  return (uint8_t*)_mi_align_up((uintptr_t)p, alignment);
+static inline void* _mi_align_up_ptr(const void* p, size_t alignment) {
+  return (void*)_mi_align_up((uintptr_t)p, alignment);
 }
-
 
 static inline uintptr_t _mi_align_down(uintptr_t sz, size_t alignment) {
   mi_assert_internal(alignment != 0);
@@ -474,7 +478,8 @@ static inline uintptr_t _mi_align_down(uintptr_t sz, size_t alignment) {
   }
 }
 
-static inline void* mi_align_down_ptr(void* p, size_t alignment) {
+// align a pointer downwards
+static inline void* _mi_align_down_ptr(const void* p, size_t alignment) {
   return (void*)_mi_align_down((uintptr_t)p, alignment);
 }
 
@@ -560,8 +565,13 @@ static inline bool mi_count_size_overflow(size_t count, size_t size, size_t* tot
 extern mi_decl_hidden const mi_theap_t _mi_theap_empty;       // read-only empty theap, initial value of the thread local default theap (in the MI_TLS_MODEL_THREAD_LOCAL)
 extern mi_decl_hidden const mi_theap_t _mi_theap_empty_wrong; // read-only empty theap used to signal that a theap for a heap could not be allocated
 
+
+static inline mi_heap_t* _mi_theap_heap(const mi_theap_t* theap) {
+  return mi_atomic_load_ptr_acquire(mi_heap_t,&theap->heap);
+}
+
 static inline bool mi_theap_is_initialized(const mi_theap_t* theap) {
-  return (theap != NULL && theap->heap != NULL);
+  return (theap != NULL && _mi_theap_heap(theap) != NULL);
 }
 
 static inline mi_page_t* _mi_theap_get_free_small_page(mi_theap_t* theap, size_t size) {
@@ -709,19 +719,35 @@ static inline size_t mi_page_usable_block_size(const mi_page_t* page) {
   return mi_page_block_size(page) - MI_PADDING_SIZE;
 }
 
-// This may change if we locate page info outside the page data slices
-static inline uint8_t* mi_page_slice_start(const mi_page_t* page) {
-  return (uint8_t*)page;
+static inline bool mi_page_meta_is_separated(const mi_page_t* page) {
+  #if MI_PAGE_META_IS_SEPARATED
+  // usually separated but can still be in front for direct OS allocations (due to size or alignment) or due to MI_PAGE_META_ALIGNED_FREE_SMALL
+  return (page->memid.memkind == MI_MEM_ARENA && page != _mi_align_down_ptr(page->page_start, MI_ARENA_SLICE_ALIGN));
+  #else
+  MI_UNUSED(page);
+  return false;  
+  #endif
 }
 
-// This gives the offset relative to the start slice of a page. This may change if we ever
-// locate page info outside the page-data itself.
+static inline uint8_t* mi_page_slice_start(const mi_page_t* page) {
+  if (mi_page_meta_is_separated(page)) {  
+    // page meta info is at a separate location (at `arena->pages`)
+    return (uint8_t*)_mi_align_down_ptr(page->page_start, MI_ARENA_SLICE_ALIGN);
+  }
+  else {
+    // page meta info is at the start of the page slices
+    return (uint8_t*)page;
+  }
+}
+
+// This gives the offset relative to the start slice of a page. 
 static inline size_t mi_page_slice_offset_of(const mi_page_t* page, size_t offset_relative_to_page_start) {
   return (page->page_start - mi_page_slice_start(page)) + offset_relative_to_page_start;
 }
 
+// Currently committed part of a page
 static inline size_t mi_page_committed(const mi_page_t* page) {
-  return (page->slice_committed == 0 ? mi_page_size(page) : page->slice_committed - (page->page_start - mi_page_slice_start(page)));
+  return (page->slice_committed == 0 ? mi_page_size(page) : page->slice_committed - mi_page_slice_offset_of(page,0));
 }
 
 // are all blocks in a page freed?
@@ -746,7 +772,7 @@ static inline bool mi_page_is_expandable(const mi_page_t* page) {
 }
 
 
-static inline bool mi_page_is_full(mi_page_t* page) {
+static inline bool mi_page_is_full(const mi_page_t* page) {
   const bool full = (page->reserved == page->used);
   mi_assert_internal(!full || page->free == NULL);
   return full;
@@ -798,9 +824,11 @@ static inline mi_page_flags_t mi_page_flags(const mi_page_t* page) {
   return (mi_page_xthread_id(page) & MI_PAGE_FLAG_MASK);
 }
 
-static inline void mi_page_flags_set(mi_page_t* page, bool set, mi_page_flags_t newflag) {
-  if (set) { mi_atomic_or_relaxed(&page->xthread_id, newflag); }
-      else { mi_atomic_and_relaxed(&page->xthread_id, ~newflag); }
+static inline bool mi_page_flags_set(mi_page_t* page, bool set, mi_page_flags_t newflag) {
+  mi_page_flags_t old;
+  if (set) { old = mi_atomic_or_relaxed(&page->xthread_id, newflag); }
+      else { old = mi_atomic_and_relaxed(&page->xthread_id, ~newflag); }
+  return ((old & newflag) == newflag);
 }
 
 static inline bool mi_page_is_in_full(const mi_page_t* page) {
@@ -808,7 +836,17 @@ static inline bool mi_page_is_in_full(const mi_page_t* page) {
 }
 
 static inline void mi_page_set_in_full(mi_page_t* page, bool in_full) {
-  mi_page_flags_set(page, in_full, MI_PAGE_IN_FULL_QUEUE);
+  const bool was_in_full = mi_page_flags_set(page, in_full, MI_PAGE_IN_FULL_QUEUE);
+  if (was_in_full != in_full) {
+    // optimize: maintain pages_full_size to avoid visiting the full queue (issue #1220)
+    mi_theap_t* const theap = page->theap;
+    mi_assert_internal(theap!=NULL);
+    if (theap != NULL) {
+      const size_t size = page->capacity * mi_page_block_size(page);
+      if (in_full) { theap->pages_full_size += size; }
+              else { mi_assert_internal(size <= theap->pages_full_size); theap->pages_full_size -= size; }
+    }
+  }
 }
 
 static inline bool mi_page_has_interior_pointers(const mi_page_t* page) {
@@ -844,12 +882,12 @@ static inline bool mi_page_is_abandoned_mapped(const mi_page_t* page) {
 
 static inline void mi_page_set_abandoned_mapped(mi_page_t* page) {
   mi_assert_internal(mi_page_is_abandoned(page));
-  mi_atomic_or_relaxed(&page->xthread_id, MI_THREADID_ABANDONED_MAPPED);
+  mi_atomic_or_relaxed(&page->xthread_id, (mi_threadid_t)MI_THREADID_ABANDONED_MAPPED);
 }
 
 static inline void mi_page_clear_abandoned_mapped(mi_page_t* page) {
   mi_assert_internal(mi_page_is_abandoned_mapped(page));
-  mi_atomic_and_relaxed(&page->xthread_id, MI_PAGE_FLAG_MASK);
+  mi_atomic_and_relaxed(&page->xthread_id, (mi_threadid_t)MI_PAGE_FLAG_MASK);
 }
 
 
@@ -907,7 +945,7 @@ static inline bool mi_page_is_owned(const mi_page_t* page) {
 
 // get ownership; returns true if the page was not owned before.
 static inline bool mi_page_claim_ownership(mi_page_t* page) {
-  const uintptr_t old = mi_atomic_or_acq_rel(&page->xthread_free, 1);
+  const uintptr_t old = mi_atomic_or_acq_rel(&page->xthread_free, (uintptr_t)1);
   return ((old&1)==0);
 }
 
@@ -916,17 +954,23 @@ static inline bool mi_page_claim_ownership(mi_page_t* page) {
   Guarded objects
 ------------------------------------------------------------------- */
 #if MI_GUARDED
-
 // we always align guarded pointers in a block at an offset
 // the block `next` field is then used as a tag to distinguish regular offset aligned blocks from guarded ones
 #define MI_BLOCK_TAG_ALIGNED   ((mi_encoded_t)(0))
 #define MI_BLOCK_TAG_GUARDED   (~MI_BLOCK_TAG_ALIGNED)
+#endif
 
 static inline bool mi_block_ptr_is_guarded(const mi_block_t* block, const void* p) {
+#if MI_GUARDED
   const ptrdiff_t offset = (uint8_t*)p - (uint8_t*)block;
   return (offset >= (ptrdiff_t)(sizeof(mi_block_t)) && block->next == MI_BLOCK_TAG_GUARDED);
+#else
+  MI_UNUSED(block); MI_UNUSED(p);
+  return false;
+#endif  
 }
 
+#if MI_GUARDED
 static inline bool mi_theap_malloc_use_guarded(mi_theap_t* theap, size_t size) {
   // this code is written to result in fast assembly as it is on the hot path for allocation
   const size_t count = theap->guarded_sample_count - 1;  // if the rate was 0, this will underflow and count for a long time..
@@ -1006,7 +1050,7 @@ static inline uint32_t mi_ptr_encode_canary(const void* null, const void* p, con
 static inline mi_block_t* mi_block_nextx( const void* null, const mi_block_t* block, const uintptr_t* keys ) {
   mi_track_mem_defined(block,sizeof(mi_block_t));
   mi_block_t* next;
-  #ifdef MI_ENCODE_FREELIST
+  #if MI_ENCODE_FREELIST
   next = (mi_block_t*)mi_ptr_decode(null, block->next, keys);
   #else
   MI_UNUSED(keys); MI_UNUSED(null);
@@ -1018,7 +1062,7 @@ static inline mi_block_t* mi_block_nextx( const void* null, const mi_block_t* bl
 
 static inline void mi_block_set_nextx(const void* null, mi_block_t* block, const mi_block_t* next, const uintptr_t* keys) {
   mi_track_mem_undefined(block,sizeof(mi_block_t));
-  #ifdef MI_ENCODE_FREELIST
+  #if MI_ENCODE_FREELIST
   block->next = mi_ptr_encode(null, next, keys);
   #else
   MI_UNUSED(keys); MI_UNUSED(null);
@@ -1028,7 +1072,7 @@ static inline void mi_block_set_nextx(const void* null, mi_block_t* block, const
 }
 
 static inline mi_block_t* mi_block_next(const mi_page_t* page, const mi_block_t* block) {
-  #ifdef MI_ENCODE_FREELIST
+  #if MI_ENCODE_FREELIST
   mi_block_t* next = mi_block_nextx(page,block,page->keys);
   // check for free list corruption: is `next` at least in the same page?
   // TODO: check if `next` is `page->block_size` aligned?
@@ -1044,7 +1088,7 @@ static inline mi_block_t* mi_block_next(const mi_page_t* page, const mi_block_t*
 }
 
 static inline void mi_block_set_next(const mi_page_t* page, mi_block_t* block, const mi_block_t* next) {
-  #ifdef MI_ENCODE_FREELIST
+  #if MI_ENCODE_FREELIST
   mi_block_set_nextx(page,block,next, page->keys);
   #else
   MI_UNUSED(page);
