@@ -2055,7 +2055,9 @@ s32 com_misc_Unsafe_objectFieldBase(Runtime *runtime, JClass *clazz) {
     Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
     pos++;
     Instance *ins = localvar_getRefer(runtime->localvar, pos);
-    push_long(runtime->stack, ins ? -1 : (s64) (intptr_t) ins->obj_fields);
+    // obj_fields and arr_body share the same union slot (see _InstanceType in jvm.h),
+    // so this base works for both regular object fields and array elements.
+    push_long(runtime->stack, ins ? (s64) (intptr_t) ins->obj_fields : -1);
     return 0;
 }
 
