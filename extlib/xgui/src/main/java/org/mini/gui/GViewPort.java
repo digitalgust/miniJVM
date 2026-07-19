@@ -240,22 +240,38 @@ public class GViewPort extends GContainer {
         //
         final double dx = x2 - x1;
         final double dy = y2 - y1;
-        Runnable task;
+
+        //---- 公共参数兜底,防止除零/NaN 进入下面的速度计算 ----
+        //getFps()在启动首秒、严重卡顿或后台返回时可能返回0,会导致 inertiaPeriod=Infinity -> speed=Infinity -> 减成 NaN 永久卡死
+        float rawFps = GCallBack.getInstance().getFps();
+        if (!(rawFps > 0) || rawFps < 1) {   // rawFps<=0 或 NaN
+            rawFps = GCallBack.FPS_DEFAULT;
+        }
+        final double inertiaPeriod = 1000d / rawFps;
+        //moveTime(cost)在触屏事件被批量/延迟投递时可能为0,这里兜底为1ms
+        final long mvTime = moveTime <= 0 ? 1 : moveTime;
+        final double perSlice = mvTime / inertiaPeriod;   // 一次切片代表的"帧数"
+
         //System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
         if (Math.abs(dy) > Math.abs(dx) || !isSlideDirectionLimit()) {
             if (getInnerH() <= getH()) {
                 return false;
             }
-            task = new Runnable() {
-                //每多长时间进行一次惯性动作
-                float inertiaPeriod = 1000 / GCallBack.getInstance().getFps();
+            if (!(perSlice > 0)) {   // perSlice<=0 或 NaN,放弃本次惯性
+                return false;
+            }
+            final double preSpeedY = dy * addOn / perSlice;
+            if (Double.isInfinite(preSpeedY) || Double.isNaN(preSpeedY)) {
+                return false;   // 拦截非法初速度,避免污染 scrolly/boundle
+            }
+            Runnable task = new Runnable() {
                 //总共做多少次操作
-                float maxMoveCount = 2000 / inertiaPeriod - 2;
+                final float maxMoveCount = (float) (2000 / inertiaPeriod - 2);
                 //惯性速度
-                double speedY = dy * addOn / (moveTime / inertiaPeriod);
+                double speedY = preSpeedY;
                 //阻力
-                double resistance = speedY / maxMoveCount;
-                //lo
+                final double resistance = speedY / maxMoveCount;
+                //
                 int count = 0;
 
                 @Override
@@ -264,7 +280,7 @@ public class GViewPort extends GContainer {
                         //System.out.println(this + " inertia Y " + speedY + " , " + resistance + " , " + count);
                         speedY -= resistance;//速度和阻力抵消为0时,退出滑动
                         count++;
-                        if (count > maxMoveCount) {
+                        if (count > maxMoveCount || Double.isNaN(speedY) || Double.isInfinite(speedY)) {
                             inertiaCmdY = null;
                         } else {
                             float inh = getOutOfViewHeight();
@@ -292,15 +308,20 @@ public class GViewPort extends GContainer {
             if (getInnerW() <= getW()) {
                 return false;
             }
-            task = new TimerTask() {
-                //每多长时间进行一次惯性动作
-                float inertiaPeriod = 1000 / GCallBack.getInstance().getFps();
+            if (!(perSlice > 0)) {
+                return false;
+            }
+            final double preSpeedX = dx * addOn / perSlice;
+            if (Double.isInfinite(preSpeedX) || Double.isNaN(preSpeedX)) {
+                return false;
+            }
+            Runnable task = new TimerTask() {
                 //总共做多少次操作
-                float maxMoveCount = 2000 / inertiaPeriod - 2;
+                final float maxMoveCount = (float) (2000 / inertiaPeriod - 2);
                 //惯性速度
-                double speedX = dx * addOn / (moveTime / inertiaPeriod);
+                double speedX = preSpeedX;
                 //阴力
-                double resistance = speedX / maxMoveCount;
+                final double resistance = speedX / maxMoveCount;
                 //
                 float count = 0;
 
@@ -310,10 +331,10 @@ public class GViewPort extends GContainer {
                         //System.out.println(this + " inertia X " + speedX + " , " + resistance + " , " + count);
                         speedX -= resistance;//速度和阴力抵消为0时,退出滑动
                         count++;
-                        if (count > maxMoveCount) {
+                        if (count > maxMoveCount || Double.isNaN(speedX) || Double.isInfinite(speedX)) {
                             inertiaCmdX = null;
                         } else {
-                            float inw = getOutOfViewHeight();
+                            float inw = getOutOfViewWidth();   //修正:原误写为 getOutOfViewHeight()
                             if (inw > 0) {
                                 float vec = (float) speedX / inw;
                                 movePercentX(vec);
@@ -403,6 +424,14 @@ public class GViewPort extends GContainer {
         if (getOutOfViewHeight() <= 0) {
             return false;
         }
+        //防御 NaN/Infinity:一旦 scrolly 被污染(历史 bug 或外部写入),
+        //这里的所有比较都会失效,导致永久卡死。此处复位为 0,让视口回到顶部。
+        if (Float.isNaN(scrolly) || Float.isInfinite(scrolly)) {
+            scrolly = 0;
+        }
+        if (Float.isNaN(dy) || Float.isInfinite(dy)) {
+            return false;
+        }
         float tmpy = scrolly;
         tmpy -= dy;
         if (tmpy < 0) {
@@ -423,6 +452,12 @@ public class GViewPort extends GContainer {
         if (getOutOfViewWidth() <= 0) {
             return false;
         }
+        if (Float.isNaN(scrollx) || Float.isInfinite(scrollx)) {
+            scrollx = 0;
+        }
+        if (Float.isNaN(dx) || Float.isInfinite(dx)) {
+            return false;
+        }
         float tmpx = scrollx;
         tmpx -= dx;
         if (tmpx < 0) {
@@ -440,7 +475,8 @@ public class GViewPort extends GContainer {
     }
 
     public void setScrollX(float sx) {
-        if (sx < 0 || sx > 1 || boundle[WIDTH] <= viewBoundle[WIDTH]) {
+        //NaN/Infinity 会让下面的比较失效从而漏进来,这里显式拦截
+        if (Float.isNaN(sx) || Float.isInfinite(sx) || sx < 0 || sx > 1 || boundle[WIDTH] <= viewBoundle[WIDTH]) {
             return;
         }
         scrollx = sx;
@@ -448,7 +484,7 @@ public class GViewPort extends GContainer {
     }
 
     public void setScrollY(float sy) {
-        if (sy < 0 || sy > 1 || boundle[HEIGHT] <= viewBoundle[HEIGHT]) {
+        if (Float.isNaN(sy) || Float.isInfinite(sy) || sy < 0 || sy > 1 || boundle[HEIGHT] <= viewBoundle[HEIGHT]) {
             return;
         }
         scrolly = sy;

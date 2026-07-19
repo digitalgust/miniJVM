@@ -71,13 +71,18 @@ public class GScrollBar extends GObject {
     }
 
     public void setPos(float p) {
+        //NaN/Infinity 会让下面的比较失效从而漏进来 (NaN>1、NaN<0 均为 false),这里显式拦截
+        //上游(如 GTextBox.setScroll)若不慎传入脏值,避免 pos 永久卡死
+        if (Float.isNaN(p) || Float.isInfinite(p)) {
+            return;
+        }
+        if (p > 1) {
+            p = 1.f;
+        }
+        if (p < 0) {
+            p = 0.f;
+        }
         pos = p;
-        if (pos > 1) {
-            pos = 1.f;
-        }
-        if (pos < 0) {
-            pos = 0.f;
-        }
     }
 
     @Override

@@ -51,7 +51,7 @@ public class GlfmCallBackImpl extends GCallBack {
 
     long vg;
 
-    float fps;
+    float fps = FPS_DEFAULT;   //初值给默认值,避免启动首秒/严重卡顿秒窗口返回0导致 GViewPort 惯性除零
     float fpsExpect = FPS_DEFAULT;
     long startAt, cost;
     long last = System.currentTimeMillis(), now;
@@ -291,6 +291,7 @@ public class GlfmCallBackImpl extends GCallBack {
                 case Glfm.GLFMTouchPhaseEnded: {//
 
                     long cost = System.currentTimeMillis() - moveStartAt;
+                    if (cost < 1) cost = 1;   //触屏事件批量/延迟投递时 cost 可能为0,会导致 GViewPort 惯性除零
                     if ((Math.abs(x - moveStartX) > INERTIA_MIN_DISTANCE || Math.abs(y - moveStartY) > INERTIA_MIN_DISTANCE)
                             && cost < INERTIA_MAX_MILLS) {//在短时间内进行了滑动操作
                         desktop.inertiaEvent((float) moveStartX, (float) moveStartY, (float) x, (float) y, cost);

@@ -227,6 +227,11 @@ public class GTextBox extends GTextObject {
     }
 
     public boolean setScroll(float p) {
+        //NaN/Infinity 会让下面的比较失效从而漏进来,这里显式拦截
+        //(inertiaEvent/键盘滚动/空文本除法等都可能产生脏值,统一在此堵住)
+        if (Float.isNaN(p) || Float.isInfinite(p)) {
+            return false;
+        }
         if (p > 1.f) {
             p = 1.f;
         }
@@ -235,11 +240,13 @@ public class GTextBox extends GTextObject {
         }
         float tmp = this.scroll;
         this.scroll = p;
-        if (tmp != this.scroll) {
+        //用 floatToIntBits 比较,避免 scroll 之前被污染成 NaN 时 (NaN != x 恒真) 误报"变化"
+        boolean changed = Float.floatToIntBits(tmp) != Float.floatToIntBits(this.scroll);
+        if (changed) {
             scrollBar.setPos(this.scroll);
         }
         //resetSelect();
-        return tmp != this.scroll;
+        return changed;
     }
 
     public float getScroll() {
@@ -624,7 +631,10 @@ public class GTextBox extends GTextObject {
                     int[] pos = editArea.getCaretPosFromArea();
                     if (pos != null) {
                         if (pos[1] < getY() + lineh[0]) {
-                            setScroll(scroll - lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
+                            float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
+                            if (denom > 0f) {
+                                setScroll(scroll - lineh[0] / denom);
+                            }
                         } else {
                             int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] - (int) (lineh[0] * 1.5f));//定位到下一行中央
                             if (cart >= 0) {
@@ -802,7 +812,10 @@ public class GTextBox extends GTextObject {
                 }
                 case Glfm.GLFMKeyUp: {
                     int[] pos = editArea.getCaretPosFromArea();
-                    setScroll(scroll - lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
+                    float denomUp = (editArea.totalTextHeight - editArea.showAreaHeight);
+                    if (denomUp > 0f) {
+                        setScroll(scroll - lineh[0] / denomUp);
+                    }
 
                     if (pos != null) {
                         int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] - (int) lineh[0]);
@@ -814,7 +827,10 @@ public class GTextBox extends GTextObject {
                 }
                 case Glfm.GLFMKeyDown: {
                     int[] pos = editArea.getCaretPosFromArea();
-                    setScroll(scroll + lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
+                    float denomDown = (editArea.totalTextHeight - editArea.showAreaHeight);
+                    if (denomDown > 0f) {
+                        setScroll(scroll + lineh[0] / denomDown);
+                    }
                     if (pos != null) {
                         int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] + (int) lineh[0]);
                         if (cart >= 0) {
@@ -842,18 +858,32 @@ public class GTextBox extends GTextObject {
         if (scroll >= 1 || scroll <= 0) {
             return false;
         }
-        double dx = x2 - x1;
         final double dy = y2 - y1;
-        float scrollDelta = 0;
-        Runnable task;
+
+        //---- 公共参数兜底,防止除零/NaN 进入下面的速度计算 ----
+        //getFps()在启动首秒、严重卡顿或后台返回时可能返回0,会导致 inertiaPeriod=Infinity -> speed=Infinity -> 减成 NaN 永久卡死
+        float rawFps = GCallBack.getInstance().getFps();
+        if (!(rawFps > 0) || rawFps < 1) {   // rawFps<=0 或 NaN
+            rawFps = GCallBack.FPS_DEFAULT;
+        }
+        final double inertiaPeriod = 1000d / rawFps;
+        //moveTime(cost)在触屏事件批量/延迟投递时可能为0,这里兜底为1ms
+        final long mvTime = moveTime <= 0 ? 1 : moveTime;
+        final double perSlice = mvTime / inertiaPeriod;
+        if (!(perSlice > 0)) {   // perSlice<=0 或 NaN,放弃本次惯性
+            return false;
+        }
+        final double preSpeed = dy / perSlice;
+        if (Double.isInfinite(preSpeed) || Double.isNaN(preSpeed)) {
+            return false;   // 拦截非法初速度,避免污染 scroll
+        }
+
         //System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
-        task = new Runnable() {
-            //每多长时间进行一次惯性动作
-            float inertiaPeriod = 1000 / GCallBack.getInstance().getFps();
+        Runnable task = new Runnable() {
             //惯性速度
-            double speed = dy / (moveTime / inertiaPeriod);
+            double speed = preSpeed;
             //阴力
-            double resistance = speed / maxMoveCount;
+            final double resistance = speed / maxMoveCount;
             //
             int count = 0;
 
@@ -868,7 +898,8 @@ public class GTextBox extends GTextObject {
                         setScroll(scroll - (float) speed / dh);
                     }
                     GForm.flush();
-                    if (++count > maxMoveCount) {
+                    //speed 出现 NaN/Infinity 时立即终止,避免脏值继续污染 scroll
+                    if (++count > maxMoveCount || Double.isNaN(speed) || Double.isInfinite(speed)) {
                         inertiaCmd = null;
                     }
                     GForm.addCmd(inertiaCmd);
@@ -1089,13 +1120,15 @@ public class GTextBox extends GTextObject {
                     Nanovg.nvgTextBoxBoundsJni(vg, 0, 0, text_area[WIDTH], local_arr, 0, local_arr.length, bond);
                     totalRows = Math.round((bond[HEIGHT] - bond[TOP]) / lineH);
                     totalTextHeight = bond[HEIGHT];
-                    ratioPerLine = lineH / totalTextHeight;
+                    //防 totalTextHeight<=0 (空文本/退化字体) 导致 ratioPerLine=Infinity, 后续经 setScroll 扩散
+                    ratioPerLine = totalTextHeight > 0 ? lineH / totalTextHeight : 0;
                 }
                 //
                 float dh = scroll * (totalTextHeight - showAreaHeight);
                 dh = dh < 0 ? 0 : dh;
                 dy -= dh;
-                topShowRow = (int) (dh / lineH) - 1;
+                //防 lineH<=0 (退化字体) 导致 dh/lineH=Infinity -> (int)Infinity 越界
+                topShowRow = lineH > 0 ? (int) (dh / lineH) - 1 : -1;
                 //
                 int posCount = 400;
                 int rowCount = 5;
@@ -1342,7 +1375,8 @@ public class GTextBox extends GTextObject {
 
                         //计算moveToIndex，滚动到需要显示的行
                         if (pendingMoveTo && firstCharOnScreen >= 0 && lastCharOnScreen >= 0) {
-                            float delta = showAreaHeight * 0.5f / totalTextHeight;//半屏占整个文本高度的比值，即每次滚动半屏
+                            //防 totalTextHeight<=0 (空文本) 导致 delta=NaN -> setScroll(NaN)
+                            float delta = totalTextHeight > 0 ? showAreaHeight * 0.5f / totalTextHeight : 0;//半屏占整个文本高度的比值，即每次滚动半屏
                             if (pendingMoveToIndex < firstCharOnScreen && getScroll() > 0f) {
                                 setScroll(getScroll() - delta);
                                 flushNow();
