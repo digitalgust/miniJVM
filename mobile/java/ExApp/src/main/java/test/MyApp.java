@@ -72,6 +72,9 @@ public class MyApp extends GApplication implements XuiAppHolder {
                     case "MI_EXIT":
                         closeApp();
                         break;
+                    case "MI_COLORPICKER":
+                        openColorPickerFrame();
+                        break;
                     case "BT_CANCEL":
                         gframe.close();
                         break;
@@ -146,6 +149,69 @@ public class MyApp extends GApplication implements XuiAppHolder {
                 gframe.align(Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE);
             }
         });
+    }
+
+    /**
+     * 打开颜色选择器测试 frame: 演示 GColorSelector 的拖动选色、编程预设色与实时取色。
+     * 拖动色轮/三角/Alpha 条时, 下方的预览块和十六进制文本会实时刷新。
+     */
+    private void openColorPickerFrame() {
+        final String frameName = "FRAME_COLORPICKER";
+        GFrame exist = (GFrame) form.findByName(frameName);
+        if (exist != null) {
+            //已打开则前置并返回, 避免重复弹出
+            GToolkit.showFrame(exist);
+            return;
+        }
+
+        int screenW = GCallBack.getInstance().getDeviceWidth();
+        int screenH = GCallBack.getInstance().getDeviceHeight();
+        float fw = Math.min(360, screenW - 20);
+        float fh = Math.min(460, screenH - 20);
+
+        final GFrame cpf = new GFrame(form, "Color Picker", (screenW - fw) / 2f, (screenH - fh) / 2f, fw, fh);
+        cpf.setName(frameName);
+
+        //frame.add 会把子组件放进 frame 的 view(GViewPort), view 自身已带标题栏偏移(TITLE_HEIGHT=30),
+        //所以下面坐标都相对 view 内容区左上角, y 从 5 开始留一点边距
+        float pad = 5f;
+        float innerW = fw - pad * 2;          //view 内可用宽度 (忽略 PAD=2 的微小误差)
+        float bottomArea = 64f;               //预览块 + hex 文本 + 间距的预留高度
+        float pickerH = fh - GFrame.TITLE_HEIGHT - bottomArea - pad;
+        if (pickerH < 80f) pickerH = 80f;
+
+        //颜色选择器: 上方占大部分高度
+        final GColorSelector picker = new GColorSelector(form, 0f, pad, pad, innerW, pickerH);
+        picker.setName("COLOR_PICKER");
+
+        //预览块: 显示当前选中色 (含 alpha)
+        float previewY = pad + pickerH + pad;
+        final GPanel preview = new GPanel(form, pad, previewY, innerW, 28);
+        preview.setName("COLOR_PREVIEW");
+        preview.setBgColor(GColorSelector.RED);
+
+        //十六进制文本
+        final GLabel hexLabel = new GLabel(form, "", pad, previewY + 30, innerW, 24);
+        hexLabel.setName("COLOR_HEX");
+        hexLabel.setAlign(Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE);
+
+        //实时取色回调: 拖动过程中持续触发
+        picker.setStateChangeListener(gobj -> {
+            float[] c = ((GColorSelector) gobj).getColor();
+            preview.setBgColor(c);
+            hexLabel.setText("ARGB: " + Integer.toHexString(GColorSelector.getHexColorARGB(c)).toUpperCase());
+            GForm.flush();
+        });
+
+        //初始触发一次, 让预览与初始色 (红) 一致
+        float[] initC = picker.getColor();
+        preview.setBgColor(initC);
+        hexLabel.setText("ARGB: " + Integer.toHexString(GColorSelector.getHexColorARGB(initC)).toUpperCase());
+
+        cpf.add(picker);
+        cpf.add(preview);
+        cpf.add(hexLabel);
+        GToolkit.showFrame(cpf);
     }
 
     @Override

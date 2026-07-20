@@ -497,8 +497,72 @@ public class GFrame extends GContainer {
                 close_boundle[TOP] = y;
                 close_boundle[WIDTH] = 30;
                 close_boundle[HEIGHT] = 30;
+
+                //在 X 图标上覆盖一层玻璃半球 (纯 Nanovg 矢量绘制, 无图片资源)
+                //图标字体 18px, 左对齐起点 x+w-30, 垂直居中于 y+15, 故球心约在此
+                //drawGlassButton(vg, x + w - 30 + 9f, y + 14f, 7f);
             }
             return true;
+        }
+
+        /**
+         * 用 Nanovg 矢量 API 绘制半透明玻璃半球, 叠加在关闭按钮的 X 图标之上。
+         * 分四层: 球体径向渐变(立体感) -> 底部环境反射 rim light -> 主高光(左上) ->
+         * 顶部小亮点 -> 外圈细描边。整体半透明, 下层 X 图标透过玻璃仍可见。
+         *
+         * @param vg  nanovg 上下文
+         * @param cx  球心 x
+         * @param cy  球心 y
+         * @param r   球半径
+         */
+        private void drawGlassButton(long vg, float cx, float cy, float r) {
+            if (r < 2f) return;
+            nvgSave(vg);
+            //光源假定在左上方, 所以渐变中心和高光都偏向左上
+            float lightOffsetX = -r * 0.3f;
+            float lightOffsetY = -r * 0.35f;
+
+            //1) 球体主体: 径向渐变, 中心(偏左上)亮白半透明 -> 边缘冷灰半透明, 产生球面立体感
+            byte[] bodyPaint = nvgRadialGradient(vg,
+                    cx + lightOffsetX, cy + lightOffsetY, r * 0.1f, r * 1.1f,
+                    nvgRGBA(255, 255, 255, 70),
+                    nvgRGBA(40, 60, 90, 55));
+            nvgBeginPath(vg);
+            nvgCircle(vg, cx, cy, r);
+            nvgFillPaint(vg, bodyPaint);
+            nvgFill(vg);
+
+            //2) 底部环境反射光 (rim light): 球下沿内侧一道亮边。
+            //   用一个偏下的径向渐变小圆叠出, 内透明 -> 外微亮, 限定在球下半部
+            byte[] rimPaint = nvgRadialGradient(vg,
+                    cx, cy + r * 0.55f, r * 0.2f, r * 0.95f,
+                    nvgRGBA(255, 255, 255, 0),
+                    nvgRGBA(255, 255, 255, 60));
+            nvgBeginPath(vg);
+            nvgCircle(vg, cx, cy, r);
+            nvgFillPaint(vg, rimPaint);
+            nvgFill(vg);
+
+            //3) 主高光: 左上一个椭圆, 白色较高透明度, 模拟光源直接反射
+            nvgBeginPath(vg);
+            nvgEllipse(vg, cx + lightOffsetX, cy + lightOffsetY, r * 0.38f, r * 0.26f);
+            nvgFillColor(vg, nvgRGBA(255, 255, 255, 110));
+            nvgFill(vg);
+
+            //4) 顶部小亮点: 更小更亮, 最锐利的高光点
+            nvgBeginPath(vg);
+            nvgEllipse(vg, cx + lightOffsetX - r * 0.05f, cy + lightOffsetY - r * 0.08f, r * 0.16f, r * 0.11f);
+            nvgFillColor(vg, nvgRGBA(255, 255, 255, 200));
+            nvgFill(vg);
+
+            //5) 外圈细描边: 深色低透明度, 增强边缘清晰度与立体感
+            nvgBeginPath(vg);
+            nvgCircle(vg, cx, cy, r);
+            nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 70));
+            nvgStrokeWidth(vg, 1f);
+            nvgStroke(vg);
+
+            nvgRestore(vg);
         }
     }
 
