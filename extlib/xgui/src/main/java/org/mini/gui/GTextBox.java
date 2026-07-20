@@ -306,6 +306,121 @@ public class GTextBox extends GTextObject {
         }
     }
 
+    float getCaretLineHeight() {
+        return lineh[0] > 0 ? lineh[0] : getFontSize() * LINE_SCALE;
+    }
+
+    boolean scrollOneLineForVerticalMove(int dir) {
+        float lineH = getCaretLineHeight();
+        float denom = editArea.totalTextHeight - editArea.showAreaHeight;
+        if (!(lineH > 0f) || !(denom > 0f)) {
+            return false;
+        }
+        float delta = lineH / denom;
+        return dir < 0 ? setScroll(scroll - delta) : setScroll(scroll + delta);
+    }
+
+    int findVisibleDetailIndexByRowNo(int rowNo) {
+        if (editArea.area_detail == null) {
+            return -1;
+        }
+        for (int i = 0; i < editArea.area_detail.length; i++) {
+            int[] detail = editArea.area_detail[i];
+            if (detail != null && detail[EditArea.AREA_ROW_NO] == rowNo) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    int getCaretIndexOnVisibleDetail(int detailIndex, int x) {
+        if (editArea.area_detail == null || detailIndex < 0 || detailIndex >= editArea.area_detail.length) {
+            return -1;
+        }
+        int[] detail = editArea.area_detail[detailIndex];
+        if (detail == null) {
+            return -1;
+        }
+        int probeY = detail[EditArea.AREA_Y] + detail[EditArea.AREA_H] / 2;
+        return editArea.getCaretIndexFromArea(x, probeY, true);
+    }
+
+    int findBoundaryVisibleDetailIndex(int dir) {
+        if (editArea.area_detail == null) {
+            return -1;
+        }
+        if (dir < 0) {
+            for (int i = 0; i < editArea.area_detail.length; i++) {
+                if (editArea.area_detail[i] != null) {
+                    return i;
+                }
+            }
+        } else {
+            for (int i = editArea.area_detail.length - 1; i >= 0; i--) {
+                if (editArea.area_detail[i] != null) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    int getAdjacentCaretFallback(int dir, int[] curDetail) {
+        if (curDetail == null) {
+            return -1;
+        }
+        if (dir > 0) {
+            int next = curDetail[EditArea.AREA_LINE_END_AT] + 1;
+            return next <= textsb.length() ? next : -1;
+        } else {
+            int prev = curDetail[EditArea.AREA_LINE_START_AT] - 1;
+            return prev >= 0 ? prev : -1;
+        }
+    }
+
+    void moveCaretVertically(int dir) {
+        int[] pos = editArea.getCaretPosFromArea();
+        if (pos == null) {
+            int fallback = getCaretIndexOnVisibleDetail(findBoundaryVisibleDetailIndex(dir), (int) caretX);
+            if (fallback >= 0 && fallback <= textsb.length()) {
+                setCaretIndex(fallback);
+            }
+            return;
+        }
+        int targetDetailIndex = findVisibleDetailIndexByRowNo(pos[2] + dir);
+        int target = getCaretIndexOnVisibleDetail(targetDetailIndex, pos[0]);
+        if (target >= 0 && target <= textsb.length()) {
+            setCaretIndex(target);
+            return;
+        }
+
+        int[] curDetail = (pos[3] >= 0 && pos[3] < editArea.area_detail.length)
+                ? editArea.area_detail[pos[3]] : null;
+        if (dir > 0 && curDetail != null && curDetail[EditArea.AREA_LINE_END_AT] + 1 >= textsb.length()) {
+            setCaretIndex(textsb.length());
+            return;
+        }
+        if (dir < 0 && curDetail != null && curDetail[EditArea.AREA_ROW_NO] <= 0 && scroll <= 0f) {
+            return;
+        }
+        if (!scrollOneLineForVerticalMove(dir)) {
+            return;
+        }
+
+        flushNow();
+
+        int targetAfterScroll = getCaretIndexOnVisibleDetail(findVisibleDetailIndexByRowNo(pos[2] + dir), pos[0]);
+        if (targetAfterScroll < 0) {
+            targetAfterScroll = getCaretIndexOnVisibleDetail(findBoundaryVisibleDetailIndex(dir), pos[0]);
+        }
+        if (targetAfterScroll < 0) {
+            targetAfterScroll = getAdjacentCaretFallback(dir, curDetail);
+        }
+        if (targetAfterScroll >= 0 && targetAfterScroll <= textsb.length()) {
+            setCaretIndex(targetAfterScroll);
+        }
+    }
+
     @Override
     public void deleteSelectedText() {
         if (!isSelected()) {
@@ -646,84 +761,11 @@ public class GTextBox extends GTextObject {
                     break;
                 }
                 case Glfw.GLFW_KEY_UP: {
-                    int[] pos = editArea.getCaretPosFromArea();
-                    if (pos != null) {
-                        if (pos[1] < getY() + lineh[0]) {
-                            float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
-                            if (denom > 0f) {
-                                setScroll(scroll - lineh[0] / denom);
-                            }
-                        } else {
-                            //pos[1]是当前行中心, 减1.0行高正好落到上一行中心(远离行边界),
-                            //避免用1.5行高时落点贴在上一行下边界, 因行距微小差异偶发跳两行
-                            //strict=true: 上一行若不在已记录行范围内(不可见), 返回-1, 改为滚动
-                            int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] - (int) (lineh[0]), true);//定位到上一行中央
-                            if (cart >= 0) {
-                                setCaretIndex(cart);
-                            } else {
-                                //上一行不在已记录范围(不可见), 滚动一行让它进入可见区
-                                float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
-                                if (scroll > 0f && denom > 0f) {
-                                    setScroll(scroll - lineh[0] / denom);
-                                }
-                            }
-                        }
-                    } else {
-                        //pos==null: 当前光标位置不在任何可见行. 原来会跳到屏幕最后一行, 行为突兀.
-                        //改为: 仅在未滚到顶时向上滚动, 不移动光标
-                        float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
-                        if (scroll > 0f && denom > 0f) {
-                            setScroll(scroll - lineh[0] / denom);
-                        }
-                    }
+                    moveCaretVertically(-1);
                     break;
                 }
                 case Glfw.GLFW_KEY_DOWN: {
-                    int[] pos = editArea.getCaretPosFromArea();
-                    if (pos != null) {
-                        if (pos[1] > getY() + getH() - lineh[0]) {
-                            float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
-                            if (denom > 0f) {
-                                setScroll(scroll + lineh[0] / denom);
-                            }
-                        } else {
-                            //pos[1]是当前行中心, 加1.0行高正好落到下一行中心(远离行边界),
-                            //避免用1.5行高时落点贴在下一行上边界, 因行距微小差异偶发跳两行
-                            //strict=true: 下一行若不在已记录行(area_detail)范围内(不可见), 返回-1,
-                            //避免原来"落点超出maxY -> 返回textsb.length()"导致光标从1900直接跳到1930末尾
-                            int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] + (int) (lineh[0]), true);
-                            if (cart >= 0 && cart <= textsb.length()) {
-                                //允许 cart == textsb.length(): 末行(尤其末尾空行)的光标合法位置就是文本末尾,
-                                //原来用 cart < textsb.length() 会挡掉末行空行, 导致按DOWN到不了最后一行
-                                setCaretIndex(cart);
-                            } else {
-                                //cart == -1: 下一行不在已记录范围(area_detail)内.
-                                //两种情况: (a)下一行真实存在但不可见 -> 滚动让它进入可见区;
-                                //(b)当前已在文本最后一行(\n所在行), 下一行是末尾空行(永远不进area_detail) ->
-                                //   光标应到文本末尾 textsb.length(). 用 pos[3](当前行detail索引)判断.
-                                int[] curDetail = (pos[3] >= 0 && pos[3] < editArea.area_detail.length)
-                                        ? editArea.area_detail[pos[3]] : null;
-                                boolean atLastLine = curDetail != null
-                                        && curDetail[EditArea.AREA_LINE_END_AT] + 1 >= textsb.length();
-                                if (atLastLine) {
-                                    setCaretIndex(textsb.length());
-                                } else {
-                                    float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
-                                    if (scroll < 1.0f && denom > 0f) {
-                                        setScroll(scroll + lineh[0] / denom);
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        //pos==null: 当前光标位置不在任何可见行(例如光标在末尾空行且该行未进area_detail).
-                        //原来会跳到屏幕第一行, 行为突兀. 改为: 仅在未滚到底时向下滚动, 不移动光标,
-                        //避免光标突然消失或跳到屏幕顶部
-                        float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
-                        if (scroll < 1.0f && denom > 0f) {
-                            setScroll(scroll + lineh[0] / denom);
-                        }
-                    }
+                    moveCaretVertically(1);
                     break;
                 }
             }
@@ -857,34 +899,11 @@ public class GTextBox extends GTextObject {
                     break;
                 }
                 case Glfm.GLFMKeyUp: {
-                    int[] pos = editArea.getCaretPosFromArea();
-                    float denomUp = (editArea.totalTextHeight - editArea.showAreaHeight);
-                    if (denomUp > 0f) {
-                        setScroll(scroll - lineh[0] / denomUp);
-                    }
-
-                    if (pos != null) {
-                        //strict=true: 上一行不可见时返回-1, 不跳到非法位置(与桌面glfw版一致)
-                        int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] - (int) lineh[0], true);
-                        if (cart >= 0) {
-                            setCaretIndex(cart);
-                        }
-                    }
+                    moveCaretVertically(-1);
                     break;
                 }
                 case Glfm.GLFMKeyDown: {
-                    int[] pos = editArea.getCaretPosFromArea();
-                    float denomDown = (editArea.totalTextHeight - editArea.showAreaHeight);
-                    if (denomDown > 0f) {
-                        setScroll(scroll + lineh[0] / denomDown);
-                    }
-                    if (pos != null) {
-                        //strict=true: 下一行不可见时返回-1, 不跳到文本末尾
-                        int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] + (int) lineh[0], true);
-                        if (cart >= 0 && cart <= textsb.length()) {
-                            setCaretIndex(cart);
-                        }
-                    }
+                    moveCaretVertically(1);
                     break;
                 }
             }
