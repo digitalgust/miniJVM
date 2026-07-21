@@ -32,7 +32,7 @@ public class GTextBox extends GTextObject {
     protected EditArea editArea;//编辑区
 
     static final int SCROLLBAR_WIDTH = 20;
-    static final int PAD = 5;
+    static final int PAD = 1;
     static final float LINE_SCALE = 1.2f;
 
     protected int curCaretRow;//以回车为换行符的行数
@@ -271,13 +271,11 @@ public class GTextBox extends GTextObject {
         if (charIndex > textsb.length()) {
             charIndex = textsb.length();
         }
-//        int[] pos = editArea.getCaretPosFromArea();
-//        if (pos != null) {
-//            float moveOffset = charIndex < caretIndex ? (-lineh[0]) : lineh[0];
-//            if (pos[1] < getY() + lineh[0] * 2) {//超出屏幕时先滚屏
-//                setScroll(scroll + moveOffset / (editArea.totalTextHeight - editArea.showAreaHeight));
-//            }
-//        }
+        //优先走确定性滚动: 一步到位, 不依赖 drawTextBox 末尾的 pendingMoveTo 动画
+        //(该动画要求 firstCharOnScreen/lastCharOnScreen>=0, 当整屏滚出可视区时这俩是 -1, 动画永不触发)
+        if (scrollCaretRowIntoView(charIndex)) {
+            return;
+        }
         pendingMoveToIndex = charIndex;
         pendingMoveTo = true;
         pendingMoveDir = 0;  //重置抗抖方向记录
@@ -345,6 +343,81 @@ public class GTextBox extends GTextObject {
         return editArea.getCaretIndexFromArea(x, probeY, true);
     }
 
+    /**
+     * 直接计算并设置 scroll, 使 area_detail[detailIndex] 这一行完整落在 text_area 内,
+     * 一步到位(不依赖 drawTextBox 末尾的 pendingMoveTo 多帧动画):
+     * - 行顶部偏出 text_area 顶端(按 UP 后常见): 把该行顶部对齐到 text_area 顶端;
+     * - 行底部偏出 text_area 底端(按 DOWN 后常见): 把该行底部对齐到 text_area 底端.
+     * <p>
+     * 几何换算: drawTextBox 里 dy = text_area[TOP] - dh, dh = scroll*denom,
+     * denom = totalTextHeight - showAreaHeight. 一行画在绝对 y=rowY, 则该行
+     * "自然顶部"(scroll=0 时位置) = rowY + dh. 要让该行顶部落到 textTop, 需要
+     * dh' = naturalTop - textTop; 要让该行底部落到 textBottom, 需要
+     * dh' = naturalTop + rowH - textBottom. 再换算回 scroll = dh'/denom.
+     *前提: 编辑区高度足以容纳一行高, 否则无法完整显示, 保持原状.
+     */
+    boolean scrollDetailFullyVisible(int detailIndex) {
+        if (editArea.area_detail == null || detailIndex < 0 || detailIndex >= editArea.area_detail.length) {
+            return false;
+        }
+        int[] detail = editArea.area_detail[detailIndex];
+        if (detail == null) {
+            return false;
+        }
+        float denom = editArea.totalTextHeight - editArea.showAreaHeight;
+        if (!(denom > 0f)) {
+            return false;
+        }
+        float textTop = editArea.getY() + PAD;
+        float textBottom = editArea.getY() + editArea.getH() - PAD * 2;
+        float rowTop = detail[EditArea.AREA_Y];
+        float rowH = detail[EditArea.AREA_H];
+        float rowBottom = rowTop + rowH;
+        //编辑区放不下一整行 -> 无法完整显示, 不强滚
+        if (textBottom - textTop + 0.5f < rowH) {
+            return false;
+        }
+        float curDh = scroll * denom;
+        float naturalTop = rowTop + curDh;
+        float targetDh;
+        if (rowTop < textTop) {
+            targetDh = naturalTop - textTop;
+        } else if (rowBottom > textBottom) {
+            targetDh = naturalTop + rowH - textBottom;
+        } else {
+            return false;
+        }
+        if (targetDh < 0f) targetDh = 0f;
+        if (targetDh > denom) targetDh = denom;
+        return setScroll(targetDh / denom);
+    }
+
+    /**
+     * 把光标所在"显示行"(由 charIndex 确定) 滚到完整可见, 一步到位, 不依赖 pendingMoveTo 动画.
+     * 仅处理"目标行已经在 area_detail 里(与 text_area 有相交)"的情形, 此时 detail 记录了精确位置,
+     * 可以一步算出正确的 scroll. 这种情形按 UP/DOWN 后(目标行与 text_area 仍相交但顶部/底部偏出)最常见.
+     * <p>
+     * 目标行完全在屏外(不在 area_detail)的情形这里返回 false, 由调用方走 pendingMoveTo 多帧动画.
+     * 该动画此前依赖 "firstCharOnScreen/lastCharOnScreen >= 0" 才执行, 整屏滚出可视区时(如 LEFT 跨
+     * \n 跳到完全在 text_area 上方的行)这两个变量是 -1, 动画永远不触发, 光标卡在屏外.
+     * 这个 bug 已在 drawTextBox 的 pendingMoveTo 分支里修复(去掉 >=0 的前置条件, 屏外时按方向继续滚).
+     */
+    boolean scrollCaretRowIntoView(int charIndex) {
+        if (charIndex < 0) charIndex = 0;
+        if (charIndex > textsb.length()) charIndex = textsb.length();
+        if (editArea.area_detail == null) {
+            return false;
+        }
+        for (int i = 0; i < editArea.area_detail.length; i++) {
+            int[] d = editArea.area_detail[i];
+            if (d != null && charIndex >= d[EditArea.AREA_LINE_START_AT]
+                    && charIndex <= d[EditArea.AREA_LINE_END_AT] + 1) {
+                return scrollDetailFullyVisible(i);
+            }
+        }
+        return false;
+    }
+
     int findBoundaryVisibleDetailIndex(int dir) {
         if (editArea.area_detail == null) {
             return -1;
@@ -390,6 +463,12 @@ public class GTextBox extends GTextObject {
         int targetDetailIndex = findVisibleDetailIndexByRowNo(pos[2] + dir);
         int target = getCaretIndexOnVisibleDetail(targetDetailIndex, pos[0]);
         if (target >= 0 && target <= textsb.length()) {
+            //目标行落在 area_detail 里(与 text_area 有相交), 但相交不等于完整可见:
+            //一行的顶部可能偏出 text_area 顶端(按 UP 移到相邻行后常见, 此时该行只剩底部一两条
+            //像素露在编辑区顶端), 或底部偏出 text_area 底端(按 DOWN 后常见).
+            //直接计算 scroll 一步到位地把该行滚到完整可见, 不依赖 drawTextBox 末尾的
+            //pendingMoveTo 多帧动画(该动画的停止条件在某些几何下不会触发, 之前修复无效).
+            scrollDetailFullyVisible(targetDetailIndex);
             setCaretIndex(target);
             return;
         }
@@ -1211,7 +1290,7 @@ public class GTextBox extends GTextObject {
                 if (local_arr == null || local_detail == null) {//文字被修改过
                     local_arr = toCstyleBytes(textsb.toString());
                     tbox.text_arr = local_arr;
-                    showRows = Math.round(text_area[HEIGHT] / lineH) + 2;
+                    showRows = Math.round(text_area[HEIGHT] / lineH) + 3;
                     showAreaHeight = text_area[HEIGHT];
 
                     //用于存放屏墓中各行的一些位置信息
@@ -1231,6 +1310,15 @@ public class GTextBox extends GTextObject {
                         bondHeight += lineH;
                     }
                     totalRows = Math.round(bondHeight / lineH);
+                    //nvgTextBoxBounds 测的是字形包围盒, 通常比"完整行框高度"(=总行数*lineH)略小,
+                    //因为末行的下行高度(descender/行间距底部)不计入字形范围. 这会导致 totalTextHeight
+                    //偏小 -> scroll=1 时 dh 偏小 -> 末行底部仍超出 text_area 底端被裁, 且无法再滚
+                    //(scroll 已到 1.0). 这里把 totalTextHeight 向上对齐到 totalRows*lineH, 保证
+                    //scroll=1 时末行底部正好落在 text_area 底端, 末行可完整显示.
+                    float fullRowsHeight = totalRows * lineH;
+                    if (fullRowsHeight > bondHeight) {
+                        bondHeight = fullRowsHeight;
+                    }
                     totalTextHeight = bondHeight;
                     //防 totalTextHeight<=0 (空文本/退化字体) 导致 ratioPerLine=Infinity, 后续经 setScroll 扩散
                     ratioPerLine = totalTextHeight > 0 ? lineH / totalTextHeight : 0;
@@ -1507,7 +1595,7 @@ public class GTextBox extends GTextObject {
                         }
 
                         //计算moveToIndex，滚动到需要显示的行
-                        if (pendingMoveTo && firstCharOnScreen >= 0 && lastCharOnScreen >= 0) {
+                        if (pendingMoveTo) {
                             //每次只滚一行, 与方向键滚动逻辑统一, 行为可预测且不会冲过头导致抖动.
                             //(原来用 max(半屏,一行), 宽区域时半屏很大, 到边界时滚半屏易与"光标行可见性"
                             // 判断冲突导致文本上下跳动)
@@ -1531,10 +1619,40 @@ public class GTextBox extends GTextObject {
                             //启动判断(还未开始滚, dir==0): 光标在可见区外才启动, 行内不滚.
                             //进行中(dir!=0): 下滚必须滚到光标行==末行才停, 上滚必须滚到光标行==首行才停,
                             //避免连续 RIGHT 时光标行在第一行/第二行交替跳动.
-                            boolean needScrollDown = pendingMoveToIndex > stopLast && getScroll() < 1f
-                                    && (pendingMoveDir == 0 || !caretAtLastRow);
-                            boolean needScrollUp = pendingMoveToIndex < stopFirst && getScroll() > 0f
-                                    && (pendingMoveDir == 0 || !caretAtFirstRow);
+                            //注意: 整屏滚出可视区时(如 LEFT 跨 \n 跳到已完全在屏外的行) firstCharOnScreen/
+                            //lastCharOnScreen 都是 -1, 此时无法判断"光标在区内还是区外", 需要用
+                            //pendingMoveDir 记录的方向继续滚, 直到有行进入可视区, 停止逻辑才重新生效.
+                            boolean noVisibleRow = firstCharOnScreen < 0 || lastCharOnScreen < 0;
+                            boolean needScrollDown = (noVisibleRow ? pendingMoveDir >= 0
+                                    : (pendingMoveToIndex > stopLast && getScroll() < 1f
+                                        && (pendingMoveDir == 0 || !caretAtLastRow)));
+                            boolean needScrollUp = (noVisibleRow ? pendingMoveDir <= 0
+                                    : (pendingMoveToIndex < stopFirst && getScroll() > 0f
+                                        && (pendingMoveDir == 0 || !caretAtFirstRow)));
+                            if (noVisibleRow && pendingMoveDir == 0) {
+                                //首次进入"屏外"状态但方向未知: 推断滚动方向.
+                                // scroll 已到底(>=1) 说明文本顶部已经被滚出去, caret 必在上方 -> 上滚;
+                                // scroll 已到顶(<=0) 说明文本底部已经被滚出去, caret 必在下方 -> 下滚;
+                                // 中间值(罕见, 通常是竞态/几何突变): 用 caret 字符位置在文本中的比例
+                                // 与 scroll 比较 —— caret 靠后但没滚到底, 说明它在下方 -> 下滚; 否则上滚.
+                                if (getScroll() >= 1f) {
+                                    needScrollDown = false;
+                                    needScrollUp = true;
+                                } else if (getScroll() <= 0f) {
+                                    needScrollDown = true;
+                                    needScrollUp = false;
+                                } else {
+                                    int txtLen = textsb.length();
+                                    float caretRatio = txtLen > 0 ? (float) pendingMoveToIndex / txtLen : 0f;
+                                    if (caretRatio > getScroll() + 0.05f) {
+                                        needScrollDown = true;
+                                        needScrollUp = false;
+                                    } else {
+                                        needScrollDown = false;
+                                        needScrollUp = true;
+                                    }
+                                }
+                            }
                             if (needScrollDown) {
                                 //抗抖动: 若上一帧是反向滚动(上滚), 说明在边界振荡, 强制停止
                                 if (pendingMoveDir < 0) {
@@ -1542,9 +1660,17 @@ public class GTextBox extends GTextObject {
                                     pendingMoveTo = false;
                                     pendingMoveDir = 0;
                                 } else {
-                                    setScroll(getScroll() + delta);
-                                    pendingMoveDir = 1;
-                                    flushNow();
+                                    boolean moved = setScroll(getScroll() + delta);
+                                    //滚不动(已到 scroll 边界) 且仍屏外 -> 光标行无法到达(如文本末尾空行),
+                                    //停止避免无限循环
+                                    if (noVisibleRow && !moved) {
+                                        pendingMoveToIndex = -1;
+                                        pendingMoveTo = false;
+                                        pendingMoveDir = 0;
+                                    } else {
+                                        pendingMoveDir = 1;
+                                        flushNow();
+                                    }
                                 }
                             } else if (needScrollUp) {
                                 if (pendingMoveDir > 0) {
@@ -1552,9 +1678,15 @@ public class GTextBox extends GTextObject {
                                     pendingMoveTo = false;
                                     pendingMoveDir = 0;
                                 } else {
-                                    setScroll(getScroll() - delta);
-                                    pendingMoveDir = -1;
-                                    flushNow();
+                                    boolean moved = setScroll(getScroll() - delta);
+                                    if (noVisibleRow && !moved) {
+                                        pendingMoveToIndex = -1;
+                                        pendingMoveTo = false;
+                                        pendingMoveDir = 0;
+                                    } else {
+                                        pendingMoveDir = -1;
+                                        flushNow();
+                                    }
                                 }
                             } else { //结束滚动
                                 pendingMoveToIndex = -1;
