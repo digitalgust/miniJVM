@@ -8,6 +8,11 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="weixin"/>
         </intent>
+        <package android:name="com.eg.android.AlipayGphone"/>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="alipays"/>
+        </intent>
     </queries>
 
     <uses-feature
@@ -51,6 +56,23 @@
             android:exported="true"
             android:taskAffinity="org.minijvm.activity"
             android:launchMode="singleTask" />
+        <activity
+            android:name=".wxapi.WXEntryActivity"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:exported="true"
+            android:taskAffinity="org.minijvm.activity"
+            android:launchMode="singleTask" />
+        <activity
+            android:name="com.alipay.sdk.app.AlipayResultActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="minijvmshlalipay"/>
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

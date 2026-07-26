@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7A1000012F00000000000001 /* AFServiceSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A1000012F00000000000002 /* AFServiceSDK.framework */; };
 		4517C54F254C60E100F03459 /* jni_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 4517C54C254C60E100F03459 /* jni_io.c */; };
 		4517C550254C60E100F03459 /* jni_reflect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4517C54D254C60E100F03459 /* jni_reflect.c */; };
 		4517C551254C60E100F03459 /* jni_std.c in Sources */ = {isa = PBXBuildFile; fileRef = 4517C54E254C60E100F03459 /* jni_std.c */; };
@@ -123,6 +124,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7A1000012F00000000000002 /* AFServiceSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Frameworks/AFServiceSDK.framework; sourceTree = "<group>"; };
 		4517C54C254C60E100F03459 /* jni_io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_io.c; sourceTree = "<group>"; };
 		4517C54D254C60E100F03459 /* jni_reflect.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_reflect.c; sourceTree = "<group>"; };
 		4517C54E254C60E100F03459 /* jni_std.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_std.c; sourceTree = "<group>"; };
@@ -359,6 +361,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A1000012F00000000000001 /* AFServiceSDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -415,6 +418,7 @@
 		45ADDF6B21625C5A00F469AC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7A1000012F00000000000002 /* AFServiceSDK.framework */,
 				457AFCB223C84FF2002F5E34 /* AVFoundation.framework */,
 				457AFCB023C84F89002F5E34 /* AVKit.framework */,
 				457AFCAE23C84C53002F5E34 /* MediaPlayer.framework */,
@@ -1026,7 +1030,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -1078,7 +1082,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
@@ -1095,6 +1099,10 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M978JH97JT;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
 				HEADER_SEARCH_PATHS = (
 					../c/glfm/,
 					../c/gui/,
@@ -1102,7 +1110,7 @@
 					"../../minijvm/c/utils/**",
 				);
 				INFOPLIST_FILE = iosapp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1126,6 +1134,10 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M978JH97JT;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
 				HEADER_SEARCH_PATHS = (
 					../c/glfm/,
 					../c/gui/,
@@ -1133,7 +1145,7 @@
 					"../../minijvm/c/utils/**",
 				);
 				INFOPLIST_FILE = iosapp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

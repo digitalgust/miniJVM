@@ -62,7 +62,7 @@ android {
 }
 
 dependencies {
-    api 'com.alipay.sdk:alipaysdk-android:+@aar'
+    api 'com.alipay.sdk:alipaysdk-android:15.8.42@aar'
     api 'com.tencent.mm.opensdk:wechat-sdk-android:+'
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'

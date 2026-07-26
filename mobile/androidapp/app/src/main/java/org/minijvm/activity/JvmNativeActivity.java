@@ -44,7 +44,9 @@ import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.alipay.sdk.app.AuthTask;
+import com.alipay.sdk.app.OpenAuthTask;
 import com.alipay.sdk.app.PayTask;
+import com.tencent.mm.opensdk.modelmsg.SendAuth;
 import com.tencent.mm.opensdk.modelpay.PayReq;
 import com.tencent.mm.opensdk.openapi.IWXAPI;
 import com.tencent.mm.opensdk.openapi.WXAPIFactory;
@@ -63,6 +65,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 20250616
@@ -98,6 +102,9 @@ public class JvmNativeActivity extends NativeActivity {
 
     public static IWXAPI sWxApi;
     public static String sWxAppId;
+    private static volatile CountDownLatch sWxAuthLatch;
+    private static volatile Map<String, String> sWxAuthResult;
+    private static volatile String sWxAuthState;
 
     // android:name="android.app.NativeActivity"
     @Override
@@ -1519,6 +1526,127 @@ public class JvmNativeActivity extends NativeActivity {
         });
         t.start();
         return new HashMap<>();
+    }
+
+    /**
+     * 微信/支付宝登录授权。参数是 Passport prepare 接口返回 JSON 的 Base64。
+     * 该方法由页面通过 RMC 同步调用，返回值会被桥接层序列化成 JSON。
+     */
+    public synchronized Map<String, String> thirdPartyAuth(String requestBase64) {
+        Map<String, String> failed = new HashMap<>();
+        try {
+            String requestJson = new String(Base64.decode(requestBase64), "utf-8");
+            org.minijvm.activity.bridge.JsonParser<Map> parser =
+                    new org.minijvm.activity.bridge.JsonParser<>();
+            Map request = parser.deserial(requestJson, Map.class);
+            String provider = stringValue(request.get("provider"));
+            if ("alipay".equals(provider)) {
+                String authUrl = stringValue(request.get("authUrl"));
+                String scheme = stringValue(request.get("alipayScheme"));
+                String state = stringValue(request.get("state"));
+                if (authUrl.length() == 0 || scheme.length() == 0) {
+                    failed.put("resultStatus", "4000");
+                    failed.put("memo", "Missing Alipay minimalist authorization parameters");
+                    return failed;
+                }
+                CountDownLatch alipayLatch = new CountDownLatch(1);
+                Map<String, String>[] alipayResult = new Map[]{null};
+                runOnUiThread(() -> {
+                    Map<String, String> bizParams = new HashMap<>();
+                    bizParams.put("url", authUrl);
+                    OpenAuthTask task = new OpenAuthTask(JvmNativeActivity.this);
+                    task.execute(scheme, OpenAuthTask.BizType.AccountAuth, bizParams,
+                            (resultCode, resultMessage, resultBundle) -> {
+                                Map<String, String> result = new HashMap<>();
+                                if (resultBundle != null) {
+                                    for (String key : resultBundle.keySet()) {
+                                        result.put(key, stringValue(resultBundle.get(key)));
+                                    }
+                                }
+                                result.put("resultStatus", String.valueOf(resultCode));
+                                result.put("memo", resultMessage == null ? "" : resultMessage);
+                                if (!result.containsKey("state")) {
+                                    result.put("state", state);
+                                }
+                                alipayResult[0] = result;
+                                alipayLatch.countDown();
+                            }, true);
+                });
+                if (!alipayLatch.await(180, TimeUnit.SECONDS)) {
+                    failed.put("resultStatus", "4000");
+                    failed.put("memo", "Alipay authorization timed out");
+                    return failed;
+                }
+                return alipayResult[0] == null ? failed : alipayResult[0];
+            }
+            if ("wechat".equals(provider)) {
+                String appId = stringValue(request.get("appid"));
+                String state = stringValue(request.get("state"));
+                String scope = stringValue(request.get("scope"));
+                if (scope.length() == 0) {
+                    scope = "snsapi_userinfo";
+                }
+                sWxAppId = appId;
+                sWxAuthState = state;
+                sWxAuthResult = null;
+                sWxAuthLatch = new CountDownLatch(1);
+                final String requestScope = scope;
+                runOnUiThread(() -> {
+                    sWxApi = WXAPIFactory.createWXAPI(JvmNativeActivity.this, appId, true);
+                    sWxApi.registerApp(appId);
+                    if (!sWxApi.isWXAppInstalled()) {
+                        Map<String, String> result = new HashMap<>();
+                        result.put("errCode", "-8");
+                        result.put("errStr", "WeChat not installed");
+                        completeWechatAuth(result);
+                        return;
+                    }
+                    SendAuth.Req req = new SendAuth.Req();
+                    req.scope = requestScope;
+                    req.state = state;
+                    if (!sWxApi.sendReq(req)) {
+                        Map<String, String> result = new HashMap<>();
+                        result.put("errCode", "-9");
+                        result.put("errStr", "Unable to start WeChat authorization");
+                        completeWechatAuth(result);
+                    }
+                });
+                if (!sWxAuthLatch.await(180, TimeUnit.SECONDS)) {
+                    failed.put("errCode", "-10");
+                    failed.put("errStr", "WeChat authorization timed out");
+                    return failed;
+                }
+                return sWxAuthResult == null ? failed : sWxAuthResult;
+            }
+            failed.put("errCode", "-11");
+            failed.put("errStr", "Unsupported authorization provider");
+        } catch (Exception e) {
+            Log.e(TAG, "thirdPartyAuth", e);
+            failed.put("errCode", "-12");
+            failed.put("errStr", e.getMessage() == null ? "Authorization failed" : e.getMessage());
+        } finally {
+            sWxAuthLatch = null;
+            sWxAuthState = null;
+        }
+        return failed;
+    }
+
+    public static void completeWechatAuth(Map<String, String> result) {
+        CountDownLatch latch = sWxAuthLatch;
+        if (latch == null) {
+            return;
+        }
+        String state = result.get("state");
+        if ("0".equals(result.get("errCode")) && sWxAuthState != null
+                && !sWxAuthState.equals(state)) {
+            return;
+        }
+        sWxAuthResult = result;
+        latch.countDown();
+    }
+
+    private static String stringValue(Object value) {
+        return value == null ? "" : String.valueOf(value);
     }
 
     /**

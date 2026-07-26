@@ -1,0 +1,7 @@
+platform :ios, '12.0'
+
+project 'iosapp.xcodeproj'
+
+target 'iosapp' do
+  pod 'WechatOpenSDK-XCFramework', '2.0.5'
+end
