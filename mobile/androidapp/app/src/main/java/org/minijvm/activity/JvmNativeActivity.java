@@ -65,8 +65,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 20250616
@@ -102,9 +100,10 @@ public class JvmNativeActivity extends NativeActivity {
 
     public static IWXAPI sWxApi;
     public static String sWxAppId;
-    private static volatile CountDownLatch sWxAuthLatch;
     private static volatile Map<String, String> sWxAuthResult;
     private static volatile String sWxAuthState;
+    private static volatile Map<String, String> sAlipayAuthResult;
+    private static volatile String sThirdPartyAuthProvider;
 
     // android:name="android.app.NativeActivity"
     @Override
@@ -1530,7 +1529,8 @@ public class JvmNativeActivity extends NativeActivity {
 
     /**
      * 微信/支付宝登录授权。参数是 Passport prepare 接口返回 JSON 的 Base64。
-     * 该方法由页面通过 RMC 同步调用，返回值会被桥接层序列化成 JSON。
+     * 该方法只启动授权并立即返回，不能跨外部 App 授权过程持续占用 JNI 调用。
+     * 页面通过 thirdPartyAuthResult() 轮询最终结果。
      */
     public synchronized Map<String, String> thirdPartyAuth(String requestBase64) {
         Map<String, String> failed = new HashMap<>();
@@ -1540,6 +1540,7 @@ public class JvmNativeActivity extends NativeActivity {
                     new org.minijvm.activity.bridge.JsonParser<>();
             Map request = parser.deserial(requestJson, Map.class);
             String provider = stringValue(request.get("provider"));
+            sThirdPartyAuthProvider = provider;
             if ("alipay".equals(provider)) {
                 String authUrl = stringValue(request.get("authUrl"));
                 String scheme = stringValue(request.get("alipayScheme"));
@@ -1549,35 +1550,32 @@ public class JvmNativeActivity extends NativeActivity {
                     failed.put("memo", "Missing Alipay minimalist authorization parameters");
                     return failed;
                 }
-                CountDownLatch alipayLatch = new CountDownLatch(1);
-                Map<String, String>[] alipayResult = new Map[]{null};
-                runOnUiThread(() -> {
-                    Map<String, String> bizParams = new HashMap<>();
-                    bizParams.put("url", authUrl);
-                    OpenAuthTask task = new OpenAuthTask(JvmNativeActivity.this);
-                    task.execute(scheme, OpenAuthTask.BizType.AccountAuth, bizParams,
-                            (resultCode, resultMessage, resultBundle) -> {
-                                Map<String, String> result = new HashMap<>();
-                                if (resultBundle != null) {
-                                    for (String key : resultBundle.keySet()) {
-                                        result.put(key, stringValue(resultBundle.get(key)));
-                                    }
+                sAlipayAuthResult = null;
+                Map<String, String> bizParams = new HashMap<>();
+                bizParams.put("url", authUrl);
+                Log.i(TAG, "Starting Alipay account authorization, scheme=" + scheme
+                        + ", stateLength=" + state.length()
+                        + ", thread=" + Thread.currentThread().getName());
+                OpenAuthTask task = new OpenAuthTask(JvmNativeActivity.this);
+                task.execute(scheme, OpenAuthTask.BizType.AccountAuth, bizParams,
+                        (resultCode, resultMessage, resultBundle) -> {
+                            Log.i(TAG, "Alipay account authorization callback, resultCode="
+                                    + resultCode + ", message="
+                                    + (resultMessage == null ? "" : resultMessage));
+                            Map<String, String> result = new HashMap<>();
+                            if (resultBundle != null) {
+                                for (String key : resultBundle.keySet()) {
+                                    result.put(key, stringValue(resultBundle.get(key)));
                                 }
-                                result.put("resultStatus", String.valueOf(resultCode));
-                                result.put("memo", resultMessage == null ? "" : resultMessage);
-                                if (!result.containsKey("state")) {
-                                    result.put("state", state);
-                                }
-                                alipayResult[0] = result;
-                                alipayLatch.countDown();
-                            }, true);
-                });
-                if (!alipayLatch.await(180, TimeUnit.SECONDS)) {
-                    failed.put("resultStatus", "4000");
-                    failed.put("memo", "Alipay authorization timed out");
-                    return failed;
-                }
-                return alipayResult[0] == null ? failed : alipayResult[0];
+                            }
+                            result.put("resultStatus", String.valueOf(resultCode));
+                            result.put("memo", resultMessage == null ? "" : resultMessage);
+                            if (!result.containsKey("state")) {
+                                result.put("state", state);
+                            }
+                            sAlipayAuthResult = result;
+                        }, true);
+                return pendingAuthResult();
             }
             if ("wechat".equals(provider)) {
                 String appId = stringValue(request.get("appid"));
@@ -1589,7 +1587,6 @@ public class JvmNativeActivity extends NativeActivity {
                 sWxAppId = appId;
                 sWxAuthState = state;
                 sWxAuthResult = null;
-                sWxAuthLatch = new CountDownLatch(1);
                 final String requestScope = scope;
                 runOnUiThread(() -> {
                     sWxApi = WXAPIFactory.createWXAPI(JvmNativeActivity.this, appId, true);
@@ -1611,12 +1608,7 @@ public class JvmNativeActivity extends NativeActivity {
                         completeWechatAuth(result);
                     }
                 });
-                if (!sWxAuthLatch.await(180, TimeUnit.SECONDS)) {
-                    failed.put("errCode", "-10");
-                    failed.put("errStr", "WeChat authorization timed out");
-                    return failed;
-                }
-                return sWxAuthResult == null ? failed : sWxAuthResult;
+                return pendingAuthResult();
             }
             failed.put("errCode", "-11");
             failed.put("errStr", "Unsupported authorization provider");
@@ -1624,16 +1616,40 @@ public class JvmNativeActivity extends NativeActivity {
             Log.e(TAG, "thirdPartyAuth", e);
             failed.put("errCode", "-12");
             failed.put("errStr", e.getMessage() == null ? "Authorization failed" : e.getMessage());
-        } finally {
-            sWxAuthLatch = null;
-            sWxAuthState = null;
         }
         return failed;
     }
 
+    public synchronized Map<String, String> thirdPartyAuthResult() {
+        Map<String, String> result;
+        if ("alipay".equals(sThirdPartyAuthProvider)) {
+            result = sAlipayAuthResult;
+        } else if ("wechat".equals(sThirdPartyAuthProvider)) {
+            result = sWxAuthResult;
+        } else {
+            result = new HashMap<>();
+            result.put("errCode", "-11");
+            result.put("errStr", "No third-party authorization is pending");
+            return result;
+        }
+        if (result == null) {
+            return pendingAuthResult();
+        }
+        sThirdPartyAuthProvider = null;
+        sAlipayAuthResult = null;
+        sWxAuthResult = null;
+        sWxAuthState = null;
+        return result;
+    }
+
+    private static Map<String, String> pendingAuthResult() {
+        Map<String, String> pending = new HashMap<>();
+        pending.put("nativeAuthPending", "true");
+        return pending;
+    }
+
     public static void completeWechatAuth(Map<String, String> result) {
-        CountDownLatch latch = sWxAuthLatch;
-        if (latch == null) {
+        if (!"wechat".equals(sThirdPartyAuthProvider)) {
             return;
         }
         String state = result.get("state");
@@ -1642,7 +1658,6 @@ public class JvmNativeActivity extends NativeActivity {
             return;
         }
         sWxAuthResult = result;
-        latch.countDown();
     }
 
     private static String stringValue(Object value) {

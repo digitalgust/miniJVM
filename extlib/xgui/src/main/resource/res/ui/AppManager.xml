@@ -159,9 +159,15 @@
                 eif
 
                 if(strlen(getEnv("ACCOUNT_URL"))>0)  #取得了登录信息
-                    loginUid=getEnv("USERNAME")
-                    loginPwdEnc=getEnv("USERPASS")
-                    if(strlen(loginUid)=0 & strlen(loginPwdEnc)=0)  #登录信息为空
+                    logintype=getEnv("LOGINTYPE")
+                    if(equals(logintype,"2"))
+                        loginUid=getEnv("LOGIN_CREDENTIAL")
+                        loginPwdEnc=getEnv("LOGIN_CREDENTIAL_SECRET")
+                    else
+                        loginUid=getEnv("USERNAME")
+                        loginPwdEnc=getEnv("USERPASS")
+                    eif
+                    if(strlen(logintype)=0 & strlen(loginUid)=0 & strlen(loginPwdEnc)=0)  #登录信息为空
                         singUpAuto()  #自动注册
                     else
                         signInAuto()  #自动登录
@@ -199,6 +205,7 @@
                 eif
 
                 setEnv("USERNAME", lines[0])
+                setEnv("DISPLAY_USERNAME", lines[0])
                 setEnv("USERPASS", lines[1])
                 setEnv("LOGINTYPE", ""+1)       # 0{mobile or email type}     1{username + password type}
                 setEnv("TOKEN", lines[2])
@@ -213,8 +220,13 @@
             eif
             getPolicy(true)
             logintype=getEnv("LOGINTYPE")
-            loginUid=getEnv("USERNAME")
-            ep=getEnv("USERPASS")
+            if(equals(logintype,"2"))
+                loginUid=getEnv("LOGIN_CREDENTIAL")
+                ep=getEnv("LOGIN_CREDENTIAL_SECRET")
+            else
+                loginUid=getEnv("USERNAME")
+                ep=getEnv("USERPASS")
+            eif
             loginPwd=decrypt(ep,ENCRYPTED_KEY)
 
             if(strlen(loginUid)=0 | strlen(loginPwd)=0)
@@ -233,7 +245,18 @@
 
         sub onSignInAutoBack(url,code,msg) #登录回调
             if(code=0)
-                setEnv("TOKEN", msg)
+                lines=split(msg,"\n")
+                i=0
+                while(i<arrlen(lines))
+                    str=lines[i]
+                    eqIdx=indexOf(str,"=")
+                    if(eqIdx>0)
+                        key=substr(str,0,eqIdx)
+                        val=substr(str,eqIdx+1)
+                        setEnv(key,val)
+                    eif
+                    i=i+1
+                loop
                 #println("token="+msg)
             else
                 showMsg("{STR_MESSAGE}: {STR_CONNECTION_FAIL}")

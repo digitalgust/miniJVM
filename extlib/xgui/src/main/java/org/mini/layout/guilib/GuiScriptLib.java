@@ -111,6 +111,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("httpPost".toLowerCase(), this::httpPost);//
             methodNames.put("httpPostAsync".toLowerCase(), this::httpPost);//
             methodNames.put("httpPostSync".toLowerCase(), this::httpPostSync);//
+            methodNames.put("remoteMethodCallAsync".toLowerCase(), this::remoteMethodCallAsync);//
             methodNames.put("urlGetAsString".toLowerCase(), this::urlGetAsString);//
             methodNames.put("setClipboard".toLowerCase(), this::setClipboard);//
             methodNames.put("getClipboard".toLowerCase(), this::getClipboard);//
@@ -1056,6 +1057,59 @@ public class GuiScriptLib extends Lib {
         String postData = Interpreter.popBackStr(para);
         String callback = para.isEmpty() ? null : Interpreter.popBackStr(para);
         return httpRequestImpl(href, postData, callback, true);
+    }
+
+    /**
+     * 在工作线程调用原生方法，再把结果排回 GUI 命令队列。
+     * 第三方授权会暂停当前应用并等待外部 App 回跳，不能在 Android 主线程同步等待。
+     */
+    public DataType remoteMethodCallAsync(ArrayList<DataType> para) {
+        if (para.size() < 2) {
+            SysLog.error("call sub error: remoteMethodCallAsync(json,callback)");
+            return null;
+        }
+        String json = Interpreter.popBackStr(para);
+        String callback = Interpreter.popBackStr(para);
+        GForm form = formHolder.getForm();
+        new Thread(() -> {
+            int code = 0;
+            String reply;
+            try {
+                reply = Glfm.glfmRemoteMethodCall(json);
+                if (reply == null) {
+                    reply = "";
+                }
+                if (reply.indexOf("nativeAuthPending") >= 0) {
+                    String pollJson = "{\"className\":\"org.minijvm.activity.JvmNativeActivity\","
+                            + "\"methodDesc\":\"thirdPartyAuthResult()Ljava/util/Map;\","
+                            + "\"paraJson\":\"[]\",\"insJson\":null}";
+                    long deadline = System.currentTimeMillis() + 180000L;
+                    while (reply.indexOf("nativeAuthPending") >= 0
+                            && System.currentTimeMillis() < deadline) {
+                        Thread.sleep(100L);
+                        reply = Glfm.glfmRemoteMethodCall(pollJson);
+                        if (reply == null) {
+                            reply = "";
+                        }
+                    }
+                    if (reply.indexOf("nativeAuthPending") >= 0) {
+                        reply = "{\"resultStatus\":\"4000\","
+                                + "\"memo\":\"Third-party authorization timed out\"}";
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                code = -1;
+                reply = e.getMessage() == null ? "remote method call failed" : e.getMessage();
+            }
+            final int callbackCode = code;
+            final String callbackReply = reply;
+            GForm.addCmd(new GCmd(() ->
+                    doHttpCallback(form, callback, "native://remoteMethodCall",
+                            callbackCode, callbackReply)));
+            GForm.flush();
+        }, "remote-method-call").start();
+        return null;
     }
 
     public DataType urlGetAsString(ArrayList<DataType> para) {
