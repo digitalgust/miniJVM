@@ -230,7 +230,8 @@
                                 <!--  把 pom 当前版本号写到 base.properties 的 cver= 行 -->
                                 <script language="javascript">
                                     <![CDATA[
-                            var file = new java.io.File("${basedir}/src/main/resource/res/base.properties");
+                            var file = new java.io.File(
+                                project.getBaseDir(), "src/main/resource/res/base.properties");
                             var version = "${project.version}";
                             var lines = [];
                             // 使用UTF-8编码读取文件
