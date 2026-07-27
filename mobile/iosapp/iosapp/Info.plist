@@ -28,6 +28,7 @@
 	<array>
 		<string>weixin</string>
 		<string>weixinULAPI</string>
+		<string>weixinURLParamsAPI</string>
 		<string>alipay</string>
 		<string>alipays</string>
 	</array>

@@ -1061,7 +1061,7 @@ public class GuiScriptLib extends Lib {
 
     /**
      * 在工作线程调用原生方法，再把结果排回 GUI 命令队列。
-     * 第三方授权会暂停当前应用并等待外部 App 回跳，不能在 Android 主线程同步等待。
+     * 第三方授权会暂停当前应用并等待外部 App 回跳，不能在 GUI 线程同步等待。
      */
     public DataType remoteMethodCallAsync(ArrayList<DataType> para) {
         if (para.size() < 2) {
@@ -1093,8 +1093,8 @@ public class GuiScriptLib extends Lib {
                         }
                     }
                     if (reply.indexOf("nativeAuthPending") >= 0) {
-                        reply = "{\"resultStatus\":\"4000\","
-                                + "\"memo\":\"Third-party authorization timed out\"}";
+                        code = -2;
+                        reply = "第三方授权结果等待超时，请重新授权";
                     }
                 }
             } catch (Exception e) {
