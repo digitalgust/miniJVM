@@ -97,6 +97,7 @@ public class XuiLoader {
             appHolder.getApp().setProperty("plugin_url", AppLoader.getProperty("plugin_url"));
             appHolder.getApp().setProperty("update_url", AppLoader.getProperty("update_url"));
             appHolder.getApp().setProperty("uuid", AppLoader.getProperty("uuid"));
+            appHolder.getApp().setProperty("bundleid", GCallBack.getInstance().getBundleId());
         }
         return envVarProvider;
     }

@@ -70,7 +70,7 @@
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="minijvmshlalipay"/>
+                <data android:scheme="org.mini.minipack.alipay"/>
             </intent-filter>
         </activity>
     </application>

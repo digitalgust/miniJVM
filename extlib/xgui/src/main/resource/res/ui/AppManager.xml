@@ -3,6 +3,7 @@
         <script>
             <![CDATA[
         sub onload() #这个用来获取服务器上的策略网址信息
+            setEnv("CLIENTID",getClientId())
             if(!isDef("ENCRYPTED_KEY"))
                 def("ENCRYPTED_KEY","L7%d9&3jw5f")
             eif
@@ -78,8 +79,18 @@
             setBrightness(b)
         ret
 
+        sub getClientId()
+            bundleid=getEnv("BUNDLEID")
+            if(equals(bundleid,"org.minijvm.activity"))
+                ret "minipack_android"
+            eif
+            if(equals(bundleid,"org.mini.minipack"))
+                ret "minipack_ios"
+            eif
+        ret getEnv("CLIENTID")
+
         sub getQueryPara()
-            s="appid="+ getEnv("APPID") + "&appzone=" + getEnv("APPZONE") + "&ver=" + getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG") +"&token="+ getEnv("TOKEN")+"&uuid="+getEnv("UUID")
+            s="appid="+ getEnv("APPID") + "&appzone=" + getEnv("APPZONE") + "&ver=" + getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG") +"&token="+ getEnv("TOKEN")+"&uuid="+getEnv("UUID")+"&bundleid="+getEnv("BUNDLEID")+"&clientid="+getClientId()
             #println(s)
         ret s
 

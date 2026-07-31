@@ -2170,6 +2170,37 @@ const char *glfmGetSaveRoot() {
     return glfmGetResRoot();
 }
 
+#define ANDROID_BUNDLE_ID_MAX_LEN 256
+static char android_bundle_id[ANDROID_BUNDLE_ID_MAX_LEN] = {0};
+
+const char *glfmGetBundleId() {
+    if (!android_bundle_id[0] && platformDataGlobal && platformDataGlobal->app) {
+        struct android_app *app = platformDataGlobal->app;
+        GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+        JNIEnv *jni = platformData->jniEnv;
+        jstring packageName = glfm__callJavaMethod(
+                jni,
+                app->activity->clazz,
+                "getPackageName",
+                "()Ljava/lang/String;",
+                Object);
+        if (packageName && !glfm__wasJavaExceptionThrown()) {
+            const char *rawString = (*jni)->GetStringUTFChars(jni, packageName, 0);
+            if (rawString) {
+                size_t len = strlen(rawString);
+                if (len >= ANDROID_BUNDLE_ID_MAX_LEN) {
+                    len = ANDROID_BUNDLE_ID_MAX_LEN - 1;
+                }
+                memcpy(android_bundle_id, rawString, len);
+                android_bundle_id[len] = 0;
+                (*jni)->ReleaseStringUTFChars(jni, packageName, rawString);
+            }
+            (*jni)->DeleteLocalRef(jni, packageName);
+        }
+    }
+    return android_bundle_id;
+}
+
 const char *getClipBoardContent() {
     struct android_app *app = platformDataGlobal->app;
     GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;

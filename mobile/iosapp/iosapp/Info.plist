@@ -51,7 +51,7 @@
 			<string>alipay</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>minijvmshlalipay</string>
+				<string>org.mini.minipack.alipay</string>
 			</array>
 		</dict>
 	</array>

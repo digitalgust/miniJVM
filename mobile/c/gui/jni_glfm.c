@@ -739,6 +739,13 @@ int org_mini_glfm_Glfm_glfmGetSaveRoot(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+int org_mini_glfm_Glfm_getBundleId(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    Instance *jstr = createJavaString(runtime, glfmGetBundleId());
+    env->push_ref(runtime->stack, jstr);
+    return 0;
+}
+
 int org_mini_glfm_Glfm_glfmGetClipBoardContent(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     Instance *jstr = createJavaString(runtime, getClipBoardContent());
@@ -1761,6 +1768,7 @@ static java_native_method method_glfm_table[] = {
         {"org/mini/glfm/Glfm", "glfmIsKeyboardVisible",                "(J)Z",                                     org_mini_glfm_Glfm_glfmIsKeyboardVisible},
         {"org/mini/glfm/Glfm", "glfmGetResRoot",                       "()Ljava/lang/String;",                     org_mini_glfm_Glfm_glfmGetResRoot},
         {"org/mini/glfm/Glfm", "glfmGetSaveRoot",                      "()Ljava/lang/String;",                     org_mini_glfm_Glfm_glfmGetSaveRoot},
+        {"org/mini/glfm/Glfm", "getBundleId",                           "()Ljava/lang/String;",                     org_mini_glfm_Glfm_getBundleId},
         {"org/mini/glfm/Glfm", "glfmGetClipBoardContent",              "()Ljava/lang/String;",                     org_mini_glfm_Glfm_glfmGetClipBoardContent},
         {"org/mini/glfm/Glfm", "glfmSetClipBoardContent",              "(Ljava/lang/String;)V",                    org_mini_glfm_Glfm_glfmSetClipBoardContent},
         {"org/mini/glfm/Glfm", "glfmPickPhotoAlbum",                   "(JII)V",                                   org_mini_glfm_Glfm_glfmPickPhotoAlbum},

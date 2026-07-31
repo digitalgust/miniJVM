@@ -2932,6 +2932,11 @@ const char* glfmGetSaveRoot(void){
     return [cachesDir UTF8String];
 }
 
+const char* glfmGetBundleId(void) {
+    NSString *bundleId = [[NSBundle mainBundle] bundleIdentifier];
+    return bundleId == nil ? "" : [bundleId UTF8String];
+}
+
 const char* glfmGetUUID(void){
     NSString* Identifier = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
     return [Identifier UTF8String];

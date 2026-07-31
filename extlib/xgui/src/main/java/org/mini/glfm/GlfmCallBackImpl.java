@@ -435,6 +435,11 @@ public class GlfmCallBackImpl extends GCallBack {
     }
 
     @Override
+    public String getBundleId() {
+        return Glfm.getBundleId();
+    }
+
+    @Override
     public void init(int w, int h) {
         init();
     }

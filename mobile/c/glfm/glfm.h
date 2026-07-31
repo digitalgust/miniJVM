@@ -599,6 +599,8 @@ const char *glfmGetResRoot();
 
 const char *glfmGetSaveRoot();
 
+const char *glfmGetBundleId();
+
 const char *getClipBoardContent();
 
 void setClipBoardContent(const char *str);

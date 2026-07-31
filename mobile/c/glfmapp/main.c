@@ -63,6 +63,7 @@ void glfmMain(GLFMDisplay *display) {
     JNI_OnLoad_mini(refers.jvm);
     sys_properties_set_c(refers.jvm, "glfm.res.root",glfmGetResRoot());
     sys_properties_set_c(refers.jvm, "glfm.save.root", glfmGetSaveRoot());
+    sys_properties_set_c(refers.jvm, "app.bundle.id", glfmGetBundleId());
     sys_properties_set_c(refers.jvm, "uuid", glfmGetUUID());
     sys_properties_set_c(refers.jvm, "os.name", getOsName());
     c8 cbuf[32];

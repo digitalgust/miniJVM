@@ -230,6 +230,11 @@ public class Glfm {
         return glfmGetSaveRoot();
     }
 
+    public static String getBundleId() {
+        String bundleId = System.getProperty("app.bundle.id");
+        return bundleId == null ? "" : bundleId;
+    }
+
     public static long glfmPlayVideo(long display, String uris, String mimeType) {
 
         uris = "file://" + uris;
