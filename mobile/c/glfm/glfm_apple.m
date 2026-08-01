@@ -27,6 +27,10 @@
 
 #if defined(GLFM_PLATFORM_IOS) || defined(GLFM_PLATFORM_TVOS)
 
+void glfmRequestDestroyApp(void) {
+    // iOS applications must not terminate themselves programmatically.
+}
+
 #import <UIKit/UIKit.h>
 //================================= gust add 1 =======================
 #import <AVFoundation/AVFoundation.h>

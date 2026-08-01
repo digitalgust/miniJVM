@@ -739,6 +739,11 @@ int org_mini_glfm_Glfm_glfmGetSaveRoot(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+int org_mini_glfm_Glfm_glfmRequestDestroyApp(Runtime *runtime, JClass *clazz) {
+    glfmRequestDestroyApp();
+    return 0;
+}
+
 int org_mini_glfm_Glfm_getBundleId(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     Instance *jstr = createJavaString(runtime, glfmGetBundleId());
@@ -1743,6 +1748,7 @@ static java_native_method method_glfm_table[] = {
         {"org/mini/gl/GLMath", "img_fill",                             "([BIII)V",                                 org_mini_glfm_utils_Gutil_img_fill},
         {"org/mini/gl/GLMath", "img_draw",                             "([BI[BIIIIIFFFFFFFZI)I",                   org_mini_glfm_utils_Gutil_img_draw},
         {"org/mini/glfm/Glfm", "glfmSetCallBack",                      "(JLorg/mini/glfm/GlfmCallBack;)V",         org_mini_glfm_Glfm_glfmSetCallBack},
+        {"org/mini/glfm/Glfm", "glfmRequestDestroyApp",                "()V",                                     org_mini_glfm_Glfm_glfmRequestDestroyApp},
         {"org/mini/glfm/Glfm", "glfmSetDisplayConfig",                 "(JIIIII)V",                                org_mini_glfm_Glfm_glfmSetDisplayConfig},
         {"org/mini/glfm/Glfm", "glfmSwapBuffers",                      "(J)V",                                     org_mini_glfm_Glfm_glfmSwapBuffers},
         {"org/mini/glfm/Glfm", "glfmIsHapticFeedbackSupported",        "(J)Z",                                     org_mini_glfm_Glfm_glfmIsHapticFeedbackSupported},

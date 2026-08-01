@@ -155,6 +155,13 @@ public class Glfm {
 
     public static native void glfmSetCallBack(long display, GlfmCallBack app);
 
+    /**
+     * Requests the host platform to terminate the application. On Android this
+     * removes the task before terminating the process, so no lifecycle callback
+     * can re-enter a partially stopped miniJVM.
+     */
+    public static native void glfmRequestDestroyApp();
+
     /// Init the display condifuration. Should only be called in glfmMain.
 /// If the device does not support the preferred rendering API, the next available rendering API is
 /// chosen (OpenGL ES 3.0 if OpenGL ES 3.1 is not available, and OpenGL ES 2.0 if OpenGL ES 3.0 is

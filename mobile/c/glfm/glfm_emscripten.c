@@ -22,6 +22,10 @@
 
 #ifdef GLFM_PLATFORM_EMSCRIPTEN
 
+void glfmRequestDestroyApp(void) {
+    // There is no host application task to remove in a browser.
+}
+
 #include <EGL/egl.h>
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>

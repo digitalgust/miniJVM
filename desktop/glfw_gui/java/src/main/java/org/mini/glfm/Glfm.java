@@ -222,6 +222,10 @@ public class Glfm {
 
     }
 
+    public static void glfmRequestDestroyApp() {
+        System.exit(0);
+    }
+
     public static String glfmGetSaveRoot() {
         return new File("./").getAbsolutePath();
     }

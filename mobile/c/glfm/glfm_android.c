@@ -2136,13 +2136,19 @@ void glfmRequestDestroyApp() {
         if (app->activity->sdkVersion >= 21) {
             glfm__callJavaMethod(jni, app->activity->clazz, "finishAndRemoveTask", "()V", Void);
         } else {
-            exit(0);
+            glfm__callJavaMethod(jni, app->activity->clazz, "finish", "()V", Void);
         }
 //
 //        // 方法3: 移动到后台
 //        glfm__callJavaMethodWithArgs(jni, app->activity->clazz, "moveTaskToBack", "(Z)Z", Boolean, true);
 
     }
+
+    // System.exit() in miniJVM only marks its Java threads as stopped. Returning
+    // to the Android event loop after that leaves orientation, surface and SDK
+    // callbacks able to enter a half-stopped VM. This is an explicit user exit,
+    // so let Android remove the task and let the OS reclaim the process image.
+    _exit(0);
 }
 
 JNIEXPORT jboolean JNICALL Java_org_minijvm_activity_JvmNativeActivity_onStringInput(JNIEnv *env, jobject jobj, jstring s) {

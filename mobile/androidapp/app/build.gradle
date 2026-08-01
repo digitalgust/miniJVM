@@ -21,7 +21,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 34
         versionCode 1
-        versionName "1.1.5"
+        versionName "2.1.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
@@ -63,7 +63,7 @@ android {
 
 dependencies {
     api 'com.alipay.sdk:alipaysdk-android:15.8.42@aar'
-    api 'com.tencent.mm.opensdk:wechat-sdk-android:+'
+    api 'com.tencent.mm.opensdk:wechat-sdk-android:6.8.40'
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
     testImplementation 'junit:junit:4.12'
