@@ -483,6 +483,11 @@ public class GlfwCallBackImpl extends GCallBack {
         return new File("./").getAbsolutePath();
     }
 
+    @Override
+    public String getBundleId() {
+        return Glfm.getBundleId();
+    }
+
     /**
      * 当窗口从一种分辨率进入另一种分辨率时,会重设form
      *

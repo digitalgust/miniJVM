@@ -83,6 +83,15 @@ public class InnerRandomAccessFile extends InnerFile {
 
     public int read(byte[] b, int off, int len) throws IOException {
         //checkReadPermission();
+        if (b == null) {
+            throw new NullPointerException();
+        }
+        if (off < 0 || len < 0 || off > b.length || off + len > b.length || off + len < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+        if (len == 0) {
+            return 0;
+        }
         return readbuf(getFilePointer(), b, off, len);
     }
 

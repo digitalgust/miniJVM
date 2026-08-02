@@ -909,6 +909,7 @@ s32 org_mini_fs_InnerFile_write0(Runtime *runtime, JClass *clazz) {
 
 s32 org_mini_fs_InnerFile_readbuf(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
+    s32 arr_length;
     Long2Double l2d;
     l2d.l = localvar_getLong(runtime->localvar, pos);
     pos += 2;
@@ -917,8 +918,15 @@ s32 org_mini_fs_InnerFile_readbuf(Runtime *runtime, JClass *clazz) {
     s32 offset = localvar_getInt(runtime->localvar, pos++);
     s32 len = localvar_getInt(runtime->localvar, pos++);
     s32 ret = -1;
-    if (fd && bytes_arr) {
+    if (len == 0) {
+        push_int(runtime->stack, 0);
+        return 0;
+    }
+    if (fd && bytes_arr && bytes_arr->mb.type == MEM_TYPE_ARR) {
+        arr_length = bytes_arr->arr_length;
+        if (bytes_arr->arr_body && offset >= 0 && len >= 0 && offset <= arr_length && len <= arr_length - offset) {
         ret = (s32) fread(bytes_arr->arr_body + offset, 1, len, fd);
+        }
     }
     if (ret == 0) {
         ret = -1;
@@ -934,6 +942,7 @@ s32 org_mini_fs_InnerFile_readbuf(Runtime *runtime, JClass *clazz) {
 
 s32 org_mini_fs_InnerFile_writebuf(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
+    s32 arr_length;
     Long2Double l2d;
     l2d.l = localvar_getLong(runtime->localvar, pos);
     pos += 2;
@@ -942,8 +951,15 @@ s32 org_mini_fs_InnerFile_writebuf(Runtime *runtime, JClass *clazz) {
     s32 offset = localvar_getInt(runtime->localvar, pos++);
     s32 len = localvar_getInt(runtime->localvar, pos++);
     s32 ret = -1;
-    if (fd && bytes_arr) {
-        ret = (s32) fwrite(bytes_arr->arr_body + offset, 1, len, fd);
+    if (len == 0) {
+        push_int(runtime->stack, 0);
+        return 0;
+    }
+    if (fd && bytes_arr && bytes_arr->mb.type == MEM_TYPE_ARR) {
+        arr_length = bytes_arr->arr_length;
+        if (bytes_arr->arr_body && offset >= 0 && len >= 0 && offset <= arr_length && len <= arr_length - offset) {
+            ret = (s32) fwrite(bytes_arr->arr_body + offset, 1, len, fd);
+        }
         if (ret == 0) {
             ret = -1;
         }
@@ -1571,6 +1587,51 @@ s32 org_mini_zip_ZipFile_gzipExtract0(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+s32 org_mini_zip_ZipFile_zlibExtract0(Runtime *runtime, JClass *clazz) {
+    Instance *zlib_data = localvar_getRefer(runtime->localvar, 0);
+    s32 expected_size = localvar_getInt(runtime->localvar, 1);
+    s32 ret = 0;
+    ByteBuf *data = bytebuf_create(0);
+    if (zlib_data) {
+        ret = zlib_extract(zlib_data->arr_body, zlib_data->arr_length, expected_size, data);
+    }
+    if (ret == -1) {
+        push_ref(runtime->stack, NULL);
+    } else {
+        Instance *byte_arr = jarray_create_by_type_index(runtime, data->wp, DATATYPE_BYTE);
+        bytebuf_read_batch(data, byte_arr->arr_body, data->wp);
+        push_ref(runtime->stack, byte_arr);
+    }
+    bytebuf_destroy(data);
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("org_mini_zip_ZipFile_zlibExtract0  \n");
+#endif
+    return 0;
+}
+
+s32 org_mini_zip_ZipFile_zlibCompress0(Runtime *runtime, JClass *clazz) {
+    Instance *data = localvar_getRefer(runtime->localvar, 0);
+    s32 ret = 0;
+    ByteBuf *zlib_data = bytebuf_create(0);
+    if (data) {
+        ret = zlib_compress(data->arr_body, data->arr_length, zlib_data);
+    }
+    if (ret == -1) {
+        push_ref(runtime->stack, NULL);
+    } else {
+        Instance *byte_arr = jarray_create_by_type_index(runtime, zlib_data->wp, DATATYPE_BYTE);
+        bytebuf_read_batch(zlib_data, byte_arr->arr_body, zlib_data->wp);
+        push_ref(runtime->stack, byte_arr);
+    }
+    bytebuf_destroy(zlib_data);
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("org_mini_zip_ZipFile_zlibCompress0  \n");
+#endif
+    return 0;
+}
+
 s32 org_mini_zip_ZipFile_gzipCompress0(Runtime *runtime, JClass *clazz) {
     Instance *data = localvar_getRefer(runtime->localvar, 0);
     s32 ret = 0;
@@ -1704,6 +1765,8 @@ static java_native_method METHODS_IO_TABLE[] = {
     {"org/mini/zip/Zip", "extract0", "([B)[B", org_mini_zip_ZipFile_extract0},
     {"org/mini/zip/Zip", "compress0", "([B)[B", org_mini_zip_ZipFile_compress0},
     {"org/mini/zip/Zip", "gzipExtract0", "([B)[B", org_mini_zip_ZipFile_gzipExtract0},
+    {"org/mini/zip/Zip", "zlibExtract0", "([BI)[B", org_mini_zip_ZipFile_zlibExtract0},
+    {"org/mini/zip/Zip", "zlibCompress0", "([B)[B", org_mini_zip_ZipFile_zlibCompress0},
     {"org/mini/zip/Zip", "gzipCompress0", "([B)[B", org_mini_zip_ZipFile_gzipCompress0},
     {"org/mini/crypt/XorCrypt", "encrypt", "([B[B)[B", org_mini_crypt_XorCrypt_encrypt},
     {"org/mini/crypt/XorCrypt", "decrypt", "([B[B)[B", org_mini_crypt_XorCrypt_decrypt},

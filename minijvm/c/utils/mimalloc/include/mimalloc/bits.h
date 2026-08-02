@@ -108,6 +108,9 @@ typedef int32_t  mi_ssize_t;
 #if MI_ARCH_X64 && (defined(__AVX2__) || defined(__BMI2__)) && !defined(__BMI1__) // msvc
 #define __BMI1__  1
 #endif
+#if MI_ARCH_X64 && defined(__AVX2__) && !defined(__LZCNT__) // msvc
+#define __LZCNT__  1
+#endif
 
 // Define big endian if needed
 // #define MI_BIG_ENDIAN  1
@@ -123,9 +126,9 @@ typedef int32_t  mi_ssize_t;
 #define MI_MAX_VABITS     (32)
 #endif
 
-// use a flat page-map (or a 2-level one)
+// use a flat page-map or a 2-level one
 #ifndef MI_PAGE_MAP_FLAT
-#if MI_MAX_VABITS <= 40 && !defined(__APPLE__) 
+#if MI_MAX_VABITS <= 40 && !defined(__APPLE__) && MI_SECURE==0 && !MI_PAGE_META_IS_SEPARATED
 #define MI_PAGE_MAP_FLAT  1
 #else
 #define MI_PAGE_MAP_FLAT  0
@@ -222,11 +225,11 @@ static inline size_t mi_ctz(size_t x) {
 }
 
 static inline size_t mi_clz(size_t x) {
-  #if defined(__GNUC__) && MI_ARCH_X64 && defined(__BMI1__) // on x64 lzcnt is defined for 0
+  #if defined(__GNUC__) && MI_ARCH_X64 && defined(__LZCNT__) // on x64 lzcnt is defined for 0
     size_t r;
     __asm ("lzcnt\t%1, %0" : "=r"(r) : "r"(x) : "cc");
     return r;
-  #elif defined(_MSC_VER) && MI_ARCH_X64 && defined(__BMI1__) 
+  #elif defined(_MSC_VER) && MI_ARCH_X64 && defined(__LZCNT__) 
     return _lzcnt_u64(x);
   #elif defined(_MSC_VER) && (MI_ARCH_X64 || MI_ARCH_X86 || MI_ARCH_ARM64 || MI_ARCH_ARM32)
     unsigned long idx;
@@ -273,12 +276,7 @@ static inline bool mi_bsf(size_t x, size_t* idx) {
 // return false if `x==0` (with `*idx` undefined) and true otherwise,
 // with the `idx` is set to the bit index (`0 <= *idx < MI_BFIELD_BITS`).
 static inline bool mi_bsr(size_t x, size_t* idx) {
-  #if defined(__GNUC__) && MI_ARCH_X64 && defined(__BMI1__)  && (!defined(__clang_major__) || __clang_major__ >= 9)
-    // on x64 the carry flag is set on zero which gives better codegen
-    bool is_zero;
-    __asm ("lzcnt\t%2, %1" : "=@ccc"(is_zero), "=r"(*idx) : "r"(x) : "cc");
-    return !is_zero;
-  #elif 0 && defined(_MSC_VER) && (MI_ARCH_X64 || MI_ARCH_X86 || MI_ARCH_ARM64 || MI_ARCH_ARM32)
+  #if 0 && defined(_MSC_VER) && (MI_ARCH_X64 || MI_ARCH_X86 || MI_ARCH_ARM64 || MI_ARCH_ARM32)
     unsigned long i;
     return (mi_msc_builtinz(_BitScanReverse)(&i, x) ? (*idx = (size_t)i, true) : false);
   #else

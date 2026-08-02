@@ -5,6 +5,7 @@
  */
 package org.mini.apploader;
 
+import org.mini.glfm.Glfm;
 import org.mini.gui.GForm;
 import org.mini.gui.GLanguage;
 import org.mini.gui.GToolkit;
@@ -150,7 +151,12 @@ public abstract class GApplication implements FormHolder {
         setState(AppState.STATE_CLOSED);
 
         if (!AppLoader.isShowHome()) {
-            System.exit(0);
+            String osName = System.getProperty("os.name");
+            if (osName != null && "android".equalsIgnoreCase(osName)) {
+                Glfm.glfmRequestDestroyApp();
+            } else {
+                System.exit(0);
+            }
         }
     }
 
@@ -295,14 +301,16 @@ public abstract class GApplication implements FormHolder {
     }
 
     public void addThread(Thread t) {
-        if (!threads.contains(t)) {
-            //System.out.println(this + " ADD " + t);
-            threads.add(t);
+        synchronized (threads) {
+            if (!threads.contains(t)) {
+                //System.out.println(this + " ADD " + t);
+                threads.add(t);
+            }
         }
     }
 
     public void removeThread(Thread t) {
-        if (threads.contains(t)) {
+        synchronized (threads) {
             threads.remove(t);
         }
     }

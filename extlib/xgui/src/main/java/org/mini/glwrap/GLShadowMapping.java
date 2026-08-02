@@ -84,6 +84,11 @@ public class GLShadowMapping {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDeleteTextures(rendertex.length, rendertex, 0);
         glDeleteFramebuffers(fbo.length, fbo, 0);
+        // 显式 delete 后清零句柄：finalize() 会读这些字段，
+        // 若不清零，已释放的 GL id 会被驱动复用，稍后 GC 触发的 finalize 清理
+        // 会误删复用了这些 id 的新对象。
+        rendertex[0] = 0;
+        fbo[0] = 0;
     }
 
     public void finalize() {
@@ -91,6 +96,10 @@ public class GLShadowMapping {
         GLShadowMappingCleaner attachment = new GLShadowMappingCleaner();
         attachment.rendertext[0] = rendertex[0];
         attachment.fboobj[0] = fbo[0];
+        // 已显式 delete（句柄为 0）则不再排队清理，避免对已复用的 GL id 误删。
+        if (attachment.rendertext[0] == 0 && attachment.fboobj[0] == 0) {
+            return;
+        }
         GForm.addCmd(new GCmd(attachment));
     }
 

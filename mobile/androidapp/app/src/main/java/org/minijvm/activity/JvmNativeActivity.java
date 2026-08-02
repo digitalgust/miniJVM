@@ -44,7 +44,9 @@ import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.alipay.sdk.app.AuthTask;
+import com.alipay.sdk.app.OpenAuthTask;
 import com.alipay.sdk.app.PayTask;
+import com.tencent.mm.opensdk.modelmsg.SendAuth;
 import com.tencent.mm.opensdk.modelpay.PayReq;
 import com.tencent.mm.opensdk.openapi.IWXAPI;
 import com.tencent.mm.opensdk.openapi.WXAPIFactory;
@@ -98,6 +100,10 @@ public class JvmNativeActivity extends NativeActivity {
 
     public static IWXAPI sWxApi;
     public static String sWxAppId;
+    private static volatile Map<String, String> sWxAuthResult;
+    private static volatile String sWxAuthState;
+    private static volatile Map<String, String> sAlipayAuthResult;
+    private static volatile String sThirdPartyAuthProvider;
 
     // android:name="android.app.NativeActivity"
     @Override
@@ -1519,6 +1525,143 @@ public class JvmNativeActivity extends NativeActivity {
         });
         t.start();
         return new HashMap<>();
+    }
+
+    /**
+     * 微信/支付宝登录授权。参数是 Passport prepare 接口返回 JSON 的 Base64。
+     * 该方法只启动授权并立即返回，不能跨外部 App 授权过程持续占用 JNI 调用。
+     * 页面通过 thirdPartyAuthResult() 轮询最终结果。
+     */
+    public synchronized Map<String, String> thirdPartyAuth(String requestBase64) {
+        Map<String, String> failed = new HashMap<>();
+        try {
+            String requestJson = new String(Base64.decode(requestBase64), "utf-8");
+            org.minijvm.activity.bridge.JsonParser<Map> parser =
+                    new org.minijvm.activity.bridge.JsonParser<>();
+            Map request = parser.deserial(requestJson, Map.class);
+            String provider = stringValue(request.get("provider"));
+            sThirdPartyAuthProvider = provider;
+            if ("alipay".equals(provider)) {
+                String authUrl = stringValue(request.get("authUrl"));
+                String scheme = stringValue(request.get("alipayScheme"));
+                String state = stringValue(request.get("state"));
+                if (authUrl.length() == 0 || scheme.length() == 0) {
+                    failed.put("resultStatus", "4000");
+                    failed.put("memo", "Missing Alipay minimalist authorization parameters");
+                    return failed;
+                }
+                sAlipayAuthResult = null;
+                Map<String, String> bizParams = new HashMap<>();
+                bizParams.put("url", authUrl);
+                Log.i(TAG, "Starting Alipay account authorization, scheme=" + scheme
+                        + ", stateLength=" + state.length()
+                        + ", thread=" + Thread.currentThread().getName());
+                OpenAuthTask task = new OpenAuthTask(JvmNativeActivity.this);
+                task.execute(scheme, OpenAuthTask.BizType.AccountAuth, bizParams,
+                        (resultCode, resultMessage, resultBundle) -> {
+                            Log.i(TAG, "Alipay account authorization callback, resultCode="
+                                    + resultCode + ", message="
+                                    + (resultMessage == null ? "" : resultMessage));
+                            Map<String, String> result = new HashMap<>();
+                            if (resultBundle != null) {
+                                for (String key : resultBundle.keySet()) {
+                                    result.put(key, stringValue(resultBundle.get(key)));
+                                }
+                            }
+                            result.put("resultStatus", String.valueOf(resultCode));
+                            result.put("memo", resultMessage == null ? "" : resultMessage);
+                            if (!result.containsKey("state")) {
+                                result.put("state", state);
+                            }
+                            sAlipayAuthResult = result;
+                        }, true);
+                return pendingAuthResult();
+            }
+            if ("wechat".equals(provider)) {
+                String appId = stringValue(request.get("appid"));
+                String state = stringValue(request.get("state"));
+                String scope = stringValue(request.get("scope"));
+                if (scope.length() == 0) {
+                    scope = "snsapi_userinfo";
+                }
+                sWxAppId = appId;
+                sWxAuthState = state;
+                sWxAuthResult = null;
+                final String requestScope = scope;
+                runOnUiThread(() -> {
+                    sWxApi = WXAPIFactory.createWXAPI(JvmNativeActivity.this, appId, true);
+                    sWxApi.registerApp(appId);
+                    if (!sWxApi.isWXAppInstalled()) {
+                        Map<String, String> result = new HashMap<>();
+                        result.put("errCode", "-8");
+                        result.put("errStr", "WeChat not installed");
+                        completeWechatAuth(result);
+                        return;
+                    }
+                    SendAuth.Req req = new SendAuth.Req();
+                    req.scope = requestScope;
+                    req.state = state;
+                    if (!sWxApi.sendReq(req)) {
+                        Map<String, String> result = new HashMap<>();
+                        result.put("errCode", "-9");
+                        result.put("errStr", "Unable to start WeChat authorization");
+                        completeWechatAuth(result);
+                    }
+                });
+                return pendingAuthResult();
+            }
+            failed.put("errCode", "-11");
+            failed.put("errStr", "Unsupported authorization provider");
+        } catch (Exception e) {
+            Log.e(TAG, "thirdPartyAuth", e);
+            failed.put("errCode", "-12");
+            failed.put("errStr", e.getMessage() == null ? "Authorization failed" : e.getMessage());
+        }
+        return failed;
+    }
+
+    public synchronized Map<String, String> thirdPartyAuthResult() {
+        Map<String, String> result;
+        if ("alipay".equals(sThirdPartyAuthProvider)) {
+            result = sAlipayAuthResult;
+        } else if ("wechat".equals(sThirdPartyAuthProvider)) {
+            result = sWxAuthResult;
+        } else {
+            result = new HashMap<>();
+            result.put("errCode", "-11");
+            result.put("errStr", "No third-party authorization is pending");
+            return result;
+        }
+        if (result == null) {
+            return pendingAuthResult();
+        }
+        sThirdPartyAuthProvider = null;
+        sAlipayAuthResult = null;
+        sWxAuthResult = null;
+        sWxAuthState = null;
+        return result;
+    }
+
+    private static Map<String, String> pendingAuthResult() {
+        Map<String, String> pending = new HashMap<>();
+        pending.put("nativeAuthPending", "true");
+        return pending;
+    }
+
+    public static void completeWechatAuth(Map<String, String> result) {
+        if (!"wechat".equals(sThirdPartyAuthProvider)) {
+            return;
+        }
+        String state = result.get("state");
+        if ("0".equals(result.get("errCode")) && sWxAuthState != null
+                && !sWxAuthState.equals(state)) {
+            return;
+        }
+        sWxAuthResult = result;
+    }
+
+    private static String stringValue(Object value) {
+        return value == null ? "" : String.valueOf(value);
     }
 
     /**

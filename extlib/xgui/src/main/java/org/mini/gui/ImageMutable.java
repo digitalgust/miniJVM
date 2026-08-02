@@ -197,7 +197,13 @@ public class ImageMutable extends GImage {
     @Override
     protected void finalize() {
         try {
-            GForm.deleteImage(nvg_texture);
+            // 已清理（句柄无效）则跳过，避免对已被 nanovg 复用的纹理 id 二次删除。
+            if (nvg_texture <= 0) {
+                return;
+            }
+            int tex = nvg_texture;
+            nvg_texture = -1;
+            GForm.deleteImage(tex);
             SysLog.getLogger().fine("finalize image " + this.getWidth() + "x" + this.getHeight());
         } catch (Throwable e) {
         }

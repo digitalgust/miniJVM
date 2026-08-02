@@ -626,6 +626,7 @@ public class GL {
     public static final int GL_ES_VERSION_2_0 = 1;
     public static final int GL_ES_VERSION_3_0 = 1;
 
+    public static void glClearDepth(double pdepth){glClearDepthf((float)pdepth);}// //int
     //public static native int gladLoadGLES2Loader();// //int
     public static native long get_gl_proc(String namez);//const char* //GLint64
     public static native void glActiveTexture(int ptexture); //GLenum, //void

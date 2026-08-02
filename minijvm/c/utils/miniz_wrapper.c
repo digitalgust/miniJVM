@@ -248,6 +248,61 @@ s32 zip_extract(char *zip_data, int size, ByteBuf *data) {
     return ret;
 }
 
+s32 zlib_extract(char *zlib_data, int size, int expected_size, ByteBuf *data) {
+    mz_ulong out_len;
+    int ret;
+
+    if (zlib_data == NULL || data == NULL || size < 0 || expected_size < 0) {
+        return -1;
+    }
+    if (expected_size == 0) {
+        data->wp = 0;
+        return 0;
+    }
+
+    bytebuf_expand(data, expected_size);
+    out_len = (mz_ulong) expected_size;
+    ret = mz_uncompress((unsigned char *) data->buf, &out_len, (const unsigned char *) zlib_data, (mz_ulong) size);
+    if (ret != MZ_OK || out_len != (mz_ulong) expected_size) {
+        data->wp = 0;
+        return -1;
+    }
+    data->wp = (s32) out_len;
+    return 0;
+}
+
+s32 zlib_compress(char *data, int size, ByteBuf *zlib_data) {
+    mz_ulong max_len;
+    mz_ulong out_len;
+    unsigned char *compressed_data;
+    int ret;
+
+    if (data == NULL || zlib_data == NULL || size < 0) {
+        return -1;
+    }
+    if (size == 0) {
+        zlib_data->wp = 0;
+        return 0;
+    }
+
+    max_len = mz_compressBound((mz_ulong) size);
+    compressed_data = (unsigned char *) MZ_MALLOC(max_len);
+    if (compressed_data == NULL) {
+        return -1;
+    }
+
+    out_len = max_len;
+    ret = mz_compress(compressed_data, &out_len, (const unsigned char *) data, (mz_ulong) size);
+    if (ret != MZ_OK) {
+        MZ_FREE(compressed_data);
+        return -1;
+    }
+
+    bytebuf_write_batch(zlib_data, (char *) compressed_data, (s32) out_len);
+    MZ_FREE(compressed_data);
+    return 0;
+}
+
 s32 zip_compress(char *data, int size, ByteBuf *zip_data) {
     mz_zip_archive zipArchive = {0};
     int ret = 0;

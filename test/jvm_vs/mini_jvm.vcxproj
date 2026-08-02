@@ -261,7 +261,14 @@
     <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\xtea.c" />
     <ClCompile Include="..\..\minijvm\c\utils\https\ssl_client.c" />
     <ClCompile Include="..\..\minijvm\c\utils\linkedlist.c" />
-    <ClCompile Include="..\..\minijvm\c\utils\mimalloc\src\static.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\mimalloc\src\static.c">
+      <!-- mimalloc must be compiled as C++ under MSVC: its C atomics wrapper
+           (mimalloc/atomic.h) uses __iso_volatile_store64/__iso_volatile_load64
+           intrinsics that the v141 toolset does not recognize in C mode, causing
+           LNK2001. Compiling as C++ selects the std::atomic path instead.
+           The public API is wrapped in extern "C", so C linkage is preserved. -->
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
     <ClCompile Include="..\..\minijvm\c\utils\miniz.c" />
     <ClCompile Include="..\..\minijvm\c\utils\miniz_wrapper.c" />
     <ClCompile Include="..\..\minijvm\c\utils\sljit\sljitLir.c" />

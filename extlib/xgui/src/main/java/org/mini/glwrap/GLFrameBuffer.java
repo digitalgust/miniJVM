@@ -115,6 +115,13 @@ public class GLFrameBuffer {
             glDeleteTextures(depth_stencil_buffer.length, depth_stencil_buffer, 0);
         }
         glDeleteFramebuffers(fbo.length, fbo, 0);
+        // 显式 delete 后把句柄清零：finalize() 会读这些字段，
+        // 若不清零，已释放的 GL id 会被 GL 驱动复用给新对象，
+        // 而稍后 GC 触发的 finalize 清理会再次删除这些 id，
+        // 把刚分配的新 FBO/纹理一起删掉（表现为 FBO 莫名变成未绑定）。
+        rendertex[0] = 0;
+        depth_stencil_buffer[0] = 0;
+        fbo[0] = 0;
     }
 
     @Override
@@ -125,6 +132,10 @@ public class GLFrameBuffer {
         attachment.renderbuf1[0] = depth_stencil_buffer[0];
         attachment.fboobj[0] = fbo[0];
         attachment.hasDepth = hasDepth;
+        // 若已显式 delete（句柄为 0），不再排队清理，避免对已复用的 GL id 误删。
+        if (attachment.rendertext[0] == 0 && attachment.renderbuf1[0] == 0 && attachment.fboobj[0] == 0) {
+            return;
+        }
         GForm.addCmd(new GCmd(attachment));
     }
 

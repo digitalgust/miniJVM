@@ -9,7 +9,7 @@
     <groupId>io.github.digitalgust</groupId>
     <artifactId>xgui</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <version>2.1.2</version>
+    <version>2.1.3</version>
     <description>miniJVM mobile platform gui library</description>
     <url>https://github.com/digitalgust/miniJVM</url>
 
@@ -114,7 +114,7 @@
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.5.0</version>
+                        <version>0.8.0</version>
                         <extensions>true</extensions>
                         <configuration>
                             <publishingServerId>central</publishingServerId>
@@ -174,17 +174,17 @@
         <dependency>
             <groupId>io.github.digitalgust</groupId>
             <artifactId>minijvm_rt</artifactId>
-            <version>2.1.2</version>
+            <version>2.1.3</version>
         </dependency>
         <dependency>
             <groupId>io.github.digitalgust</groupId>
             <artifactId>glfw_gui</artifactId>
-            <version>2.1.2</version>
+            <version>2.1.3</version>
         </dependency>
         <dependency>
             <groupId>io.github.digitalgust</groupId>
             <artifactId>glfm_gui</artifactId>
-            <version>2.1.2</version>
+            <version>2.1.3</version>
         </dependency>
     </dependencies>
 
@@ -216,6 +216,46 @@
                                         <include name="${project.artifactId}.jar"/>
                                     </fileset>
                                 </copy>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>write-cver</id>
+                        <phase>initialize</phase> <!-- 在 Maven 生命周期的早期阶段执行 -->
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!--  把 pom 当前版本号写到 base.properties 的 cver= 行 -->
+                                <script language="javascript">
+                                    <![CDATA[
+                            var file = new java.io.File(
+                                project.getBaseDir(), "src/main/resource/res/base.properties");
+                            var version = "${project.version}";
+                            var lines = [];
+                            // 使用UTF-8编码读取文件
+                            var input = new java.io.BufferedReader(new java.io.InputStreamReader(
+                                new java.io.FileInputStream(file), "UTF-8"));
+                            var line;
+                            while ((line = input.readLine()) != null) {
+                                if (line.startsWith("cver=")) {
+                                    line = "cver=" + version;
+                                }
+                                lines.push(line);
+                            }
+                            input.close();
+
+                            // 使用UTF-8编码写入文件
+                            var output = new java.io.BufferedWriter(new java.io.OutputStreamWriter(
+                                new java.io.FileOutputStream(file), "UTF-8"));
+                            for (var i in lines) {
+                                output.write(lines[i]);
+                                output.newLine();
+                            }
+                            output.close();
+                        ]]>
+                                </script>
                             </target>
                         </configuration>
                     </execution>

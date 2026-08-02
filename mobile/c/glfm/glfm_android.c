@@ -2136,13 +2136,19 @@ void glfmRequestDestroyApp() {
         if (app->activity->sdkVersion >= 21) {
             glfm__callJavaMethod(jni, app->activity->clazz, "finishAndRemoveTask", "()V", Void);
         } else {
-            exit(0);
+            glfm__callJavaMethod(jni, app->activity->clazz, "finish", "()V", Void);
         }
 //
 //        // 方法3: 移动到后台
 //        glfm__callJavaMethodWithArgs(jni, app->activity->clazz, "moveTaskToBack", "(Z)Z", Boolean, true);
 
     }
+
+    // System.exit() in miniJVM only marks its Java threads as stopped. Returning
+    // to the Android event loop after that leaves orientation, surface and SDK
+    // callbacks able to enter a half-stopped VM. This is an explicit user exit,
+    // so let Android remove the task and let the OS reclaim the process image.
+    _exit(0);
 }
 
 JNIEXPORT jboolean JNICALL Java_org_minijvm_activity_JvmNativeActivity_onStringInput(JNIEnv *env, jobject jobj, jstring s) {
@@ -2168,6 +2174,37 @@ const char *glfmGetResRoot() {
 const char *glfmGetSaveRoot() {
 
     return glfmGetResRoot();
+}
+
+#define ANDROID_BUNDLE_ID_MAX_LEN 256
+static char android_bundle_id[ANDROID_BUNDLE_ID_MAX_LEN] = {0};
+
+const char *glfmGetBundleId() {
+    if (!android_bundle_id[0] && platformDataGlobal && platformDataGlobal->app) {
+        struct android_app *app = platformDataGlobal->app;
+        GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+        JNIEnv *jni = platformData->jniEnv;
+        jstring packageName = glfm__callJavaMethod(
+                jni,
+                app->activity->clazz,
+                "getPackageName",
+                "()Ljava/lang/String;",
+                Object);
+        if (packageName && !glfm__wasJavaExceptionThrown()) {
+            const char *rawString = (*jni)->GetStringUTFChars(jni, packageName, 0);
+            if (rawString) {
+                size_t len = strlen(rawString);
+                if (len >= ANDROID_BUNDLE_ID_MAX_LEN) {
+                    len = ANDROID_BUNDLE_ID_MAX_LEN - 1;
+                }
+                memcpy(android_bundle_id, rawString, len);
+                android_bundle_id[len] = 0;
+                (*jni)->ReleaseStringUTFChars(jni, packageName, rawString);
+            }
+            (*jni)->DeleteLocalRef(jni, packageName);
+        }
+    }
+    return android_bundle_id;
 }
 
 const char *getClipBoardContent() {

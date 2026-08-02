@@ -27,6 +27,10 @@
 
 #if defined(GLFM_PLATFORM_IOS) || defined(GLFM_PLATFORM_TVOS)
 
+void glfmRequestDestroyApp(void) {
+    // iOS applications must not terminate themselves programmatically.
+}
+
 #import <UIKit/UIKit.h>
 //================================= gust add 1 =======================
 #import <AVFoundation/AVFoundation.h>
@@ -34,6 +38,19 @@
 #import <AssetsLibrary/AssetsLibrary.h>
 #import <AVFoundation/AVFoundation.h>
 
+#if __has_include(<WechatOpenSDK/WXApi.h>)
+#import <WechatOpenSDK/WXApi.h>
+#define MINIJVM_HAS_WECHAT_SDK 1
+#else
+#define MINIJVM_HAS_WECHAT_SDK 0
+#endif
+
+#if __has_include(<AFServiceSDK/AFServiceSDK.h>)
+#import <AFServiceSDK/AFServiceSDK.h>
+#define MINIJVM_HAS_ALIPAY_AUTH_SDK 1
+#else
+#define MINIJVM_HAS_ALIPAY_AUTH_SDK 0
+#endif
 
 #ifdef NSFoundationVersionNumber_iOS_9_x_Max
 #import <UserNotifications/UserNotifications.h>
@@ -79,12 +96,95 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
 #define GLFM_WEAK __unsafe_unretained
 #endif
 
+#if MINIJVM_HAS_WECHAT_SDK
+@interface GLFMAppDelegate : NSObject <UIApplicationDelegate, WXApiDelegate>
+#else
 @interface GLFMAppDelegate : NSObject <UIApplicationDelegate>
+#endif
 
 @property(nonatomic, strong) UIWindow *window;
 @property(nonatomic, assign) BOOL active;
 
 @end
+
+static NSDictionary *glfmThirdPartyAuthResult;
+static BOOL glfmThirdPartyAuthCompleted;
+static NSString *glfmThirdPartyAuthProvider;
+static NSString *glfmWechatAuthState;
+static NSString *glfmAlipayAuthState;
+static NSString *glfmAlipayAuthScheme;
+
+static void glfmCompleteThirdPartyAuth(NSDictionary *result) {
+    @synchronized([GLFMAppDelegate class]) {
+        if (!glfmThirdPartyAuthProvider || glfmThirdPartyAuthCompleted) {
+            return;
+        }
+        glfmThirdPartyAuthResult = result ?: @{};
+        glfmThirdPartyAuthCompleted = YES;
+    }
+}
+
+static NSDictionary *glfmPendingThirdPartyAuthResult(void) {
+    return @{@"nativeAuthPending": @"true"};
+}
+
+static void glfmBeginThirdPartyAuth(NSString *provider, NSString *wechatState,
+                                    NSString *alipayState, NSString *alipayScheme) {
+    @synchronized([GLFMAppDelegate class]) {
+        glfmThirdPartyAuthResult = nil;
+        glfmThirdPartyAuthCompleted = NO;
+        glfmThirdPartyAuthProvider = [provider copy];
+        glfmWechatAuthState = [wechatState copy];
+        glfmAlipayAuthState = [alipayState copy];
+        glfmAlipayAuthScheme = [alipayScheme copy];
+    }
+}
+
+static NSDictionary *glfmTakeThirdPartyAuthResult(void) {
+    @synchronized([GLFMAppDelegate class]) {
+        if (!glfmThirdPartyAuthProvider) {
+            return @{@"errCode": @"-11",
+                     @"errStr": @"No third-party authorization is pending"};
+        }
+        if (!glfmThirdPartyAuthCompleted) {
+            return glfmPendingThirdPartyAuthResult();
+        }
+        NSDictionary *result = glfmThirdPartyAuthResult ?: @{};
+        glfmThirdPartyAuthResult = nil;
+        glfmThirdPartyAuthCompleted = NO;
+        glfmThirdPartyAuthProvider = nil;
+        glfmWechatAuthState = nil;
+        glfmAlipayAuthState = nil;
+        glfmAlipayAuthScheme = nil;
+        return result;
+    }
+}
+
+#if MINIJVM_HAS_ALIPAY_AUTH_SDK
+static void glfmCompleteAlipayAuth(AFAuthServiceResponse *response) {
+    if (!response) {
+        glfmCompleteThirdPartyAuth(@{
+            @"resultStatus": @"4000",
+            @"memo": @"Alipay authorization returned no result"
+        });
+        return;
+    }
+    NSLog(@"Alipay authorization completion received, responseCode=%lu",
+          (unsigned long)response.responseCode);
+    NSMutableDictionary *result =
+        [NSMutableDictionary dictionaryWithDictionary:response.result ?: @{}];
+    if (!result[@"resultStatus"]) {
+        result[@"resultStatus"] =
+            response.responseCode == AFAuthResSuccess ? @"9000" : @"4000";
+    }
+    result[@"responseCode"] =
+        [NSString stringWithFormat:@"%lu", (unsigned long)response.responseCode];
+    if (!result[@"state"]) {
+        result[@"state"] = glfmAlipayAuthState ?: @"";
+    }
+    glfmCompleteThirdPartyAuth(result);
+}
+#endif
 
 #pragma mark - GLFMView
 
@@ -2189,6 +2289,68 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 
     return YES;
 }
+
+- (BOOL)application:(UIApplication *)application
+            openURL:(NSURL *)url
+            options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
+#if MINIJVM_HAS_WECHAT_SDK
+    if ([WXApi handleOpenURL:url delegate:self]) {
+        return YES;
+    }
+#endif
+#if MINIJVM_HAS_ALIPAY_AUTH_SDK
+    NSString *expectedAlipayScheme = nil;
+    @synchronized([GLFMAppDelegate class]) {
+        expectedAlipayScheme = glfmAlipayAuthScheme;
+    }
+    BOOL matchesAlipayScheme = expectedAlipayScheme.length > 0
+        && url.scheme.length > 0
+        && [url.scheme caseInsensitiveCompare:expectedAlipayScheme] == NSOrderedSame;
+    if (matchesAlipayScheme || [url.host isEqualToString:@"apmqpdispatch"]) {
+        NSLog(@"Alipay authorization callback URL received, scheme=%@, host=%@",
+              url.scheme ?: @"", url.host ?: @"");
+        [AFServiceCenter handleResponseURL:url withCompletion:^(AFAuthServiceResponse *response) {
+            glfmCompleteAlipayAuth(response);
+        }];
+        return YES;
+    }
+#endif
+    return NO;
+}
+
+- (BOOL)application:(UIApplication *)application
+continueUserActivity:(NSUserActivity *)userActivity
+ restorationHandler:(void (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler {
+#if MINIJVM_HAS_WECHAT_SDK
+    if ([WXApi handleOpenUniversalLink:userActivity delegate:self]) {
+        return YES;
+    }
+#endif
+    return NO;
+}
+
+#if MINIJVM_HAS_WECHAT_SDK
+- (void)onReq:(BaseReq *)req {
+}
+
+- (void)onResp:(BaseResp *)resp {
+    if (![resp isKindOfClass:[SendAuthResp class]]) {
+        return;
+    }
+    SendAuthResp *auth = (SendAuthResp *)resp;
+    NSString *state = auth.state ?: @"";
+    if (resp.errCode == 0 && glfmWechatAuthState
+        && ![glfmWechatAuthState isEqualToString:state]) {
+        return;
+    }
+    glfmCompleteThirdPartyAuth(@{
+        @"errCode": [NSString stringWithFormat:@"%d", resp.errCode],
+        @"errStr": resp.errStr ?: @"",
+        @"code": auth.code ?: @"",
+        @"state": state
+    });
+}
+#endif
 ////lock screen
 //static void screenLockStateChanged(CFNotificationCenterRef center,void* observer,CFStringRef name,const void*object,CFDictionaryRef userInfo)
 //{
@@ -2774,6 +2936,11 @@ const char* glfmGetSaveRoot(void){
     return [cachesDir UTF8String];
 }
 
+const char* glfmGetBundleId(void) {
+    NSString *bundleId = [[NSBundle mainBundle] bundleIdentifier];
+    return bundleId == nil ? "" : [bundleId UTF8String];
+}
+
 const char* glfmGetUUID(void){
     NSString* Identifier = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
     return [Identifier UTF8String];
@@ -2966,7 +3133,116 @@ int openOtherApp(const char *curl, const char *more, int detectAppInstalled){
 }
 
 void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr){
-    
+    @autoreleasepool {
+        NSDictionary *failure = @{@"errCode": @"-12", @"errStr": @"Invalid authorization request"};
+        NSDictionary *result = failure;
+        @try {
+            NSData *descriptorData = [[NSString stringWithUTF8String:inJsonStr]
+                                      dataUsingEncoding:NSUTF8StringEncoding];
+            NSDictionary *descriptor = [NSJSONSerialization JSONObjectWithData:descriptorData
+                                                                        options:0 error:nil];
+            NSString *method = descriptor[@"methodDesc"];
+            if ([method hasPrefix:@"thirdPartyAuthResult("]) {
+                result = glfmTakeThirdPartyAuthResult();
+            } else if (![method hasPrefix:@"thirdPartyAuth("]) {
+                NSData *jsonData = [NSJSONSerialization dataWithJSONObject:@{}
+                                                                   options:0 error:nil];
+                utf8_append_c(outJsonStr, [[[NSString alloc] initWithData:jsonData
+                                                                 encoding:NSUTF8StringEncoding] UTF8String]);
+                return;
+            } else {
+                NSString *paraJson = descriptor[@"paraJson"];
+                NSArray *parameters = [NSJSONSerialization JSONObjectWithData:
+                                       [paraJson dataUsingEncoding:NSUTF8StringEncoding]
+                                                                    options:0 error:nil];
+                NSString *requestBase64 = parameters.count > 0 ? parameters[0] : nil;
+                NSData *requestData = [[NSData alloc] initWithBase64EncodedString:requestBase64 options:0];
+                NSDictionary *request = [NSJSONSerialization JSONObjectWithData:requestData options:0 error:nil];
+                NSString *provider = request[@"provider"];
+
+                if ([provider isEqualToString:@"wechat"]) {
+#if MINIJVM_HAS_WECHAT_SDK
+                    NSString *appId = request[@"appid"] ?: @"";
+                    NSString *universalLink = request[@"universalLink"] ?: @"";
+                    NSString *state = request[@"state"] ?: @"";
+                    NSString *scope = request[@"scope"] ?: @"snsapi_userinfo";
+                    glfmBeginThirdPartyAuth(provider, state, nil, nil);
+                    dispatch_block_t start = ^{
+                        if (![WXApi registerApp:appId universalLink:universalLink]) {
+                            glfmCompleteThirdPartyAuth(@{@"errCode": @"-8",
+                                                        @"errStr": @"WeChat registration failed"});
+                            return;
+                        }
+                        if (![WXApi isWXAppInstalled]) {
+                            glfmCompleteThirdPartyAuth(@{@"errCode": @"-9",
+                                                        @"errStr": @"WeChat not installed"});
+                            return;
+                        }
+                        SendAuthReq *auth = [[SendAuthReq alloc] init];
+                        auth.scope = scope;
+                        auth.state = state;
+                        [WXApi sendReq:auth completion:^(BOOL success) {
+                            if (!success) {
+                                glfmCompleteThirdPartyAuth(@{@"errCode": @"-11",
+                                                            @"errStr": @"Unable to start WeChat authorization"});
+                            }
+                        }];
+                    };
+                    if ([NSThread isMainThread]) {
+                        start();
+                    } else {
+                        dispatch_async(dispatch_get_main_queue(), start);
+                    }
+                    result = glfmPendingThirdPartyAuthResult();
+#else
+                    result = @{@"errCode": @"-13", @"errStr": @"WeChat SDK is not installed"};
+#endif
+                } else if ([provider isEqualToString:@"alipay"]) {
+#if MINIJVM_HAS_ALIPAY_AUTH_SDK
+                    NSString *authUrl = request[@"authUrl"] ?: @"";
+                    NSString *scheme = request[@"alipayScheme"] ?: @"";
+                    NSString *state = request[@"state"] ?: @"";
+                    glfmBeginThirdPartyAuth(provider, nil, state, scheme);
+                    dispatch_block_t start = ^{
+                        if (authUrl.length == 0 || scheme.length == 0) {
+                            glfmCompleteThirdPartyAuth(@{
+                                @"resultStatus": @"4000",
+                                @"memo": @"Missing Alipay minimalist authorization parameters"
+                            });
+                            return;
+                        }
+                        NSDictionary *params = @{
+                            kAFServiceOptionBizParams: @{
+                                kAFServiceBizParamsKeyUrl: authUrl
+                            },
+                            kAFServiceOptionCallbackScheme: scheme
+                        };
+                        [AFServiceCenter callService:AFServiceAuth
+                                          withParams:params
+                                       andCompletion:^(AFAuthServiceResponse *response) {
+                            glfmCompleteAlipayAuth(response);
+                        }];
+                    };
+                    if ([NSThread isMainThread]) {
+                        start();
+                    } else {
+                        dispatch_async(dispatch_get_main_queue(), start);
+                    }
+                    result = glfmPendingThirdPartyAuthResult();
+#else
+                    result = @{@"resultStatus": @"4000", @"memo": @"Alipay SDK is not installed"};
+#endif
+                } else {
+                    result = failure;
+                }
+            }
+        } @catch (NSException *exception) {
+            result = @{@"errCode": @"-12", @"errStr": exception.reason ?: @"Authorization failed"};
+        }
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:result options:0 error:nil];
+        NSString *json = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        utf8_append_c(outJsonStr, [json UTF8String]);
+    }
 }
 
 

@@ -222,12 +222,21 @@ public class Glfm {
 
     }
 
+    public static void glfmRequestDestroyApp() {
+        System.exit(0);
+    }
+
     public static String glfmGetSaveRoot() {
         return new File("./").getAbsolutePath();
     }
 
     public static String glfmGetResRoot() {
         return glfmGetSaveRoot();
+    }
+
+    public static String getBundleId() {
+        String bundleId = System.getProperty("app.bundle.id");
+        return bundleId == null ? "" : bundleId;
     }
 
     public static long glfmPlayVideo(long display, String uris, String mimeType) {

@@ -97,6 +97,8 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
     public abstract String getAppResRoot();
 
+    public abstract String getBundleId();
+
     public abstract long getNvContext();
 
     public abstract void setDisplayTitle(String title);

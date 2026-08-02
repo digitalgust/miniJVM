@@ -1,0 +1,6 @@
+framework module AFServiceSDK {
+  umbrella header "AFServiceSDK.h"
+  export *
+
+  module * { export * }
+}

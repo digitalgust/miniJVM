@@ -108,8 +108,11 @@ public class ImageImmutable extends GImage {
     @Override
     public void finalize() {
         try {
-            if (gc) {
-                GForm.deleteImage(nvg_texture);
+            // gc=true 表示本对象拥有该 nanovg 纹理；删除后置位，避免二次 finalize 误删复用 id。
+            if (gc && nvg_texture > 0) {
+                int tex = nvg_texture;
+                nvg_texture = -1;
+                GForm.deleteImage(tex);
                 SysLog.getLogger().fine("finalize image " + this.getWidth() + "x" + this.getHeight());
             }
         } catch (Throwable e) {

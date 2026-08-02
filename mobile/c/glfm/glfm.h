@@ -342,6 +342,9 @@ typedef void (*GLFMSensorFunc)(GLFMDisplay *display, GLFMSensorEvent event);
 /// can be set.
 extern void glfmMain(GLFMDisplay *display);
 
+/// Requests the platform to terminate the application.
+void glfmRequestDestroyApp(void);
+
 /// Init the display condifuration. Should only be called in glfmMain.
 /// If the device does not support the preferred rendering API, the next available rendering API is
 /// chosen (OpenGL ES 3.0 if OpenGL ES 3.1 is not available, and OpenGL ES 2.0 if OpenGL ES 3.0 is
@@ -598,6 +601,8 @@ typedef void (*GLFMNotifyFunc)(GLFMDisplay *display, const char *key, const char
 const char *glfmGetResRoot();
 
 const char *glfmGetSaveRoot();
+
+const char *glfmGetBundleId();
 
 const char *getClipBoardContent();
 

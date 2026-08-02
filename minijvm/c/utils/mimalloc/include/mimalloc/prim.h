@@ -126,6 +126,9 @@ void _mi_prim_thread_associate_default_theap(mi_theap_t* theap);
 // Is this thread part of a thread pool?
 bool _mi_prim_thread_is_in_threadpool(void);
 
+// Yield to other threads. Should be similar to `sleep(0)`. 
+// Is called only in rare situations and does not have to be lightning fast.
+void _mi_prim_thread_yield(void);
 
 //-------------------------------------------------------------------
 // Access to TLS (thread local storage) slots.
@@ -253,14 +256,16 @@ extern mi_decl_hidden bool _mi_process_is_initialized;                // has mi_
 // but unfortunately, it seems we cannot test for this reliably at this time (see issue #883)
 // Nevertheless, it seems needed on older graviton platforms (see issue #851).
 // For now, we only enable this for specific platforms.
-#if !defined(__APPLE__)  /* on apple (M1) the wrong register is read (tpidr_el0 instead of tpidrro_el0) so fall back to TLS slot assembly (<https://github.com/microsoft/mimalloc/issues/343#issuecomment-763272369>)*/ \
-    && !defined(__CYGWIN__) \
-    && !defined(MI_LIBC_MUSL) \
-    && (!defined(__clang_major__) || __clang_major__ >= 14)  /* older clang versions emit bad code; fall back to using the TLS slot (<https://lore.kernel.org/linux-arm-kernel/202110280952.352F66D8@keescook/T/>) */
-  #if    (defined(__GNUC__) && (__GNUC__ >= 7)  && defined(__aarch64__)) /* aarch64 for older gcc versions (issue #851) */ \
-      || (defined(__GNUC__) && (__GNUC__ >= 11) && defined(__x86_64__)) \
-      || (defined(__clang_major__) && (__clang_major__ >= 14) && (defined(__aarch64__) || defined(__x86_64__)))
-    #define MI_USE_BUILTIN_THREAD_POINTER  1
+#if !defined(MI_USE_BUILTIN_THREAD_POINTER)   /* allow user override */
+  #if !defined(__APPLE__)  /* on apple (M1) the wrong register is read (tpidr_el0 instead of tpidrro_el0) so fall back to TLS slot assembly (<https://github.com/microsoft/mimalloc/issues/343#issuecomment-763272369>)*/ \
+      && !defined(__CYGWIN__) \
+      && !defined(MI_LIBC_MUSL) \
+      && (!defined(__clang_major__) || __clang_major__ >= 14)  /* older clang versions emit bad code; fall back to using the TLS slot (<https://lore.kernel.org/linux-arm-kernel/202110280952.352F66D8@keescook/T/>) */
+    #if    (defined(__GNUC__) && (__GNUC__ >= 7)  && defined(__aarch64__)) /* aarch64 for older gcc versions (issue #851) */ \
+        || (defined(__GNUC__) && (__GNUC__ >= 11) && defined(__x86_64__)) \
+        || (defined(__clang_major__) && (__clang_major__ >= 14) && (defined(__aarch64__) || defined(__x86_64__)))
+      #define MI_USE_BUILTIN_THREAD_POINTER  1
+    #endif
   #endif
 #endif
 
@@ -276,8 +281,10 @@ static inline mi_threadid_t _mi_prim_thread_id(void) mi_attr_noexcept {
 // Get a unique id for the current thread.
 #if defined(MI_PRIM_THREAD_ID)
 
-static inline mi_threadid_t __mi_prim_thread_id(void) mi_attr_noexcept {
-  return MI_PRIM_THREAD_ID();  // used for example by CPython for a free threaded build (see python/cpython#115488)
+static inline mi_threadid_t _mi_prim_thread_id(void) mi_attr_noexcept {
+  const mi_threadid_t tid = MI_PRIM_THREAD_ID();  // used for example by CPython for a free threaded build (see python/cpython#115488)
+  mi_assert_internal( (tid & 0x03) == 0 );        // mimalloc reserves the bottom 2 bits
+  return tid;
 }
 
 #elif defined(_WIN32)
@@ -363,14 +370,14 @@ static inline mi_theap_t* _mi_theap_cached(void);
 
 #if defined(_WIN32)
   #define MI_TLS_MODEL_DYNAMIC_WIN32        1    
-#elif defined(__APPLE__)  // macOS
+#elif defined(__APPLE__) && MI_HAS_TLS_SLOT && !defined(__POWERPC__)  // macOS on arm64 or x64
   // #define MI_TLS_MODEL_DYNAMIC_PTHREADS  1    // also works but a bit slower
   #define MI_TLS_MODEL_FIXED_SLOT           1
   #define MI_TLS_MODEL_FIXED_SLOT_DEFAULT   108  // seems unused. @apple: it would be great to get 2 official slots for custom allocators :-)
   #define MI_TLS_MODEL_FIXED_SLOT_CACHED    109
   // we used before __PTK_FRAMEWORK_OLDGC_KEY9 (89) but that seems used now.
   // see <https://github.com/rweichler/substrate/blob/master/include/pthread_machdep.h>
-#elif defined(__OpenBSD__) || defined(__ANDROID__)
+#elif defined(__APPLE__) || defined(__OpenBSD__) || defined(__ANDROID__)
   #define MI_TLS_MODEL_DYNAMIC_PTHREADS     1
   // #define MI_TLS_MODEL_DYNAMIC_PTHREADS_DEFAULT_ENTRY_IS_NULL  1
 #else
@@ -497,11 +504,11 @@ static inline bool _mi_thread_is_initialized(void) {
 // Get (and possible create) the theap belonging to a heap
 // We cache the last accessed theap in `_mi_theap_cached` for better performance.
 static inline mi_theap_t* _mi_heap_theap(const mi_heap_t* heap) {
-  mi_theap_t* theap = _mi_theap_cached();
+  mi_theap_t* theap = _mi_theap_cached();  
   #if MI_THEAP_INITASNULL
-  if mi_likely(theap!=NULL && theap->heap==heap) return theap;
+  if mi_likely(theap!=NULL && _mi_theap_heap(theap)==heap) return theap;
   #else
-  if mi_likely(theap->heap==heap) return theap;
+  if mi_likely(_mi_theap_heap(theap)==heap) return theap;
   #endif
   return _mi_heap_theap_get_or_init(heap);
 }
@@ -510,14 +517,14 @@ static inline mi_theap_t* _mi_heap_theap(const mi_heap_t* heap) {
 static inline mi_theap_t* _mi_heap_theap_peek(const mi_heap_t* heap) {
   mi_theap_t* theap = _mi_theap_cached();
   #if MI_THEAP_INITASNULL
-  if mi_unlikely(theap==NULL || theap->heap!=heap)
+  if mi_unlikely(theap==NULL || _mi_theap_heap(theap)!=heap)
   #else
-  if mi_unlikely(theap->heap!=heap)
+  if mi_unlikely(_mi_theap_heap(theap)!=heap)
   #endif
   {
     theap = _mi_heap_theap_get_peek(heap);  // don't update the cache on a query (?)
   }
-  mi_assert(theap==NULL || theap->heap==heap);
+  mi_assert(theap==NULL || _mi_theap_heap(theap)==heap);
   return theap;
 }
 

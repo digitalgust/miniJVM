@@ -32,7 +32,7 @@ public class GTextBox extends GTextObject {
     protected EditArea editArea;//编辑区
 
     static final int SCROLLBAR_WIDTH = 20;
-    static final int PAD = 5;
+    static final int PAD = 1;
     static final float LINE_SCALE = 1.2f;
 
     protected int curCaretRow;//以回车为换行符的行数
@@ -53,6 +53,12 @@ public class GTextBox extends GTextObject {
 
     protected int pendingMoveToIndex = -1;
     protected boolean pendingMoveTo = false;
+    //pendingMoveTo 抗抖动与对齐: 记录滚动方向.
+    //1) 若方向反转(振荡)则强制停止 —— area_detail 范围有限, 光标行在 detail 边缘时
+    //   firstFullyVisibleCS 可能帧间翻转导致反复滚动.
+    //2) 决定停止时的对齐: 下滚(+1)时光标行对齐到显示区末行, 上滚(-1)时对齐到首行,
+    //   避免连续 RIGHT/LEFT 时光标行在第一行/第二行交替跳动.
+    protected int pendingMoveDir = 0;   //-1上滚, +1下滚, 0未滚
 
     /**
      * StyleRun defines a styled segment of text.
@@ -227,6 +233,11 @@ public class GTextBox extends GTextObject {
     }
 
     public boolean setScroll(float p) {
+        //NaN/Infinity 会让下面的比较失效从而漏进来,这里显式拦截
+        //(inertiaEvent/键盘滚动/空文本除法等都可能产生脏值,统一在此堵住)
+        if (Float.isNaN(p) || Float.isInfinite(p)) {
+            return false;
+        }
         if (p > 1.f) {
             p = 1.f;
         }
@@ -235,11 +246,13 @@ public class GTextBox extends GTextObject {
         }
         float tmp = this.scroll;
         this.scroll = p;
-        if (tmp != this.scroll) {
+        //用 floatToIntBits 比较,避免 scroll 之前被污染成 NaN 时 (NaN != x 恒真) 误报"变化"
+        boolean changed = Float.floatToIntBits(tmp) != Float.floatToIntBits(this.scroll);
+        if (changed) {
             scrollBar.setPos(this.scroll);
         }
         //resetSelect();
-        return tmp != this.scroll;
+        return changed;
     }
 
     public float getScroll() {
@@ -258,15 +271,233 @@ public class GTextBox extends GTextObject {
         if (charIndex > textsb.length()) {
             charIndex = textsb.length();
         }
-//        int[] pos = editArea.getCaretPosFromArea();
-//        if (pos != null) {
-//            float moveOffset = charIndex < caretIndex ? (-lineh[0]) : lineh[0];
-//            if (pos[1] < getY() + lineh[0] * 2) {//超出屏幕时先滚屏
-//                setScroll(scroll + moveOffset / (editArea.totalTextHeight - editArea.showAreaHeight));
-//            }
-//        }
+        //优先走确定性滚动: 一步到位, 不依赖 drawTextBox 末尾的 pendingMoveTo 动画
+        //(该动画要求 firstCharOnScreen/lastCharOnScreen>=0, 当整屏滚出可视区时这俩是 -1, 动画永不触发)
+        if (scrollCaretRowIntoView(charIndex)) {
+            return;
+        }
         pendingMoveToIndex = charIndex;
         pendingMoveTo = true;
+        pendingMoveDir = 0;  //重置抗抖方向记录
+    }
+
+    /**
+     * 左右方向键只在光标已经离开可视区时再触发自动滚动。
+     * 两行高窗口里如果每次水平移动都要求"整行完整显示", pendingMoveTo 会在首/末可见行之间来回校正,
+     * 表现为光标每按一次键就在两行间反复切换。
+     */
+    void ensureCaretVisibleForHorizontalMove() {
+        int[] pos = editArea.getCaretPosFromArea();
+        if (pos == null) {
+            moveScreenToIndex(caretIndex);
+            return;
+        }
+        float lineH = lineh[0] > 0 ? lineh[0] : getFontSize() * LINE_SCALE;
+        float textTop = editArea.getY() + PAD;
+        float textBottom = editArea.getY() + editArea.getH() - PAD * 2;
+        float caretTop = pos[1] - lineH * 0.5f;
+        float caretBottom = pos[1] + lineH * 0.5f;
+        // 左右移动只要求当前行仍与可视区相交即可;
+        // 若仅有1-2像素被裁掉, 继续强制对齐会让两行高窗口在上下两个位置之间来回跳动.
+        if (caretBottom <= textTop || caretTop >= textBottom) {
+            moveScreenToIndex(caretIndex);
+        }
+    }
+
+    float getCaretLineHeight() {
+        return lineh[0] > 0 ? lineh[0] : getFontSize() * LINE_SCALE;
+    }
+
+    boolean scrollOneLineForVerticalMove(int dir) {
+        float lineH = getCaretLineHeight();
+        float denom = editArea.totalTextHeight - editArea.showAreaHeight;
+        if (!(lineH > 0f) || !(denom > 0f)) {
+            return false;
+        }
+        float delta = lineH / denom;
+        return dir < 0 ? setScroll(scroll - delta) : setScroll(scroll + delta);
+    }
+
+    int findVisibleDetailIndexByRowNo(int rowNo) {
+        if (editArea.area_detail == null) {
+            return -1;
+        }
+        for (int i = 0; i < editArea.area_detail.length; i++) {
+            int[] detail = editArea.area_detail[i];
+            if (detail != null && detail[EditArea.AREA_ROW_NO] == rowNo) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    int getCaretIndexOnVisibleDetail(int detailIndex, int x) {
+        if (editArea.area_detail == null || detailIndex < 0 || detailIndex >= editArea.area_detail.length) {
+            return -1;
+        }
+        int[] detail = editArea.area_detail[detailIndex];
+        if (detail == null) {
+            return -1;
+        }
+        int probeY = detail[EditArea.AREA_Y] + detail[EditArea.AREA_H] / 2;
+        return editArea.getCaretIndexFromArea(x, probeY, true);
+    }
+
+    /**
+     * 直接计算并设置 scroll, 使 area_detail[detailIndex] 这一行完整落在 text_area 内,
+     * 一步到位(不依赖 drawTextBox 末尾的 pendingMoveTo 多帧动画):
+     * - 行顶部偏出 text_area 顶端(按 UP 后常见): 把该行顶部对齐到 text_area 顶端;
+     * - 行底部偏出 text_area 底端(按 DOWN 后常见): 把该行底部对齐到 text_area 底端.
+     * <p>
+     * 几何换算: drawTextBox 里 dy = text_area[TOP] - dh, dh = scroll*denom,
+     * denom = totalTextHeight - showAreaHeight. 一行画在绝对 y=rowY, 则该行
+     * "自然顶部"(scroll=0 时位置) = rowY + dh. 要让该行顶部落到 textTop, 需要
+     * dh' = naturalTop - textTop; 要让该行底部落到 textBottom, 需要
+     * dh' = naturalTop + rowH - textBottom. 再换算回 scroll = dh'/denom.
+     *前提: 编辑区高度足以容纳一行高, 否则无法完整显示, 保持原状.
+     */
+    boolean scrollDetailFullyVisible(int detailIndex) {
+        if (editArea.area_detail == null || detailIndex < 0 || detailIndex >= editArea.area_detail.length) {
+            return false;
+        }
+        int[] detail = editArea.area_detail[detailIndex];
+        if (detail == null) {
+            return false;
+        }
+        float denom = editArea.totalTextHeight - editArea.showAreaHeight;
+        if (!(denom > 0f)) {
+            return false;
+        }
+        float textTop = editArea.getY() + PAD;
+        float textBottom = editArea.getY() + editArea.getH() - PAD * 2;
+        float rowTop = detail[EditArea.AREA_Y];
+        float rowH = detail[EditArea.AREA_H];
+        float rowBottom = rowTop + rowH;
+        //编辑区放不下一整行 -> 无法完整显示, 不强滚
+        if (textBottom - textTop + 0.5f < rowH) {
+            return false;
+        }
+        float curDh = scroll * denom;
+        float naturalTop = rowTop + curDh;
+        float targetDh;
+        if (rowTop < textTop) {
+            targetDh = naturalTop - textTop;
+        } else if (rowBottom > textBottom) {
+            targetDh = naturalTop + rowH - textBottom;
+        } else {
+            return false;
+        }
+        if (targetDh < 0f) targetDh = 0f;
+        if (targetDh > denom) targetDh = denom;
+        return setScroll(targetDh / denom);
+    }
+
+    /**
+     * 把光标所在"显示行"(由 charIndex 确定) 滚到完整可见, 一步到位, 不依赖 pendingMoveTo 动画.
+     * 仅处理"目标行已经在 area_detail 里(与 text_area 有相交)"的情形, 此时 detail 记录了精确位置,
+     * 可以一步算出正确的 scroll. 这种情形按 UP/DOWN 后(目标行与 text_area 仍相交但顶部/底部偏出)最常见.
+     * <p>
+     * 目标行完全在屏外(不在 area_detail)的情形这里返回 false, 由调用方走 pendingMoveTo 多帧动画.
+     * 该动画此前依赖 "firstCharOnScreen/lastCharOnScreen >= 0" 才执行, 整屏滚出可视区时(如 LEFT 跨
+     * \n 跳到完全在 text_area 上方的行)这两个变量是 -1, 动画永远不触发, 光标卡在屏外.
+     * 这个 bug 已在 drawTextBox 的 pendingMoveTo 分支里修复(去掉 >=0 的前置条件, 屏外时按方向继续滚).
+     */
+    boolean scrollCaretRowIntoView(int charIndex) {
+        if (charIndex < 0) charIndex = 0;
+        if (charIndex > textsb.length()) charIndex = textsb.length();
+        if (editArea.area_detail == null) {
+            return false;
+        }
+        for (int i = 0; i < editArea.area_detail.length; i++) {
+            int[] d = editArea.area_detail[i];
+            if (d != null && charIndex >= d[EditArea.AREA_LINE_START_AT]
+                    && charIndex <= d[EditArea.AREA_LINE_END_AT] + 1) {
+                return scrollDetailFullyVisible(i);
+            }
+        }
+        return false;
+    }
+
+    int findBoundaryVisibleDetailIndex(int dir) {
+        if (editArea.area_detail == null) {
+            return -1;
+        }
+        if (dir < 0) {
+            for (int i = 0; i < editArea.area_detail.length; i++) {
+                if (editArea.area_detail[i] != null) {
+                    return i;
+                }
+            }
+        } else {
+            for (int i = editArea.area_detail.length - 1; i >= 0; i--) {
+                if (editArea.area_detail[i] != null) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    int getAdjacentCaretFallback(int dir, int[] curDetail) {
+        if (curDetail == null) {
+            return -1;
+        }
+        if (dir > 0) {
+            int next = curDetail[EditArea.AREA_LINE_END_AT] + 1;
+            return next <= textsb.length() ? next : -1;
+        } else {
+            int prev = curDetail[EditArea.AREA_LINE_START_AT] - 1;
+            return prev >= 0 ? prev : -1;
+        }
+    }
+
+    void moveCaretVertically(int dir) {
+        int[] pos = editArea.getCaretPosFromArea();
+        if (pos == null) {
+            int fallback = getCaretIndexOnVisibleDetail(findBoundaryVisibleDetailIndex(dir), (int) caretX);
+            if (fallback >= 0 && fallback <= textsb.length()) {
+                setCaretIndex(fallback);
+            }
+            return;
+        }
+        int targetDetailIndex = findVisibleDetailIndexByRowNo(pos[2] + dir);
+        int target = getCaretIndexOnVisibleDetail(targetDetailIndex, pos[0]);
+        if (target >= 0 && target <= textsb.length()) {
+            //目标行落在 area_detail 里(与 text_area 有相交), 但相交不等于完整可见:
+            //一行的顶部可能偏出 text_area 顶端(按 UP 移到相邻行后常见, 此时该行只剩底部一两条
+            //像素露在编辑区顶端), 或底部偏出 text_area 底端(按 DOWN 后常见).
+            //直接计算 scroll 一步到位地把该行滚到完整可见, 不依赖 drawTextBox 末尾的
+            //pendingMoveTo 多帧动画(该动画的停止条件在某些几何下不会触发, 之前修复无效).
+            scrollDetailFullyVisible(targetDetailIndex);
+            setCaretIndex(target);
+            return;
+        }
+
+        int[] curDetail = (pos[3] >= 0 && pos[3] < editArea.area_detail.length)
+                ? editArea.area_detail[pos[3]] : null;
+        if (dir > 0 && curDetail != null && curDetail[EditArea.AREA_LINE_END_AT] + 1 >= textsb.length()) {
+            setCaretIndex(textsb.length());
+            return;
+        }
+        if (dir < 0 && curDetail != null && curDetail[EditArea.AREA_ROW_NO] <= 0 && scroll <= 0f) {
+            return;
+        }
+        if (!scrollOneLineForVerticalMove(dir)) {
+            return;
+        }
+
+        flushNow();
+
+        int targetAfterScroll = getCaretIndexOnVisibleDetail(findVisibleDetailIndexByRowNo(pos[2] + dir), pos[0]);
+        if (targetAfterScroll < 0) {
+            targetAfterScroll = getCaretIndexOnVisibleDetail(findBoundaryVisibleDetailIndex(dir), pos[0]);
+        }
+        if (targetAfterScroll < 0) {
+            targetAfterScroll = getAdjacentCaretFallback(dir, curDetail);
+        }
+        if (targetAfterScroll >= 0 && targetAfterScroll <= textsb.length()) {
+            setCaretIndex(targetAfterScroll);
+        }
     }
 
     @Override
@@ -596,80 +827,24 @@ public class GTextBox extends GTextObject {
 
                 case Glfw.GLFW_KEY_LEFT: {
                     if (textsb.length() > 0 && caretIndex > 0) {
-                        int[] pos = editArea.getCaretPosFromArea();
-                        if (pos != null && pos[1] < getY() + lineh[0] * 2 && scroll > 0f) {
-                            float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
-                            if (denom > 0f) {
-                                setScroll(scroll - lineh[0] / denom);
-                            }
-                        }
                         setCaretIndex(caretIndex - 1);
+                        ensureCaretVisibleForHorizontalMove();
                     }
                     break;
                 }
                 case Glfw.GLFW_KEY_RIGHT: {
                     if (textsb.length() > caretIndex) {
-                        int[] pos = editArea.getCaretPosFromArea();
-                        if (pos != null && pos[1] > getY() + getH() - lineh[0] * 2 && scroll < 1.0f) {
-                            float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
-                            if (denom > 0f) {
-                                setScroll(scroll + lineh[0] / denom);
-                            }
-                        }
                         setCaretIndex(caretIndex + 1);
+                        ensureCaretVisibleForHorizontalMove();
                     }
                     break;
                 }
                 case Glfw.GLFW_KEY_UP: {
-                    int[] pos = editArea.getCaretPosFromArea();
-                    if (pos != null) {
-                        if (pos[1] < getY() + lineh[0]) {
-                            setScroll(scroll - lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
-                        } else {
-                            int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] - (int) (lineh[0] * 1.5f));//定位到下一行中央
-                            if (cart >= 0) {
-                                setCaretIndex(cart);
-                            }
-                        }
-                    } else {
-                        for (int i = editArea.area_detail.length - 1; i >= 0; i--) {
-                            if (editArea.area_detail[i] != null) {
-                                int c = editArea.area_detail[i][EditArea.AREA_LINE_START_AT];
-                                setCaretIndex(c);
-                                break;
-                            }
-                        }
-                    }
+                    moveCaretVertically(-1);
                     break;
                 }
                 case Glfw.GLFW_KEY_DOWN: {
-                    int[] pos = editArea.getCaretPosFromArea();
-                    if (pos != null) {
-                        if (pos[1] > getY() + getH() - lineh[0]) {
-                            float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
-                            if (denom > 0f) {
-                                setScroll(scroll + lineh[0] / denom);
-                            }
-                        } else {
-                            int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] + (int) (lineh[0] * 1.5f));
-                            if (cart >= 0 && cart < textsb.length()) {
-                                setCaretIndex(cart);
-                            } else if (cart >= textsb.length()) {
-                                float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
-                                if (scroll < 1.0f && denom > 0f) {
-                                    setScroll(scroll + lineh[0] / denom);
-                                }
-                            }
-                        }
-                    } else {
-                        for (int i = 0; i < editArea.area_detail.length; i++) {
-                            if (editArea.area_detail[i] != null) {
-                                int c = editArea.area_detail[i][EditArea.AREA_LINE_START_AT];
-                                setCaretIndex(c);
-                                break;
-                            }
-                        }
-                    }
+                    moveCaretVertically(1);
                     break;
                 }
             }
@@ -791,37 +966,23 @@ public class GTextBox extends GTextObject {
                 case Glfm.GLFMKeyLeft: {
                     if (textsb.length() > 0 && caretIndex > 0) {
                         setCaretIndex(caretIndex - 1);
+                        ensureCaretVisibleForHorizontalMove();
                     }
                     break;
                 }
                 case Glfm.GLFMKeyRight: {
                     if (textsb.length() > caretIndex) {
                         setCaretIndex(caretIndex + 1);
+                        ensureCaretVisibleForHorizontalMove();
                     }
                     break;
                 }
                 case Glfm.GLFMKeyUp: {
-                    int[] pos = editArea.getCaretPosFromArea();
-                    setScroll(scroll - lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
-
-                    if (pos != null) {
-                        int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] - (int) lineh[0]);
-                        if (cart >= 0) {
-                            setCaretIndex(cart);
-                        }
-                    }
+                    moveCaretVertically(-1);
                     break;
                 }
                 case Glfm.GLFMKeyDown: {
-                    int[] pos = editArea.getCaretPosFromArea();
-                    setScroll(scroll + lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
-                    if (pos != null) {
-                        int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] + (int) lineh[0]);
-                        if (cart >= 0) {
-                            setCaretIndex(cart);
-                        }
-
-                    }
+                    moveCaretVertically(1);
                     break;
                 }
             }
@@ -842,18 +1003,32 @@ public class GTextBox extends GTextObject {
         if (scroll >= 1 || scroll <= 0) {
             return false;
         }
-        double dx = x2 - x1;
         final double dy = y2 - y1;
-        float scrollDelta = 0;
-        Runnable task;
+
+        //---- 公共参数兜底,防止除零/NaN 进入下面的速度计算 ----
+        //getFps()在启动首秒、严重卡顿或后台返回时可能返回0,会导致 inertiaPeriod=Infinity -> speed=Infinity -> 减成 NaN 永久卡死
+        float rawFps = GCallBack.getInstance().getFps();
+        if (!(rawFps > 0) || rawFps < 1) {   // rawFps<=0 或 NaN
+            rawFps = GCallBack.FPS_DEFAULT;
+        }
+        final double inertiaPeriod = 1000d / rawFps;
+        //moveTime(cost)在触屏事件批量/延迟投递时可能为0,这里兜底为1ms
+        final long mvTime = moveTime <= 0 ? 1 : moveTime;
+        final double perSlice = mvTime / inertiaPeriod;
+        if (!(perSlice > 0)) {   // perSlice<=0 或 NaN,放弃本次惯性
+            return false;
+        }
+        final double preSpeed = dy / perSlice;
+        if (Double.isInfinite(preSpeed) || Double.isNaN(preSpeed)) {
+            return false;   // 拦截非法初速度,避免污染 scroll
+        }
+
         //System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
-        task = new Runnable() {
-            //每多长时间进行一次惯性动作
-            float inertiaPeriod = 1000 / GCallBack.getInstance().getFps();
+        Runnable task = new Runnable() {
             //惯性速度
-            double speed = dy / (moveTime / inertiaPeriod);
+            double speed = preSpeed;
             //阴力
-            double resistance = speed / maxMoveCount;
+            final double resistance = speed / maxMoveCount;
             //
             int count = 0;
 
@@ -868,7 +1043,8 @@ public class GTextBox extends GTextObject {
                         setScroll(scroll - (float) speed / dh);
                     }
                     GForm.flush();
-                    if (++count > maxMoveCount) {
+                    //speed 出现 NaN/Infinity 时立即终止,避免脏值继续污染 scroll
+                    if (++count > maxMoveCount || Double.isNaN(speed) || Double.isInfinite(speed)) {
                         inertiaCmd = null;
                     }
                     GForm.addCmd(inertiaCmd);
@@ -948,27 +1124,50 @@ public class GTextBox extends GTextObject {
          * @return
          */
         int getCaretIndexFromArea(int x, int y) {
+            return getCaretIndexFromArea(x, y, false);
+        }
+
+        /**
+         * 查找指定屏幕坐标对应的字符位置.
+         *
+         * @param strict false(默认, 鼠标点击场景): 落点超出已记录行(下方空白)时返回 textsb.length(),
+         *               即点击文本下方空白区会把光标放到文本末尾.
+         *               true(方向键导航场景): 落点超出已记录行时返回 -1 表示"目标行不可见",
+         *               调用方据此改为滚动而非跳到文本末尾, 避免按一次下方向键光标从1900直接跳到1930.
+         */
+        int getCaretIndexFromArea(int x, int y, boolean strict) {
             int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
+            //记录Y最大(最下方)的那一行的末尾字符位置, 供"点在已记录行下方"时定位到该行末尾,
+            //而不是直接跳到文本末尾(textsb.length()), 避免点显示区底部空白时光标跳到1930
+            int lastDetailEnd = -1;
             if (editArea.area_detail != null) {
-                //如果鼠标位置超出显示区域，进行校正
-                if (x < getX()) {
-                    x = (int) getX() + PAD;
-                }
-                if (y < getY()) {
-                    y = (int) getY() + PAD;
-                }
-                if (x > getX() + getW()) {
-                    x = (int) (getX() + getW()) - PAD;
-                }
-                if (y > getY() + getH()) {
-                    y = (int) (getY() + getH()) - PAD;
+                //如果鼠标位置超出显示区域，进行校正(仅点击场景).
+                //strict(方向键)场景不做校正: 需保留原始坐标, 以便下面准确判断
+                //"目标行是否超出已记录行范围(不可见)", 校正会把区外点拉回区内导致误判
+                if (!strict) {
+                    if (x < getX()) {
+                        x = (int) getX() + PAD;
+                    }
+                    if (y < getY()) {
+                        y = (int) getY() + PAD;
+                    }
+                    if (x > getX() + getW()) {
+                        x = (int) (getX() + getW()) - PAD;
+                    }
+                    if (y > getY() + getH()) {
+                        y = (int) (getY() + getH()) - PAD;
+                    }
                 }
 
                 //根据预存的屏幕内字符串位置，查找光标所在字符位置
                 for (int[] detail : editArea.area_detail) {
                     if (detail != null) {
                         minY = Math.min(minY, detail[TOP]);
-                        maxY = Math.max(maxY, detail[TOP] + detail[HEIGHT]);
+                        int rowBottom = detail[TOP] + detail[HEIGHT];
+                        if (rowBottom > maxY) {
+                            maxY = rowBottom;
+                            lastDetailEnd = detail[AREA_LINE_END_AT];
+                        }
                         if (x >= detail[LEFT] && x <= detail[LEFT] + getW() && y >= detail[TOP] && y <= detail[TOP] + detail[HEIGHT]) {
                             for (int i = AREA_CHAR_POS_START, imax = detail.length; i < imax; i++) {
                                 float x0 = detail[i];
@@ -990,9 +1189,15 @@ public class GTextBox extends GTextObject {
                 }
             }
             if (y > maxY) {
-                return textsb.length();//只可能在下方空白区域点，那就把光标放在最后的位置
+                //落点在已记录行(可见行)下方:
+                // strict(方向键): 返回-1表示目标行不可见, 由调用方滚动
+                // 点击: 定位到最下方那一行的末尾字符位置, 而非直接跳到文本末尾.
+                //   这样点显示区底部空白时, 光标停在最后一行, 不会跳到1930再触发pendingMoveTo无限滚动.
+                //   只有当没有任何可见行(lastDetailEnd<0)时, 才fallback到文本末尾.
+                if (strict) return -1;
+                return lastDetailEnd >= 0 ? lastDetailEnd : textsb.length();
             }
-            return caretIndex;
+            return strict ? -1 : caretIndex;
         }
 
 
@@ -1012,6 +1217,13 @@ public class GTextBox extends GTextObject {
                             int codePrev = caretIndex > 0 ? textsb.codePointAt(caretIndex - 1) : 0;
                             if (codePrev == '\n') {//这里要注意，有种特殊情况是行尾没有回车符，但会自动换行，这时不会进入到此分支里面
                                 //如果光标正好在换行符处，则认为光标在下一行行首，跳到下一行处理
+                                //但若是文本末尾(caretIndex == textsb.length()), "下一行"是末尾空行,
+                                //它不在area_detail里, 循环结束也找不到, 最终返回null导致方向键失效.
+                                //此处特判: 末尾空行的光标位置 = 当前行(\n所在行)的下一行, 直接返回,
+                                //让UP/DOWN能基于此位置正常定位(UP回到\n行, DOWN保持在末尾)
+                                if (caretIndex == textsb.length()) {
+                                    return new int[]{detail[AREA_X], detail[AREA_Y] + (int) lineh[0] + (int) lineh[0] / 2, detail[AREA_ROW_NO] + 1, i};
+                                }
                             } else {
                                 int idx = caretIndex - detail[AREA_LINE_START_AT] + AREA_CHAR_POS_START;
                                 int x = caretIndex <= detail[AREA_LINE_END_AT] ? detail[idx] : detail[detail.length - 1];
@@ -1078,7 +1290,7 @@ public class GTextBox extends GTextObject {
                 if (local_arr == null || local_detail == null) {//文字被修改过
                     local_arr = toCstyleBytes(textsb.toString());
                     tbox.text_arr = local_arr;
-                    showRows = Math.round(text_area[HEIGHT] / lineH) + 2;
+                    showRows = Math.round(text_area[HEIGHT] / lineH) + 3;
                     showAreaHeight = text_area[HEIGHT];
 
                     //用于存放屏墓中各行的一些位置信息
@@ -1087,15 +1299,36 @@ public class GTextBox extends GTextObject {
 
                     float[] bond = new float[4];
                     Nanovg.nvgTextBoxBoundsJni(vg, 0, 0, text_area[WIDTH], local_arr, 0, local_arr.length, bond);
-                    totalRows = Math.round((bond[HEIGHT] - bond[TOP]) / lineH);
-                    totalTextHeight = bond[HEIGHT];
-                    ratioPerLine = lineH / totalTextHeight;
+                    //注意: NanoVG 的 bounds[1]=miny(顶部y,通常为负), bounds[3]=maxy(底部y).
+                    //真实包围盒高度 = maxy - miny = bond[HEIGHT] - bond[TOP], 不能直接用 bond[HEIGHT](=maxy)
+                    float bondHeight = bond[HEIGHT] - bond[TOP];
+                    //当文本以换行符结尾时(末行是空行), nvgTextBreakLines/nvgTextBoxBounds 不会为该空行
+                    //计入高度, 但绘制循环仍会画出这个空行(光标可停在该行). 这会导致 scroll=1 时 dh 偏小,
+                    //末行底部超出显示区被裁(只显示一半). 这里检测末尾换行符, 补上一个行高.
+                    int txtLen = textsb.length();
+                    if (txtLen > 0 && textsb.codePointAt(txtLen - 1) == '\n') {
+                        bondHeight += lineH;
+                    }
+                    totalRows = Math.round(bondHeight / lineH);
+                    //nvgTextBoxBounds 测的是字形包围盒, 通常比"完整行框高度"(=总行数*lineH)略小,
+                    //因为末行的下行高度(descender/行间距底部)不计入字形范围. 这会导致 totalTextHeight
+                    //偏小 -> scroll=1 时 dh 偏小 -> 末行底部仍超出 text_area 底端被裁, 且无法再滚
+                    //(scroll 已到 1.0). 这里把 totalTextHeight 向上对齐到 totalRows*lineH, 保证
+                    //scroll=1 时末行底部正好落在 text_area 底端, 末行可完整显示.
+                    float fullRowsHeight = totalRows * lineH;
+                    if (fullRowsHeight > bondHeight) {
+                        bondHeight = fullRowsHeight;
+                    }
+                    totalTextHeight = bondHeight;
+                    //防 totalTextHeight<=0 (空文本/退化字体) 导致 ratioPerLine=Infinity, 后续经 setScroll 扩散
+                    ratioPerLine = totalTextHeight > 0 ? lineH / totalTextHeight : 0;
                 }
                 //
                 float dh = scroll * (totalTextHeight - showAreaHeight);
                 dh = dh < 0 ? 0 : dh;
                 dy -= dh;
-                topShowRow = (int) (dh / lineH) - 1;
+                //防 lineH<=0 (退化字体) 导致 dh/lineH=Infinity -> (int)Infinity 越界
+                topShowRow = lineH > 0 ? (int) (dh / lineH) - 1 : -1;
                 //
                 int posCount = 400;
                 int rowCount = 5;
@@ -1120,8 +1353,16 @@ public class GTextBox extends GTextObject {
 
                     int char_at = 0;
                     int char_starti, char_endi;
-                    int firstCharOnScreen = -1;// 显示区域第一行的第一个字符的索引
-                    int lastCharOnScreen = -1;// 显示区域最后一行的最后一个字符的索引
+                    int firstCharOnScreen = -1;// 显示区域第一行的第一个字符的索引(相交即算, 用于点击是否可见判断)
+                    int lastCharOnScreen = -1;// 显示区域最后一行的最后一个字符的索引(相交即算)
+                    //完整可见的首/末行字符索引: 行完全在显示区内(dy>=区顶 且 dy+lineH<=区底).
+                    //pendingMoveTo 滚动用这个判断停止时机, 保证光标行完整显示在显示区内,
+                    //避免左右键上滚时光标行只露一部分(顶部偏出)累积偏差.
+                    //额外记录首行末字符/末行首字符, 用于精确判断光标行是否就是首行/末行(对齐停止).
+                    int firstFullyVisibleCS = -1;   //首行首字符
+                    int firstFullyVisibleCE = -1;   //首行末字符
+                    int lastFullyVisibleRowStart = -1; //末行首字符
+                    int lastFullyVisibleCS = -1;    //末行末字符
 
                     int row_index = 0;
 
@@ -1188,11 +1429,24 @@ public class GTextBox extends GTextObject {
                                         local_detail[curRow][AREA_LINE_START_AT] = (int) char_starti;
                                         local_detail[curRow][AREA_LINE_END_AT] = (int) char_endi;
                                         local_detail[curRow][AREA_ROW_NO] = (int) row_index;
-                                        if (firstCharOnScreen == -1 && dy >= text_area[TOP]) {// 显示区域第一行完整的显示出来
+                                        //firstCharOnScreen/lastCharOnScreen 的判定与绘制条件(行与显示区相交即画)保持一致,
+                                        //避免最后一行底部不完整时 lastCharOnScreen 不更新, 导致 pendingMoveTo 误判
+                                        //"目标行不可见"而反复半屏滚动直到文本末尾
+                                        if (firstCharOnScreen == -1 && dy + lineH > text_area[TOP]) {//首行底部进入显示区即算显示
                                             firstCharOnScreen = char_starti;
                                         }
-                                        if (dy + lineH <= text_area[TOP] + text_area[HEIGHT]) {// 显示区域最后一行完整的显示出来
+                                        if (dy < text_area[TOP] + text_area[HEIGHT]) {//末行顶部在显示区内即算显示(循环持续更新到最后可见行)
                                             lastCharOnScreen = char_endi;
+                                        }
+                                        //完整可见(行完全在显示区内): 供 pendingMoveTo 判断光标行是否完整显示,
+                                        //避免上滚停止时光标行顶部偏出显示区
+                                        if (firstFullyVisibleCS == -1 && dy >= text_area[TOP]) {
+                                            firstFullyVisibleCS = char_starti;
+                                            firstFullyVisibleCE = char_endi;
+                                        }
+                                        if (dy + lineH <= text_area[TOP] + text_area[HEIGHT]) {
+                                            lastFullyVisibleCS = char_endi;
+                                            lastFullyVisibleRowStart = char_starti;
                                         }
                                         //后面把每个char的位置存下来
                                         for (int j = 0; j < char_count; j++) {
@@ -1341,17 +1595,103 @@ public class GTextBox extends GTextObject {
                         }
 
                         //计算moveToIndex，滚动到需要显示的行
-                        if (pendingMoveTo && firstCharOnScreen >= 0 && lastCharOnScreen >= 0) {
-                            float delta = showAreaHeight * 0.5f / totalTextHeight;//半屏占整个文本高度的比值，即每次滚动半屏
-                            if (pendingMoveToIndex < firstCharOnScreen && getScroll() > 0f) {
-                                setScroll(getScroll() - delta);
-                                flushNow();
-                            } else if (pendingMoveToIndex > lastCharOnScreen && getScroll() < 1f) {
-                                setScroll(getScroll() + delta);
-                                flushNow();
+                        if (pendingMoveTo) {
+                            //每次只滚一行, 与方向键滚动逻辑统一, 行为可预测且不会冲过头导致抖动.
+                            //(原来用 max(半屏,一行), 宽区域时半屏很大, 到边界时滚半屏易与"光标行可见性"
+                            // 判断冲突导致文本上下跳动)
+                            //delta 除以 denom(=totalTextHeight-showAreaHeight) 而非 totalTextHeight,
+                            //因为 scroll->offset 换算是 offset=scroll*denom, 这样每帧 offset 精确滚一行 lineH
+                            float stepPixels = lineH;
+                            float scrollDenom = totalTextHeight - showAreaHeight;
+                            float delta = scrollDenom > 0 ? stepPixels / scrollDenom : 0;
+                            //停止时机用"完整可见"的首/末行(行完全在显示区内), 而非"相交可见".
+                            //这样光标行会完整显示, 避免左右键上滚时光标行只露一部分(顶部偏出)累积偏差.
+                            //极窄显示区(不足一行)时完整可见变量为-1, 退回到相交可见变量.
+                            int stopFirst = firstFullyVisibleCS >= 0 ? firstFullyVisibleCS : firstCharOnScreen;
+                            int stopLast = lastFullyVisibleCS >= 0 ? lastFullyVisibleCS : lastCharOnScreen;
+                            //光标行是否就是首行/末行(用首行末字符/末行首字符精确判断)
+                            boolean caretAtFirstRow = firstFullyVisibleCE >= 0
+                                    && pendingMoveToIndex >= firstFullyVisibleCS
+                                    && pendingMoveToIndex <= firstFullyVisibleCE;
+                            boolean caretAtLastRow = lastFullyVisibleRowStart >= 0
+                                    && pendingMoveToIndex >= lastFullyVisibleRowStart
+                                    && pendingMoveToIndex <= lastFullyVisibleCS;
+                            //启动判断(还未开始滚, dir==0): 光标在可见区外才启动, 行内不滚.
+                            //进行中(dir!=0): 下滚必须滚到光标行==末行才停, 上滚必须滚到光标行==首行才停,
+                            //避免连续 RIGHT 时光标行在第一行/第二行交替跳动.
+                            //注意: 整屏滚出可视区时(如 LEFT 跨 \n 跳到已完全在屏外的行) firstCharOnScreen/
+                            //lastCharOnScreen 都是 -1, 此时无法判断"光标在区内还是区外", 需要用
+                            //pendingMoveDir 记录的方向继续滚, 直到有行进入可视区, 停止逻辑才重新生效.
+                            boolean noVisibleRow = firstCharOnScreen < 0 || lastCharOnScreen < 0;
+                            boolean needScrollDown = (noVisibleRow ? pendingMoveDir >= 0
+                                    : (pendingMoveToIndex > stopLast && getScroll() < 1f
+                                        && (pendingMoveDir == 0 || !caretAtLastRow)));
+                            boolean needScrollUp = (noVisibleRow ? pendingMoveDir <= 0
+                                    : (pendingMoveToIndex < stopFirst && getScroll() > 0f
+                                        && (pendingMoveDir == 0 || !caretAtFirstRow)));
+                            if (noVisibleRow && pendingMoveDir == 0) {
+                                //首次进入"屏外"状态但方向未知: 推断滚动方向.
+                                // scroll 已到底(>=1) 说明文本顶部已经被滚出去, caret 必在上方 -> 上滚;
+                                // scroll 已到顶(<=0) 说明文本底部已经被滚出去, caret 必在下方 -> 下滚;
+                                // 中间值(罕见, 通常是竞态/几何突变): 用 caret 字符位置在文本中的比例
+                                // 与 scroll 比较 —— caret 靠后但没滚到底, 说明它在下方 -> 下滚; 否则上滚.
+                                if (getScroll() >= 1f) {
+                                    needScrollDown = false;
+                                    needScrollUp = true;
+                                } else if (getScroll() <= 0f) {
+                                    needScrollDown = true;
+                                    needScrollUp = false;
+                                } else {
+                                    int txtLen = textsb.length();
+                                    float caretRatio = txtLen > 0 ? (float) pendingMoveToIndex / txtLen : 0f;
+                                    if (caretRatio > getScroll() + 0.05f) {
+                                        needScrollDown = true;
+                                        needScrollUp = false;
+                                    } else {
+                                        needScrollDown = false;
+                                        needScrollUp = true;
+                                    }
+                                }
+                            }
+                            if (needScrollDown) {
+                                //抗抖动: 若上一帧是反向滚动(上滚), 说明在边界振荡, 强制停止
+                                if (pendingMoveDir < 0) {
+                                    pendingMoveToIndex = -1;
+                                    pendingMoveTo = false;
+                                    pendingMoveDir = 0;
+                                } else {
+                                    boolean moved = setScroll(getScroll() + delta);
+                                    //滚不动(已到 scroll 边界) 且仍屏外 -> 光标行无法到达(如文本末尾空行),
+                                    //停止避免无限循环
+                                    if (noVisibleRow && !moved) {
+                                        pendingMoveToIndex = -1;
+                                        pendingMoveTo = false;
+                                        pendingMoveDir = 0;
+                                    } else {
+                                        pendingMoveDir = 1;
+                                        flushNow();
+                                    }
+                                }
+                            } else if (needScrollUp) {
+                                if (pendingMoveDir > 0) {
+                                    pendingMoveToIndex = -1;
+                                    pendingMoveTo = false;
+                                    pendingMoveDir = 0;
+                                } else {
+                                    boolean moved = setScroll(getScroll() - delta);
+                                    if (noVisibleRow && !moved) {
+                                        pendingMoveToIndex = -1;
+                                        pendingMoveTo = false;
+                                        pendingMoveDir = 0;
+                                    } else {
+                                        pendingMoveDir = -1;
+                                        flushNow();
+                                    }
+                                }
                             } else { //结束滚动
                                 pendingMoveToIndex = -1;
                                 pendingMoveTo = false;
+                                pendingMoveDir = 0;
                             }
                         }
                     }
@@ -1432,12 +1772,18 @@ public class GTextBox extends GTextObject {
     }
 
     public void setStyles(List<StyleRun> styles) {
+        if (styles == null) {
+            return;
+        }
         this.styles = styles;
         mergeStyleRunColor(styles);//合并相同颜色
         editArea.area_detail = null; //force redraw
     }
 
     public void setStyleJson(String json) {
+        if (json == null) {
+            return;
+        }
         JsonParser<List<StyleRun>> jp = new JsonParser();
         List<StyleRun> list = jp.deserial(json, List.class, StyleRun.class.getClassLoader(), "java.util.List<org.mini.gui.GTextBox$StyleRun>");
         setStyles(list);

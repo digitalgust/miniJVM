@@ -13,6 +13,7 @@ terms of the MIT license. A copy of the license can be found in the file
 
 #include <stdio.h>   // fputs
 #include <stdlib.h>  // getenv
+#include <unistd.h>  // sbrk, sleep
 
 //---------------------------------------------
 // Initialize
@@ -42,8 +43,6 @@ int _mi_prim_free(void* addr, size_t size ) {
 //---------------------------------------------
 
 #if defined(MI_USE_SBRK)
-  #include <unistd.h>  // for sbrk
-
   static void* mi_memory_grow( size_t size ) {
     void* p = sbrk(size);
     if (p == (void*)(-1)) return NULL;
@@ -89,7 +88,7 @@ static void* mi_prim_mem_grow(size_t size, size_t try_alignment) {
     {
       void* current = mi_memory_grow(0);  // get current size
       if (current != NULL) {
-        void* aligned_current = mi_align_up_ptr(current, try_alignment);  // and align from there to minimize wasted space
+        void* aligned_current = _mi_align_up_ptr(current, try_alignment);  // and align from there to minimize wasted space
         alloc_size = _mi_align_up( ((uint8_t*)aligned_current - (uint8_t*)current) + size, _mi_os_page_size());
         base = mi_memory_grow(alloc_size);
       }
@@ -98,7 +97,7 @@ static void* mi_prim_mem_grow(size_t size, size_t try_alignment) {
     pthread_mutex_unlock(&mi_theap_grow_mutex);
     #endif
     if (base != NULL) {
-      p = mi_align_up_ptr(base, try_alignment);
+      p = _mi_align_up_ptr(base, try_alignment);
       if ((uint8_t*)p + size > (uint8_t*)base + alloc_size) {
         // another thread used wasm_memory_grow/sbrk in-between and we do not have enough
         // space after alignment. Give up (and waste the space as we cannot shrink :-( )
@@ -285,4 +284,8 @@ void _mi_prim_thread_associate_default_theap(mi_theap_t* theap) {
 
 bool _mi_prim_thread_is_in_threadpool(void) {
   return false;
+}
+
+void _mi_prim_thread_yield(void) {
+  sleep(0);
 }

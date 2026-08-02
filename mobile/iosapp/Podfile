@@ -1,0 +1,8 @@
+platform :ios, '12.0'
+
+project 'iosapp.xcodeproj'
+
+target 'iosapp' do
+  # 微信官方 CocoaPods 包包含支付能力。本工程将官方 2.0.5 无支付版
+  # XCFramework 固定在 Frameworks/ 并由 Xcode 工程直接链接。
+end

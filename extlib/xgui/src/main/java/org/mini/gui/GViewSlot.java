@@ -208,8 +208,16 @@ public class GViewSlot extends GViewPort {
             }
             this.timeInMils = timeInMils;
             //每多长时间进行一次惯性动作
-            float inertiaPeriod = 1000 / GCallBack.getInstance().getFps();
+            //getFps()在启动首秒/严重卡顿时可能返回0,会导致 inertiaPeriod=Infinity -> maxCounter=0 -> run()里 distX*counter/maxCounter 除零
+            float rawFps = GCallBack.getInstance().getFps();
+            if (!(rawFps > 0) || rawFps < 1) {   // rawFps<=0 或 NaN
+                rawFps = GCallBack.FPS_DEFAULT;
+            }
+            float inertiaPeriod = 1000 / rawFps;
             maxCounter = (int) (timeInMils / inertiaPeriod);
+            //maxCounter 至少为 1 (避免下面 distX*counter/maxCounter 除零), 且封顶避免低 fps 下动画拖得太久
+            if (maxCounter < 1) maxCounter = 1;
+            else if (maxCounter > 600) maxCounter = 600;
 
         }
 
@@ -224,6 +232,7 @@ public class GViewSlot extends GViewPort {
                 counter++;
                 float curX, curY;
                 if (counter <= maxCounter) {
+                    //maxCounter 已在构造函数里保证 >=1,这里不会除零
                     curX = slotOrignalX - distX * counter / maxCounter;
                     curY = slotOrignalY - distY * counter / maxCounter;
                 } else {

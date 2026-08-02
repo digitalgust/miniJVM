@@ -193,6 +193,10 @@ public class GButton extends GObject {
             }
             nvgBeginPath(vg);
             nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, getCornerRadius() - 0.5f);
+            nvgFillColor(vg, getBgColor());
+            nvgFill(vg);
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, getCornerRadius() - 0.5f);
             nvgFillColor(vg, c);
             nvgFill(vg);
         }

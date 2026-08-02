@@ -161,7 +161,8 @@ public class ReflectUtil {
             if (insJson != null && insJson.length() > 0) {
                 JsonParser parser = new JsonParser();
                 ins = parser.deserial(insJson, c);
-            } else if (className.equalsIgnoreCase(activity.getClass().getName())) {
+            // 壳应用可以使用 JvmNativeActivity 子类，脚本仍统一调用公共桥接类。
+            } else if (activity != null && c.isInstance(activity)) {
                 ins = activity;
             }
             if (paraJson != null && paraJson.length() > 0) {

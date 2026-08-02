@@ -117,7 +117,7 @@ static void mi_stat_counter_add_mt(mi_stat_counter_t* stat, const mi_stat_counte
 
 // must be thread safe as it is called from stats_merge
 static void mi_stats_add(mi_stats_t* stats, const mi_stats_t* src) {
-  if (stats==src) return;
+  if (stats==NULL || src==NULL || stats==src) return;
 
   // copy all fields
   MI_STAT_FIELDS()
@@ -214,10 +214,9 @@ static void mi_stat_print_ex(const mi_stat_count_t* stat, const char* msg, int64
     }
   }
   else {
-    mi_print_amount(stat->peak, 1, out, arg);
-    mi_print_amount(stat->total, 1, out, arg);
-    _mi_fprintf(out, arg, "%11s", " ");  // no freed
-    mi_print_amount(stat->current, 1, out, arg);
+    mi_print_amount(stat->peak, 0, out, arg);
+    mi_print_amount(stat->total, 0, out, arg);
+    mi_print_amount(stat->current, 0, out, arg);
     _mi_fprintf(out, arg, "\n");
   }
 }
@@ -237,16 +236,21 @@ static void mi_stat_total_print(const mi_stat_count_t* stat, const char* msg, in
 
 static void mi_stat_counter_print(const mi_stat_counter_t* stat, const char* msg, mi_output_fun* out, void* arg ) {
   _mi_fprintf(out, arg, "  %-10s:", msg);
-  mi_print_amount(stat->total, -1, out, arg);
+  mi_print_amount(stat->total, 0, out, arg);
   _mi_fprintf(out, arg, "\n");
 }
 
+static void mi_stat_counter_print_size(const mi_stat_counter_t* stat, const char* msg, mi_output_fun* out, void* arg ) {
+  _mi_fprintf(out, arg, "  %-10s:", msg);
+  mi_print_amount(stat->total, 1, out, arg);
+  _mi_fprintf(out, arg, "\n");
+}
 
-static void mi_stat_average_print(size_t count, size_t total, const char* msg, mi_output_fun* out, void* arg) {
+static void mi_stat_average_print(int64_t count, int64_t total, const char* msg, mi_output_fun* out, void* arg) {
   const int64_t avg_tens = (count == 0 ? 0 : (total*10 / count));
-  const long avg_whole = (long)(avg_tens/10);
-  const long avg_frac1 = (long)(avg_tens%10);
-  _mi_fprintf(out, arg, "  %-10s: %5ld.%ld avg\n", msg, avg_whole, avg_frac1);
+  const int64_t avg_whole = avg_tens/10;
+  const int64_t avg_frac1 = avg_tens%10;
+  _mi_fprintf(out, arg, "  %-10s: %5lld.%lld avg\n", msg, avg_whole, avg_frac1);
 }
 
 
@@ -335,7 +339,7 @@ mi_decl_export void mi_process_info_print_out(mi_output_fun* out, void* arg) mi_
   _mi_fprintf(out, arg, "\n");
 }
 
-void _mi_stats_print(const char* name, size_t id, mi_stats_t* stats, mi_output_fun* out0, void* arg0) mi_attr_noexcept {
+void _mi_stats_print(const char* name, size_t id, const mi_stats_t* stats, mi_output_fun* out0, void* arg0) mi_attr_noexcept {
   // wrap the output function to be line buffered
   char buf[256]; _mi_memzero_var(buf);
   buffered_t buffer = { out0, arg0, NULL, 0, 255 };
@@ -352,8 +356,8 @@ void _mi_stats_print(const char* name, size_t id, mi_stats_t* stats, mi_output_f
     mi_stats_print_bins(stats->malloc_bins, MI_BIN_HUGE, out, arg);
     #endif
     #if MI_STAT
-    mi_stat_print(&stats->malloc_normal, "binned", (stats->malloc_normal_count.total == 0 ? 1 : -1), out, arg);
-    mi_stat_print(&stats->malloc_huge, "huge", (stats->malloc_huge_count.total == 0 ? 1 : -1), out, arg);
+    mi_stat_print(&stats->malloc_normal, "binned", (stats->malloc_normal_count.total == 0 ? -1 : 1), out, arg);
+    mi_stat_print(&stats->malloc_huge, "huge", (stats->malloc_huge_count.total == 0 ? -1 : 1), out, arg);
     mi_stat_count_t total = { 0,0,0 };
     mi_stat_count_add_mt(&total, &stats->malloc_normal);
     mi_stat_count_add_mt(&total, &stats->malloc_huge);
@@ -371,8 +375,8 @@ void _mi_stats_print(const char* name, size_t id, mi_stats_t* stats, mi_output_f
     // mi_stat_print(&stats->segments, "segments", -1, out, arg);
     // mi_stat_print(&stats->segments_abandoned, "-abandoned", -1, out, arg);
     // mi_stat_print(&stats->segments_cache, "-cached", -1, out, arg);
-    mi_stat_print(&stats->pages, "pages", -1, out, arg);
-    mi_stat_print(&stats->pages_abandoned, "abandoned", -1, out, arg);
+    mi_stat_print(&stats->pages, "pages", 0, out, arg);
+    mi_stat_print(&stats->pages_abandoned, "abandoned", 0, out, arg);
     mi_stat_counter_print(&stats->pages_reclaim_on_alloc, "reclaima", out, arg);
     mi_stat_counter_print(&stats->pages_reclaim_on_free, "reclaimf", out, arg);
     mi_stat_counter_print(&stats->pages_reabandon_full, "reabandon", out, arg);
@@ -387,8 +391,8 @@ void _mi_stats_print(const char* name, size_t id, mi_stats_t* stats, mi_output_f
     mi_print_header("arenas", out, arg);
     mi_stat_print_ex(&stats->reserved, "reserved", 1, out, arg, "");
     mi_stat_print_ex(&stats->committed, "committed", 1, out, arg, "");
-    mi_stat_counter_print(&stats->reset, "reset", out, arg);
-    mi_stat_counter_print(&stats->purged, "purged", out, arg);
+    mi_stat_counter_print_size(&stats->reset, "reset", out, arg);
+    mi_stat_counter_print_size(&stats->purged, "purged", out, arg);
 
     mi_stat_counter_print(&stats->arena_count, "arenas", out, arg);
     mi_stat_counter_print(&stats->arena_rollback_count, "rollback", out, arg);
@@ -397,11 +401,13 @@ void _mi_stats_print(const char* name, size_t id, mi_stats_t* stats, mi_output_f
     mi_stat_counter_print(&stats->reset_calls, "resets", out, arg);
     mi_stat_counter_print(&stats->purge_calls, "purges", out, arg);
     mi_stat_counter_print(&stats->malloc_guarded_count, "guarded", out, arg);
-    mi_stat_print_ex(&stats->heaps, "heaps", -1, out, arg, "");
+    mi_stat_print_ex(&stats->theaps, "theaps", 0, out, arg, "");
+    mi_stat_print_ex(&stats->heaps, "heaps", 0, out, arg, "");
+    mi_stat_counter_print(&stats->heaps_delete_wait, "heap waits", out, arg);
     _mi_fprintf(out, arg, "\n");
 
     mi_print_header("process", out, arg);
-    mi_stat_print_ex(&stats->threads, "threads", -1, out, arg, "");
+    mi_stat_print_ex(&stats->threads, "threads", 0, out, arg, "");
     _mi_fprintf(out, arg, "  %-10s: %5i\n", "numa nodes", _mi_os_numa_node_count());
     mi_process_info_print_out(out, arg);
   }
@@ -416,7 +422,7 @@ void _mi_stats_init(void) {
   if (mi_process_start == 0) { mi_process_start = _mi_clock_start(); };
 }
 
-static void mi_stats_add_into(mi_stats_t* to, mi_stats_t* from) {
+static void mi_stats_add_into(mi_stats_t* to, const mi_stats_t* from) {
   mi_assert_internal(to != NULL && from != NULL);
   if (to == from) return;
   mi_stats_add(to, from);
@@ -429,14 +435,14 @@ void _mi_stats_merge_into(mi_stats_t* to, mi_stats_t* from) {
   _mi_memzero(from, sizeof(mi_stats_t));
 }
 
-static mi_stats_t* mi_stats_merge_theap_to_heap(mi_theap_t* theap) mi_attr_noexcept {
+static const mi_stats_t* mi_stats_merge_theap_to_heap(mi_theap_t* theap) mi_attr_noexcept {
   mi_stats_t* stats = &theap->stats;
-  mi_stats_t* heap_stats = &theap->heap->stats;
+  mi_stats_t* heap_stats = &_mi_theap_heap(theap)->stats;
   _mi_stats_merge_into( heap_stats, stats );
   return heap_stats;
 }
 
-static mi_stats_t* mi_heap_get_stats(mi_heap_t* heap) {
+static const mi_stats_t* mi_heap_get_stats(mi_heap_t* heap) {
   if (heap==NULL) { heap = mi_heap_main(); }
   mi_theap_t* theap = _mi_heap_theap_peek(heap);
   if (theap==NULL) return &heap->stats;
@@ -473,7 +479,7 @@ void mi_subproc_heap_stats_print_out(mi_subproc_id_t subproc_id, mi_output_fun* 
   mi_subproc_t* subproc = _mi_subproc_from_id(subproc_id);
   if (subproc==NULL) return;
   mi_heap_print_visit_info_t vinfo = { out, arg };
-  mi_subproc_visit_heaps(subproc, &mi_heap_print_visitor, &vinfo);
+  mi_subproc_visit_heaps(subproc_id, &mi_heap_print_visitor, &vinfo);
   _mi_stats_print("subproc", subproc->subproc_seq, &subproc->stats, out, arg);
 }
 
@@ -482,7 +488,7 @@ void mi_subproc_heap_stats_print_out(mi_subproc_id_t subproc_id, mi_output_fun* 
 void mi_subproc_stats_print_out(mi_subproc_id_t subproc_id, mi_output_fun* out, void* arg) mi_attr_noexcept {
   mi_subproc_t* subproc = _mi_subproc_from_id(subproc_id);
   if (subproc==NULL) return;
-  mi_stats_t_decl(stats); 
+  mi_stats_t_decl(stats);
   if (mi_subproc_stats_get(subproc_id, &stats)) {
     _mi_stats_print("subproc", subproc->subproc_seq, &stats, out, arg);
   }
@@ -502,7 +508,7 @@ void mi_stats_print(void* out) mi_attr_noexcept {
 void mi_thread_stats_print_out(mi_output_fun* out, void* arg) mi_attr_noexcept {
   mi_theap_t* theap = _mi_theap_default();
   if (theap==NULL || !mi_theap_is_initialized(theap)) return;
-  _mi_stats_print("heap", theap->heap->heap_seq, &theap->stats, out, arg);
+  _mi_stats_print("heap", _mi_theap_heap(theap)->heap_seq, &theap->stats, out, arg);
   mi_stats_merge_theap_to_heap(_mi_theap_default());
 }
 
@@ -537,16 +543,15 @@ mi_msecs_t _mi_clock_end(mi_msecs_t start) {
 
 mi_decl_export void mi_process_info(size_t* elapsed_msecs, size_t* user_msecs, size_t* system_msecs, size_t* current_rss, size_t* peak_rss, size_t* current_commit, size_t* peak_commit, size_t* page_faults) mi_attr_noexcept
 {
-  mi_subproc_t* subproc = _mi_subproc_main();
   mi_process_info_t pinfo;
-  int64_t current_commit_i64;
-  int64_t peak_commit_i64;
   _mi_memzero_var(pinfo);
   pinfo.elapsed        = _mi_clock_end(mi_process_start);
-  current_commit_i64   = mi_atomic_loadi64_relaxed((_Atomic(int64_t)*)(&subproc->stats.committed.current));
-  peak_commit_i64      = mi_atomic_loadi64_relaxed((_Atomic(int64_t)*)(&subproc->stats.committed.peak));
-  pinfo.current_commit = (current_commit_i64 < 0 ? 0 : (size_t)current_commit_i64);
-  pinfo.peak_commit    = (peak_commit_i64 < 0 ? 0 : (size_t)peak_commit_i64);
+  { const mi_subproc_t* subproc = _mi_subproc_main();
+    if (subproc!=NULL) {
+      pinfo.current_commit = (size_t)(mi_atomic_loadi64_relaxed((_Atomic(int64_t)*)(&subproc->stats.committed.current)));
+      pinfo.peak_commit    = (size_t)(mi_atomic_loadi64_relaxed((_Atomic(int64_t)*)(&subproc->stats.committed.peak)));
+    }  
+  }
   pinfo.current_rss    = pinfo.current_commit;
   pinfo.peak_rss       = pinfo.peak_commit;
   pinfo.utime          = 0;
@@ -579,34 +584,36 @@ size_t mi_stats_get_bin_size(size_t bin) mi_attr_noexcept {
   return _mi_bin_size(bin);
 }
 
-static bool _mi_stats_get(mi_stats_t* stats_in, mi_stats_t* stats_out) mi_attr_noexcept {
-  if (stats_out == NULL || stats_out->size != sizeof(mi_stats_t) || stats_out->version != MI_STAT_VERSION) return false;
-  if (stats_in == NULL || stats_in->size != stats_out->size) return false;
-  _mi_memcpy(stats_out, stats_in, stats_out->size);
+static bool mi_stats_copy(mi_stats_t* stats_to, const mi_stats_t* stats_from) mi_attr_noexcept {
+  if (stats_to == NULL || stats_to->size != sizeof(mi_stats_t) || stats_to->version != MI_STAT_VERSION) return false;
+  if (stats_from == NULL || stats_from->size != stats_to->size) return false;
+  _mi_memcpy(stats_to, stats_from, stats_to->size);
   return true;
 }
 
 bool mi_subproc_stats_get_exclusive(mi_subproc_id_t subproc_id, mi_stats_t* stats) mi_attr_noexcept {
-  return _mi_stats_get(&_mi_subproc_from_id(subproc_id)->stats, stats);
+  const mi_subproc_t* subproc = _mi_subproc_from_id(subproc_id);
+  if (subproc==NULL) return false;
+  return mi_stats_copy(stats,&subproc->stats);
 }
 
 bool mi_heap_stats_get(mi_heap_t* heap, mi_stats_t* stats) mi_attr_noexcept {
-  return _mi_stats_get(mi_heap_get_stats(heap), stats);
+  return mi_stats_copy(stats, mi_heap_get_stats(heap));
 }
 
 
 static bool mi_cdecl mi_heap_aggregate_visitor(mi_heap_t* heap, void* arg) {
   mi_stats_t* stats = (mi_stats_t*)arg;
-  mi_stats_add_into(stats, &heap->stats);
+  mi_stats_add_into(stats, mi_heap_get_stats(heap));
   return true;
 }
 
 bool mi_subproc_stats_get(mi_subproc_id_t subproc_id, mi_stats_t* stats) mi_attr_noexcept {
+  if (stats==NULL) return false;
   mi_subproc_t* subproc = _mi_subproc_from_id(subproc_id);
-  if (stats == NULL || stats->size != sizeof(mi_stats_t) || stats->version != MI_STAT_VERSION) return false;
-  _mi_memzero(stats,stats->size);  
-  mi_subproc_visit_heaps(subproc, &mi_heap_aggregate_visitor, stats);
-  mi_stats_add_into(stats, &subproc->stats);
+  if (subproc == NULL) return false;
+  if (!mi_stats_copy(stats, &subproc->stats)) return false;
+  mi_subproc_visit_heaps(subproc_id, &mi_heap_aggregate_visitor, stats);
   return true;
 }
 
@@ -655,7 +662,7 @@ static void mi_json_buf_print(mi_json_buf_t* hbuf, const char* msg) {
   hbuf->buf[hbuf->used] = 0;
 }
 
-static void mi_json_buf_print_count_bin(mi_json_buf_t* hbuf, const char* prefix, mi_stat_count_t* stat, size_t bin, bool add_comma) {
+static void mi_json_buf_print_count_bin(mi_json_buf_t* hbuf, const char* prefix, const mi_stat_count_t* stat, size_t bin, bool add_comma) {
   const size_t binsize = mi_stats_get_bin_size(bin);
   const size_t pagesize = (binsize <= MI_SMALL_MAX_OBJ_SIZE ? MI_SMALL_PAGE_SIZE :
                             (binsize <= MI_MEDIUM_MAX_OBJ_SIZE ? MI_MEDIUM_PAGE_SIZE :
@@ -666,7 +673,7 @@ static void mi_json_buf_print_count_bin(mi_json_buf_t* hbuf, const char* prefix,
   mi_json_buf_print(hbuf, buf);
 }
 
-static void mi_json_buf_print_count_cbin(mi_json_buf_t* hbuf, const char* prefix, mi_stat_count_t* stat, mi_chunkbin_t bin, bool add_comma) {
+static void mi_json_buf_print_count_cbin(mi_json_buf_t* hbuf, const char* prefix, const mi_stat_count_t* stat, mi_chunkbin_t bin, bool add_comma) {
   const char* cbin = " ";
   switch(bin) {
     case MI_CBIN_SMALL:  cbin = "S"; break;
@@ -682,14 +689,14 @@ static void mi_json_buf_print_count_cbin(mi_json_buf_t* hbuf, const char* prefix
   mi_json_buf_print(hbuf, buf);
 }
 
-static void mi_json_buf_print_count(mi_json_buf_t* hbuf, const char* prefix, mi_stat_count_t* stat, bool add_comma) {
+static void mi_json_buf_print_count(mi_json_buf_t* hbuf, const char* prefix, const mi_stat_count_t* stat, bool add_comma) {
   char buf[128];
   _mi_snprintf(buf, 128, "%s{ \"total\": %lld, \"peak\": %lld, \"current\": %lld }%s\n", prefix, stat->total, stat->peak, stat->current, (add_comma ? "," : ""));
   buf[127] = 0;
   mi_json_buf_print(hbuf, buf);
 }
 
-static void mi_json_buf_print_count_value(mi_json_buf_t* hbuf, const char* name, mi_stat_count_t* stat) {
+static void mi_json_buf_print_count_value(mi_json_buf_t* hbuf, const char* name, const mi_stat_count_t* stat) {
   char buf[128];
   _mi_snprintf(buf, 128, "  \"%s\": ", name);
   buf[127] = 0;
@@ -711,14 +718,14 @@ static void mi_json_buf_print_size(mi_json_buf_t* hbuf, const char* name, size_t
   mi_json_buf_print(hbuf, buf);
 }
 
-static void mi_json_buf_print_counter_value(mi_json_buf_t* hbuf, const char* name, mi_stat_counter_t* stat) {
+static void mi_json_buf_print_counter_value(mi_json_buf_t* hbuf, const char* name, const mi_stat_counter_t* stat) {
   mi_json_buf_print_value(hbuf, name, stat->total);
 }
 
 #define MI_STAT_COUNT(stat)    mi_json_buf_print_count_value(&hbuf, #stat, &stats->stat);
 #define MI_STAT_COUNTER(stat)  mi_json_buf_print_counter_value(&hbuf, #stat, &stats->stat);
 
-static char* mi_stats_get_json_from(mi_stats_t* stats, size_t output_size, char* output_buf) mi_attr_noexcept {
+static char* mi_stats_get_json_from(const mi_stats_t* stats, size_t output_size, char* output_buf) mi_attr_noexcept {
   if (stats==NULL || stats->size!=sizeof(mi_stats_t) || stats->version!=MI_STAT_VERSION) return NULL;
   mi_json_buf_t hbuf = { NULL, 0, 0, true };
   if (output_size > 0 && output_buf != NULL) {
@@ -773,7 +780,7 @@ static char* mi_stats_get_json_from(mi_stats_t* stats, size_t output_size, char*
   for (size_t i = 0; i < MI_CBIN_COUNT; i++) {
     mi_json_buf_print_count_cbin(&hbuf, "    ", &stats->chunk_bins[i], (mi_chunkbin_t)i, i!=MI_CBIN_COUNT-1);
   }
-  mi_json_buf_print(&hbuf, "  ]\n");  
+  mi_json_buf_print(&hbuf, "  ]\n");
   mi_json_buf_print(&hbuf, "}\n");
   if (hbuf.used >= hbuf.size) {
     // failed
@@ -790,7 +797,7 @@ char* mi_subproc_stats_get_json(mi_subproc_id_t subproc_id, size_t buf_size, cha
   if (subproc==NULL) return NULL;
   mi_stats_t_decl(stats);
   if (!mi_subproc_stats_get(subproc_id,&stats)) return NULL;
-  return mi_stats_get_json_from(&subproc->stats, buf_size, buf);  
+  return mi_stats_get_json_from(&stats, buf_size, buf);
 }
 
 char* mi_heap_stats_get_json(mi_heap_t* heap, size_t buf_size, char* buf) mi_attr_noexcept {

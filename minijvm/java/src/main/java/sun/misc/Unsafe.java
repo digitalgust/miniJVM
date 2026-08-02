@@ -31,7 +31,7 @@ public final class Unsafe {
 
     public void setMemory(Object base, long offset, long count, byte value) {
         long b = objectFieldBase(base);
-        for (int i = 0; i < count; i++) {
+        for (long i = 0; i < count; i++) {
             RefNative.heap_put_byte(b + offset + i, 0, value);
         }
     }
@@ -129,7 +129,7 @@ public final class Unsafe {
 
     public char getCharVolatile(Object o, long offset) {
         long base = objectFieldBase(o);
-        return (char) RefNative.heap_get_short(base + offset, 0);
+        return (char) (RefNative.heap_get_short(base + offset, 0) & 0xffff);
     }
 
     public void putCharVolatile(Object o, long offset, char x) {
@@ -280,7 +280,27 @@ public final class Unsafe {
     }
 
     public int arrayIndexScale(Class<?> arrayClass) {
-        return RConst.getBytes((byte) arrayClass.getName().charAt(1));
+        // arrayClass.getName() for an array starts with '[', e.g. "[I", "[Ljava/lang/Object;".
+        // RConst.getBytes returns the element width as a char ('1','2','4','8','R'); convert it
+        // to a real byte count. Non-array classes fall through to the default (1).
+        if (arrayClass != null && arrayClass.isArray()) {
+            char c = RConst.getBytes((byte) arrayClass.getName().charAt(1));
+            switch (c) {
+                case '1':
+                    return 1;
+                case '2':
+                    return 2;
+                case '4':
+                    return 4;
+                case '8':
+                    return 8;
+                case 'R':
+                    return RefNative.refIdSize();
+                default:
+                    break;
+            }
+        }
+        return 1;
     }
 
     public void copyMemory(Object srcBase, long srcOffset,

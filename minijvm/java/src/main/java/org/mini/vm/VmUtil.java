@@ -18,10 +18,11 @@ import static org.mini.vm.ByteCodeAssembler.*;
 
 public class VmUtil {
     public static List<String> gcHistory = new ArrayList<>();
+    public static String allThreadDump = "";
     public static int historySize = 100;
     static final SimpleDateFormat gcTimeFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    public static void gcPushHistory(String msg) {
+    public static void gcPushHistory(String msg, String threadsDump) {
         if (msg != null) {
             int sep = msg.indexOf('|');
             if (sep > 0) {
@@ -35,6 +36,9 @@ public class VmUtil {
         gcHistory.add(msg);
         if (gcHistory.size() > historySize) {
             gcHistory.remove(0);
+        }
+        if (threadsDump != null) {
+            allThreadDump = threadsDump;
         }
     }
 
@@ -204,7 +208,6 @@ public class VmUtil {
         threadHandler.removeHandler(r);
     }
 
-
     /**
      * ===============================================================================
      */
@@ -218,10 +221,11 @@ public class VmUtil {
      */
 
     public static Class<?> genProxyClass(ClassLoader loader, String proxyName, Class<?>[] interfaces) {
-        //生成class的字节码，并加载为class
-        //这个class 命名为proxyName
-        //这个class 有一个构造函数，接受InvocationHandler参数，并在实例里面保存这个参数
-        //这个class 实现所有interfaces的接口方法，并在这些接口方法中会调用InvocationHandler的接口Object invoke(Object proxy, Method method, Object[] arguments) throws Throwable;
+        // 生成class的字节码，并加载为class
+        // 这个class 命名为proxyName
+        // 这个class 有一个构造函数，接受InvocationHandler参数，并在实例里面保存这个参数
+        // 这个class 实现所有interfaces的接口方法，并在这些接口方法中会调用InvocationHandler的接口Object
+        // invoke(Object proxy, Method method, Object[] arguments) throws Throwable;
 
         try {
             return generateProxyClassUsingBytecode(loader, proxyName, interfaces);
@@ -233,7 +237,8 @@ public class VmUtil {
     /**
      * 使用ByteCode相关类生成代理类
      */
-    private static Class<?> generateProxyClassUsingBytecode(ClassLoader loader, String proxyName, Class<?>[] interfaces) {
+    private static Class<?> generateProxyClassUsingBytecode(ClassLoader loader, String proxyName,
+                                                            Class<?>[] interfaces) {
         try {
             // 1. 创建常量池
             java.util.List<org.mini.vm.ByteCodeConstantPool.PoolEntry> pool = new java.util.ArrayList<>();
@@ -258,7 +263,8 @@ public class VmUtil {
 
             // 5.1 生成构造函数
             int constructorNameIndex = org.mini.vm.ByteCodeConstantPool.addUtf8(pool, "<init>");
-            int constructorDescIndex = org.mini.vm.ByteCodeConstantPool.addUtf8(pool, "(Ljava/lang/reflect/InvocationHandler;)V");
+            int constructorDescIndex = org.mini.vm.ByteCodeConstantPool.addUtf8(pool,
+                    "(Ljava/lang/reflect/InvocationHandler;)V");
             byte[] constructorCode = generateConstructorBytecode(pool);
 
             methodsList.add(new org.mini.vm.ByteCodeAssembler.MethodData(
@@ -303,7 +309,8 @@ public class VmUtil {
                     // 只有当接口中没有声明annotationType方法时才生成
                     if (!hasAnnotationTypeMethod) {
                         int annotationTypeNameIndex = org.mini.vm.ByteCodeConstantPool.addUtf8(pool, "annotationType");
-                        int annotationTypeDescIndex = org.mini.vm.ByteCodeConstantPool.addUtf8(pool, "()Ljava/lang/Class;");
+                        int annotationTypeDescIndex = org.mini.vm.ByteCodeConstantPool.addUtf8(pool,
+                                "()Ljava/lang/Class;");
                         byte[] annotationTypeCode = generateAnnotationTypeMethodBytecode(pool, intf);
 
                         methodsList.add(new org.mini.vm.ByteCodeAssembler.MethodData(
@@ -315,8 +322,8 @@ public class VmUtil {
                 }
             }
 
-            org.mini.vm.ByteCodeAssembler.MethodData[] methods =
-                    methodsList.toArray(new org.mini.vm.ByteCodeAssembler.MethodData[methodsList.size()]);
+            org.mini.vm.ByteCodeAssembler.MethodData[] methods = methodsList
+                    .toArray(new org.mini.vm.ByteCodeAssembler.MethodData[methodsList.size()]);
 
             // 6. 生成类文件到字节数组
             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
@@ -324,12 +331,12 @@ public class VmUtil {
                     interfaceIndices, fields, methods);
 
             byte[] classBytes = baos.toByteArray();
-//            try {
-//                FileOutputStream fos = new FileOutputStream(proxyName + ".class");
-//                fos.write(classBytes);
-//                fos.close();
-//            } catch (IOException iOException) {
-//            }
+            // try {
+            // FileOutputStream fos = new FileOutputStream(proxyName + ".class");
+            // fos.write(classBytes);
+            // fos.close();
+            // } catch (IOException iOException) {
+            // }
             // 7. 使用反射定义类 (这是miniJVM需要支持的部分)
             return RefNative.defineClass(loader, proxyName, classBytes, 0, classBytes.length);
 
@@ -341,31 +348,34 @@ public class VmUtil {
     /**
      * 生成构造函数字节码
      */
-    private static byte[] generateConstructorBytecode(java.util.List<org.mini.vm.ByteCodeConstantPool.PoolEntry> pool) throws Exception {
+    private static byte[] generateConstructorBytecode(java.util.List<org.mini.vm.ByteCodeConstantPool.PoolEntry> pool)
+            throws Exception {
         // 构造函数应该调用super(InvocationHandler)
-        // aload_0      // 加载this
-        // aload_1      // 加载InvocationHandler参数
-        // invokespecial java/lang/reflect/Proxy.<init>(Ljava/lang/reflect/InvocationHandler;)V
+        // aload_0 // 加载this
+        // aload_1 // 加载InvocationHandler参数
+        // invokespecial
+        // java/lang/reflect/Proxy.<init>(Ljava/lang/reflect/InvocationHandler;)V
         // return
 
         java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
 
         // 写入Code属性头部
         org.mini.vm.ByteCodeStream.write2(out, 3); // max stack
-        org.mini.vm.ByteCodeStream.write2(out, 2); // max locals  
+        org.mini.vm.ByteCodeStream.write2(out, 2); // max locals
         org.mini.vm.ByteCodeStream.write4(out, 0); // code length (稍后设置)
 
         // 生成字节码指令
-        org.mini.vm.ByteCodeStream.write1(out, org.mini.vm.ByteCodeAssembler.aload_0);     // aload_0
-        org.mini.vm.ByteCodeStream.write1(out, org.mini.vm.ByteCodeAssembler.aload_1);     // aload_1
+        org.mini.vm.ByteCodeStream.write1(out, org.mini.vm.ByteCodeAssembler.aload_0); // aload_0
+        org.mini.vm.ByteCodeStream.write1(out, org.mini.vm.ByteCodeAssembler.aload_1); // aload_1
 
-        // invokespecial java/lang/reflect/Proxy.<init>(Ljava/lang/reflect/InvocationHandler;)V
+        // invokespecial
+        // java/lang/reflect/Proxy.<init>(Ljava/lang/reflect/InvocationHandler;)V
         org.mini.vm.ByteCodeStream.write1(out, org.mini.vm.ByteCodeAssembler.invokespecial);
         int superConstructorRef = org.mini.vm.ByteCodeConstantPool.addMethodRef(pool,
                 "java/lang/reflect/Proxy", "<init>", "(Ljava/lang/reflect/InvocationHandler;)V");
         org.mini.vm.ByteCodeStream.write2(out, superConstructorRef + 1);
 
-        org.mini.vm.ByteCodeStream.write1(out, org.mini.vm.ByteCodeAssembler.return_);      // return
+        org.mini.vm.ByteCodeStream.write1(out, org.mini.vm.ByteCodeAssembler.return_); // return
 
         // 异常表和属性
         org.mini.vm.ByteCodeStream.write2(out, 0); // exception handler table length
@@ -382,11 +392,12 @@ public class VmUtil {
     /**
      * 生成代理方法字节码
      */
-    private static byte[] generateProxyMethodBytecode(java.util.List<org.mini.vm.ByteCodeConstantPool.PoolEntry> pool, Method method, Class<?> interfaceClass) throws Exception {
+    private static byte[] generateProxyMethodBytecode(java.util.List<org.mini.vm.ByteCodeConstantPool.PoolEntry> pool,
+                                                      Method method, Class<?> interfaceClass) throws Exception {
         // 参考字节码模式：
         // 0 aload_0
         // 1 getfield h
-        // 4 aload_0  
+        // 4 aload_0
         // 5 ldc 接口Class
         // 7 ldc 方法名
         // 9 ldc 方法描述符
@@ -409,7 +420,7 @@ public class VmUtil {
 
         // 写入Code属性头部
         org.mini.vm.ByteCodeStream.write2(out, maxStack); // max stack
-        org.mini.vm.ByteCodeStream.write2(out, maxLocals); // max locals  
+        org.mini.vm.ByteCodeStream.write2(out, maxLocals); // max locals
         org.mini.vm.ByteCodeStream.write4(out, 0); // code length (稍后设置)
 
         // 1. aload_0 - 加载this
@@ -425,7 +436,8 @@ public class VmUtil {
         org.mini.vm.ByteCodeStream.write1(out, org.mini.vm.ByteCodeAssembler.aload_0);
 
         // 4. ldc 接口Class - 加载接口Class对象
-        int interfaceClassRef = org.mini.vm.ByteCodeConstantPool.addClass(pool, interfaceClass.getName().replace('.', '/'));
+        int interfaceClassRef = org.mini.vm.ByteCodeConstantPool.addClass(pool,
+                interfaceClass.getName().replace('.', '/'));
         if (interfaceClassRef + 1 <= 255) {
             org.mini.vm.ByteCodeStream.write1(out, org.mini.vm.ByteCodeAssembler.ldc);
             org.mini.vm.ByteCodeStream.write1(out, interfaceClassRef + 1);
@@ -511,7 +523,7 @@ public class VmUtil {
                 // 使用astore和aload指令
                 org.mini.vm.ByteCodeStream.write1(out, astore); // astore
                 org.mini.vm.ByteCodeStream.write1(out, localVarIndex);
-                org.mini.vm.ByteCodeStream.write1(out, aload); // aload  
+                org.mini.vm.ByteCodeStream.write1(out, aload); // aload
                 org.mini.vm.ByteCodeStream.write1(out, localVarIndex);
             }
             org.mini.vm.ByteCodeStream.write1(out, org.mini.vm.ByteCodeAssembler.areturn);
@@ -582,7 +594,8 @@ public class VmUtil {
 
         // 调用拆箱方法
         org.mini.vm.ByteCodeStream.write1(out, org.mini.vm.ByteCodeAssembler.invokevirtual);
-        int methodRef = org.mini.vm.ByteCodeConstantPool.addMethodRef(pool, wrapperClass, valueMethodName, methodDescriptor);
+        int methodRef = org.mini.vm.ByteCodeConstantPool.addMethodRef(pool, wrapperClass, valueMethodName,
+                methodDescriptor);
         org.mini.vm.ByteCodeStream.write2(out, methodRef + 1);
     }
 
@@ -684,14 +697,16 @@ public class VmUtil {
         }
 
         org.mini.vm.ByteCodeStream.write1(out, org.mini.vm.ByteCodeAssembler.invokestatic);
-        int methodRef = org.mini.vm.ByteCodeConstantPool.addMethodRef(pool, wrapperClass, valueMethodName, methodDescriptor);
+        int methodRef = org.mini.vm.ByteCodeConstantPool.addMethodRef(pool, wrapperClass, valueMethodName,
+                methodDescriptor);
         org.mini.vm.ByteCodeStream.write2(out, methodRef + 1);
     }
 
     /**
      * 写入适当的返回指令
      */
-    private static void writeReturnInstruction(java.io.ByteArrayOutputStream out, Class<?> returnType) throws Exception {
+    private static void writeReturnInstruction(java.io.ByteArrayOutputStream out, Class<?> returnType)
+            throws Exception {
         if (returnType == void.class) {
             org.mini.vm.ByteCodeStream.write1(out, org.mini.vm.ByteCodeAssembler.return_);
         } else if (returnType == boolean.class || returnType == byte.class ||
@@ -733,15 +748,24 @@ public class VmUtil {
      * 获取类型描述符
      */
     private static String getTypeDescriptor(Class<?> type) {
-        if (type == void.class) return "V";
-        if (type == boolean.class) return "Z";
-        if (type == byte.class) return "B";
-        if (type == char.class) return "C";
-        if (type == short.class) return "S";
-        if (type == int.class) return "I";
-        if (type == long.class) return "J";
-        if (type == float.class) return "F";
-        if (type == double.class) return "D";
+        if (type == void.class)
+            return "V";
+        if (type == boolean.class)
+            return "Z";
+        if (type == byte.class)
+            return "B";
+        if (type == char.class)
+            return "C";
+        if (type == short.class)
+            return "S";
+        if (type == int.class)
+            return "I";
+        if (type == long.class)
+            return "J";
+        if (type == float.class)
+            return "F";
+        if (type == double.class)
+            return "D";
         if (type.isArray()) {
             return "[" + getTypeDescriptor(type.getComponentType());
         } else {
@@ -749,9 +773,11 @@ public class VmUtil {
         }
     }
 
-    public static Object wrapInvoke(InvocationHandler handler, Proxy proxy, Class<?> annotationClass, String methodName, String methodDescriptor, Object[] args) {
+    public static Object wrapInvoke(InvocationHandler handler, Proxy proxy, Class<?> annotationClass, String methodName,
+                                    String methodDescriptor, Object[] args) {
         try {
-            Method method = annotationClass.getMethod(methodName, ReflectMethod.getMethodPara(annotationClass.getClassLoader(), methodDescriptor));
+            Method method = annotationClass.getMethod(methodName,
+                    ReflectMethod.getMethodPara(annotationClass.getClassLoader(), methodDescriptor));
             Object o = handler.invoke(proxy, method, args);
             return o;
         } catch (Throwable e) {
@@ -765,7 +791,9 @@ public class VmUtil {
      * 0 ldc #3 <注解类>
      * 2 areturn
      */
-    private static byte[] generateAnnotationTypeMethodBytecode(java.util.List<org.mini.vm.ByteCodeConstantPool.PoolEntry> pool, Class<?> annotationClass) throws Exception {
+    private static byte[] generateAnnotationTypeMethodBytecode(
+            java.util.List<org.mini.vm.ByteCodeConstantPool.PoolEntry> pool, Class<?> annotationClass)
+            throws Exception {
         java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
 
         // 写入Code属性头部
@@ -775,7 +803,8 @@ public class VmUtil {
 
         // 生成字节码指令
         // ldc 注解类
-        int annotationClassRef = org.mini.vm.ByteCodeConstantPool.addClass(pool, annotationClass.getName().replace('.', '/'));
+        int annotationClassRef = org.mini.vm.ByteCodeConstantPool.addClass(pool,
+                annotationClass.getName().replace('.', '/'));
         if (annotationClassRef + 1 <= 255) {
             org.mini.vm.ByteCodeStream.write1(out, ldc);
             org.mini.vm.ByteCodeStream.write1(out, annotationClassRef + 1);

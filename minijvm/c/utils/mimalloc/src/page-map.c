@@ -42,6 +42,9 @@ bool _mi_page_map_init(void) {
     if (vbits >= 48) { vbits = 47; }
     #endif
   }
+  if (vbits < MI_ARENA_SLICE_SHIFT) {
+    vbits = MI_ARENA_SLICE_SHIFT;
+  }
 
   // Allocate the page map and commit bits
   mi_page_map_max_address = (void*)(vbits >= MI_SIZE_BITS ? (SIZE_MAX - MI_ARENA_SLICE_SIZE + 1) : (MI_PU(1) << vbits));
@@ -127,13 +130,13 @@ static size_t mi_page_map_get_idx(mi_page_t* page, uint8_t** page_start, size_t*
   size_t page_size;
   *page_start = mi_page_area(page, &page_size);
   if (page_size > MI_LARGE_PAGE_SIZE) { page_size = MI_LARGE_PAGE_SIZE - MI_ARENA_SLICE_SIZE; }  // furthest interior pointer
-  *slice_count = mi_slice_count_of_size(page_size) + (((uint8_t*)*page_start - (uint8_t*)page)/MI_ARENA_SLICE_SIZE); // add for large aligned blocks
+  *slice_count = mi_slice_count_of_size(page_size) + ((*page_start - mi_page_slice_start(page))/MI_ARENA_SLICE_SIZE); // add for large aligned blocks
   return _mi_page_map_index(page);
 }
 
 bool _mi_page_map_register(mi_page_t* page) {
   mi_assert_internal(page != NULL);
-  mi_assert_internal(_mi_is_aligned(page, MI_PAGE_ALIGN));
+  mi_assert_internal(_mi_is_aligned(mi_page_slice_start(page), MI_PAGE_ALIGN));
   mi_assert_internal(_mi_page_map != NULL);  // should be initialized before multi-thread access!
   if mi_unlikely(_mi_page_map == NULL) {
     if (!_mi_page_map_init()) return false;
@@ -193,7 +196,7 @@ mi_decl_nodiscard mi_decl_export bool mi_is_in_heap_region(const void* p) mi_att
 
 // A 2-level page map
 #define MI_PAGE_MAP_SUB_SIZE          (MI_PAGE_MAP_SUB_COUNT * sizeof(mi_page_t*))
-#define MI_PAGE_MAP_ENTRIES_PER_CBIT  (MI_PAGE_MAP_COUNT / MI_BFIELD_BITS)
+#define MI_PAGE_MAP_ENTRIES_PER_CBIT  (MI_PAGE_MAP_COUNT < MI_BFIELD_BITS ? 1 : (MI_PAGE_MAP_COUNT / MI_BFIELD_BITS))
 
 mi_decl_cache_align _Atomic(mi_submap_t)* _mi_page_map;
 static size_t       mi_page_map_count;
@@ -235,6 +238,9 @@ bool _mi_page_map_init(void) {
     #if MI_ARCH_X64  // canonical address is limited to the first 128 TiB
     if (vbits >= 48) { vbits = 47; }
     #endif
+  }
+  if (vbits < MI_PAGE_MAP_SUB_SHIFT + MI_ARENA_SLICE_SHIFT) {
+    vbits = MI_PAGE_MAP_SUB_SHIFT + MI_ARENA_SLICE_SHIFT;
   }
 
   // Allocate the page map and commit bits
@@ -308,7 +314,7 @@ void _mi_page_map_unsafe_destroy(mi_subproc_t* subproc) {
   mi_page_map_count = 0;
   mi_page_map_memid = _mi_memid_none();
   mi_page_map_max_address = NULL;
-  mi_atomic_store_release(&mi_page_map_commit, 0);
+  mi_atomic_store_release(&mi_page_map_commit, (mi_bfield_t)0);
 }
 
 
@@ -383,13 +389,13 @@ static size_t mi_page_map_get_idx(mi_page_t* page, size_t* sub_idx, size_t* slic
   size_t page_size;
   uint8_t* page_start = mi_page_area(page, &page_size);
   if (page_size > MI_LARGE_PAGE_SIZE) { page_size = MI_LARGE_PAGE_SIZE - MI_ARENA_SLICE_SIZE; }  // furthest interior pointer
-  *slice_count = mi_slice_count_of_size(page_size) + ((page_start - (uint8_t*)page)/MI_ARENA_SLICE_SIZE); // add for large aligned blocks
-  return _mi_page_map_index(page, sub_idx);
+  *slice_count = mi_slice_count_of_size(page_size) + ((page_start - mi_page_slice_start(page))/MI_ARENA_SLICE_SIZE); // add for large aligned blocks
+  return _mi_page_map_index(page_start, sub_idx);
 }
 
 bool _mi_page_map_register(mi_page_t* page) {
   mi_assert_internal(page != NULL);
-  mi_assert_internal(_mi_is_aligned(page, MI_PAGE_ALIGN));
+  mi_assert_internal(_mi_is_aligned(mi_page_slice_start(page), MI_PAGE_ALIGN));
   mi_assert_internal(_mi_page_map != NULL);  // should be initialized before multi-thread access!
   if mi_unlikely(_mi_page_map == NULL) {
     if (!_mi_page_map_init()) return false;
@@ -404,7 +410,7 @@ bool _mi_page_map_register(mi_page_t* page) {
 void _mi_page_map_unregister(mi_page_t* page) {
   mi_assert_internal(_mi_page_map != NULL);
   mi_assert_internal(page != NULL);
-  mi_assert_internal(_mi_is_aligned(page, MI_PAGE_ALIGN));
+  mi_assert_internal(_mi_is_aligned(mi_page_slice_start(page), MI_PAGE_ALIGN));
   if mi_unlikely(_mi_page_map == NULL) return;
   // get index and count
   size_t slice_count;

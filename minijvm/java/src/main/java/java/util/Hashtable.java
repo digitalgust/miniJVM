@@ -77,11 +77,46 @@ public class Hashtable<K, V> implements Map<K, V> {
     }
 
     public Enumeration<K> keys() {
-        return Collections.enumeration(keySet());
+        // 标准 J2SE Hashtable 的 keys()/elements() 返回的 Enumeration 不依赖
+        // HashMap 的 fail-fast iterator，因此在遍历过程中对本表做 remove 不会抛
+        // ConcurrentModificationException。这里先前委托给 Collections.enumeration
+        // (keySet())，而 keySet() 底层是 HashMap iterator，遍历中 remove 会抛 CME，
+        // 导致依赖"边遍历边删除"的 J2ME 游戏（如 truckracer 的 bc.a(String) 清缓存）
+        // 直接崩溃。改为返回一份 key 快照的 Enumeration，对齐 RI 语义。
+        final Object[] snapshot;
+        synchronized (this) {
+            snapshot = map.keySet().toArray();
+        }
+        return new Enumeration<K>() {
+            private int i = 0;
+            public boolean hasMoreElements() { return i < snapshot.length; }
+            @SuppressWarnings("unchecked")
+            public K nextElement() {
+                if (i >= snapshot.length) {
+                    throw new java.util.NoSuchElementException();
+                }
+                return (K) snapshot[i++];
+            }
+        };
     }
 
     public Enumeration<V> elements() {
-        return Collections.enumeration(values());
+        // 同 keys()：返回 value 快照，避免遍历中 remove 抛 CME。
+        final Object[] snapshot;
+        synchronized (this) {
+            snapshot = map.values().toArray();
+        }
+        return new Enumeration<V>() {
+            private int i = 0;
+            public boolean hasMoreElements() { return i < snapshot.length; }
+            @SuppressWarnings("unchecked")
+            public V nextElement() {
+                if (i >= snapshot.length) {
+                    throw new java.util.NoSuchElementException();
+                }
+                return (V) snapshot[i++];
+            }
+        };
     }
 
     public Set<Entry<K, V>> entrySet() {
