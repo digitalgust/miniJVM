@@ -337,7 +337,7 @@ mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 [< Back](#linkhome)
 
 <a href="https://github.com/digitalgust/miniJVM/stargazers">
-        <img width="500" alt="Star History Chart" src="https://api.star-history.com/svg?repos=digitalgust/miniJVM&type=Date">
+        <img width="500" alt="Star History Chart" src="https://star-history.dera.page/svg?repos=digitalgust/miniJVM&type=Date">
 </a>
 
 <span id="linklicense"/>
