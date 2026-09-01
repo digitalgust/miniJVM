@@ -13,6 +13,8 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <locale.h>
+#include <errno.h>
+#include <limits.h>
 
 #include "utils/d_type.h"
 
@@ -29,6 +31,28 @@
 
 extern s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src);
 extern s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src);
+
+static s64 parse_memory_option(const c8 *arg, size_t prefix_len) {
+    char *end = NULL;
+    unsigned long long value;
+    unsigned long long multiplier = 1;
+
+    if (!arg || strlen(arg) <= prefix_len) return -1;
+    errno = 0;
+    value = strtoull(arg + prefix_len, &end, 10);
+    if (errno != 0 || end == arg + prefix_len || value == 0) return -1;
+    if (*end != '\0') {
+        if (end[1] != '\0') return -1;
+        switch (*end) {
+            case 'k': case 'K': multiplier = 1024ULL; break;
+            case 'm': case 'M': multiplier = 1024ULL * 1024ULL; break;
+            case 'g': case 'G': multiplier = 1024ULL * 1024ULL * 1024ULL; break;
+            default: return -1;
+        }
+    }
+    if (value > (unsigned long long) INT64_MAX / multiplier) return -1;
+    return (s64) (value * multiplier);
+}
 
 static void set_working_dir_to_startup_dir(Utf8String *startup_dir) {
     if (!startup_dir || startup_dir->length <= 0) {
@@ -68,9 +92,11 @@ int main(int argc, char **argv) {
     s32 main_set = 0;
     ArrayList *java_para = arraylist_create(0);
     s32 jdwp_enable = 0;
+    c8 *gc_backend = NULL; //NULL: auto (immix), or "immix"/"malloc"
     s32 jdwp_suspend_on_start = 0;
     s32 jdwp_port = JDWP_TCP_PORT;
     s64 maxheap = MAX_HEAP_SIZE_DEFAULT;
+    s64 max_vm_memory = 0;
     s32 ret;
     Utf8String *bootcp = utf8_create();
     Utf8String *cp = utf8_create();
@@ -185,20 +211,19 @@ int main(int argc, char **argv) {
                 //                if (!jdwp_enable) {
                 //                    printf("binary not support debug, please recompile and define JDWP_DEBUG as 1 ");
                 //                }
+            } else if (strcmp(argv[i], "-Xgcimmix") == 0) {
+                gc_backend = "immix";
+            } else if (strcmp(argv[i], "-Xgcmalloc") == 0) {
+                gc_backend = "malloc";
             } else if (argv[i][0] == '-') {
-                if (argv[i][1] == 'X' && argv[i][2] == 'm' && argv[i][3] == 'x') {
-                    //"-Xmx1G"
-                    s32 alen = strlen(argv[i]);
-                    s32 mb = 1;
-                    if (argv[i][alen - 1] == 'g' || argv[i][alen - 1] == 'G') {
-                        mb = 1000;
-                    }
-                    Utf8String *num_u = utf8_create_part_c(argv[i], 4, alen - 5);
-                    s64 num = utf8_aton(num_u, 10);
-                    if (num > 0)
-                        maxheap = num * mb * 1024 * 1024;
-                    utf8_destroy(num_u);
-                    //jvm_printf("%s , %lld\n", argv[i], MAX_HEAP_SIZE);
+                if (strncmp(argv[i], "-Xmaxvm", 7) == 0) {
+                    s64 parsed = parse_memory_option(argv[i], 7);
+                    if (parsed > 0) max_vm_memory = parsed;
+                    else jvm_printf("[WARN]invalid memory option: %s\n", argv[i]);
+                } else if (strncmp(argv[i], "-Xmx", 4) == 0) {
+                    s64 parsed = parse_memory_option(argv[i], 4);
+                    if (parsed > 0) maxheap = parsed;
+                    else jvm_printf("[WARN]invalid memory option: %s\n", argv[i]);
                 } else if (argv[i][1] == 'X' && argv[i][2] == 'r' && argv[i][3] == 'u' && argv[i][4] == 'n' && argv[i][
                                5] == 'j' && argv[i][6] == 'd' && argv[i][7] == 'w' && argv[i][8] == 'p' && argv[i][9] ==
                            ':') {
@@ -246,9 +271,11 @@ int main(int argc, char **argv) {
     if (jvm != NULL) {
         jvm->startup_dir = utf8_create_copy(startup_dir);
         jvm->jdwp_enable = jdwp_enable;
+        jvm->gc_backend = gc_backend;
         jvm->jdwp_suspend_on_start = jdwp_suspend_on_start;
         jvm->jdwp_port = jdwp_port;
         jvm->max_heap_size = maxheap; //25*1024*1024;//
+        jvm->max_vm_memory = max_vm_memory;
 
         ret = jvm_init(jvm, bootclasspath, classpath);
         if (ret) {

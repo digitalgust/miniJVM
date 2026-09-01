@@ -131,7 +131,7 @@ public class StringBuilder implements Appendable, CharSequence {
      * @param str the initial contents of the buffer.
      */
     public StringBuilder(String str) {
-        this(str.length() + 32);
+        this(str.length() + 16);
         append(str);
     }
 
@@ -522,7 +522,19 @@ public class StringBuilder implements Appendable, CharSequence {
      */
 //    public native StringBuilder append(int i);
     public StringBuilder append(int i) {
-        return append(String.valueOf(i));
+        if (i == Integer.MIN_VALUE) {
+            return append("-2147483648");
+        }
+        int appendedLength = (i < 0)
+                ? Integer.stringSize(-i) + 1
+                : Integer.stringSize(i);
+        int newcount = count + appendedLength;
+        if (newcount > value.length) {
+            expandCapacity(newcount);
+        }
+        Integer.getChars(i, newcount, value);
+        count = newcount;
+        return this;
     }
 
     /**
@@ -539,7 +551,19 @@ public class StringBuilder implements Appendable, CharSequence {
      * @see java.lang.StringBuilder#append(java.lang.String)
      */
     public StringBuilder append(long l) {
-        return append(String.valueOf(l));
+        if (l == Long.MIN_VALUE) {
+            return append("-9223372036854775808");
+        }
+        int appendedLength = (l < 0)
+                ? Long.stringSize(-l) + 1
+                : Long.stringSize(l);
+        int newcount = count + appendedLength;
+        if (newcount > value.length) {
+            expandCapacity(newcount);
+        }
+        Long.getChars(l, newcount, value);
+        count = newcount;
+        return this;
     }
 
     /**
@@ -949,6 +973,15 @@ public class StringBuilder implements Appendable, CharSequence {
      */
 //    public native String toString();
     public String toString() {
+        // Compiler-generated concatenation normally leaves little spare
+        // capacity. Share that buffer and use the existing copy-on-write flag
+        // to avoid allocating and copying a second char[]. A deliberately
+        // oversized builder still gets a compact result so a short String does
+        // not retain a large backing array on memory-constrained devices.
+        if (value.length - count <= 16) {
+            setShared();
+            return new String(0, count, value);
+        }
         return new String(value, 0, count);
     }
 

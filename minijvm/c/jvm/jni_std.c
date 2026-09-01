@@ -657,9 +657,18 @@ s32 java_lang_Runtime_exitInternal(Runtime *runtime, JClass *clazz) {
 
 s32 java_lang_Runtime_freeMemory(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
+#if __JVM_PRI_ALLOC__
+    if (!gc_backend_is_immix(runtime->jvm)) {
+        u64 limit = pri_alloc_get_limit();
+        u64 used = pri_alloc_get_live_bytes();
+        push_long(stack, (s64) (used < limit ? limit - used : 0));
+    } else
+#endif
+    {
     spin_lock(&runtime->jvm->collector->lock);
     push_long(stack, runtime->jvm->max_heap_size - runtime->jvm->collector->obj_heap_size);
     spin_unlock(&runtime->jvm->collector->lock);
+    }
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_Runtime_freeMemory \n");
@@ -670,7 +679,14 @@ s32 java_lang_Runtime_freeMemory(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Runtime_totalMemory(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
 
+#if __JVM_PRI_ALLOC__
+    if (!gc_backend_is_immix(runtime->jvm)) {
+        push_long(stack, (s64) pri_alloc_get_limit());
+    } else
+#endif
+    {
     push_long(stack, runtime->jvm->max_heap_size);
+    }
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_Runtime_totalMemory \n");
@@ -777,7 +793,14 @@ s32 java_lang_Runtime_kill(Runtime *runtime, JClass *clazz) {
 }
 
 s32 java_lang_Runtime_maxMemory(Runtime *runtime, JClass *clazz) {
-    push_long(runtime->stack, runtime->jvm->max_heap_size);
+#if __JVM_PRI_ALLOC__
+    if (!gc_backend_is_immix(runtime->jvm)) {
+        push_long(runtime->stack, (s64) pri_alloc_get_max_ceiling());
+    } else
+#endif
+    {
+        push_long(runtime->stack, runtime->jvm->max_heap_size);
+    }
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);

@@ -894,6 +894,7 @@ MiniJVM *jvm_create() {
     }
     jvm->env = &jnienv;
     jvm->max_heap_size = MAX_HEAP_SIZE_DEFAULT;
+    jvm->max_vm_memory = 0;
     jvm->heap_overload_percent = GARBAGE_OVERLOAD_DEFAULT;
     jvm->garbage_collect_period_ms = GARBAGE_PERIOD_MS_DEFAULT;
 #if _JVM_DEBUG_SLOW_CALL_PROFILE
@@ -923,7 +924,18 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
 #endif
 
 #if __JVM_PRI_ALLOC__
+    if (jvm->max_vm_memory <= 0) {
+        if (jvm->max_heap_size > INT64_MAX / 4) {
+            jvm->max_vm_memory = INT64_MAX;
+        } else {
+            jvm->max_vm_memory = jvm->max_heap_size * 4;
+        }
+    }
+    if (jvm->max_vm_memory < jvm->max_heap_size) {
+        jvm->max_vm_memory = jvm->max_heap_size;
+    }
     pri_alloc_set_max_size(jvm->max_heap_size);
+    pri_alloc_set_max_ceiling(jvm->max_vm_memory);
 #endif
 
     set_jvm_state(jvm, JVM_STATUS_INITING);

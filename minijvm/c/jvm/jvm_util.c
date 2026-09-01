@@ -1135,14 +1135,15 @@ Instance *jarray_create_by_class(Runtime *runtime, s32 count, JClass *clazz) {
     s32 typeIdx = clazz->mb.arr_type_index;
     s32 width = DATA_TYPE_BYTES[typeIdx];
     s32 insSize = instance_base_size() + (width * count);
-    Instance *arr = jvm_calloc(insSize);
+    Instance *arr = gc_obj_alloc(runtime, insSize);
+    if (!arr) return NULL;
     arr->mb.heap_size = insSize;
     arr->mb.type = MEM_TYPE_ARR;
     arr->mb.clazz = clazz;
     arr->mb.arr_type_index = typeIdx;
     arr->arr_length = count;
     if (arr->arr_length)arr->arr_body = (c8 *) (&arr[1]);
-    gc_obj_reg(runtime, arr);
+    if (!gc_backend_is_immix(runtime->jvm)) gc_obj_reg(runtime, arr); //immix: enumerated by block bitmap
     //    jvm_printf("%s\n", utf8_cstr(clazz->name));
     //    if(utf8_equals_c(clazz->name,"[Lorg/mini/util/StringFormatImpl$FmtCmpnt;")){
     //        int debug = 1;
@@ -1170,6 +1171,8 @@ s32 jarray_destroy(Instance *arr) {
         jthreadlock_destroy(&arr->mb);
         arr->mb.thread_lock = NULL;
         arr->arr_length = -1;
+        //malloc backend only: Immix arrays are reclaimed by the block sweep,
+        //memoryblock_destroy is never called for them on that backend.
         jvm_free(arr); // 确保释放数组内存
     }
     return 0;
@@ -1270,7 +1273,8 @@ s32 instance_base_size() {
 
 Instance *instance_create(Runtime *runtime, JClass *clazz) {
     s32 insSize = instance_base_size() + clazz->field_instance_len;
-    Instance *ins = jvm_calloc(insSize);
+    Instance *ins = gc_obj_alloc(runtime, insSize);
+    if (!ins) return NULL;
     ins->mb.type = MEM_TYPE_INS;
     ins->mb.clazz = clazz;
     ins->mb.heap_size = insSize;
@@ -1285,7 +1289,7 @@ Instance *instance_create(Runtime *runtime, JClass *clazz) {
     //    if (utf8_equals_c(clazz->name, "java/lang/String")) {
     //        s32 debug = 1;
     //    }
-    gc_obj_reg(runtime, ins);
+    if (!gc_backend_is_immix(runtime->jvm)) gc_obj_reg(runtime, ins); //immix: enumerated by block bitmap
     return ins;
 }
 
@@ -1363,6 +1367,7 @@ void instance_clear_refer(Instance *ins) {
 
 s32 instance_destroy(Instance *ins) {
     jthreadlock_destroy(&ins->mb);
+    //malloc backend only: Immix instances are reclaimed by the block sweep.
     jvm_free(ins); // 确保释放实例内存
     return 0;
 }
@@ -1383,7 +1388,8 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
         bodySize = src->arr_length * DATA_TYPE_BYTES[src->mb.arr_type_index];
     }
     s32 insSize = instance_base_size() + bodySize;
-    Instance *dst = jvm_malloc(insSize);
+    Instance *dst = gc_obj_alloc(runtime, insSize);
+    if (!dst) return NULL;
     memcpy(dst, src, instance_base_size());
     dst->mb.thread_lock = NULL;
     dst->mb.gcflag = src->mb.gcflag;
@@ -1435,7 +1441,7 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
             memcpy(dst->arr_body, src->arr_body, size);
         }
     }
-    gc_obj_reg(runtime, dst);
+    if (!gc_backend_is_immix(runtime->jvm)) gc_obj_reg(runtime, dst); //immix: enumerated by block bitmap
     return dst;
 }
 
@@ -1484,26 +1490,38 @@ Instance *jstring_create(Utf8String *src, Runtime *runtime) {
     if (!src)return NULL;
     JClass *jstr_clazz = classes_load_get_with_clinit_c(NULL, STR_CLASS_JAVA_LANG_STRING, runtime);
     Instance *jstring = instance_create(runtime, jstr_clazz);
+    Instance *arr;
+    s32 len;
+    s32 decoded_len;
+    c8 *value_ptr;
+
+    if (!jstring) return NULL;
     instance_hold_to_thread(jstring, runtime); //hold for no gc
 
-    jstring->mb.clazz = jstr_clazz;
-    instance_init(jstring, runtime);
-
-    c8 *ptr = jstring_get_value_ptr(jstring, runtime);
-    s32 c8len = (src->length + 1) * DATA_TYPE_BYTES[DATATYPE_JCHAR];
-    u16 *buf = jvm_calloc(c8len);
-    s32 len = utf8_2_unicode(src, buf, c8len / DATA_TYPE_BYTES[DATATYPE_JCHAR]);
-    if (len >= 0) {
-        //可能解析出错
-        Instance *arr = jstring_get_value_array(jstring, runtime);
-        if (!arr || arr->arr_length < len) {
-            arr = jarray_create_by_type_index(runtime, len, DATATYPE_JCHAR); //u16 type is 5
-            setFieldRefer(ptr, (__refer) arr); //设置数组
-        }
-        memcpy(arr->arr_body, buf, len * DATA_TYPE_BYTES[DATATYPE_JCHAR]);
+    /* String.<init>() used to allocate char[DEFAULT_CAP], after which this
+     * function allocated a native UTF-16 buffer and sometimes another Java
+     * char[]. Count first, allocate the exact Java array, then decode into it
+     * directly. Object.<init>() has no state to establish and String fields
+     * are already zeroed by instance_create(). */
+    len = utf8_2_unicode(src, NULL, 0);
+    if (len < 0) {
+        instance_release_from_thread(jstring, runtime);
+        return NULL;
     }
-    jvm_free(buf);
-    jstring_set_count(jstring, len, runtime); //设置长度
+    arr = jarray_create_by_type_index(runtime, len, DATATYPE_JCHAR);
+    if (!arr) {
+        instance_release_from_thread(jstring, runtime);
+        return NULL;
+    }
+    value_ptr = jstring_get_value_ptr(jstring, runtime);
+    setFieldRefer(value_ptr, (__refer) arr);
+    decoded_len = utf8_2_unicode(src, (u16 *) arr->arr_body, len);
+    if (decoded_len != len) {
+        instance_release_from_thread(jstring, runtime);
+        return NULL;
+    }
+    jstring_set_offset(jstring, 0, runtime);
+    jstring_set_count(jstring, len, runtime);
     instance_release_from_thread(jstring, runtime);
     return jstring;
 }

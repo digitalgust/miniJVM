@@ -4,6 +4,7 @@
 #include "jvm.h"
 #include "garbage.h"
 #include "jvm_util.h"
+#include "immix.h"
 
 
 /* Stack Initialization */
@@ -126,6 +127,12 @@ Runtime *runtime_create(MiniJVM *jvm) {
 }
 
 void runtime_destroy(Runtime *runtime) {
+    //top runtimes own the per-thread Immix allocation context
+    if (runtime->thrd_info && runtime->thrd_info->top_runtime == runtime &&
+        runtime->thrd_info->immix_mutator && runtime->jvm && runtime->jvm->collector) {
+        immix_mutator_detach((ImmixMutator *) runtime->thrd_info->immix_mutator);
+        runtime->thrd_info->immix_mutator = NULL;
+    }
     runtime_destroy_inl(runtime);
 }
 

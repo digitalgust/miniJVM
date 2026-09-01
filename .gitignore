@@ -1,5 +1,9 @@
 .DS_Store
 .idea
+.vscode
+.cache
+.codex-*
+build-*
 
 Thumbs.db
 /build

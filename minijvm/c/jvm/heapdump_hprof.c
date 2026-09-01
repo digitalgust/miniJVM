@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "jvm.h"
+#include "garbage.h"
 
 extern s32 _gc_pause_the_world(MiniJVM *jvm);
 
@@ -120,19 +121,22 @@ static void hprof_collect_class_closure(Hashset *classes, JClass *clazz) {
     }
 }
 
-static void hprof_collect_live_classes(Hashset *classes, MemoryBlock *header, u8 mark_cnt) {
-    MemoryBlock *mb = header;
-    while (mb) {
-        if (mb->garbage_mark == mark_cnt) {
-            if (mb->type == MEM_TYPE_CLASS) {
-                hprof_collect_class_closure(classes, (JClass *) mb);
-                if (mb->clazz) hprof_collect_class_closure(classes, mb->clazz);
-            } else {
-                if (mb->clazz) hprof_collect_class_closure(classes, mb->clazz);
-            }
+typedef struct _HprofClassScan {
+    Hashset *classes;
+    u8 mark_cnt;
+} HprofClassScan;
+
+static s32 hprof_collect_live_classes_iter(MemoryBlock *mb, void *data) {
+    HprofClassScan *scan = (HprofClassScan *) data;
+    if (mb->garbage_mark == scan->mark_cnt) {
+        if (mb->type == MEM_TYPE_CLASS) {
+            hprof_collect_class_closure(scan->classes, (JClass *) mb);
+            if (mb->clazz) hprof_collect_class_closure(scan->classes, mb->clazz);
+        } else {
+            if (mb->clazz) hprof_collect_class_closure(scan->classes, mb->clazz);
         }
-        mb = mb->next;
     }
+    return 0;
 }
 
 static void hprof_collect_strings_for_class(Hashtable *str2id, u32 id_size, u64 *seq, JClass *clazz) {
@@ -387,6 +391,54 @@ static int hprof_flush_segment(FILE *fp, ByteBuf *seg) {
     return rc;
 }
 
+typedef struct _HprofThreadScan {
+    ByteBuf *seg;
+    u32 id_size;
+    u32 thread_serial;
+    u8 mark_cnt;
+} HprofThreadScan;
+
+static s32 hprof_thread_root_iter(MemoryBlock *mb, void *data) {
+    HprofThreadScan *scan = (HprofThreadScan *) data;
+    if (mb->garbage_mark == scan->mark_cnt &&
+        mb->type == MEM_TYPE_INS &&
+        GCFLAG_JTHREAD_GET(mb->gcflag)) {
+        hprof_heap_bb_write_root_thread_obj(scan->seg, scan->id_size,
+                                            (u64) (uintptr_t) mb, scan->thread_serial++);
+    }
+    return 0;
+}
+
+typedef struct _HprofDumpScan {
+    FILE *file;
+    ByteBuf *seg;
+    u32 id_size;
+    u8 mark_cnt;
+    int rc;
+} HprofDumpScan;
+
+static s32 hprof_instance_dump_iter(MemoryBlock *mb, void *data) {
+    HprofDumpScan *scan = (HprofDumpScan *) data;
+    if (mb->garbage_mark == scan->mark_cnt) {
+        if (mb->type == MEM_TYPE_INS) {
+            hprof_heap_bb_write_instance_dump(scan->seg, scan->id_size, (Instance *) mb,
+                                              scan->mark_cnt);
+        } else if (mb->type == MEM_TYPE_ARR) {
+            Instance *arr = (Instance *) mb;
+            if (isDataReferByIndex(arr->mb.arr_type_index)) {
+                hprof_heap_bb_write_object_array_dump(scan->seg, scan->id_size, arr);
+            } else {
+                hprof_heap_bb_write_primitive_array_dump(scan->seg, scan->id_size, arr);
+            }
+        }
+        if (scan->seg->wp >= 4 * 1024 * 1024) {
+            scan->rc = hprof_flush_segment(scan->file, scan->seg);
+            if (scan->rc != 0) return 1;
+        }
+    }
+    return 0;
+}
+
 int hprof_write_heap(GcCollector *collector, const char *path) {
     int flags = 0;
     if (!collector || !collector->jvm || !path || !path[0]) return -1;
@@ -409,7 +461,12 @@ int hprof_write_heap(GcCollector *collector, const char *path) {
     u64 str_seq = 1;
 
     Hashset *classes = hashset_create();
-    hprof_collect_live_classes(classes, collector->header, collector->mark_cnt);
+    {
+        HprofClassScan scan;
+        scan.classes = classes;
+        scan.mark_cnt = collector->mark_cnt;
+        gc_iterate_heap_objects(collector, hprof_collect_live_classes_iter, &scan);
+    }
 
     HashsetIterator ci;
     hashset_iterate(classes, &ci);
@@ -463,15 +520,13 @@ int hprof_write_heap(GcCollector *collector, const char *path) {
     }
     
     // Thread objects as ROOT_THREAD_OBJ
-    u32 thread_serial = 1;
-    MemoryBlock *mb_scan = collector->header;
-    while (mb_scan) {
-        if (mb_scan->garbage_mark == collector->mark_cnt && 
-            mb_scan->type == MEM_TYPE_INS && 
-            GCFLAG_JTHREAD_GET(mb_scan->gcflag)) {
-            hprof_heap_bb_write_root_thread_obj(seg, id_size, (u64) (uintptr_t) mb_scan, thread_serial++);
-        }
-        mb_scan = mb_scan->next;
+    {
+        HprofThreadScan thread_scan;
+        thread_scan.seg = seg;
+        thread_scan.id_size = id_size;
+        thread_scan.thread_serial = 1;
+        thread_scan.mark_cnt = collector->mark_cnt;
+        gc_iterate_heap_objects(collector, hprof_thread_root_iter, &thread_scan);
     }
 
     hashset_iterate(classes, &ci);
@@ -484,25 +539,15 @@ int hprof_write_heap(GcCollector *collector, const char *path) {
         }
     }
 
-    MemoryBlock *mb = collector->header;
-    while (mb) {
-        if (mb->garbage_mark == collector->mark_cnt) {
-            if (mb->type == MEM_TYPE_INS) {
-                hprof_heap_bb_write_instance_dump(seg, id_size, (Instance *) mb, collector->mark_cnt);
-            } else if (mb->type == MEM_TYPE_ARR) {
-                Instance *arr = (Instance *) mb;
-                if (isDataReferByIndex(arr->mb.arr_type_index)) {
-                    hprof_heap_bb_write_object_array_dump(seg, id_size, arr);
-                } else {
-                    hprof_heap_bb_write_primitive_array_dump(seg, id_size, arr);
-                }
-            }
-            if (seg->wp >= 4 * 1024 * 1024) {
-                rc = hprof_flush_segment(fp, seg);
-                if (rc != 0) goto cleanup_seg;
-            }
-        }
-        mb = mb->next;
+    {
+        HprofDumpScan dump_scan;
+        dump_scan.file = fp;
+        dump_scan.seg = seg;
+        dump_scan.id_size = id_size;
+        dump_scan.mark_cnt = collector->mark_cnt;
+        dump_scan.rc = 0;
+        gc_iterate_heap_objects(collector, hprof_instance_dump_iter, &dump_scan);
+        if (dump_scan.rc != 0) goto cleanup_seg;
     }
 
     rc = hprof_flush_segment(fp, seg);

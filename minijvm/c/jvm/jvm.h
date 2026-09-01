@@ -28,10 +28,10 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage  , 03=class_load & jit info, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_LOG_LEVEL 0
+#define _JVM_DEBUG_LOG_LEVEL 02
 //_JVM_DEBUG_GARBAGE_DUMP 01=count instance , 02=print every object create/destroy
 #define _JVM_DEBUG_GARBAGE_DUMP 0
-#define _JVM_DEBUG_METHOD_PROFILE 0
+#define _JVM_DEBUG_METHOD_PROFILE 04
 #define _JVM_DEBUG_BYTECODE_PROFILE 0
 #define _JVM_DEBUG_SLOW_CALL_PROFILE _JVM_DEBUG_METHOD_PROFILE
 #define _JVM_DEBUG_GARBAGE 0
@@ -39,7 +39,7 @@ extern "C" {
 
 #define GARBAGE_OVERLOAD_DEFAULT 80  // overload of max heap size ,will active garbage collection
 #define GARBAGE_PERIOD_MS_DEFAULT 10 * 1000
-#define MAX_HEAP_SIZE_DEFAULT  384 * 1024 * 1024
+#define MAX_HEAP_SIZE_DEFAULT  256 * 1024 * 1024
 #define MAX_STACK_SIZE_DEFAULT 4096
 
 
@@ -743,6 +743,7 @@ struct _PeerClassLoader {
     ArrayList *classpath;
     Hashtable *classes;
     //
+    u8 in_pending_destroy; //immix gc: capture flag, destroy deferred to post-resume
 };
 
 PeerClassLoader *classloader_create(MiniJVM *jvm);
@@ -1418,6 +1419,7 @@ struct _JavaThreadInfo {
     MemoryBlock *curThreadLock; //if thread is locked ,the filed save the lock
     ArrayList *held_locks; //list of locks held by this thread for precise debugging (JDWP only)
     MemoryBlock *pending_release_lock; //lock that needs to be released for suspension (JDWP only)
+    struct ImmixMutator *immix_mutator; //per-thread Immix allocation context (block backend)
 
     ArrayList *stacktrack; //save methodrawindex, the pos 0 is the throw point
     ArrayList *lineNo; //save methodrawindex, the pos 0 is the throw point
@@ -1520,6 +1522,7 @@ struct _Runtime {
     s32 idx;
     s32 offset;
     s32 count;
+    u8 in_pending_destroy; //immix gc: runtime destruction deferred to post-resume
 #if _JVM_DEBUG_SLOW_CALL_PROFILE
     s64 slow_profile_start_at;
     s64 slow_profile_child_spent;
@@ -2101,6 +2104,7 @@ struct _MiniJVM {
 
     GcCollector *collector;
     ArrayList *shutdown_hook; //shutdown hook ,it contains thread instance
+    c8 *gc_backend; //NULL|immix|malloc , select the Java object allocation backend
 
     ShortCut shortcut;
 
@@ -2108,7 +2112,8 @@ struct _MiniJVM {
     s32 jdwp_enable; // 0:disable java debug , 1:enable java debug and disable jit
     s32 jdwp_suspend_on_start;
     s32 jdwp_port;
-    s64 max_heap_size;
+    s64 max_heap_size;       //Immix hard heap limit; malloc adaptive soft limit
+    s64 max_vm_memory;       //malloc final safety ceiling (0 derives as 4 * Xmx)
     s32 heap_overload_percent;
     s64 garbage_collect_period_ms;
 

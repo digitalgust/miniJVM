@@ -935,23 +935,16 @@ s32 org_mini_vm_RefNative_stringFromUtf8Bytes(Runtime *runtime, JClass *clazz) {
         return 0;
     }
 
-    s32 c8len = (ustr->length + 1) * DATA_TYPE_BYTES[DATATYPE_JCHAR];
-    u16 *buf = jvm_calloc(c8len);
-    if (!buf) {
-        utf8_destroy(ustr);
-        return 0;
-    }
-    s32 unicode_len = utf8_2_unicode(ustr, buf, c8len / DATA_TYPE_BYTES[DATATYPE_JCHAR]);
+    /* Two-pass conversion avoids the native UTF-16 staging buffer. */
+    s32 unicode_len = utf8_2_unicode(ustr, NULL, 0);
     if (unicode_len < 0) {
-        jvm_free(buf);
         utf8_destroy(ustr);
         return 0;
     }
 
-    if (!arr || arr->arr_length < unicode_len) {
+    if (!arr || arr->arr_length != unicode_len) {
         Instance *new_arr = jarray_create_by_type_index(runtime, unicode_len, DATATYPE_JCHAR);
         if (!new_arr) {
-            jvm_free(buf);
             utf8_destroy(ustr);
             return 0;
         }
@@ -959,13 +952,12 @@ s32 org_mini_vm_RefNative_stringFromUtf8Bytes(Runtime *runtime, JClass *clazz) {
         setFieldRefer(ptr, (__refer) new_arr);
         arr = new_arr;
     }
-    if (unicode_len > 0) {
-        memcpy(arr->arr_body, buf, unicode_len * DATA_TYPE_BYTES[DATATYPE_JCHAR]);
+    if (utf8_2_unicode(ustr, (u16 *) arr->arr_body, unicode_len) != unicode_len) {
+        utf8_destroy(ustr);
+        return 0;
     }
     jstring_set_offset(target, 0, runtime);
     jstring_set_count(target, unicode_len, runtime);
-
-    jvm_free(buf);
 
     utf8_destroy(ustr);
 

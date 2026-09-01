@@ -125,12 +125,13 @@ s32 jvm_destroy_mem_alloc();
 #include <string.h>
 
 typedef struct {
-    spinlock_t m_lock;
+    volatile s64 allocated;
+    volatile s64 peak_allocated;
+    volatile s64 pool_size;      /* current adaptive soft limit */
+    volatile s64 max_pool_size;  /* final safety ceiling, 0 means current limit */
+    volatile s64 accounting_errors;
     volatile s32 alloc_pause;
-    size_t allocated;
-
-    size_t pool_size;
-    s32 need_gc;
+    volatile s32 need_gc;
 } jvm_allocator_t;
 
 extern jvm_allocator_t g_jvm_allocator;
@@ -143,6 +144,32 @@ extern s64 threadSleep(s64 ms);
 s32 pri_alloc_init();
 
 s32 pri_alloc_set_max_size(size_t size);
+
+s32 pri_alloc_set_max_ceiling(size_t size);
+
+u64 pri_alloc_get_live_bytes(void);
+
+u64 pri_alloc_get_peak_bytes(void);
+
+u64 pri_alloc_get_limit(void);
+
+u64 pri_alloc_get_max_ceiling(void);
+
+s32 pri_alloc_should_gc(void);
+
+s32 pri_alloc_would_exceed(size_t incoming_bytes);
+
+void pri_alloc_recalculate_gc_request(void);
+
+/* Clears the completed-cycle latch. A subsequent allocation re-arms it when
+ * tracked usage is still above the trigger, avoiding idle GC spin loops. */
+void pri_alloc_clear_gc_request(void);
+
+void pri_alloc_account_allocation(size_t size);
+
+void pri_alloc_account_free(size_t size);
+
+void pri_alloc_account_resize(size_t old_size, size_t new_size);
 
 s32 pri_alloc_destroy();
 
@@ -166,10 +193,7 @@ static inline void *jvm_malloc(u32 size) {
         // }
         // g_jvm_allocator.alloc_pause = 0;
     }
-    g_jvm_allocator.allocated += mi_usable_size(ptr);
-    if (g_jvm_allocator.pool_size) {
-        g_jvm_allocator.need_gc = (g_jvm_allocator.allocated * 100 / (g_jvm_allocator.pool_size)) > 80;
-    }
+    if (ptr) pri_alloc_account_allocation(mi_usable_size(ptr));
     return ptr;
 }
 
@@ -182,7 +206,7 @@ static inline void *jvm_calloc(u32 size) {
 
 static inline void jvm_free(void *ptr) {
     if (ptr) {
-        g_jvm_allocator.allocated -= mi_usable_size(ptr);
+        pri_alloc_account_free(mi_usable_size(ptr));
         mi_free(ptr);
     }
 }
@@ -208,12 +232,10 @@ static inline void *jvm_realloc(void *pPtr, u32 size) {
         // }
         // g_jvm_allocator.alloc_pause = 0;
     }
-    size_t new_size = mi_usable_size(ptr);
+    if (!ptr) return NULL; /* realloc failure keeps pPtr and its accounting alive */
 
-    g_jvm_allocator.allocated += new_size - old_size;
-    if (g_jvm_allocator.pool_size) {
-        g_jvm_allocator.need_gc = (g_jvm_allocator.allocated * 100 / (g_jvm_allocator.pool_size)) > 80;
-    }
+    size_t new_size = mi_usable_size(ptr);
+    pri_alloc_account_resize(old_size, new_size);
     return ptr;
 }
 

@@ -254,7 +254,9 @@ public final class String implements Comparable<String>, CharSequence {
     public String(byte bytes[], int off, int len, String enc)
             throws UnsupportedEncodingException {
         if ("utf-8".equalsIgnoreCase(enc)) {//speedup
-            value = new char[DEFAULT_CAP];
+            // The native decoder installs one exactly-sized char[] directly.
+            // Preallocating DEFAULT_CAP here creates an immediately-dead array
+            // for non-trivial input and forces an extra managed allocation.
             RefNative.stringFromUtf8Bytes(this, bytes, off, len);
         } else {
             char[] value = (Helper.byteToCharArray(bytes, off, len, enc));

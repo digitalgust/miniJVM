@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -171,6 +171,7 @@
     <ClCompile Include="..\..\minijvm\c\jvm\garbage.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\global.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\heapdump_hprof.c" />
+    <ClCompile Include="..\..\minijvm\c\jvm\immix.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\interpreter.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\jdwp.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\jit.c" />
@@ -277,6 +278,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\minijvm\c\jvm\garbage.h" />
+    <ClInclude Include="..\..\minijvm\c\jvm\immix.h" />
     <ClInclude Include="..\..\minijvm\c\jvm\jdwp.h" />
     <ClInclude Include="..\..\minijvm\c\jvm\jit.h" />
     <ClInclude Include="..\..\minijvm\c\jvm\jvm.h" />

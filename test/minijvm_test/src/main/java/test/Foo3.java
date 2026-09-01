@@ -33,11 +33,15 @@ class Foo3 {
     }
 
 
+    static public String result = "";
+    static Vector list = new Vector();
+
     static void t7() {
         final int MAX = 5000000;
         final int PRINT_COUNT = 10000;
         Thread t = new Thread(new Runnable() {
-            Vector list = new Vector(MAX);
+            public Vector list = new Vector(MAX);
+            public String result = "";
 
             public void run() {
                 try {
@@ -49,41 +53,49 @@ class Foo3 {
 
                 long start = System.currentTimeMillis();
                 System.out.println("thread here.");
-                int j = 0;
+                long j = 0;
+                String a = "abc";
+                String b = "def";
                 String c = null;
                 for (int i = 0; i < MAX; i++) {
-                    String a = "abc";
-                    String b = "def";
-                    c = a + b;
+                    c = a + b + i;
+                    result = c;
                     list.addElement(c);
                     list.removeElementAt(0);
                     if (i % PRINT_COUNT == 0) {
-                        System.out.println(this + " thread i=" + i);
+                        //System.out.println(this + " thread i=" + i);
                     }
+                    j = result.hashCode();
                 }
                 System.out.println(this + " list.size():" + list.size());
                 System.out.println(this + " thread cost: " + (System.currentTimeMillis() - start));
+                System.out.println("j=" + j);
             }
         });
         t.start();
 
 
         //
-        Vector list = new Vector();
+
         long start = System.currentTimeMillis();
+        long j = 0;
         String c = null;
+        String a = "abc";
+        String b = "def";
         for (int i = 0; i < MAX; i++) {
-            String a = "abc";
-            String b = "def";
-            c = a + b;
+            c = a + b + i;
+            result = c;
             list.addElement(c);
             list.removeElementAt(0);
             if (i % PRINT_COUNT == 0) {
-                System.out.println("main i=" + i);
+                //System.out.println("main i=" + i);
             }
+            j = result.hashCode();
         }
         System.out.println("main list.size():" + list.size());
         System.out.println("main thread cost: " + (System.currentTimeMillis() - start));
+        System.out.println("j=" + j);
+
     }
 
 
@@ -106,7 +118,7 @@ class Foo3 {
             return null;
         }
 
-        public void finalize() {
+        void finalize() {
             System.out.println("destory thine later");
         }
     }
