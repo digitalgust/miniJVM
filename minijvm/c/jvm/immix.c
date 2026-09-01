@@ -12,6 +12,12 @@
 // are listed in that document, section 16.
 //
 
+#if defined(__APPLE__) && !defined(_DARWIN_C_SOURCE)
+/* jvm.h -> tinycthread.h defines _POSIX_C_SOURCE, which makes Darwin's
+ * <sys/mman.h> hide MAP_ANONYMOUS, MADV_DONTNEED and madvise(). */
+#define _DARWIN_C_SOURCE
+#endif
+
 #include "immix.h"
 
 #include <limits.h>

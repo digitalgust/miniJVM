@@ -1732,6 +1732,23 @@ public class GTextBox extends GTextObject {
         editArea.area_detail = null; //force redraw
     }
 
+    public void addStylesBatch(List<int[]> positions, float[] color) {
+        if (positions == null || positions.isEmpty()) {
+            editArea.area_detail = null;
+            return;
+        }
+        int size = positions.size();
+        for (int i = 0; i < size; i++) {
+            int[] pos = positions.get(i);
+            styles.add(new StyleRun(pos[0], pos[1], color));
+        }
+        editArea.area_detail = null;
+    }
+
+    public void requestRedraw() {
+        editArea.area_detail = null;
+    }
+
     /**
      * Find the style for a given character index.
      * Iterates backwards so the last added style takes precedence.
