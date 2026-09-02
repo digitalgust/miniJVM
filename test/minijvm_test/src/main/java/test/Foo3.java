@@ -118,7 +118,7 @@ class Foo3 {
             return null;
         }
 
-        void finalize() {
+        protected void finalize() {
             System.out.println("destory thine later");
         }
     }

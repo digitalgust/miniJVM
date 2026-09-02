@@ -19,7 +19,7 @@ import java.lang.reflect.Array;
  *
  * Run in BOTH modes:
  *   default                (interpreter + old JIT via hot loops)
- *   MINIJVM_JIT_DISABLE=1  (pure interpreter)
+ *   -Xdebug                (pure interpreter; no debugger needs to attach)
  */
 public class JvmSemanticsFixTest {
 
@@ -273,6 +273,14 @@ public class JvmSemanticsFixTest {
             bad("arraycopy boolean[]->byte[]", "no exception");
         } catch (ArrayStoreException e) {
             ok("arraycopy boolean[]->byte[]");
+        }
+        try {
+            System.arraycopy(new int[1], -1, new long[1], 0, 0);
+            bad("arraycopy type check before bounds", "no exception");
+        } catch (ArrayStoreException e) {
+            ok("arraycopy type check before bounds");
+        } catch (IndexOutOfBoundsException e) {
+            bad("arraycopy type check before bounds", "wrong exception " + e);
         }
 
         // bounds
@@ -538,12 +546,30 @@ public class JvmSemanticsFixTest {
         } catch (NullPointerException e) {
             ok("newInstance null type");
         }
+        try {
+            Array.newInstance(Void.TYPE, 0);
+            bad("newInstance void type", "no exception");
+        } catch (IllegalArgumentException e) {
+            ok("newInstance void type");
+        }
+        try {
+            Array.newInstance(Void.TYPE, 1, 1);
+            bad("multiNewInstance void type", "no exception");
+        } catch (IllegalArgumentException e) {
+            ok("multiNewInstance void type");
+        }
+        try {
+            Array.newInstance(String[].class, new int[255]);
+            bad("newInstance total dimensions > 255", "no exception");
+        } catch (IllegalArgumentException e) {
+            ok("newInstance total dimensions > 255");
+        }
 
         String[] sa = {"a"};
         try {
             Array.set(sa, 0, Integer.valueOf(1));
             bad("Array.set type check", "no exception");
-        } catch (ArrayStoreException e) {
+        } catch (IllegalArgumentException e) {
             ok("Array.set type check");
         }
         Array.set(sa, 0, null);

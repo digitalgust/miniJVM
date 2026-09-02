@@ -103,7 +103,7 @@ public final class Array {
      * @throws NegativeArraySizeException if any of the components in the
      *                                    specified <code>dimensions</code> argument is negative.
      */
-    public static Object newInstance(Class<?> componentType, int[] dimensions)
+    public static Object newInstance(Class<?> componentType, int... dimensions)
         throws IllegalArgumentException {
         return ReflectArray.multiNewArray(componentType, dimensions);
     }
@@ -401,7 +401,7 @@ public final class Array {
         } else {
             checkExeception(array, index, null);
             if (value != null && !array.getClass().getComponentType().isInstance(value)) {
-                throw new ArrayStoreException();
+                throw new IllegalArgumentException();
             }
             int pos = index * RefNative.refIdSize();
             RefNative.heap_put_ref(ReflectArray.getBodyPtr(array), pos, value);

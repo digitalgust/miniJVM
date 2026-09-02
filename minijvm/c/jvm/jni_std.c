@@ -992,17 +992,17 @@ s32 java_lang_System_arraycopy(Runtime *runtime, JClass *clazz) {
     } else if (src->mb.type != MEM_TYPE_ARR || dest->mb.type != MEM_TYPE_ARR) {
         push_ref(stack, exception_create(JVM_EXCEPTION_ARRAYSTORE, runtime));
         ret = RUNTIME_STATUS_EXCEPTION;
-    } else if (src_start < 0 || dest_start < 0 || count < 0
-               || (s64) src_start + count > src->arr_length
-               || (s64) dest_start + count > dest->arr_length) {
-        push_ref(stack, exception_create(JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, runtime));
-        ret = RUNTIME_STATUS_EXCEPTION;
     } else {
         s32 src_refer = isDataReferByIndex(src->mb.arr_type_index);
         s32 dest_refer = isDataReferByIndex(dest->mb.arr_type_index);
         if (src_refer != dest_refer
             || (!src_refer && src->mb.clazz->component_class != dest->mb.clazz->component_class)) {
             push_ref(stack, exception_create(JVM_EXCEPTION_ARRAYSTORE, runtime));
+            ret = RUNTIME_STATUS_EXCEPTION;
+        } else if (src_start < 0 || dest_start < 0 || count < 0
+                   || (s64) src_start + count > src->arr_length
+                   || (s64) dest_start + count > dest->arr_length) {
+            push_ref(stack, exception_create(JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, runtime));
             ret = RUNTIME_STATUS_EXCEPTION;
         } else if (!src_refer
                    || assignable_from(dest->mb.clazz->component_class,

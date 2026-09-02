@@ -287,7 +287,9 @@ public class UnsafeSemanticsTest {
 
     // ================= 7. static field offset model =================
 
+    static int staticInt = 7;
     static long staticVal = 0x0BADF00DCAFEBABEL;
+    static Object staticRef = "before";
 
     static void testStaticField() throws Exception {
         Field f = UnsafeSemanticsTest.class.getDeclaredField("staticVal");
@@ -298,6 +300,28 @@ public class UnsafeSemanticsTest {
         U.putLong(base, addr, 0x1234567890ABCDEFL);
         ok("staticField write", staticVal == 0x1234567890ABCDEFL);
         staticVal = 0x0BADF00DCAFEBABEL;
+
+        Field intField = UnsafeSemanticsTest.class.getDeclaredField("staticInt");
+        long intAddr = U.staticFieldOffset(intField);
+        Object intBase = U.staticFieldBase(intField);
+        staticInt = 7;
+        ok("staticField CAS int",
+                U.compareAndSwapInt(intBase, intAddr, 7, 9) && staticInt == 9);
+        ok("staticField CAS int miss",
+                !U.compareAndSwapInt(intBase, intAddr, 7, 11) && staticInt == 9);
+
+        staticVal = 10L;
+        ok("staticField CAS long",
+                U.compareAndSwapLong(base, addr, 10L, 20L) && staticVal == 20L);
+
+        Field refField = UnsafeSemanticsTest.class.getDeclaredField("staticRef");
+        long refAddr = U.staticFieldOffset(refField);
+        Object refBase = U.staticFieldBase(refField);
+        Object before = staticRef;
+        Object after = new Object();
+        ok("staticField CAS object",
+                U.compareAndSwapObject(refBase, refAddr, before, after) && staticRef == after);
+
         // instance/static rejection
         try {
             U.objectFieldOffset(f);

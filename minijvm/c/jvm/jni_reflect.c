@@ -295,6 +295,10 @@ s32 org_mini_reflect_ReflectArray_newArray(Runtime *runtime, JClass *clazz) {
         push_ref(runtime->stack, exception_create(JVM_EXCEPTION_NULLPOINTER, runtime));
         return RUNTIME_STATUS_EXCEPTION;
     }
+    if (cl->is_primitive && getDataTypeTagByName(cl->name) == 'V') {
+        push_ref(runtime->stack, exception_create(JVM_EXCEPTION_ILLEGALARGUMENT, runtime));
+        return RUNTIME_STATUS_EXCEPTION;
+    }
     if (count < 0) {
         push_ref(runtime->stack, exception_create(JVM_EXCEPTION_NEGATIVEARRAYSIZE, runtime));
         return RUNTIME_STATUS_EXCEPTION;
@@ -324,6 +328,21 @@ s32 org_mini_reflect_ReflectArray_multiNewArray(Runtime *runtime, JClass *clazz)
         return RUNTIME_STATUS_EXCEPTION;
     }
     if (dimarr->arr_length <= 0 || dimarr->arr_length > 255) {
+        push_ref(runtime->stack, exception_create(JVM_EXCEPTION_ILLEGALARGUMENT, runtime));
+        return RUNTIME_STATUS_EXCEPTION;
+    }
+
+    if (cl->is_primitive && getDataTypeTagByName(cl->name) == 'V') {
+        push_ref(runtime->stack, exception_create(JVM_EXCEPTION_ILLEGALARGUMENT, runtime));
+        return RUNTIME_STATUS_EXCEPTION;
+    }
+
+    s32 component_dimensions = 0;
+    while (cl->name && component_dimensions < cl->name->length
+           && utf8_char_at(cl->name, component_dimensions) == '[') {
+        component_dimensions++;
+    }
+    if (component_dimensions + dimarr->arr_length > 255) {
         push_ref(runtime->stack, exception_create(JVM_EXCEPTION_ILLEGALARGUMENT, runtime));
         return RUNTIME_STATUS_EXCEPTION;
     }
@@ -2107,12 +2126,12 @@ s32 com_misc_Unsafe_compareAndSwapInt(Runtime *runtime, JClass *clazz) {
     s32 oldv = localvar_getInt(runtime->localvar, pos);
     pos++;
     s32 newv = localvar_getInt(runtime->localvar, pos);
-    if (!ins || offset < 0) {
+    if (offset < 0 || (!ins && offset == 0)) {
         Instance *ex = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
         push_ref(runtime->stack, ex);
         return RUNTIME_STATUS_EXCEPTION;
     } else {
-        c8 *src = (c8 *) (ins ? ins->arr_body : NULL) + offset;
+        c8 *src = ins ? (c8 *) ins->arr_body + offset : (c8 *) (intptr_t) offset;
         s32 *src32 = (s32 *) src;
         s32 ret = ATOMIC_CAS(src32, oldv, newv);
         push_int(runtime->stack, ret);
@@ -2131,12 +2150,12 @@ s32 com_misc_Unsafe_compareAndSwapLong(Runtime *runtime, JClass *clazz) {
     s64 oldv = localvar_getLong(runtime->localvar, pos);
     pos += 2;
     s64 newv = localvar_getLong(runtime->localvar, pos);
-    if (!ins || offset < 0) {
+    if (offset < 0 || (!ins && offset == 0)) {
         Instance *ex = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
         push_ref(runtime->stack, ex);
         return RUNTIME_STATUS_EXCEPTION;
     } else {
-        c8 *src = (c8 *) (ins ? ins->arr_body : NULL) + offset;
+        c8 *src = ins ? (c8 *) ins->arr_body + offset : (c8 *) (intptr_t) offset;
         // ATOMIC_CAS is 32-bit on MSVC (InterlockedCompareExchange/LONG);
         // an 8-byte slot must use the 64-bit variant.
         s32 ret = (s32) ATOMIC_CAS64((s64 *) src, oldv, newv);
@@ -2156,12 +2175,12 @@ s32 com_misc_Unsafe_compareAndSwapObject(Runtime *runtime, JClass *clazz) {
     __refer oldv = localvar_getRefer(runtime->localvar, pos);
     pos++;
     __refer newv = localvar_getRefer(runtime->localvar, pos);
-    if (!ins || offset < 0) {
+    if (offset < 0 || (!ins && offset == 0)) {
         Instance *ex = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
         push_ref(runtime->stack, ex);
         return RUNTIME_STATUS_EXCEPTION;
     } else {
-        c8 *src = (c8 *) (ins ? ins->arr_body : NULL) + offset;
+        c8 *src = ins ? (c8 *) ins->arr_body + offset : (c8 *) (intptr_t) offset;
         s32 ret = 0;
         if (sizeof(__refer) == 8) {
             ret = (s32) ATOMIC_CAS64((s64 *) src, (s64) (intptr_t) oldv, (s64) (intptr_t) newv);
