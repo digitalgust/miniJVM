@@ -291,7 +291,15 @@ s32 org_mini_reflect_ReflectArray_newArray(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, pos++));
     s32 count = localvar_getInt(runtime->localvar, pos++);
-    if (cl->mb.clazz->is_primitive) {
+    if (!cl) {
+        push_ref(runtime->stack, exception_create(JVM_EXCEPTION_NULLPOINTER, runtime));
+        return RUNTIME_STATUS_EXCEPTION;
+    }
+    if (count < 0) {
+        push_ref(runtime->stack, exception_create(JVM_EXCEPTION_NEGATIVEARRAYSIZE, runtime));
+        return RUNTIME_STATUS_EXCEPTION;
+    }
+    if (cl->is_primitive) {
         u8 t = getDataTypeTagByName(cl->name);
         s32 typeIndex = getDataTypeIndex(t);
         Instance *arr = jarray_create_by_type_index(runtime, count, typeIndex);
@@ -311,6 +319,26 @@ s32 org_mini_reflect_ReflectArray_multiNewArray(Runtime *runtime, JClass *clazz)
     s32 pos = 0;
     JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, pos++));
     Instance *dimarr = localvar_getRefer(runtime->localvar, pos++);
+    if (!cl || !dimarr) {
+        push_ref(runtime->stack, exception_create(JVM_EXCEPTION_NULLPOINTER, runtime));
+        return RUNTIME_STATUS_EXCEPTION;
+    }
+    if (dimarr->arr_length <= 0 || dimarr->arr_length > 255) {
+        push_ref(runtime->stack, exception_create(JVM_EXCEPTION_ILLEGALARGUMENT, runtime));
+        return RUNTIME_STATUS_EXCEPTION;
+    }
+
+    s32 dimensions[255];
+    s32 i;
+    for (i = 0; i < dimarr->arr_length; i++) {
+        s32 dimension = ((s32 *) dimarr->arr_body)[i];
+        if (dimension < 0) {
+            push_ref(runtime->stack, exception_create(JVM_EXCEPTION_NEGATIVEARRAYSIZE, runtime));
+            return RUNTIME_STATUS_EXCEPTION;
+        }
+        dimensions[dimarr->arr_length - 1 - i] = dimension;
+    }
+
     Utf8String *desc = utf8_create();
     if (cl->is_primitive) {
         utf8_insert(desc, 0, getDataTypeTagByName(cl->name));
@@ -321,12 +349,11 @@ s32 org_mini_reflect_ReflectArray_multiNewArray(Runtime *runtime, JClass *clazz)
         utf8_append(desc, cl->name);
         utf8_append_c(desc, ";");
     }
-    s32 i;
     for (i = 0; i < dimarr->arr_length; i++) {
         utf8_insert(desc, 0, '[');
     }
 
-    Instance *arr = jarray_multi_create(runtime, (s32 *) dimarr->arr_body, dimarr->arr_length, desc, 0);
+    Instance *arr = jarray_multi_create(runtime, dimensions, dimarr->arr_length, desc, 0);
     utf8_destroy(desc);
     push_ref(runtime->stack, arr);
 #if _JVM_DEBUG_LOG_LEVEL > 5

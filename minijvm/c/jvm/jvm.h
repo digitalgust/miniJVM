@@ -28,7 +28,7 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage  , 03=class_load & jit info, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_LOG_LEVEL 02
+#define _JVM_DEBUG_LOG_LEVEL 0
 //_JVM_DEBUG_GARBAGE_DUMP 01=count instance , 02=print every object create/destroy
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_METHOD_PROFILE 0
@@ -474,6 +474,8 @@ enum {
     JVM_EXCEPTION_VMSTOP,
     JVM_EXCEPTION_ILLEGALTHREADSTATE,
     JVM_EXCEPTION_ILLEGALMONITORSTATE,
+    JVM_EXCEPTION_NEGATIVEARRAYSIZE,
+    JVM_EXCEPTION_ARRAYSTORE,
 };
 
 enum {
@@ -511,6 +513,8 @@ extern const c8 STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ[];
 extern const c8 STR_CLASS_SUN_MISC_LAUNCHER[];
 extern const c8 STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD[];
 extern const c8 STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION[];
+extern const c8 STR_CLASS_JAVA_LANG_NEGATIVEARRAYSIZE[];
+extern const c8 STR_CLASS_JAVA_LANG_ARRAYSTORE[];
 
 extern const c8 STR_FIELD_STACKFRAME[];
 extern const c8 STR_FIELD_NAME[];
@@ -1167,6 +1171,7 @@ typedef struct _AttributePool {
 struct _ClassType {
     MemoryBlock mb;
     JClass *superclass;
+    JClass *component_class; // immediate component type for array classes
     __refer *constant_item_ptr; //存放常量池项目地址
     s32 constant_item_count; //总数
 

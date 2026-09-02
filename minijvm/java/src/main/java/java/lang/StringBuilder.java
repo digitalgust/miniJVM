@@ -852,7 +852,27 @@ public class StringBuilder implements Appendable, CharSequence {
      * @see java.lang.StringBuilder#length()
      */
     public StringBuilder insert(int offset, int i) {
-        return insert(offset, String.valueOf(i));
+        if (i == Integer.MIN_VALUE) {
+            return insert(offset, "-2147483648");
+        }
+        if ((offset < 0) || (offset > count)) {
+            throw new StringIndexOutOfBoundsException();
+        }
+
+        int insertedLength = (i < 0)
+                ? Integer.stringSize(-i) + 1
+                : Integer.stringSize(i);
+        int newcount = count + insertedLength;
+        if (newcount > value.length) {
+            expandCapacity(newcount);
+        } else if (shared) {
+            copy();
+        }
+        System.arraycopy(value, offset, value, offset + insertedLength,
+                count - offset);
+        Integer.getChars(i, offset + insertedLength, value);
+        count = newcount;
+        return this;
     }
 
     /**
@@ -876,7 +896,27 @@ public class StringBuilder implements Appendable, CharSequence {
      * @see java.lang.StringBuilder#length()
      */
     public StringBuilder insert(int offset, long l) {
-        return insert(offset, String.valueOf(l));
+        if (l == Long.MIN_VALUE) {
+            return insert(offset, "-9223372036854775808");
+        }
+        if ((offset < 0) || (offset > count)) {
+            throw new StringIndexOutOfBoundsException();
+        }
+
+        int insertedLength = (l < 0)
+                ? Long.stringSize(-l) + 1
+                : Long.stringSize(l);
+        int newcount = count + insertedLength;
+        if (newcount > value.length) {
+            expandCapacity(newcount);
+        } else if (shared) {
+            copy();
+        }
+        System.arraycopy(value, offset, value, offset + insertedLength,
+                count - offset);
+        Long.getChars(l, offset + insertedLength, value);
+        count = newcount;
+        return this;
     }
 
     /**
@@ -998,11 +1038,11 @@ public class StringBuilder implements Appendable, CharSequence {
     }
 
     public int indexOf(String str) {
-        return toString().indexOf(str, 0);
+        return String.indexOf(value, 0, count, str, 0);
     }
 
     public int indexOf(String str, int fromIndex) {
-        return toString().indexOf(str, fromIndex);
+        return String.indexOf(value, 0, count, str, fromIndex);
     }
 
     public String substring(int start) {
@@ -1023,11 +1063,45 @@ public class StringBuilder implements Appendable, CharSequence {
     }
 
     public StringBuilder append(CharSequence sequence) {
-        return append(sequence.toString());
+        if (sequence == null) {
+            return append("null");
+        }
+        if (sequence instanceof String) {
+            return append((String) sequence);
+        }
+        return append(sequence, 0, sequence.length());
     }
 
     public StringBuilder append(CharSequence sequence, int start, int end) {
-        return append(sequence.subSequence(start, end));
+        if (sequence == null) {
+            sequence = "null";
+        }
+        int sourceLength = sequence.length();
+        if (start < 0 || end < start || end > sourceLength) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        int len = end - start;
+        if (len == 0) {
+            return this;
+        }
+        int oldCount = count;
+        int newcount = oldCount + len;
+        if (newcount > value.length) {
+            expandCapacity(newcount);
+        }
+
+        if (sequence instanceof String) {
+            ((String) sequence).getChars(start, end, value, oldCount);
+        } else if (sequence instanceof StringBuilder) {
+            ((StringBuilder) sequence).getChars(start, end, value, oldCount);
+        } else {
+            for (int i = start; i < end; i++) {
+                value[oldCount++] = sequence.charAt(i);
+            }
+        }
+        count = newcount;
+        return this;
     }
 
     public StringBuilder appendCodePoint(int codePoint) {

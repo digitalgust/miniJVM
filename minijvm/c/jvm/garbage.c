@@ -1697,6 +1697,9 @@ static inline void _gc_class_mark(GcCollector *collector, JClass *clazz, u8 flag
     if (clazz->jloader) {
         _gc_mark_object(collector, clazz->jloader, flag_cnt);
     }
+    if (clazz->component_class) {
+        _gc_mark_object(collector, clazz->component_class, flag_cnt);
+    }
 }
 
 

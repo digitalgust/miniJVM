@@ -392,6 +392,16 @@ s32 jarray_destroy(Instance *arr);
 
 Instance *jarray_multi_create(Runtime *runtime, s32 *dim, s32 dim_size, Utf8String *desc, s32 deep);
 
+s32 jarray_reference_store_check(Instance *arr, Instance *value);
+
+s32 jvm_float_to_int(f32 value);
+
+s32 jvm_double_to_int(f64 value);
+
+s64 jvm_float_to_long(f32 value);
+
+s64 jvm_double_to_long(f64 value);
+
 void jarray_set_field(Instance *arr, s32 index, s64 val);
 
 s64 jarray_get_field(Instance *arr, s32 index);

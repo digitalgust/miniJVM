@@ -40,8 +40,7 @@ package java.lang;
  * @version 12/17/01 (CLDC 1.1)
  * @since   JDK1.0, CLDC 1.0
  */
-public
-class ArrayStoreException extends RuntimeException {
+public class ArrayStoreException extends RuntimeException {
     /**
      * Constructs an <code>ArrayStoreException</code> with no detail message. 
      */

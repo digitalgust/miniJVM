@@ -634,17 +634,7 @@ void class_clear_cached_virtualmethod(MiniJVM *jvm, JClass *tgt) {
 //===============================    Instantiation related  ==================================
 
 u8 instance_of(Instance *ins, JClass *other) {
-    JClass *clazz = ins->mb.clazz;
-    s32 i, imax;
-    if (clazz) {
-        for (i = 0, imax = clazz->supers->length; i < imax; i++) {
-            JClass *cl = clazz->supers->data[i];
-            if (other == cl) {
-                return 1;
-            }
-        }
-    }
-    return 0;
+    return ins && assignable_from(other, ins->mb.clazz);
 }
 
 u8 isSonOfInterface(JClass *clazz, JClass *son, Runtime *runtime) {
@@ -663,14 +653,33 @@ u8 isSonOfInterface(JClass *clazz, JClass *son, Runtime *runtime) {
 }
 
 u8 assignable_from(JClass *clazzParent, JClass *clazzSon) {
+    if (!clazzParent || !clazzSon) return 0;
+    if (clazzParent == clazzSon) return 1;
+
+    u8 parent_is_array = clazzParent->name && utf8_char_at(clazzParent->name, 0) == '[';
+    u8 son_is_array = clazzSon->name && utf8_char_at(clazzSon->name, 0) == '[';
+    if (son_is_array) {
+        if (!parent_is_array) {
+            return utf8_equals_c(clazzParent->name, STR_CLASS_JAVA_LANG_OBJECT)
+                   || utf8_equals_c(clazzParent->name, "java/lang/Cloneable")
+                   || utf8_equals_c(clazzParent->name, "java/io/Serializable");
+        }
+
+        JClass *parent_component = clazzParent->component_class;
+        JClass *son_component = clazzSon->component_class;
+        if (!parent_component || !son_component) return 0;
+        if (parent_component->is_primitive || son_component->is_primitive) {
+            return parent_component == son_component;
+        }
+        return assignable_from(parent_component, son_component);
+    }
+    if (parent_is_array) return 0;
 
     s32 i, imax;
-    if (clazzSon) {
-        for (i = 0, imax = clazzSon->supers->length; i < imax; i++) {
-            JClass *cl = clazzSon->supers->data[i];
-            if (clazzParent == cl) {
-                return 1;
-            }
+    for (i = 0, imax = clazzSon->supers->length; i < imax; i++) {
+        JClass *cl = clazzSon->supers->data[i];
+        if (clazzParent == cl) {
+            return 1;
         }
     }
     return 0;

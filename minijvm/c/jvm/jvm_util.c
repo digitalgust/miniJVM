@@ -4,6 +4,8 @@
 
 
 #include <stdarg.h>
+#include <limits.h>
+#include <math.h>
 #include <sys/stat.h>
 #include "jvm.h"
 
@@ -153,12 +155,11 @@ JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr) {
 
 JClass *arraytype_get_by_desc(Runtime *runtime, Instance *jloader, Utf8String *desc) {
     if (desc && desc->length && utf8_char_at(desc, 0) == '[') {
-        Utf8String *typename = utf8_create_copy(desc);
+        Utf8String *typename = utf8_create_part(desc, 1, desc->length - 1);
         JClass *typec = NULL;
-        while (utf8_char_at(typename, 0) == '[') {
-            utf8_remove(typename, 0);
-        }
-        if (utf8_char_at(typename, 0) == 'L') {
+        if (utf8_char_at(typename, 0) == '[') {
+            typec = array_class_create_get(runtime, jloader, typename);
+        } else if (utf8_char_at(typename, 0) == 'L') {
             //class:  Ljava/lang/Object;
             utf8_remove(typename, 0); //remove "L"
             utf8_remove(typename, typename->length - 1); //remove ";"
@@ -181,6 +182,8 @@ JClass *array_class_create_get(Runtime *runtime, Instance *jloader, Utf8String *
         MiniJVM *jvm = runtime->jvm;
         JClass *clazz = classes_get(jvm, jloader, desc);
         if (!clazz) {
+            JClass *component_class = arraytype_get_by_desc(runtime, jloader, desc);
+            if (!component_class) return NULL;
             vm_share_lock(jvm);
             clazz = classes_get(jvm, jloader, desc); //maybe other thread created
             if (!clazz) {
@@ -188,9 +191,9 @@ JClass *array_class_create_get(Runtime *runtime, Instance *jloader, Utf8String *
                 clazz->mb.arr_type_index = getDataTypeIndex(utf8_char_at(desc, 1));
                 clazz->name = utf8_create_copy(desc);
                 clazz->superclass = classes_get_c(jvm, NULL, STR_CLASS_JAVA_LANG_OBJECT);
-                //this arrayclass need to set loader with element type
-                JClass *typec = arraytype_get_by_desc(runtime, jloader, desc);
-                clazz->jloader = typec->jloader;
+                clazz->component_class = component_class;
+                // Array classes use the defining loader of their immediate component.
+                clazz->jloader = component_class->jloader;
 
                 //                gc_obj_hold(jvm->collector, clazz);
                 classes_put(jvm, clazz);
@@ -1185,8 +1188,9 @@ s32 jarray_destroy(Instance *arr) {
  * @return ins
  */
 Instance *jarray_multi_create(Runtime *runtime, s32 *dim, s32 dim_size, Utf8String *pdesc, s32 deep) {
+    if (!dim || deep < 0 || deep >= dim_size) return NULL;
     s32 len = dim[dim_size - 1 - deep];
-    if (len == -1) {
+    if (len < 0) {
         return NULL;
     }
     JClass *cl = array_class_create_get(runtime, runtime->clazz->jloader, pdesc);
@@ -1197,7 +1201,7 @@ Instance *jarray_multi_create(Runtime *runtime, s32 *dim, s32 dim_size, Utf8Stri
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("multi arr deep :%d  type(%c) arr[%x] size:%d\n", deep, ch, arr, len);
 #endif
-    if (ch == '[') {
+    if (ch == '[' && deep + 1 < dim_size) {
         s32 i;
         s64 val;
         for (i = 0; i < len; i++) {
@@ -1476,6 +1480,7 @@ Instance *insOfJavaLangClass_create_get(Runtime *runtime, JClass *clazz) {
 
 
 JClass *insOfJavaLangClass_get_classHandle(Runtime *runtime, Instance *insOfJavaLangClass) {
+    if (!insOfJavaLangClass) return NULL;
     return (JClass *) (intptr_t) getFieldLong(
         getInstanceFieldPtr(insOfJavaLangClass, runtime->jvm->shortcut.class_classHandle));
 }
@@ -1524,6 +1529,42 @@ Instance *jstring_create(Utf8String *src, Runtime *runtime) {
     jstring_set_count(jstring, len, runtime);
     instance_release_from_thread(jstring, runtime);
     return jstring;
+}
+
+s32 jarray_reference_store_check(Instance *arr, Instance *value) {
+    if (!arr || arr->mb.type != MEM_TYPE_ARR || !isDataReferByIndex(arr->mb.arr_type_index)) {
+        return 0;
+    }
+    if (!value) return 1;
+    return assignable_from(arr->mb.clazz->component_class, value->mb.clazz) ? 1 : 0;
+}
+
+s32 jvm_float_to_int(f32 value) {
+    if (isnan(value)) return 0;
+    if (value >= (f32) INT_MAX) return INT_MAX;
+    if (value <= (f32) INT_MIN) return INT_MIN;
+    return (s32) value;
+}
+
+s32 jvm_double_to_int(f64 value) {
+    if (isnan(value)) return 0;
+    if (value >= (f64) INT_MAX) return INT_MAX;
+    if (value <= (f64) INT_MIN) return INT_MIN;
+    return (s32) value;
+}
+
+s64 jvm_float_to_long(f32 value) {
+    if (isnan(value)) return 0;
+    if (value >= (f32) LLONG_MAX) return LLONG_MAX;
+    if (value <= (f32) LLONG_MIN) return LLONG_MIN;
+    return (s64) value;
+}
+
+s64 jvm_double_to_long(f64 value) {
+    if (isnan(value)) return 0;
+    if (value >= (f64) LLONG_MAX) return LLONG_MAX;
+    if (value <= (f64) LLONG_MIN) return LLONG_MIN;
+    return (s64) value;
 }
 
 Instance *jstring_create_cstr(c8 const *cstr, Runtime *runtime) {

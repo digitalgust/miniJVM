@@ -686,6 +686,17 @@ void _gen_arr_store(struct sljit_compiler *C, s32 datatype) {
     _gen_load_sp_ip(C);
     _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, -1, 0);
 
+    if (datatype == DATATYPE_REFERENCE) {
+        _gen_save_sp_ip(C);
+        _gen_stack_peek_ref(C, 0, SLJIT_R0, 0);//arr
+        _gen_stack_peek_ref(C, 2, SLJIT_R1, 0);//value
+        sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P), SLJIT_IMM,
+                         SLJIT_FUNC_ADDR(jarray_reference_store_check));
+        _gen_load_sp_ip(C);
+        _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0,
+                                          SLJIT_IMM, 0, JVM_EXCEPTION_ARRAYSTORE, 0);
+    }
+
     _gen_stack_peek_ref(C, 0, SLJIT_R1, 0);//arr
     _gen_stack_peek_int(C, 1, SLJIT_R0, 0);//index
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(Instance, arr_body));
@@ -1168,8 +1179,16 @@ s32 multiarray(Runtime *runtime, Utf8String *desc, s32 count) {
     }
 
     s32 i;
-    for (i = 0; i < count; i++)
+    s32 has_negative_dimension = 0;
+    for (i = 0; i < count; i++) {
         dim[i] = pop_int(stack);
+        if (dim[i] < 0) has_negative_dimension = 1;
+    }
+
+    if (has_negative_dimension) {
+        push_ref(stack, exception_create(JVM_EXCEPTION_NEGATIVEARRAYSIZE, runtime));
+        return RUNTIME_STATUS_EXCEPTION;
+    }
 
     Instance *arr = jarray_multi_create(runtime, dim, count, desc, 0);
 
@@ -3678,8 +3697,11 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
             case op_f2i: {
                 _gen_stack_peek_float(C, -1, SLJIT_FR0, 0);
-                sljit_emit_fop1(C, SLJIT_CONV_S32_FROM_F32, SLJIT_R0, 0, SLJIT_FR0, 0);
-                _gen_stack_set_int(C, -1, SLJIT_R0, 0);
+                _gen_save_sp_ip(C);
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS1(32, F32), SLJIT_IMM,
+                                 SLJIT_FUNC_ADDR(jvm_float_to_int));
+                _gen_load_sp_ip(C);
+                _gen_stack_set_int(C, -1, SLJIT_RETURN_REG, 0);
 
                 _gen_ip_modify_imm(C, 1);
                 ip++;
@@ -3687,8 +3709,11 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
             case op_f2l: {
                 _gen_stack_peek_float(C, -1, SLJIT_FR0, 0);
-                sljit_emit_fop1(C, SLJIT_CONV_SW_FROM_F32, SLJIT_R0, 0, SLJIT_FR0, 0);
-                _gen_stack_set_long(C, -1, SLJIT_R0, 0);
+                _gen_save_sp_ip(C);
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS1(W, F32), SLJIT_IMM,
+                                 SLJIT_FUNC_ADDR(jvm_float_to_long));
+                _gen_load_sp_ip(C);
+                _gen_stack_set_long(C, -1, SLJIT_RETURN_REG, 0);
                 _gen_stack_size_modify(C, 1);
 
                 _gen_ip_modify_imm(C, 1);
@@ -3707,8 +3732,11 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
             case op_d2i: {
                 _gen_stack_peek_double(C, -2, SLJIT_FR0, 0);
-                sljit_emit_fop1(C, SLJIT_CONV_S32_FROM_F64, SLJIT_R0, 0, SLJIT_FR0, 0);
-                _gen_stack_set_int(C, -2, SLJIT_R0, 0);
+                _gen_save_sp_ip(C);
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS1(32, F64), SLJIT_IMM,
+                                 SLJIT_FUNC_ADDR(jvm_double_to_int));
+                _gen_load_sp_ip(C);
+                _gen_stack_set_int(C, -2, SLJIT_RETURN_REG, 0);
                 _gen_stack_size_modify(C, -1);
 
                 _gen_ip_modify_imm(C, 1);
@@ -3717,8 +3745,11 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
             case op_d2l: {
                 _gen_stack_peek_double(C, -2, SLJIT_FR0, 0);
-                sljit_emit_fop1(C, SLJIT_CONV_SW_FROM_F64, SLJIT_R0, 0, SLJIT_FR0, 0);
-                _gen_stack_set_long(C, -2, SLJIT_R0, 0);
+                _gen_save_sp_ip(C);
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS1(W, F64), SLJIT_IMM,
+                                 SLJIT_FUNC_ADDR(jvm_double_to_long));
+                _gen_load_sp_ip(C);
+                _gen_stack_set_long(C, -2, SLJIT_RETURN_REG, 0);
 
                 _gen_ip_modify_imm(C, 1);
                 ip++;
@@ -4510,6 +4541,10 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
 
             case op_newarray: {
+                _gen_stack_peek_int(C, -1, SLJIT_R0, 0);
+                _gen_exception_check_throw_handle(C, SLJIT_SIG_LESS, SLJIT_R0, 0,
+                                                  SLJIT_IMM, 0,
+                                                  JVM_EXCEPTION_NEGATIVEARRAYSIZE, -1);
                 _gen_save_sp_ip(C);
 
                 s32 typeIdx = ip[1];
@@ -4530,6 +4565,10 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
 
             case op_anewarray: {
+                _gen_stack_peek_int(C, -1, SLJIT_R0, 0);
+                _gen_exception_check_throw_handle(C, SLJIT_SIG_LESS, SLJIT_R0, 0,
+                                                  SLJIT_IMM, 0,
+                                                  JVM_EXCEPTION_NEGATIVEARRAYSIZE, -1);
                 _gen_save_sp_ip(C);
 
                 s32 idx = *((u16 *) (ip + 1));
@@ -4792,7 +4831,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_IMM, count);
                 sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(32, P, P, 32), SLJIT_IMM, SLJIT_FUNC_ADDR(multiarray));
                 _gen_load_sp_ip(C);
-                _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, JVM_EXCEPTION_NULLPOINTER, 0);
+                _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0,
+                                                  SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, -1, 0);
 
                 _gen_ip_modify_imm(C, 4);
                 ip += 4;

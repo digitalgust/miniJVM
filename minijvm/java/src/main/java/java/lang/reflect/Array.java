@@ -125,9 +125,9 @@ public final class Array {
     static private void checkExeception(Object array, int index, Class clazz) throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
         if (array == null) {
             throw new NullPointerException();
-        } else if (index < 0 || index > ReflectArray.getLength(array)) {
+        } else if (index < 0 || index >= ReflectArray.getLength(array)) {
             throw new IndexOutOfBoundsException();
-        } else if (!array.getClass().isArray() || array.getClass() != clazz) {
+        } else if (!array.getClass().isArray() || (clazz != null && array.getClass() != clazz)) {
             throw new IllegalArgumentException();
         }
     }
@@ -170,7 +170,7 @@ public final class Array {
         } else if (array instanceof double[]) {
             return (Double) getDouble(array, index);
         } else {
-            checkExeception(array, index, array.getClass());
+            checkExeception(array, index, null);
             int pos = index * RefNative.refIdSize();
             return RefNative.heap_get_ref(ReflectArray.getBodyPtr(array), pos);
         }
@@ -399,7 +399,10 @@ public final class Array {
         } else if (array instanceof double[]) {
             setDouble(array, index, (Double) value);
         } else {
-            checkExeception(array, index, array.getClass());
+            checkExeception(array, index, null);
+            if (value != null && !array.getClass().getComponentType().isInstance(value)) {
+                throw new ArrayStoreException();
+            }
             int pos = index * RefNative.refIdSize();
             RefNative.heap_put_ref(ReflectArray.getBodyPtr(array), pos, value);
         }

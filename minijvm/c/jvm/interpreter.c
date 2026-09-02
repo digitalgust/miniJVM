@@ -291,9 +291,8 @@ s32 checkcast(Runtime *runtime, Instance *ins, s32 typeIdx) {
                 return 1;
             }
         } else if (ins->mb.type == MEM_TYPE_ARR) {
-            Utf8String *utf = class_get_constant_classref(clazz, typeIdx)->name;
-            u8 ch = utf8_char_at(utf, 1);
-            if (getDataTypeIndex(ch) == ins->mb.clazz->mb.arr_type_index) {
+            JClass *other = getClassByConstantClassRef(clazz, typeIdx, runtime);
+            if (other && instance_of(ins, other)) {
                 return 1;
             }
         } else if (ins->mb.type == MEM_TYPE_CLASS) {
@@ -1279,6 +1278,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 goto label_null_throw;
                             } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
                                 goto label_outofbounds_throw;
+                            } else if (!jarray_reference_store_check(r->ins, r->rval1)) {
+                                goto label_arraystore_throw;
                             } else {
                                 *(((__refer *) r->ins->arr_body) + r->idx) = r->rval1;
 
@@ -2110,7 +2111,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(r);
                             jvm_printf("f2i: %f\n", (sp - 1)->fvalue);
 #endif
-                            (sp - 1)->ivalue = (s32) (sp - 1)->fvalue;
+                            (sp - 1)->ivalue = jvm_float_to_int((sp - 1)->fvalue);
                             r->pc++;
 
                             break;
@@ -2123,7 +2124,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("f2l: %f\n", (sp - 1)->fvalue);
 #endif
                             ++sp;
-                            (sp - 2)->lvalue = (s64) (sp - 2)->fvalue;
+                            (sp - 2)->lvalue = jvm_float_to_long((sp - 2)->fvalue);
                             r->pc++;
 
                             break;
@@ -2149,7 +2150,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("d2i: %lf\n", (sp - 2)->dvalue);
 #endif
                             --sp;
-                            (sp - 1)->ivalue = (s32) (sp - 1)->dvalue;
+                            (sp - 1)->ivalue = jvm_double_to_int((sp - 1)->dvalue);
                             r->pc++;
 
                             break;
@@ -2161,7 +2162,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(r);
                             jvm_printf("d2l: %lf\n", (sp - 2)->dvalue);
 #endif
-                            (sp - 2)->lvalue = (s64) (sp - 2)->dvalue;
+                            (sp - 2)->lvalue = jvm_double_to_long((sp - 2)->dvalue);
                             r->pc++;
 
                             break;
@@ -3196,6 +3197,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             r->count = (--sp)->ivalue;
 
+                            if (r->count < 0) {
+                                goto label_negativearraysize_throw;
+                            }
+
                             stack->sp = sp;
                             r->ins = jarray_create_by_type_index(r, r->count, r->idx);
                             sp = stack->sp;
@@ -3213,6 +3218,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->idx = *((u16 *) (r->pc + 1));
 
                             r->count = (--sp)->ivalue;
+                            if (r->count < 0) {
+                                goto label_negativearraysize_throw;
+                            }
                             r->other = pairlist_get(clazz->arr_class_type, (__refer) (intptr_t) r->idx);
 
                             stack->sp = sp;
@@ -3428,8 +3436,15 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #else
                             s32 dim[r->count];
 #endif
-                            for (r->idx = 0; r->idx < r->count; r->idx++)
+                            s32 has_negative_dimension = 0;
+                            for (r->idx = 0; r->idx < r->count; r->idx++) {
                                 dim[r->idx] = (--sp)->ivalue;
+                                if (dim[r->idx] < 0) has_negative_dimension = 1;
+                            }
+
+                            if (has_negative_dimension) {
+                                goto label_negativearraysize_throw;
+                            }
 
                             stack->sp = sp;
                             r->ins = jarray_multi_create(r, dim, r->count, r->ustr, 0);
@@ -3490,7 +3505,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_jsr_w: {
                             r->offset = *((s32 *) (r->pc + 1));
-                            (sp++)->rvalue = (r->pc + 3);
+                            (sp++)->rvalue = (r->pc + 5);
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(r);
                             jvm_printf("jsr_w: %d\n", r->offset);
@@ -4050,6 +4065,18 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 label_checkcast_throw: {
                         stack->sp = sp;
                         push_ref(stack, (__refer) exception_create(JVM_EXCEPTION_CLASSCAST, r));
+                        goto label_exception_handle;
+                    }
+
+                label_negativearraysize_throw: {
+                        stack->sp = sp;
+                        push_ref(stack, (__refer) exception_create(JVM_EXCEPTION_NEGATIVEARRAYSIZE, r));
+                        goto label_exception_handle;
+                    }
+
+                label_arraystore_throw: {
+                        stack->sp = sp;
+                        push_ref(stack, (__refer) exception_create(JVM_EXCEPTION_ARRAYSTORE, r));
                         goto label_exception_handle;
                     }
 

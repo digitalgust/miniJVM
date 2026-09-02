@@ -292,24 +292,8 @@ s32 java_lang_Class_getComponentType(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
     JClass *other = insOfJavaLangClass_get_classHandle(runtime, ins);
-    s32 idx = utf8_last_indexof_c(other->name, "[");
-    if (idx > 0) {
-        Utf8String *ustr = utf8_create_part(other->name, idx + 1, other->name->length - 1 - idx);
-        c8 ch = utf8_index_of(ustr, 0);
-        if (ch == 'L') {
-            utf8_substring(ustr, 1, ustr->length - 2);
-        } else {
-            c8 *cstr = getDataTypeFullName(ch);
-            utf8_clear(ustr);
-            utf8_append_c(ustr, cstr);
-        }
-
-        JClass *cl = classes_load_get_with_clinit(other->jloader, ustr, runtime);
-        if (cl) {
-            push_ref(stack, cl->ins_class);
-        } else {
-            push_ref(stack, NULL);
-        }
+    if (other && other->component_class) {
+        push_ref(stack, insOfJavaLangClass_create_get(runtime, other->component_class));
     } else {
         push_ref(stack, NULL);
     }
@@ -1005,19 +989,40 @@ s32 java_lang_System_arraycopy(Runtime *runtime, JClass *clazz) {
         Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
         push_ref(stack, (__refer) exception);
         ret = RUNTIME_STATUS_EXCEPTION;
+    } else if (src->mb.type != MEM_TYPE_ARR || dest->mb.type != MEM_TYPE_ARR) {
+        push_ref(stack, exception_create(JVM_EXCEPTION_ARRAYSTORE, runtime));
+        ret = RUNTIME_STATUS_EXCEPTION;
+    } else if (src_start < 0 || dest_start < 0 || count < 0
+               || (s64) src_start + count > src->arr_length
+               || (s64) dest_start + count > dest->arr_length) {
+        push_ref(stack, exception_create(JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, runtime));
+        ret = RUNTIME_STATUS_EXCEPTION;
     } else {
-        s32 bytes = DATA_TYPE_BYTES[src->mb.clazz->mb.arr_type_index];
-        //根据元素宽
-        src_start *= bytes;
-        count *= bytes;
-        dest_start *= bytes;
-        if (src_start + count > src->arr_length * bytes || dest_start + count > dest->arr_length * bytes || count < 0) {
-            Instance *exception = exception_create(JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, runtime);
-            push_ref(stack, (__refer) exception);
+        s32 src_refer = isDataReferByIndex(src->mb.arr_type_index);
+        s32 dest_refer = isDataReferByIndex(dest->mb.arr_type_index);
+        if (src_refer != dest_refer
+            || (!src_refer && src->mb.clazz->component_class != dest->mb.clazz->component_class)) {
+            push_ref(stack, exception_create(JVM_EXCEPTION_ARRAYSTORE, runtime));
             ret = RUNTIME_STATUS_EXCEPTION;
+        } else if (!src_refer
+                   || assignable_from(dest->mb.clazz->component_class,
+                                      src->mb.clazz->component_class)) {
+            s32 bytes = DATA_TYPE_BYTES[src->mb.arr_type_index];
+            if (count > 0) {
+                memmove(dest->arr_body + (dest_start * bytes),
+                        src->arr_body + (src_start * bytes), count * bytes);
+            }
         } else {
-            if (src->arr_body && dest->arr_body)
-                memmove(&(dest->arr_body[dest_start]), &(src->arr_body[src_start]), count);
+            s32 i;
+            for (i = 0; i < count; i++) {
+                Instance *value = (__refer) (intptr_t) jarray_get_field(src, src_start + i);
+                if (!jarray_reference_store_check(dest, value)) {
+                    push_ref(stack, exception_create(JVM_EXCEPTION_ARRAYSTORE, runtime));
+                    ret = RUNTIME_STATUS_EXCEPTION;
+                    break;
+                }
+                jarray_set_field(dest, dest_start + i, (s64) (intptr_t) value);
+            }
         }
     }
 #if _JVM_DEBUG_LOG_LEVEL > 5
