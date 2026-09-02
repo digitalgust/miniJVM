@@ -780,6 +780,7 @@ __refer jthread_get_name_value(MiniJVM *jvm, Instance *ins) {
 }
 
 __refer jthread_get_stackframe_value(MiniJVM *jvm, Instance *ins) {
+    if (!ins) return NULL;
     c8 *ptr = getInstanceFieldPtr(ins, jvm->shortcut.thread_stackFrame);
     return (__refer) (intptr_t) getFieldLong(ptr);
 }

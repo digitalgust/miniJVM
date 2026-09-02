@@ -2063,7 +2063,8 @@ s32 com_misc_Unsafe_objectFieldOffset(Runtime *runtime, JClass *clazz) {
     Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
     pos++;
     FieldInfo *fi = (__refer) (intptr_t) localvar_getLong(runtime->localvar, pos);
-    push_long(runtime->stack, !fi
+    // static fields have no instance offset; caller must use staticFieldOffset
+    push_long(runtime->stack, !fi || (fi->access_flags & ACC_STATIC)
                                   ? -1
                                   : (s64) (intptr_t)
                                   fi->offset_instance);
@@ -2075,10 +2076,11 @@ s32 com_misc_Unsafe_staticFieldOffset(Runtime *runtime, JClass *clazz) {
     Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
     pos++;
     FieldInfo *fi = (__refer) (intptr_t) localvar_getLong(runtime->localvar, pos);
+    // statics live in JClass.field_static, unreachable from any object base:
+    // return the ABSOLUTE address of the slot so get/putLong(null, addr) works.
     push_long(runtime->stack, !fi || !(fi->access_flags & ACC_STATIC)
                                   ? -1
-                                  : (s64) (intptr_t)
-                                  fi->offset);
+                                  : (s64) (intptr_t) getStaticFieldPtr(fi));
     return 0;
 }
 
@@ -2089,7 +2091,8 @@ s32 com_misc_Unsafe_objectFieldBase(Runtime *runtime, JClass *clazz) {
     Instance *ins = localvar_getRefer(runtime->localvar, pos);
     // obj_fields and arr_body share the same union slot (see _InstanceType in jvm.h),
     // so this base works for both regular object fields and array elements.
-    push_long(runtime->stack, ins ? (s64) (intptr_t) ins->obj_fields : -1);
+    // JDK convention: a null base means offsets are absolute addresses (base 0).
+    push_long(runtime->stack, ins ? (s64) (intptr_t) ins->obj_fields : 0);
     return 0;
 }
 
@@ -2134,11 +2137,9 @@ s32 com_misc_Unsafe_compareAndSwapLong(Runtime *runtime, JClass *clazz) {
         return RUNTIME_STATUS_EXCEPTION;
     } else {
         c8 *src = (c8 *) (ins ? ins->arr_body : NULL) + offset;
-#if __JVM_ARCH_64__
-        s32 ret = (s32) ATOMIC_CAS((s64 *) src, oldv, newv);
-#else
-        s32 ret = ATOMIC_CAS((s64 *) src, oldv, newv);
-#endif
+        // ATOMIC_CAS is 32-bit on MSVC (InterlockedCompareExchange/LONG);
+        // an 8-byte slot must use the 64-bit variant.
+        s32 ret = (s32) ATOMIC_CAS64((s64 *) src, oldv, newv);
         push_int(runtime->stack, ret);
         return 0;
     }
@@ -2163,7 +2164,7 @@ s32 com_misc_Unsafe_compareAndSwapObject(Runtime *runtime, JClass *clazz) {
         c8 *src = (c8 *) (ins ? ins->arr_body : NULL) + offset;
         s32 ret = 0;
         if (sizeof(__refer) == 8) {
-            ret = ATOMIC_CAS((s64 *) src, (s64) (intptr_t) oldv, (s64) (intptr_t) newv);
+            ret = (s32) ATOMIC_CAS64((s64 *) src, (s64) (intptr_t) oldv, (s64) (intptr_t) newv);
         } else {
             ret = ATOMIC_CAS((s32 *) src, (s32) (intptr_t) oldv, (s32) (intptr_t) newv);
         }
@@ -2181,21 +2182,47 @@ s32 com_misc_Unsafe_pack(Runtime *runtime, JClass *clazz) {
     s64 time = localvar_getLong(runtime->localvar, pos);
     pos += 2;
 
-    if (time < NANO_2_MILLS_SCALE)time = NANO_2_MILLS_SCALE;
-    s64 waitmills = absolute ? (time - currentTimeMillis()) : time / NANO_2_MILLS_SCALE;
+    // JDK: park(false, 0) blocks until unpark/interrupt (no timeout).
+    s64 waitmills;
+    if (!absolute && time == 0) {
+        waitmills = -1; // infinite, applied as chunked waits below
+    } else {
+        if (!absolute && time > 0 && time < NANO_2_MILLS_SCALE)time = NANO_2_MILLS_SCALE; // sub-ms -> 1ms
+        waitmills = absolute ? (time - currentTimeMillis()) : time / NANO_2_MILLS_SCALE;
+        if (waitmills < 0)waitmills = 0; // deadline already passed
+    }
 
-    s32 ret = 0;
     Runtime *rt = runtime; // current thread
     jthread_lock(&rt->thrd_info->pack, rt);
-    if (rt->thrd_info->is_unparked) {
-        rt->thrd_info->is_unparked = 0;
-    } else {
-        rt->thrd_info->is_unparked = 0;
-        //jvm_printf("++++++pack %llx  %d\n", (s64) (intptr_t) &runtime->thrd_info->pack.thread_lock->thread_cond, (s32) waitmills);
-        ret = jthread_waitTime(&rt->thrd_info->pack, rt, waitmills);
+    for (;;) {
+        if (rt->thrd_info->is_unparked) {
+            rt->thrd_info->is_unparked = 0;
+            break;
+        }
+        if (rt->thrd_info->is_interrupt) {
+            break; // interrupted: return without clearing the flag (JDK)
+        }
+        if (waitmills == 0) {
+            break; // deadline reached
+        }
+        // Chunk the wait: jthread_wakeup notifies thrd_info->curThreadLock which
+        // may point elsewhere when the thread holds other monitors, so an
+        // interrupt-driven notify can be missed; the chunk timeout bounds the loss.
+        s64 chunk = waitmills < 0 || waitmills > 100 ? 100 : waitmills;
+        s32 ret = jthread_waitTime(&rt->thrd_info->pack, rt, chunk);
+        if (ret != RUNTIME_STATUS_NORMAL) {
+            // JDK: park never throws. Drop the InterruptedException pushed by
+            // jthread_waitTime and restore the interrupt flag for the caller.
+            pop_ref(runtime->stack);
+            rt->thrd_info->is_interrupt = 1;
+            break;
+        }
+        if (waitmills > 0) {
+            waitmills -= chunk;
+        }
     }
     jthread_unlock(&rt->thrd_info->pack, rt);
-    return ret;
+    return 0;
 }
 
 s32 com_misc_Unsafe_unpack(Runtime *runtime, JClass *clazz) {
@@ -2205,14 +2232,38 @@ s32 com_misc_Unsafe_unpack(Runtime *runtime, JClass *clazz) {
     Instance *thrd = localvar_getRefer(runtime->localvar, pos);
     pos++;
 
+    if (!thrd) return 0; // unpark(null): no-op
     Runtime *rt = jthread_get_stackframe_value(runtime->jvm, thrd);
+    if (!rt) return 0; // not started or already reaped: nothing to signal
+
     jthread_lock(&rt->thrd_info->pack, rt);
-    if (rt && rt->thrd_info->thread_status != THREAD_STATUS_ZOMBIE) {
+    if (rt->thrd_info->thread_status != THREAD_STATUS_ZOMBIE) {
         rt->thrd_info->is_unparked = 1;
         jthread_notify(&rt->thrd_info->pack, rt);
-        //jvm_printf("----unpack %llx \n", (s64) (intptr_t) &rt->thrd_info->pack.thread_lock->thread_cond);
     }
     jthread_unlock(&rt->thrd_info->pack, rt);
+    return 0;
+}
+
+s32 com_misc_Unsafe_getAddress(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
+    pos++;
+    s64 address = localvar_getLong(runtime->localvar, pos);
+
+    push_long(runtime->stack, (s64) (intptr_t) (*(__refer *) (intptr_t) address));
+    return 0;
+}
+
+s32 com_misc_Unsafe_putAddress(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
+    pos++;
+    s64 address = localvar_getLong(runtime->localvar, pos);
+    pos += 2;
+    s64 x = localvar_getLong(runtime->localvar, pos);
+
+    *(__refer *) (intptr_t) address = (__refer) (intptr_t) x;
     return 0;
 }
 
@@ -2304,6 +2355,8 @@ static java_native_method METHODS_REFLECT_TABLE[] = {
     {"sun/misc/Unsafe", "compareAndSwapObject", "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z", com_misc_Unsafe_compareAndSwapObject},
     {"sun/misc/Unsafe", "park", "(ZJ)V", com_misc_Unsafe_pack},
     {"sun/misc/Unsafe", "unpark", "(Ljava/lang/Object;)V", com_misc_Unsafe_unpack},
+    {"sun/misc/Unsafe", "getAddress", "(J)J", com_misc_Unsafe_getAddress},
+    {"sun/misc/Unsafe", "putAddress", "(JJ)V", com_misc_Unsafe_putAddress},
     {"org/mini/vm/RefNative", "resetProfile", "()V", org_mini_vm_RefNative_resetProfile},
     {"org/mini/vm/RefNative", "getProfileAll", "()Ljava/lang/String;", org_mini_vm_RefNative_getProfileAll},
 

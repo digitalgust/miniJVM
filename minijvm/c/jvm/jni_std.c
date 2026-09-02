@@ -1334,7 +1334,25 @@ s32 java_lang_Thread_interrupted0(Runtime *runtime, JClass *clazz) {
         push_int(runtime->stack, 0);
     } else {
         Runtime *rt_thread = jthread_get_stackframe_value(runtime->jvm, ins_thread);
-        push_int(runtime->stack, rt_thread->thrd_info->is_interrupt != 0);
+        push_int(runtime->stack, rt_thread && rt_thread->thrd_info->is_interrupt != 0);
+    }
+    return 0;
+}
+
+s32 java_lang_Thread_interruptedClear0(Runtime *runtime, JClass *clazz) {
+    // Thread.interrupted(): reports AND clears the interrupt status (JDK).
+    Instance *ins_thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
+    if (ins_thread == NULL) {
+        push_int(runtime->stack, 0);
+    } else {
+        Runtime *rt_thread = jthread_get_stackframe_value(runtime->jvm, ins_thread);
+        if (rt_thread) {
+            s32 interrupted = rt_thread->thrd_info->is_interrupt != 0;
+            rt_thread->thrd_info->is_interrupt = 0;
+            push_int(runtime->stack, interrupted);
+        } else {
+            push_int(runtime->stack, 0);
+        }
     }
     return 0;
 }
@@ -1539,6 +1557,7 @@ static java_native_method METHODS_STD_TABLE[] = {
     {"java/lang/Thread", "setPriority0", "(I)V", java_lang_Thread_setPriority0},
     {"java/lang/Thread", "interrupt0", "(Ljava/lang/Thread;)V", java_lang_Thread_interrupt0},
     {"java/lang/Thread", "interrupted0", "(Ljava/lang/Thread;)Z", java_lang_Thread_interrupted0},
+    {"java/lang/Thread", "interruptedClear0", "(Ljava/lang/Thread;)Z", java_lang_Thread_interruptedClear0},
     {"java/lang/Thread", "setContextClassLoader0", "(Ljava/lang/ClassLoader;)V", java_lang_Thread_setContextClassLoader0},
     {"java/lang/Thread", "getContextClassLoader0", "()Ljava/lang/ClassLoader;", java_lang_Thread_getContextClassLoader0},
     {"java/lang/Throwable", "printStackTrace0", "", java_io_Throwable_printStackTrace0},

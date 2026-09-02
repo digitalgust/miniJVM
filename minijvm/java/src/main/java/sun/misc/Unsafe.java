@@ -16,8 +16,6 @@ import org.mini.vm.RefNative;
 import java.lang.reflect.Field;
 
 public final class Unsafe {
-    private void Unsafe() {
-    }
 
     private static final Unsafe theUnsafe = new Unsafe();
 
@@ -26,6 +24,9 @@ public final class Unsafe {
     }
 
     public long allocateMemory(long bytes) {
+        if (bytes < 0 || bytes > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("invalid size: " + bytes);
+        }
         return RefNative.heap_calloc((int) bytes);
     }
 
@@ -264,15 +265,25 @@ public final class Unsafe {
     }
 
     public long objectFieldOffset(Field field) {
-        return objectFieldOffset(field.getRefField().fieldId);
+        long offset = objectFieldOffset(field.getRefField().fieldId);
+        if (offset < 0) {
+            throw new IllegalArgumentException("not an instance field: " + field);
+        }
+        return offset;
     }
 
     public Object staticFieldBase(Field field) {
+        // statics live in a class-private area: staticFieldOffset returns the
+        // absolute address of the slot, so a null base is the correct pairing.
         return null;
     }
 
     public long staticFieldOffset(Field field) {
-        return staticFieldOffset(field.getRefField().fieldId);
+        long address = staticFieldOffset(field.getRefField().fieldId);
+        if (address < 0) {
+            throw new IllegalArgumentException("not a static field: " + field);
+        }
+        return address;
     }
 
     public int arrayBaseOffset(Class<?> arrayClass) {
@@ -306,6 +317,9 @@ public final class Unsafe {
     public void copyMemory(Object srcBase, long srcOffset,
                            Object destBase, long destOffset,
                            long count) {
+        if (count < 0 || count > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("invalid length: " + count);
+        }
         long srcb = objectFieldBase(srcBase);
         long destb = objectFieldBase(destBase);
         RefNative.heap_copy(srcb + srcOffset, 0, destb + destOffset, 0, (int) count);
