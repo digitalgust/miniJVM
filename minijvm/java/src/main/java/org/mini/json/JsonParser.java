@@ -22,24 +22,7 @@ public class JsonParser<T> {
 
     private Object[] callPara = {null};
 
-    static List<StringBuilder> sbpool = new ArrayList<>();
-
     ClassLoader classLoader;
-
-    static synchronized StringBuilder getStringBuilder() {
-        if (sbpool.size() > 0) {
-            return sbpool.remove(sbpool.size() - 1);
-        } else {
-            return new StringBuilder();
-        }
-    }
-
-    static synchronized void releaseStringBuilder(StringBuilder sb) {
-        if (sbpool.size() < 10) {
-            sb.setLength(0);
-            sbpool.add(sb);
-        }
-    }
 
     public JsonParser() {
         SimpleModule module = new SimpleModule();
@@ -333,8 +316,68 @@ public class JsonParser<T> {
         return null;
     }
 
+    /**
+     * Resolved binding of one json field name of one class: the setter method
+     * if present, else the field. Resolving costs a getMethods()/getFields()
+     * scan plus "set"+name string building per json key per instance, so
+     * results are cached per class.
+     */
+    static class FieldBinder {
+        final Method setter;
+        final Field field;
+        final Class<?> valueClass;
+        final String valueTypeName;
+
+        FieldBinder(Method setter, Field field, Class<?> valueClass, String valueTypeName) {
+            this.setter = setter;
+            this.field = field;
+            this.valueClass = valueClass;
+            this.valueTypeName = valueTypeName;
+        }
+    }
+
+    private static final Map<Class, Map<String, FieldBinder>> BINDER_CACHE = new HashMap<>();
+
+    private static FieldBinder findBinder(Class<?> clazz, String name) {
+        Map<String, FieldBinder> classBinders;
+        synchronized (BINDER_CACHE) {
+            classBinders = BINDER_CACHE.get(clazz);
+            if (classBinders == null) {
+                classBinders = new HashMap<>();
+                BINDER_CACHE.put(clazz, classBinders);
+            }
+        }
+        synchronized (classBinders) {
+            FieldBinder binder = classBinders.get(name);
+            if (binder != null)
+                return binder;
+            Method setter = getMethodByName(name, clazz);
+            if (setter != null && !Modifier.isStatic(setter.getModifiers())) {
+                binder = new FieldBinder(setter, null, setter.getParameterTypes()[0],
+                        setter.getGenericParameterTypes()[0].getTypeName());
+            } else {
+                Field field = getFieldByName(name, clazz);
+                if (field != null && !Modifier.isStatic(field.getModifiers())) {
+                    binder = new FieldBinder(null, field, field.getType(), field.getGenericType().getTypeName());
+                } else {
+                    binder = new FieldBinder(null, null, null, null);
+                }
+            }
+            classBinders.put(name, binder);
+            return binder;
+        }
+    }
+
+    /**
+     * Scanning state. The whole document is converted to a char[] once so the
+     * hot loops index the array directly instead of paying String.length() +
+     * String.charAt() calls per character, and one StringBuilder is reused
+     * within a parse for the rare escaped-string path.
+     */
     static class ParseToken {
-        String source;
+        final char[] chars;
+
+        final int length;
 
         int pos;
 
@@ -344,41 +387,34 @@ public class JsonParser<T> {
 
         JsonParser.JsonCell result;
 
+        private StringBuilder sb;
+
         ParseToken(String source, int pos) {
-            this.source = source;
+            this.chars = source.toCharArray();
+            this.length = this.chars.length;
             this.pos = pos;
         }
 
-        ParseToken(String source, int pos, Object parentContainer, JsonParser.JsonCell containerKey) {
-            this.source = source;
-            this.pos = pos;
-            this.parentContainer = parentContainer;
-            this.containerKey = containerKey;
-        }
-
-        void skipWhitespace() {
-            while (this.pos < this.source.length() && Character.isWhitespace(this.source.charAt(this.pos)))
-                this.pos++;
-        }
-
-        char currentChar() {
-            return (this.pos < this.source.length()) ? this.source.charAt(this.pos) : Character.MIN_VALUE;
-        }
-
-        boolean isEnd() {
-            return (this.pos >= this.source.length());
-        }
-
-        void advance() {
-            this.pos++;
+        StringBuilder acquireBuilder() {
+            if (this.sb == null) {
+                this.sb = new StringBuilder();
+            } else {
+                this.sb.setLength(0);
+            }
+            return this.sb;
         }
     }
 
     private static void parseAndFillDirect(ParseToken token) {
-        token.skipWhitespace();
-        if (token.isEnd())
+        char[] cs = token.chars;
+        int pos = token.pos;
+        int length = token.length;
+        while (pos < length && cs[pos] <= ' ')
+            pos++;
+        token.pos = pos;
+        if (pos >= length)
             return;
-        char ch = token.currentChar();
+        char ch = cs[pos];
         if (ch == '{') {
             JsonMap<JsonCell, JsonCell> newMap = new JsonMap<>();
             putIntoContainer(token.parentContainer, token.containerKey, newMap);
@@ -405,121 +441,172 @@ public class JsonParser<T> {
     }
 
     private static void parseStringDirect(ParseToken token) {
-        StringBuilder sb = getStringBuilder();
-        token.advance();
-        while (!token.isEnd()) {
-            char ch = token.currentChar();
+        char[] cs = token.chars;
+        int length = token.length;
+        int pos = token.pos + 1; // skip opening quote
+        int start = pos;
+        // fast path: no escapes -> single bulk String allocation
+        while (pos < length) {
+            char ch = cs[pos];
             if (ch == '"') {
-                token.advance();
+                token.result = new JsonString(new String(cs, start, pos - start));
+                token.pos = pos + 1;
+                return;
+            }
+            if (ch == '\\')
+                break;
+            pos++;
+        }
+        // slow path: string contains escapes
+        StringBuilder sb = token.acquireBuilder();
+        if (pos > start)
+            sb.append(cs, start, pos - start);
+        while (pos < length) {
+            char ch = cs[pos];
+            if (ch == '"') {
+                pos++;
                 break;
             }
             if (ch == '\\') {
-                token.advance();
-                if (!token.isEnd()) {
-                    ch = token.currentChar();
-                    if (ch == 'r') {
-                        sb.append('\r');
-                    } else if (ch == 'n') {
-                        sb.append('\n');
-                    } else if (ch == 't') {
-                        sb.append('\t');
-                    } else if (ch == 'b') {
-                        sb.append('\b');
-                    } else if (ch == 'f') {
-                        sb.append('\f');
-                    } else if (ch == 'u') {
-                        StringBuilder unicode = getStringBuilder();
-                        for (int i = 0; i < 4 && !token.isEnd(); i++) {
-                            token.advance();
-                            if (!token.isEnd())
-                                unicode.append(token.currentChar());
+                pos++;
+                if (pos >= length)
+                    break;
+                ch = cs[pos];
+                if (ch == 'u') {
+                    int v = 0;
+                    for (int i = 0; i < 4 && pos + 1 < length; i++) {
+                        char hc = cs[pos + 1];
+                        int d;
+                        if (hc >= '0' && hc <= '9') {
+                            d = hc - '0';
+                        } else if (hc >= 'a' && hc <= 'f') {
+                            d = hc - 'a' + 10;
+                        } else if (hc >= 'A' && hc <= 'F') {
+                            d = hc - 'A' + 10;
+                        } else {
+                            throw new NumberFormatException("invalid \\uXXXX escape");
                         }
-                        sb.append((char) Integer.parseInt(unicode.toString(), 16));
-                        releaseStringBuilder(unicode);
-                    } else {
-                        sb.append(ch);
+                        v = (v << 4) | d;
+                        pos++;
                     }
+                    sb.append((char) v);
+                } else if (ch == 'r') {
+                    sb.append('\r');
+                } else if (ch == 'n') {
+                    sb.append('\n');
+                } else if (ch == 't') {
+                    sb.append('\t');
+                } else if (ch == 'b') {
+                    sb.append('\b');
+                } else if (ch == 'f') {
+                    sb.append('\f');
+                } else {
+                    sb.append(ch);
                 }
             } else {
                 sb.append(ch);
             }
-            token.advance();
+            pos++;
         }
         token.result = new JsonString(sb.toString());
-        releaseStringBuilder(sb);
+        token.pos = pos;
     }
 
     private static void parseNumberDirect(ParseToken token) {
-        StringBuilder sb = getStringBuilder();
-        while (!token.isEnd()) {
-            char ch = token.currentChar();
-            if (ch == ',' || ch == '}' || ch == ']' || Character.isWhitespace(ch))
+        char[] cs = token.chars;
+        int length = token.length;
+        int pos = token.pos;
+        int start = pos;
+        while (pos < length) {
+            char ch = cs[pos];
+            if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ')
                 break;
-            sb.append(ch);
-            token.advance();
+            pos++;
         }
-        token.result = new JsonNumber(sb.toString());
-        releaseStringBuilder(sb);
+        token.pos = pos;
+        token.result = new JsonNumber(new String(cs, start, pos - start));
     }
 
     private static void parseMapDirect(ParseToken token, JsonMap<JsonCell, JsonCell> targetMap) {
-        token.advance();
-        while (!token.isEnd()) {
-            token.skipWhitespace();
-            if (token.isEnd() || token.currentChar() == '}') {
-                if (!token.isEnd())
-                    token.advance();
+        char[] cs = token.chars;
+        int length = token.length;
+        int pos = token.pos + 1; // skip '{'
+        while (pos < length) {
+            while (pos < length && cs[pos] <= ' ')
+                pos++;
+            if (pos >= length || cs[pos] == '}') {
+                if (pos < length)
+                    pos++;
                 break;
             }
+            token.pos = pos;
             parseStringDirect(token);
+            pos = token.pos;
             JsonCell key = token.result;
-            token.skipWhitespace();
-            if (!token.isEnd() && token.currentChar() == ':')
-                token.advance();
-            token.skipWhitespace();
+            while (pos < length && cs[pos] <= ' ')
+                pos++;
+            if (pos < length && cs[pos] == ':')
+                pos++;
+            while (pos < length && cs[pos] <= ' ')
+                pos++;
             Object tempParentContainer = token.parentContainer;
             JsonCell tempContainerKey = token.containerKey;
+            token.pos = pos;
             token.parentContainer = targetMap;
             token.containerKey = key;
             parseAndFillDirect(token);
+            pos = token.pos;
             token.parentContainer = tempParentContainer;
             token.containerKey = tempContainerKey;
-            token.skipWhitespace();
-            if (!token.isEnd() && token.currentChar() == ',')
-                token.advance();
-            token.skipWhitespace();
+            while (pos < length && cs[pos] <= ' ')
+                pos++;
+            if (pos < length && cs[pos] == ',')
+                pos++;
         }
+        token.pos = pos;
     }
 
     private static void parseListDirect(ParseToken token, JsonList<JsonCell> targetList) {
-        token.advance();
-        while (!token.isEnd()) {
-            token.skipWhitespace();
-            if (token.isEnd() || token.currentChar() == ']') {
-                if (!token.isEnd())
-                    token.advance();
+        char[] cs = token.chars;
+        int length = token.length;
+        int pos = token.pos + 1; // skip '['
+        while (pos < length) {
+            while (pos < length && cs[pos] <= ' ')
+                pos++;
+            if (pos >= length || cs[pos] == ']') {
+                if (pos < length)
+                    pos++;
                 break;
             }
             Object tempParentContainer = token.parentContainer;
             JsonCell tempContainerKey = token.containerKey;
+            token.pos = pos;
             token.parentContainer = targetList;
             token.containerKey = null;
             parseAndFillDirect(token);
+            pos = token.pos;
             token.parentContainer = tempParentContainer;
             token.containerKey = tempContainerKey;
-            token.skipWhitespace();
-            if (!token.isEnd() && token.currentChar() == ',')
-                token.advance();
-            token.skipWhitespace();
+            while (pos < length && cs[pos] <= ' ')
+                pos++;
+            if (pos < length && cs[pos] == ',')
+                pos++;
         }
+        token.pos = pos;
     }
 
     public static final JsonCell parse(String s, int pos) {
         try {
             if (s.length() == 0)
                 return null;
-            ParseToken token = new ParseToken(s.trim(), 0);
-            char ch = token.currentChar();
+            ParseToken token = new ParseToken(s, 0);
+            char[] cs = token.chars;
+            int length = token.length;
+            int p = 0;
+            while (p < length && cs[p] <= ' ')
+                p++;
+            token.pos = p;
+            char ch = (p < length) ? cs[p] : Character.MIN_VALUE;
             if (ch == '{') {
                 JsonMap<JsonCell, JsonCell> rootMap = new JsonMap<>();
                 parseMapDirect(token, rootMap);
@@ -564,48 +651,45 @@ public class JsonParser<T> {
                     ins = findInjectableValues(clazz);
                     if (ins == null)
                         ins = clazz.newInstance();
-                    fields = clazz.getFields();
-                    for (int i = 0, length = fields.length; i < length; i++) {
-                        Field f = fields[i];
-                        Class<?> c = f.getType();
-                        Object o = findInjectableValues(c);
-                        if (o != null)
-                            f.set(ins, o);
+                    if (this.injectableValues != null && !this.injectableValues.values.isEmpty()) {
+                        fields = clazz.getFields();
+                        for (int i = 0, length = fields.length; i < length; i++) {
+                            Field f = fields[i];
+                            Class<?> c = f.getType();
+                            Object o = findInjectableValues(c);
+                            if (o != null)
+                                f.set(ins, o);
+                        }
                     }
                     for (JsonCell jc : map.keySet()) {
                         if (jc.getType() != 2)
                             throw new RuntimeException("[JSON]error: field name need quotation : " + jc.toString());
-                        String fieldName = ((JsonString) jc).toString();
                         JsonCell childJson = map.get(jc);
-                        Method method = getMethodByName(fieldName, clazz);
-                        if (method != null && !Modifier.isStatic(method.getModifiers())) {
-                            Type[] pt = method.getGenericParameterTypes();
-                            Class<?> childClazz = method.getParameterTypes()[0];
+                        FieldBinder binder = findBinder(clazz, ((JsonString) jc).str);
+                        if (binder.setter != null) {
                             try {
-                                callPara[0] = map2obj(childJson, childClazz, pt[0].getTypeName());
-                                method.invoke(ins, callPara);
+                                callPara[0] = map2obj(childJson, binder.valueClass, binder.valueTypeName);
+                                binder.setter.invoke(ins, callPara);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
                             continue;
                         }
-                        Field field = getFieldByName(fieldName, clazz);
-                        if (field != null && !Modifier.isStatic(field.getModifiers())) {
+                        if (binder.field != null) {
                             try {
-                                if (!field.isAccessible())
-                                    field.setAccessible(true);
-                                String fieldType = field.getGenericType().getTypeName();
-                                Object childObj = map2obj(childJson, field.getType(), fieldType);
+                                if (!binder.field.isAccessible())
+                                    binder.field.setAccessible(true);
+                                Object childObj = map2obj(childJson, binder.valueClass, binder.valueTypeName);
                                 if (childObj instanceof Polymorphic)
-                                    childObj = map2obj(childJson, ((Polymorphic) childObj).getType(), fieldType);
-                                field.set(ins, childObj);
+                                    childObj = map2obj(childJson, ((Polymorphic) childObj).getType(), binder.valueTypeName);
+                                binder.field.set(ins, childObj);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
                             continue;
                         }
                         if (!(ins instanceof Polymorphic))
-                            SysLog.warn("[JSON]" + clazz.getName() + " field '" + fieldName + "' setter or field not found.");
+                            SysLog.warn("[JSON]" + clazz.getName() + " field '" + ((JsonString) jc).str + "' setter or field not found.");
                     }
                     return ins;
                 case JsonCell.TYPE_LIST:

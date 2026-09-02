@@ -1399,15 +1399,28 @@ s32 org_mini_reflect_ReflectMethod_invokeMethod(Runtime *runtime, JClass *clazz)
     Instance *argsArr = (Instance *) localvar_getRefer(runtime->localvar, pos++);
     s32 ret = 0;
     if (methodInfo) {
+        s32 i;
+        s32 argsLen = argsArr ? argsArr->arr_length : 0;
+        //validate before anything is pushed: null cannot be unboxed into a primitive parameter
+        for (i = 0; i < argsLen; i++) {
+            utf8_char tag = utf8_char_at(methodInfo->paraType, i);
+            if (tag == '4' || tag == '8') {
+                Instance *p = (__refer) (intptr_t) jarray_get_field(argsArr, i);
+                if (p == NULL) {
+                    exception_throw(JVM_EXCEPTION_ILLEGALARGUMENT, runtime,
+                                    "argument type mismatch: null for primitive parameter");
+                    return RUNTIME_STATUS_EXCEPTION;
+                }
+            }
+        }
         if (!(methodInfo->is_static)) {
             push_ref(runtime->stack, ins);
         }
-        s32 i;
-        for (i = 0; i < argsArr->arr_length; i++) {
+        for (i = 0; i < argsLen; i++) {
             Instance *p = (__refer) (intptr_t) jarray_get_field(argsArr, i);
             switch (utf8_char_at(methodInfo->paraType, i)) {
                 case '4': {
-                    s32 val;
+                    s32 val = 0;
                     if (p->mb.clazz == shortcut->booleanclass) {
                         c8 *ptr = getInstanceFieldPtr(p, shortcut->boolean_value);
                         val = getFieldByte(ptr);
@@ -1431,7 +1444,7 @@ s32 org_mini_reflect_ReflectMethod_invokeMethod(Runtime *runtime, JClass *clazz)
                     break;
                 }
                 case '8': {
-                    s64 val;
+                    s64 val = 0;
                     if (p->mb.clazz == shortcut->longclass) {
                         c8 *ptr = getInstanceFieldPtr(p, shortcut->long_value);
                         val = getFieldLong(ptr);
