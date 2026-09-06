@@ -1193,7 +1193,7 @@ s32 multiarray(Runtime *runtime, Utf8String *desc, s32 count) {
     Instance *arr = jarray_multi_create(runtime, dim, count, desc, 0);
 
     if (!arr) {
-        return RUNTIME_STATUS_EXCEPTION;
+        return exception_throw_out_of_memory(runtime);
     } else {
         push_ref(stack, (__refer) arr);
     }
@@ -4529,6 +4529,10 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) other);
                     sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(P, P, P), SLJIT_IMM, SLJIT_FUNC_ADDR(instance_create));
                     _gen_load_sp_ip(C);
+                    _gen_exception_check_throw_handle(C, SLJIT_EQUAL,
+                                                      SLJIT_RETURN_REG, 0,
+                                                      SLJIT_IMM, 0,
+                                                      JVM_ERROR_OUTOFMEMORY, 0);
                     _gen_stack_push_ref(C, SLJIT_RETURN_REG, 0);
                 } else {
                     return JIT_GEN_ERROR;
@@ -4557,6 +4561,10 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_IMM, typeIdx);
                 sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(P, P, 32, 32), SLJIT_IMM, SLJIT_FUNC_ADDR(jarray_create_by_type_index));
                 _gen_load_sp_ip(C);
+                _gen_exception_check_throw_handle(C, SLJIT_EQUAL,
+                                                  SLJIT_RETURN_REG, 0,
+                                                  SLJIT_IMM, 0,
+                                                  JVM_ERROR_OUTOFMEMORY, -1);
                 _gen_stack_set_ref(C, -1, SLJIT_RETURN_REG, 0);
 
                 _gen_ip_modify_imm(C, 2);
@@ -4588,6 +4596,10 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_IMM, (sljit_sw) arr_class);
                 sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(P, P, 32, P), SLJIT_IMM, SLJIT_FUNC_ADDR(jarray_create_by_class));
                 _gen_load_sp_ip(C);
+                _gen_exception_check_throw_handle(C, SLJIT_EQUAL,
+                                                  SLJIT_RETURN_REG, 0,
+                                                  SLJIT_IMM, 0,
+                                                  JVM_ERROR_OUTOFMEMORY, -1);
                 _gen_stack_set_ref(C, -1, SLJIT_RETURN_REG, 0);
 
                 _gen_ip_modify_imm(C, 3);

@@ -982,6 +982,7 @@ s32 immix_should_collect(const ImmixHeap *heap, size_t incoming_bytes) {
     spin_lock(&mutable_heap->lock);
     stats = heap->stats;
     pressure = heap->memory_pressure;
+    heap_limit = (u64) heap->config.heap_limit;
     spin_unlock(&mutable_heap->lock);
     if (pressure != IMMIX_MEMORY_PRESSURE_NONE) return 1;
 
@@ -1001,7 +1002,6 @@ s32 immix_should_collect(const ImmixHeap *heap, size_t incoming_bytes) {
     if ((u64) incoming_bytes > UINT64_MAX - projected) return 1;
     projected += (u64) incoming_bytes;
 
-    heap_limit = (u64) heap->config.heap_limit;
     if (heap_limit != 0) {
         if (projected >= heap_limit) return 1;
         trigger = (heap_limit / 100u) * heap->config.gc_trigger_percent;
@@ -1033,6 +1033,22 @@ ImmixResult immix_trim(ImmixHeap *heap, size_t target_committed_bytes) {
     return immix_block_trim(heap, target_committed_bytes);
 }
 
+ImmixResult immix_set_heap_limit(ImmixHeap *heap, size_t heap_limit) {
+    if (!immix_heap_is_valid(heap)) return IMMIX_ERR_INVALID_ARGUMENT;
+    if (heap_limit != 0 && heap_limit < heap->config.block_size) {
+        return IMMIX_ERR_INVALID_ARGUMENT;
+    }
+
+    spin_lock(&heap->lock);
+    if (heap_limit != 0 && (u64) heap_limit < heap->managed_capacity_bytes) {
+        spin_unlock(&heap->lock);
+        return IMMIX_ERR_INVALID_ARGUMENT;
+    }
+    heap->config.heap_limit = heap_limit;
+    spin_unlock(&heap->lock);
+    return IMMIX_OK;
+}
+
 void immix_get_stats(const ImmixHeap *heap, ImmixStats *out_stats) {
     ImmixHeap *mutable_heap;
     ImmixChunk *chunk;
@@ -1058,6 +1074,7 @@ void immix_get_stats(const ImmixHeap *heap, ImmixStats *out_stats) {
         }
     }
     *out_stats = heap->stats;
+    out_stats->managed_capacity_bytes = heap->managed_capacity_bytes;
     out_stats->chunk_count = chunk_count;
     out_stats->free_block_count = heap->free_blocks.count;
     out_stats->recyclable_block_count = heap->recyclable_blocks.count;
@@ -1648,14 +1665,19 @@ static ImmixResult immix_block_request_collection(ImmixMutator *mutator,
     ImmixHeap *heap = mutator->heap;
     ImmixCollectionReason reason;
     u64 live_bytes;
+    u64 managed_capacity_bytes;
+    u64 heap_limit;
 
     if (!heap->vm_ops.request_collection) return IMMIX_ERR_OUT_OF_MEMORY;
     spin_lock(&heap->lock);
     live_bytes = heap->stats.live_bytes;
+    managed_capacity_bytes = heap->managed_capacity_bytes;
+    heap_limit = (u64) heap->config.heap_limit;
     spin_unlock(&heap->lock);
-    if (heap->config.heap_limit != 0 &&
-        (live_bytes >= (u64) heap->config.heap_limit ||
-         (u64) requested_bytes >= (u64) heap->config.heap_limit - live_bytes)) {
+    if (heap_limit != 0 &&
+        (live_bytes >= heap_limit || managed_capacity_bytes >= heap_limit ||
+         (u64) requested_bytes >= heap_limit - live_bytes ||
+         (u64) requested_bytes >= heap_limit - managed_capacity_bytes)) {
         reason = IMMIX_GC_HEAP_LIMIT;
     } else {
         reason = IMMIX_GC_ALLOCATION_DEBT;

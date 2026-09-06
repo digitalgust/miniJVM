@@ -52,6 +52,11 @@ s32 com_sun_cldc_io_ResourceInputStream_open(Runtime *runtime, JClass *clazz) {
     if (buf) {
         s32 _j_t_bytes = buf->wp;
         Instance *_arr = jarray_create_by_type_index(runtime, _j_t_bytes, DATATYPE_BYTE);
+        if (!_arr) {
+            bytebuf_destroy(buf);
+            utf8_destroy(path);
+            return exception_throw_out_of_memory(runtime);
+        }
         bytebuf_read_batch(buf, _arr->arr_body, _j_t_bytes);
         bytebuf_destroy(buf);
         push_ref(runtime->stack, _arr);
@@ -251,6 +256,7 @@ s32 java_lang_Class_getInterfaces(Runtime *runtime, JClass *clazz) {
     Utf8String *ustr = utf8_create_c(STR_INS_JAVA_LANG_CLASS);
     Instance *jarr = jarray_create_by_type_name(runtime, len, ustr, cl->jloader);
     utf8_destroy(ustr);
+    if (!jarr) return exception_throw_out_of_memory(runtime);
     s32 i;
     for (i = 0; i < len; i++) {
         ConstantClassRef *ccr = (cl->interfacePool.clasz + i);
@@ -807,6 +813,7 @@ s32 java_lang_String_replace0(Runtime *runtime, JClass *clazz) {
     s32 dst_count = jstring_get_count(dst, runtime);
     if (count == 0 || src == NULL || dst == NULL || src_count == 0) {
         Instance *jchar_arr = jarray_create_by_type_index(runtime, count, DATATYPE_JCHAR);
+        if (!jchar_arr) return exception_throw_out_of_memory(runtime);
         memcpy((c8 *) jchar_arr->arr_body, (c8 *) &value[offset], count * sizeof(u16));
         push_ref(stack, jchar_arr);
     } else {
@@ -842,6 +849,10 @@ s32 java_lang_String_replace0(Runtime *runtime, JClass *clazz) {
         }
         s32 jchar_count = sb->wp / 2;
         Instance *jchar_arr = jarray_create_by_type_index(runtime, jchar_count, DATATYPE_JCHAR);
+        if (!jchar_arr) {
+            bytebuf_destroy(sb);
+            return exception_throw_out_of_memory(runtime);
+        }
         bytebuf_read_batch(sb, (c8 *) jchar_arr->arr_body, sb->wp);
         bytebuf_destroy(sb);
         push_ref(stack, jchar_arr);
@@ -956,6 +967,7 @@ s32 java_lang_StringBuilder_append(Runtime *runtime, JClass *clazz) {
                 s32 n_count = bcount + scount + 1;
                 n_count = n_count > bcount * 2 ? n_count : bcount * 2;
                 Instance *b_new_v = jarray_create_by_type_index(runtime, n_count, DATATYPE_JCHAR);
+                if (!b_new_v) return exception_throw_out_of_memory(runtime);
                 memcpy(b_new_v->arr_body, bvalue->arr_body, bcount * bytes);
                 setFieldRefer(ptr_bvalue, b_new_v);
                 bvalue = b_new_v;
@@ -1451,6 +1463,10 @@ s32 java_lang_System_getNativeProperties(Runtime *runtime, JClass *clazz) {
     s32 size = (s32) sys_prop->entries;
     Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
     Instance *jarr = jarray_create_by_type_name(runtime, size, ustr, NULL);
+    if (!jarr) {
+        utf8_destroy(ustr);
+        return exception_throw_out_of_memory(runtime);
+    }
     instance_hold_to_thread(jarr, runtime);
 
     s32 i = 0;

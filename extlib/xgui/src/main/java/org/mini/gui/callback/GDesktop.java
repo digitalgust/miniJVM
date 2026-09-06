@@ -69,6 +69,11 @@ public class GDesktop extends GPanel implements GCallbackUI {
             elements.remove(curForm);
             curForm = gform;
             elements.add(0, curForm);
+            // The direct list update intentionally avoids re-running the form
+            // lifecycle, but it must still make the form the desktop's event
+            // target. Otherwise keyboard and pointer events remain attached
+            // to the command handler that was added during construction.
+            setCurrent(curForm);
             if (!curForm.isInited()) {
                 curForm.init();
             }

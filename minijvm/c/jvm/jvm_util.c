@@ -1135,10 +1135,12 @@ s32 check_suspend_and_pause(Runtime *runtime) {
 
 //===============================    实例化数组  ==================================
 Instance *jarray_create_by_class(Runtime *runtime, s32 count, JClass *clazz) {
-    if (count < 0)return NULL;
+    if (count < 0 || !clazz)return NULL;
     s32 typeIdx = clazz->mb.arr_type_index;
     s32 width = DATA_TYPE_BYTES[typeIdx];
-    s32 insSize = instance_base_size() + (width * count);
+    s64 required = (s64) instance_base_size() + (s64) width * count;
+    if (required > INT32_MAX) return NULL;
+    s32 insSize = (s32) required;
     Instance *arr = gc_obj_alloc(runtime, insSize);
     if (!arr) return NULL;
     arr->mb.heap_size = insSize;
@@ -1196,7 +1198,13 @@ Instance *jarray_multi_create(Runtime *runtime, s32 *dim, s32 dim_size, Utf8Stri
     }
     JClass *cl = array_class_create_get(runtime, runtime->clazz->jloader, pdesc);
     Instance *arr = jarray_create_by_class(runtime, len, cl);
+    if (!arr) return NULL;
+    instance_hold_to_thread(arr, runtime);
     Utf8String *desc = utf8_create_part(pdesc, 1, pdesc->length - 1);
+    if (!desc) {
+        instance_release_from_thread(arr, runtime);
+        return NULL;
+    }
 
     c8 ch = utf8_char_at(desc, 0);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1207,11 +1215,17 @@ Instance *jarray_multi_create(Runtime *runtime, s32 *dim, s32 dim_size, Utf8Stri
         s64 val;
         for (i = 0; i < len; i++) {
             Instance *elem = jarray_multi_create(runtime, dim, dim_size, desc, deep + 1);
+            if (!elem) {
+                utf8_destroy(desc);
+                instance_release_from_thread(arr, runtime);
+                return NULL;
+            }
             val = (intptr_t) elem;
             jarray_set_field(arr, i, val);
         }
     }
     utf8_destroy(desc);
+    instance_release_from_thread(arr, runtime);
     return arr;
 }
 
@@ -1692,15 +1706,27 @@ Instance *exception_create(s32 exception_type, Runtime *runtime) {
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("create exception : %s\n", STRS_CLASS_EXCEPTION[exception_type]);
 #endif
+    if (exception_type == JVM_ERROR_OUTOFMEMORY && runtime->jvm->out_of_memory_error) {
+        return runtime->jvm->out_of_memory_error;
+    }
     Utf8String *clsName = utf8_create_c(STRS_CLASS_EXCEPTION[exception_type]);
     JClass *clazz = classes_load_get_with_clinit(NULL, clsName, runtime);
     utf8_destroy(clsName);
 
+    if (!clazz) return NULL;
     Instance *ins = instance_create(runtime, clazz);
+    if (!ins) return NULL;
     instance_hold_to_thread(ins, runtime);
     instance_init(ins, runtime);
     instance_release_from_thread(ins, runtime);
     return ins;
+}
+
+s32 exception_throw_out_of_memory(Runtime *runtime) {
+    Instance *exception = runtime->jvm->out_of_memory_error;
+    if (!exception) exception = exception_create(JVM_ERROR_OUTOFMEMORY, runtime);
+    if (exception) push_ref(runtime->stack, exception);
+    return RUNTIME_STATUS_EXCEPTION;
 }
 
 Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 const *errmsg) {

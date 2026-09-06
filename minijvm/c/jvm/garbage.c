@@ -50,6 +50,11 @@ static ImmixResult _gc_request_collection(void *context,
 
 static void _gc_signal_completed_cycle(GcCollector *collector);
 
+static void _gc_immix_adjust_soft_limit(GcCollector *collector,
+                                        const ImmixStats *stats,
+                                        ImmixCollectionReason reason,
+                                        size_t requested_bytes);
+
 #if __JVM_PRI_ALLOC__
 static void _gc_malloc_adjust_soft_limit(GcCollector *collector);
 #endif
@@ -208,6 +213,8 @@ s32 gc_create(MiniJVM *jvm) {
     collector->immix_pending_runtimes = arraylist_create(64);
     collector->immix_pending_loaders = arraylist_create(64);
     collector->gc_request = 0;
+    collector->gc_request_reason = IMMIX_GC_EXPLICIT;
+    collector->gc_requested_bytes = 0;
     collector->gc_gen = 0;
 
     /*
@@ -247,8 +254,9 @@ s32 gc_create(MiniJVM *jvm) {
             } else {
                 const ImmixConfig *actual = immix_heap_config(
                         (ImmixHeap *) collector->immix_heap);
-                jvm_printf("[INFO] gc backend : immix block heap limit=%lld KB reserve=%lld KB\n",
+                jvm_printf("[INFO] gc backend : immix block heap soft=%lld KB max=%lld KB reserve=%lld KB\n",
                            (s64) (actual->heap_limit / 1024),
+                           (s64) (jvm->max_vm_memory / 1024),
                            (s64) (actual->emergency_reserve_size / 1024));
             }
         }
@@ -393,13 +401,18 @@ static ImmixResult _gc_request_collection(void *context,
     s64 gen_before;
     s64 deadline;
 
-    (void) reason;
-    (void) requested_bytes;
     if (!collector) return IMMIX_ERR_INVALID_STATE;
 
     spin_lock(&collector->lock);
     gen_before = collector->gc_gen;
     collector->gc_request = 1;
+    if (reason == IMMIX_GC_HEAP_LIMIT ||
+        collector->gc_request_reason != IMMIX_GC_HEAP_LIMIT) {
+        collector->gc_request_reason = reason;
+    }
+    if (requested_bytes > collector->gc_requested_bytes) {
+        collector->gc_requested_bytes = requested_bytes;
+    }
     spin_unlock(&collector->lock);
 
     if (!requesting_thread || requesting_thread->type == THREAD_TYPE_GC) {
@@ -436,7 +449,67 @@ static void _gc_signal_completed_cycle(GcCollector *collector) {
     spin_lock(&collector->lock);
     collector->gc_gen++;
     collector->gc_request = 0;
+    collector->gc_request_reason = IMMIX_GC_EXPLICIT;
+    collector->gc_requested_bytes = 0;
     spin_unlock(&collector->lock);
+}
+
+static void _gc_immix_adjust_soft_limit(GcCollector *collector,
+                                        const ImmixStats *stats,
+                                        ImmixCollectionReason reason,
+                                        size_t requested_bytes) {
+    const u64 round_unit = 1024ULL * 1024ULL;
+    MiniJVM *jvm = collector->jvm;
+    ImmixHeap *heap = (ImmixHeap *) collector->immix_heap;
+    const ImmixConfig *config = immix_heap_config(heap);
+    u64 limit = config ? (u64) config->heap_limit : 0;
+    u64 ceiling = jvm->max_vm_memory > 0 ? (u64) jvm->max_vm_memory : limit;
+    u64 used = stats->live_bytes;
+    u64 requested = (u64) requested_bytes;
+    u64 capacity_needed;
+    u64 reserve_threshold;
+    u64 grow_20_percent;
+    u64 fit_at_80_percent;
+    u64 next;
+
+    if (limit == 0 || limit >= ceiling) return;
+    if (requested > UINT64_MAX - used) requested = UINT64_MAX - used;
+
+    /* Match malloc mode's adaptive Xmx behavior. Normal collections grow only
+     * for a dense live heap; a failed limit allocation also includes the
+     * request that must fit when the waiting mutator retries. */
+    if (reason == IMMIX_GC_HEAP_LIMIT) {
+        used += requested;
+        capacity_needed = stats->managed_capacity_bytes;
+        if (requested > UINT64_MAX - capacity_needed) {
+            capacity_needed = UINT64_MAX;
+        } else {
+            capacity_needed += requested;
+        }
+        if (capacity_needed > used) used = capacity_needed;
+    }
+    reserve_threshold = limit - limit / 20;
+    if (used < reserve_threshold) return;
+
+    grow_20_percent = limit + (limit + 4) / 5;
+    fit_at_80_percent = used + (used + 3) / 4;
+    next = grow_20_percent > fit_at_80_percent
+           ? grow_20_percent : fit_at_80_percent;
+    if (next < ceiling && next <= UINT64_MAX - (round_unit - 1)) {
+        next = (next + round_unit - 1) / round_unit * round_unit;
+    }
+    if (next > ceiling) next = ceiling;
+    if (next > limit && immix_set_heap_limit(heap, (size_t) next) == IMMIX_OK) {
+        jvm->max_heap_size = (s64) next;
+        jvm_printf("[INFO] immix memory soft limit: %llu -> %llu bytes, "
+                   "post_gc_live=%llu, requested=%llu, capacity=%llu, max=%llu\n",
+                   (unsigned long long) limit,
+                   (unsigned long long) next,
+                   (unsigned long long) stats->live_bytes,
+                   (unsigned long long) requested,
+                   (unsigned long long) stats->managed_capacity_bytes,
+                   (unsigned long long) ceiling);
+    }
 }
 
 #if __JVM_PRI_ALLOC__
@@ -906,7 +979,7 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
 
     spin_lock(&collector->lock);
     if (collector->gc_request) {
-        reason = IMMIX_GC_ALLOCATION_DEBT;
+        reason = collector->gc_request_reason;
     }
     spin_unlock(&collector->lock);
 
@@ -1044,6 +1117,15 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
         }
 
         immix_get_stats(heap, &stats_after);
+
+        spin_lock(&collector->lock);
+        reason = collector->gc_request ? collector->gc_request_reason : reason;
+        {
+            size_t requested_bytes = collector->gc_requested_bytes;
+            spin_unlock(&collector->lock);
+            _gc_immix_adjust_soft_limit(collector, &stats_after, reason,
+                                        requested_bytes);
+        }
 
         collector->isworldstoped = 0;
         _gc_resume_the_world(jvm);

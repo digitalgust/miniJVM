@@ -182,6 +182,8 @@ s32 invokedynamic_prepare(Runtime *runtime, BootstrapMethod *bootMethod, Constan
         more_args = jarray_create_by_type_name(runtime, args_cnt, ustr, clazz->jloader);
         utf8_destroy(ustr);
 
+        if (!more_args) return exception_throw_out_of_memory(runtime);
+
         push_ref(stack, more_args);
     }
     s32 i;
@@ -3181,6 +3183,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             }
                             sp = stack->sp;
 
+                            if (!r->ins) {
+                                goto label_outofmemory_throw;
+                            }
+
                             (sp++)->rvalue = r->ins;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -3204,6 +3210,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             stack->sp = sp;
                             r->ins = jarray_create_by_type_index(r, r->count, r->idx);
                             sp = stack->sp;
+                            if (!r->ins) {
+                                goto label_outofmemory_throw;
+                            }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(r);
                             jvm_printf("(a)newarray  [%llx] type:%c , r->count:%d  \n", (s64) (intptr_t) r->ins, getDataTypeTag(r->idx), r->count);
@@ -3235,6 +3244,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             }
                             r->ins = jarray_create_by_class(r, r->count, r->other);
                             sp = stack->sp;
+
+                            if (!r->ins) {
+                                goto label_outofmemory_throw;
+                            }
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(r);
@@ -3449,6 +3462,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             stack->sp = sp;
                             r->ins = jarray_multi_create(r, dim, r->count, r->ustr, 0);
                             sp = stack->sp;
+                            if (!r->ins) {
+                                goto label_outofmemory_throw;
+                            }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(r);
                             jvm_printf("multianewarray  [%llx] type:%s , r->count:%d  \n", (s64) (intptr_t) r->ins, utf8_cstr(r->ustr), r->count);
@@ -4035,6 +4051,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 label_outofbounds_throw: {
                         stack->sp = sp;
                         push_ref(stack, (__refer) exception_create(JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, r));
+                        goto label_exception_handle;
+                    }
+
+                label_outofmemory_throw: {
+                        stack->sp = sp;
+                        exception_throw_out_of_memory(r);
                         goto label_exception_handle;
                     }
 

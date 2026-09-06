@@ -221,11 +221,15 @@ public class InnerFile {
         }
 
         @Override
-        public void write(byte[] b, int offset, int len) {
+        public void write(byte[] b, int offset, int len) throws IOException {
 //            checkWritePermission();
             int wrote = 0;
             while (wrote < len) {
-                wrote += writebuf(getFilePointer(), b, offset + wrote, len - wrote);
+                int count = writebuf(getFilePointer(), b, offset + wrote, len - wrote);
+                if (count <= 0) {
+                    throw new IOException("write file error: " + path);
+                }
+                wrote += count;
             }
         }
 

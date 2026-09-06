@@ -52,6 +52,8 @@ struct _GcCollectorType {
     ArrayList *immix_pending_runtimes; //dead jthread runtimes to destroy after resume
     ArrayList *immix_pending_loaders;  //dead classloaders to destroy after resume
     volatile s32 gc_request;     //async collection request from a mutator
+    ImmixCollectionReason gc_request_reason;
+    size_t gc_requested_bytes;
     volatile s64 gc_gen;         //incremented after every completed cycle
 
     u8 _garbage_thread_status;

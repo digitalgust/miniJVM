@@ -143,6 +143,8 @@ typedef struct ImmixConfig {
 typedef struct ImmixStats {
     u64 requested_bytes;
     u64 live_bytes;
+    /* Capacity currently owned by Immix, including block chunks and LOS. */
+    u64 managed_capacity_bytes;
     u64 committed_bytes;
     u64 reserved_bytes;
     u64 metadata_bytes;
@@ -275,6 +277,9 @@ void immix_notify_memory_pressure(ImmixHeap *heap,
                                   ImmixMemoryPressure pressure);
 
 ImmixResult immix_trim(ImmixHeap *heap, size_t target_committed_bytes);
+
+/* Raises or lowers the allocation limit without rebuilding the heap. */
+ImmixResult immix_set_heap_limit(ImmixHeap *heap, size_t heap_limit);
 
 void immix_get_stats(const ImmixHeap *heap, ImmixStats *out_stats);
 

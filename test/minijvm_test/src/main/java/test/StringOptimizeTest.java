@@ -63,6 +63,11 @@ public class StringOptimizeTest {
         check("delete copy-on-write", third.equals("Xbcdef"));
         check("delete builder result", builder.toString().equals("Xdef"));
 
+        String fourth = builder.toString();
+        builder.replace(0, 1, "R");
+        check("replace copy-on-write", fourth.equals("Xdef"));
+        check("replace builder result", builder.toString().equals("Rdef"));
+
         StringBuilder oversized = new StringBuilder(1024);
         oversized.append("small");
         String compact = oversized.toString();

@@ -64,6 +64,8 @@ Instance *exception_create(s32 exception_type, Runtime *runtime);
 
 Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 const *errmsg);
 
+s32 exception_throw_out_of_memory(Runtime *runtime);
+
 void exception_throw(s32 exception_type, Runtime *runtime, c8 const *errmsg);
 
 Instance *method_type_create(Runtime *runtime, Instance *jloader, Utf8String *desc);

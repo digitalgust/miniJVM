@@ -923,7 +923,6 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     signal(SIGPIPE, _on_jvm_sig_print); //not exit when network sigpipe
 #endif
 
-#if __JVM_PRI_ALLOC__
     if (jvm->max_vm_memory <= 0) {
         if (jvm->max_heap_size > INT64_MAX / 4) {
             jvm->max_vm_memory = INT64_MAX;
@@ -934,6 +933,7 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     if (jvm->max_vm_memory < jvm->max_heap_size) {
         jvm->max_vm_memory = jvm->max_heap_size;
     }
+#if __JVM_PRI_ALLOC__
     pri_alloc_set_max_size(jvm->max_heap_size);
     pri_alloc_set_max_ceiling(jvm->max_vm_memory);
 #endif
@@ -1023,12 +1023,24 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     instance_create(runtime, c2);
     utf8_clear(clsName);
 
-
     if (!jvm->collector->runtime->thrd_info->jthread) {
         Instance *inst = instance_create(runtime, classes_get_c(jvm, NULL, STR_CLASS_JAVA_LANG_THREAD));
         jvm->collector->runtime->thrd_info->jthread = inst;
         hashset_put(jvm->collector->objs_holder, inst);
     }
+
+    /* Keep one OOME instance alive. Its constructor normally captures a stack
+     * trace and allocates more objects, so the emergency instance is created
+     * without running that constructor. */
+    utf8_append_c(clsName, STRS_CLASS_EXCEPTION[JVM_ERROR_OUTOFMEMORY]);
+    JClass *oom_class = classes_load_get_with_clinit(NULL, clsName, runtime);
+    jvm->out_of_memory_error = oom_class ? instance_create(runtime, oom_class) : NULL;
+    if (!jvm->out_of_memory_error) {
+        jvm_printf("[ERROR] unable to preallocate OutOfMemoryError\n");
+        return -1;
+    }
+    gc_obj_hold(jvm->collector, jvm->out_of_memory_error);
+    utf8_clear(clsName);
 
     utf8_destroy(clsName);
     gc_move_objs_thread_2_gc(runtime);
@@ -1130,6 +1142,11 @@ s32 call_main(MiniJVM *jvm, c8 *p_mainclass, ArrayList *java_para) {
     s32 count = java_para ? java_para->length : 0;
     Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
     Instance *arr = jarray_create_by_type_name(runtime, count, ustr, NULL);
+    if (!arr) {
+        utf8_destroy(ustr);
+        runtime_destroy(runtime);
+        return 1;
+    }
     instance_hold_to_thread(arr, runtime);
     utf8_destroy(ustr);
     s32 i;

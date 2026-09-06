@@ -404,6 +404,8 @@ public class StringBuilder implements Appendable, CharSequence {
         int newcount = count + len;
         if (newcount > value.length) {
             expandCapacity(newcount);
+        } else if (shared) {
+            copy();
         }
         str.getChars(0, len, value, count);
         count = newcount;
@@ -431,6 +433,8 @@ public class StringBuilder implements Appendable, CharSequence {
         int newcount = count + len;
         if (newcount > value.length) {
             expandCapacity(newcount);
+        } else if (shared) {
+            copy();
         }
         System.arraycopy(str, 0, value, count, len);
         count = newcount;
@@ -460,6 +464,8 @@ public class StringBuilder implements Appendable, CharSequence {
         int newcount = count + len;
         if (newcount > value.length) {
             expandCapacity(newcount);
+        } else if (shared) {
+            copy();
         }
         System.arraycopy(str, offset, value, count, len);
         count = newcount;
@@ -502,6 +508,8 @@ public class StringBuilder implements Appendable, CharSequence {
         int newcount = count + 1;
         if (newcount > value.length) {
             expandCapacity(newcount);
+        } else if (shared) {
+            copy();
         }
         value[count++] = c;
         return this;
@@ -531,6 +539,8 @@ public class StringBuilder implements Appendable, CharSequence {
         int newcount = count + appendedLength;
         if (newcount > value.length) {
             expandCapacity(newcount);
+        } else if (shared) {
+            copy();
         }
         Integer.getChars(i, newcount, value);
         count = newcount;
@@ -560,6 +570,8 @@ public class StringBuilder implements Appendable, CharSequence {
         int newcount = count + appendedLength;
         if (newcount > value.length) {
             expandCapacity(newcount);
+        } else if (shared) {
+            copy();
         }
         Long.getChars(l, newcount, value);
         count = newcount;
@@ -1089,6 +1101,8 @@ public class StringBuilder implements Appendable, CharSequence {
         int newcount = oldCount + len;
         if (newcount > value.length) {
             expandCapacity(newcount);
+        } else if (shared) {
+            copy();
         }
 
         if (sequence instanceof String) {
@@ -1109,10 +1123,16 @@ public class StringBuilder implements Appendable, CharSequence {
 
         if (Character.isBmpCodePoint(codePoint)) {
             ensureCapacity(count + 1);
+            if (shared) {
+                copy();
+            }
             value[count] = (char) codePoint;
             this.count = count + 1;
         } else if (Character.isValidCodePoint(codePoint)) {
             ensureCapacity(count + 2);
+            if (shared) {
+                copy();
+            }
             Character.toSurrogates(codePoint, value, count);
             this.count = count + 2;
         } else {
@@ -1141,6 +1161,8 @@ public class StringBuilder implements Appendable, CharSequence {
         int newCount = count + len - (end - start);
         if (newCount > value.length)
             expandCapacity(newCount);
+        else if (shared)
+            copy();
 
         System.arraycopy(value, end, value, start + len, count - end);
         str.getChars(value, start);

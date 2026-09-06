@@ -277,6 +277,10 @@ s32 org_mini_net_SocketNative_open0(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     jthread_block_enter(runtime);
     Instance *vmarr = jarray_create_by_type_index(runtime, sizeof(VmSock), DATATYPE_BYTE);
+    if (!vmarr) {
+        jthread_block_exit(runtime);
+        return exception_throw_out_of_memory(runtime);
+    }
     mbedtls_net_context *ctx = &((VmSock *) vmarr->arr_body)->contex;
     mbedtls_net_init(ctx);
     jthread_block_exit(runtime);
@@ -316,6 +320,7 @@ s32 org_mini_net_SocketNative_accept0(Runtime *runtime, JClass *clazz) {
     if (vmarr) {
         mbedtls_net_context *ctx = &((VmSock *) vmarr->arr_body)->contex;
         Instance *cltarr = jarray_create_by_type_index(runtime, sizeof(VmSock), DATATYPE_BYTE);
+        if (!cltarr) return exception_throw_out_of_memory(runtime);
         VmSock *cltsock = (VmSock *) cltarr->arr_body;
         gc_obj_hold(runtime->jvm->collector, cltarr);
         s32 ret = 0;
@@ -638,6 +643,7 @@ s32 org_mini_net_SocketNative_host2ip(Runtime *runtime, JClass *clazz) {
         if (ret >= 0) {
             s32 buflen = strlen(buf);
             jbyte_arr = jarray_create_by_type_index(runtime, buflen, DATATYPE_BYTE);
+            if (!jbyte_arr) return exception_throw_out_of_memory(runtime);
             memmove(jbyte_arr->arr_body, buf, buflen);
         }
     }
@@ -651,6 +657,7 @@ s32 org_mini_net_SocketNative_host2ip(Runtime *runtime, JClass *clazz) {
 
 s32 org_mini_net_SocketNative_sslc_construct_entry(Runtime *runtime, JClass *clazz) {
     Instance *jbyte_arr = jarray_create_by_type_index(runtime, sizeof(struct _SSLC_Entry), DATATYPE_BYTE);
+    if (!jbyte_arr) return exception_throw_out_of_memory(runtime);
     push_ref(runtime->stack, jbyte_arr);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
@@ -1160,6 +1167,15 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
             Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
             Instance *jarr = jarray_create_by_type_name(runtime, files->length, ustr, NULL);
             utf8_destroy(ustr);
+            if (!jarr) {
+                for (i = 0; i < files->length; i++) {
+                    instance_release_from_thread(arraylist_get_value(files, i), runtime);
+                }
+                bytebuf_destroy(platformPath);
+                arraylist_destroy(files);
+                utf8_destroy(filepath);
+                return exception_throw_out_of_memory(runtime);
+            }
             for (i = 0; i < files->length; i++) {
                 __refer ref = arraylist_get_value(files, i);
                 instance_release_from_thread(ref, runtime);
@@ -1423,6 +1439,7 @@ s32 org_mini_zip_ZipFile_getEntry0(Runtime *runtime, JClass *clazz) {
         s64 filesize = zip_get_file_unzip_size(zip_path_arr->arr_body, name_arr->arr_body);
         if (filesize >= 0) {
             Instance *arr = jarray_create_by_type_index(runtime, (s32) filesize, DATATYPE_BYTE);
+            if (!arr) return exception_throw_out_of_memory(runtime);
             ret = zip_loadfile_to_mem(zip_path_arr->arr_body, name_arr->arr_body, arr->arr_body, filesize);
             if (ret == 0) {
                 push_ref(runtime->stack, arr);
@@ -1481,6 +1498,10 @@ s32 org_mini_zip_ZipFile_listFiles0(Runtime *runtime, JClass *clazz) {
             Utf8String *clustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
             Instance *jarr = jarray_create_by_type_name(runtime, list->length, clustr, NULL);
             utf8_destroy(clustr);
+            if (!jarr) {
+                zip_destroy_filenames_list(list);
+                return exception_throw_out_of_memory(runtime);
+            }
             instance_hold_to_thread(jarr, runtime);
             s32 i;
             for (i = 0; i < list->length; i++) {
@@ -1532,6 +1553,10 @@ s32 org_mini_zip_ZipFile_extract0(Runtime *runtime, JClass *clazz) {
         push_ref(runtime->stack, NULL);
     } else {
         Instance *byte_arr = jarray_create_by_type_index(runtime, data->wp, DATATYPE_BYTE);
+        if (!byte_arr) {
+            bytebuf_destroy(data);
+            return exception_throw_out_of_memory(runtime);
+        }
         bytebuf_read_batch(data, byte_arr->arr_body, data->wp);
         push_ref(runtime->stack, byte_arr);
     }
@@ -1554,6 +1579,10 @@ s32 org_mini_zip_ZipFile_compress0(Runtime *runtime, JClass *clazz) {
         push_ref(runtime->stack, NULL);
     } else {
         Instance *byte_arr = jarray_create_by_type_index(runtime, zip_data->wp, DATATYPE_BYTE);
+        if (!byte_arr) {
+            bytebuf_destroy(zip_data);
+            return exception_throw_out_of_memory(runtime);
+        }
         bytebuf_read_batch(zip_data, byte_arr->arr_body, zip_data->wp);
         push_ref(runtime->stack, byte_arr);
     }
@@ -1576,6 +1605,10 @@ s32 org_mini_zip_ZipFile_gzipExtract0(Runtime *runtime, JClass *clazz) {
         push_ref(runtime->stack, NULL);
     } else {
         Instance *byte_arr = jarray_create_by_type_index(runtime, data->wp, DATATYPE_BYTE);
+        if (!byte_arr) {
+            bytebuf_destroy(data);
+            return exception_throw_out_of_memory(runtime);
+        }
         bytebuf_read_batch(data, byte_arr->arr_body, data->wp);
         push_ref(runtime->stack, byte_arr);
     }
@@ -1599,6 +1632,10 @@ s32 org_mini_zip_ZipFile_zlibExtract0(Runtime *runtime, JClass *clazz) {
         push_ref(runtime->stack, NULL);
     } else {
         Instance *byte_arr = jarray_create_by_type_index(runtime, data->wp, DATATYPE_BYTE);
+        if (!byte_arr) {
+            bytebuf_destroy(data);
+            return exception_throw_out_of_memory(runtime);
+        }
         bytebuf_read_batch(data, byte_arr->arr_body, data->wp);
         push_ref(runtime->stack, byte_arr);
     }
@@ -1621,6 +1658,10 @@ s32 org_mini_zip_ZipFile_zlibCompress0(Runtime *runtime, JClass *clazz) {
         push_ref(runtime->stack, NULL);
     } else {
         Instance *byte_arr = jarray_create_by_type_index(runtime, zlib_data->wp, DATATYPE_BYTE);
+        if (!byte_arr) {
+            bytebuf_destroy(zlib_data);
+            return exception_throw_out_of_memory(runtime);
+        }
         bytebuf_read_batch(zlib_data, byte_arr->arr_body, zlib_data->wp);
         push_ref(runtime->stack, byte_arr);
     }
@@ -1643,6 +1684,10 @@ s32 org_mini_zip_ZipFile_gzipCompress0(Runtime *runtime, JClass *clazz) {
         push_ref(runtime->stack, NULL);
     } else {
         Instance *byte_arr = jarray_create_by_type_index(runtime, gzip_data->wp, DATATYPE_BYTE);
+        if (!byte_arr) {
+            bytebuf_destroy(gzip_data);
+            return exception_throw_out_of_memory(runtime);
+        }
         bytebuf_read_batch(gzip_data, byte_arr->arr_body, gzip_data->wp);
         push_ref(runtime->stack, byte_arr);
     }
@@ -1660,6 +1705,7 @@ s32 org_mini_crypt_XorCrypt_encrypt(Runtime *runtime, JClass *clazz) {
     Instance *key = localvar_getRefer(runtime->localvar, pos++);
     if (data && key) {
         Instance *r = jarray_create_by_type_index(runtime, data->arr_length, DATATYPE_BYTE);
+        if (!r) return exception_throw_out_of_memory(runtime);
         s32 i, j, imax, jmax;
         for (i = 0, imax = data->arr_length; i < imax; i++) {
             u32 v = jarray_get_field(data, i) & 0xff;
@@ -1689,6 +1735,7 @@ s32 org_mini_crypt_XorCrypt_decrypt(Runtime *runtime, JClass *clazz) {
     Instance *key = localvar_getRefer(runtime->localvar, pos++);
     if (data && key) {
         Instance *r = jarray_create_by_type_index(runtime, data->arr_length, DATATYPE_BYTE);
+        if (!r) return exception_throw_out_of_memory(runtime);
         s32 i, j, imax;
         for (i = 0, imax = data->arr_length; i < imax; i++) {
             u32 v = jarray_get_field(data, i) & 0xff;

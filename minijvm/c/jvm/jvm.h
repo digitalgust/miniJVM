@@ -2108,6 +2108,7 @@ struct _MiniJVM {
     Hashtable *sys_prop;
 
     GcCollector *collector;
+    Instance *out_of_memory_error; //preallocated: allocation failure cannot allocate its exception
     ArrayList *shutdown_hook; //shutdown hook ,it contains thread instance
     c8 *gc_backend; //NULL|immix|malloc , select the Java object allocation backend
 
@@ -2117,8 +2118,8 @@ struct _MiniJVM {
     s32 jdwp_enable; // 0:disable java debug , 1:enable java debug and disable jit
     s32 jdwp_suspend_on_start;
     s32 jdwp_port;
-    s64 max_heap_size;       //Immix hard heap limit; malloc adaptive soft limit
-    s64 max_vm_memory;       //malloc final safety ceiling (0 derives as 4 * Xmx)
+    s64 max_heap_size;       //current adaptive soft limit for Java objects
+    s64 max_vm_memory;       //final safety ceiling (0 derives as 4 * Xmx)
     s32 heap_overload_percent;
     s64 garbage_collect_period_ms;
 
