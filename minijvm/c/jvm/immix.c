@@ -1084,8 +1084,45 @@ void immix_get_stats(const ImmixHeap *heap, ImmixStats *out_stats) {
     spin_unlock(&mutable_heap->lock);
 }
 
+/* Per-type header sanity for objects living in Immix storage: the header
+ * must be big enough for its kind and, for arrays, length/width/heap_size
+ * must be consistent. Classes never live in Immix blocks/LOS. */
+static int immix_object_header_valid(const MemoryBlock *mb) {
+    if (mb->type == MEM_TYPE_INS) {
+        s32 required;
+        if (!mb->clazz || mb->clazz->field_instance_len < 0) return 0;
+        required = jvm_instance_alloc_size(mb->clazz);
+        return required >= 0 && mb->heap_size >= required;
+    }
+    if (mb->type == MEM_TYPE_ARR) {
+        if (mb->clazz == NULL) return 0;
+        if ((size_t) mb->heap_size < (size_t) JVM_ARRAY_HEADER_SIZE) return 0;
+        s32 length = jarray_length((Instance *) mb);
+        if (mb->arr_type_index >= DATATYPE_COUNT) return 0;
+        s32 width = DATA_TYPE_BYTES[mb->arr_type_index];
+        if (length < 0 || width <= 0) return 0;
+        if ((s64) mb->heap_size < (s64) JVM_ARRAY_HEADER_SIZE + (s64) width * length) return 0;
+        return 1;
+    }
+    return 0;
+}
+
+static int immix_large_object_valid(const ImmixLargeObject *los) {
+    const MemoryBlock *mb;
+    ImmixObjectKind expected_kind;
+    if (!los || !los->address || los->size == 0) return 0;
+    mb = (const MemoryBlock *) los->address;
+    if (mb->heap_size <= 0 || (size_t) mb->heap_size > los->size ||
+        !immix_object_header_valid(mb)) return 0;
+    expected_kind = mb->type == MEM_TYPE_ARR
+                    ? IMMIX_OBJECT_ARRAY : IMMIX_OBJECT_INSTANCE;
+    return (ImmixObjectKind) los->kind == expected_kind ||
+           (ImmixObjectKind) los->kind == IMMIX_OBJECT_LARGE;
+}
+
 ImmixResult immix_verify(const ImmixHeap *heap) {
     ImmixChunk *chunk;
+    ImmixLargeObject *los;
 
     if (!immix_heap_is_valid(heap)) return IMMIX_ERR_INVALID_ARGUMENT;
     if (immix_validate_config(&heap->config) != IMMIX_OK) {
@@ -1106,7 +1143,7 @@ ImmixResult immix_verify(const ImmixHeap *heap) {
                                  (size_t) bit * heap->config.object_alignment;
                 MemoryBlock *mb = (MemoryBlock *) addr;
                 size_t size;
-                if (mb->heap_size <= 0 ||
+                if (mb->heap_size <= 0 || !immix_object_header_valid(mb) ||
                     immix_block_object_size(heap, b, addr,
                                             (size_t) mb->heap_size,
                                             &size) != IMMIX_OK) {
@@ -1122,6 +1159,12 @@ ImmixResult immix_verify(const ImmixHeap *heap) {
                 prev_end = addr + size;
                 bit++;
             }
+        }
+    }
+    for (los = heap->large_objects; los; los = los->next) {
+        if (!immix_large_object_valid(los)) {
+            jvm_printf("[IMMIX] verify: invalid large object header %p\n", los->address);
+            return IMMIX_ERR_INVALID_STATE;
         }
     }
     return IMMIX_OK;
@@ -1576,6 +1619,7 @@ static void *immix_block_allocate_large(ImmixMutator *mutator,
 
     /* Claim hard-limit capacity before doing an OS reservation. */
     spin_lock(&heap->lock);
+
     immix_release_empty_chunks_for(heap, aligned_size);
     if (heap->config.heap_limit != 0 &&
         (heap->managed_capacity_bytes > (u64) heap->config.heap_limit ||
@@ -1887,6 +1931,14 @@ static ImmixResult immix_block_sweep(ImmixHeap *heap, const ImmixSweepOps *ops) 
 
     spin_lock(&heap->lock);
 
+    /* Validate LOS before mutating block lists or reclaiming any object. */
+    for (los = heap->large_objects; los; los = los->next) {
+        if (!immix_large_object_valid(los)) {
+            spin_unlock(&heap->lock);
+            return IMMIX_ERR_INVALID_STATE;
+        }
+    }
+
     /* Blocks: recompute line states, reclaim dead objects, classify. */
     memset(&heap->free_blocks, 0, sizeof(ImmixBlockList));
     memset(&heap->recyclable_blocks, 0, sizeof(ImmixBlockList));
@@ -1913,7 +1965,7 @@ static ImmixResult immix_block_sweep(ImmixHeap *heap, const ImmixSweepOps *ops) 
                 u8 *addr = b->start + (size_t) bit * heap->config.object_alignment;
                 MemoryBlock *mb = (MemoryBlock *) addr;
                 size_t size;
-                if (mb->heap_size <= 0 ||
+                if (mb->heap_size <= 0 || !immix_object_header_valid(mb) ||
                     immix_block_object_size(heap, b, addr,
                                             (size_t) mb->heap_size,
                                             &size) != IMMIX_OK) {
@@ -2043,7 +2095,7 @@ static ImmixResult immix_block_visit_objects(ImmixHeap *heap,
                                        ? IMMIX_OBJECT_ARRAY
                                        : IMMIX_OBJECT_INSTANCE;
                 size_t size;
-                if (mb->heap_size <= 0 ||
+                if (mb->heap_size <= 0 || !immix_object_header_valid(mb) ||
                     immix_block_object_size(heap, b, addr,
                                             (size_t) mb->heap_size,
                                             &size) != IMMIX_OK) {
@@ -2057,6 +2109,9 @@ static ImmixResult immix_block_visit_objects(ImmixHeap *heap,
         }
     }
     for (los = heap->large_objects; los; los = los->next) {
+        if (!immix_large_object_valid(los)) {
+            return IMMIX_ERR_INVALID_STATE;
+        }
         if (visitor(context, (MemoryBlock *) los->address, los->size,
                     (ImmixObjectKind) los->kind) != 0) {
             return IMMIX_ERR_VISITOR_STOPPED;

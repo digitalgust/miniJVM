@@ -13,7 +13,10 @@ void thread_boundle(Runtime *runtime) {
     JClass *thread_clazz = classes_load_get_with_clinit_c(NULL, STR_CLASS_JAVA_LANG_THREAD, runtime);
     //create jthread for main thread
     Instance *t = instance_create(runtime, thread_clazz);
-    instance_hold_to_thread(t, runtime);
+    if (!t || instance_hold_to_thread(t, runtime) != 0) {
+        exception_throw_out_of_memory(runtime);
+        return;
+    }
     runtime->thrd_info->jthread = t; //Thread.init currentThread() need this
     //runtime->clazz = thread_clazz;
     instance_init(t, runtime);
@@ -915,6 +918,11 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
 
     os_setup_crash_handler();
 
+    //one-line layout fingerprint: identifies a mis-linked binary at a glance
+    jvm_printf("[INFO] object layout: ptr=%db MemoryBlock=%d Instance=%d JArrayHeader=%d field_off=%d arr_len_off=%d arr_body_off=%d\n",
+               (s32) (sizeof(void *) * 8), (s32) sizeof(MemoryBlock), (s32) sizeof(Instance),
+               (s32) sizeof(JArrayHeader), JVM_OBJECT_BODY_OFFSET, JVM_ARRAY_LENGTH_OFFSET, JVM_ARRAY_BODY_OFFSET);
+
     signal(SIGABRT, _on_jvm_sig);
     signal(SIGFPE, _on_jvm_sig);
     signal(SIGSEGV, _on_jvm_sig);
@@ -1147,7 +1155,11 @@ s32 call_main(MiniJVM *jvm, c8 *p_mainclass, ArrayList *java_para) {
         runtime_destroy(runtime);
         return 1;
     }
-    instance_hold_to_thread(arr, runtime);
+    if (instance_hold_to_thread(arr, runtime) != 0) {
+        utf8_destroy(ustr);
+        runtime_destroy(runtime);
+        return 1;
+    }
     utf8_destroy(ustr);
     s32 i;
     for (i = 0; i < count; i++) {

@@ -271,19 +271,19 @@ int org_mini_glfw_utils_Gutil_f2b(Runtime *runtime, JClass *clazz) {
     int pos = 0;
     Instance *farr = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *barr = env->localvar_getRefer(runtime->localvar, pos++);
-    if (farr->arr_length == barr->arr_length * 4) {
-        memcpy(barr->arr_body, farr->arr_body, barr->arr_length);
+    if (jarray_length(farr) == jarray_length(barr) * 4) {
+        memcpy(jarray_body(barr), jarray_body(farr), jarray_length(barr));
     }
     env->push_ref(runtime->stack, barr);
     return 0;
 }
 
 void vec_add(Instance *ra, Instance *aa, Instance *ba) {
-    GLfloat *r = (GLfloat *) ra->arr_body;
-    GLfloat *a = (GLfloat *) aa->arr_body;
-    GLfloat *b = (GLfloat *) ba->arr_body;
+    GLfloat *r = (GLfloat *) jarray_body(ra);
+    GLfloat *a = (GLfloat *) jarray_body(aa);
+    GLfloat *b = (GLfloat *) jarray_body(ba);
     int i;
-    for (i = 0; i < ra->arr_length; ++i)
+    for (i = 0; i < jarray_length(ra); ++i)
         r[i] = a[i] + b[i];
 }
 
@@ -299,11 +299,11 @@ int org_mini_glfw_utils_Gutil_vec_add(Runtime *runtime, JClass *clazz) {
 }
 
 void vec_sub(Instance *ra, Instance *aa, Instance *ba) {
-    GLfloat *r = (GLfloat *) ra->arr_body;
-    GLfloat *a = (GLfloat *) aa->arr_body;
-    GLfloat *b = (GLfloat *) ba->arr_body;
+    GLfloat *r = (GLfloat *) jarray_body(ra);
+    GLfloat *a = (GLfloat *) jarray_body(aa);
+    GLfloat *b = (GLfloat *) jarray_body(ba);
     int i;
-    for (i = 0; i < ra->arr_length; ++i)
+    for (i = 0; i < jarray_length(ra); ++i)
         r[i] = a[i] - b[i];
 }
 
@@ -321,9 +321,9 @@ int org_mini_glfw_utils_Gutil_vec_sub(Runtime *runtime, JClass *clazz) {
 float vec_mul_inner(Instance *aa, Instance *ba) {
     int i;
     float r = 0;
-    GLfloat *a = (GLfloat *) aa->arr_body;
-    GLfloat *b = (GLfloat *) ba->arr_body;
-    for (i = 0; i < aa->arr_length; ++i)
+    GLfloat *a = (GLfloat *) jarray_body(aa);
+    GLfloat *b = (GLfloat *) jarray_body(ba);
+    for (i = 0; i < jarray_length(aa); ++i)
         r += a[i] * b[i];
     return r;
 }
@@ -339,10 +339,10 @@ int org_mini_glfw_utils_Gutil_vec_mul_inner(Runtime *runtime, JClass *clazz) {
 }
 
 void vec_scale(Instance *ra, Instance *aa, float f) {
-    GLfloat *r = (GLfloat *) ra->arr_body;
-    GLfloat *a = (GLfloat *) aa->arr_body;
+    GLfloat *r = (GLfloat *) jarray_body(ra);
+    GLfloat *a = (GLfloat *) jarray_body(aa);
     int i;
-    for (i = 0; i < ra->arr_length; ++i)
+    for (i = 0; i < jarray_length(ra); ++i)
         r[i] = a[i] * f;
 }
 
@@ -388,9 +388,9 @@ int org_mini_glfw_utils_Gutil_vec_reflect(Runtime *runtime, JClass *clazz) {
     Instance *ra = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *aa = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *ba = env->localvar_getRefer(runtime->localvar, pos++);
-    GLfloat *r = (GLfloat *) ra->arr_body;
-    GLfloat *a = (GLfloat *) aa->arr_body;
-    GLfloat *b = (GLfloat *) ba->arr_body;
+    GLfloat *r = (GLfloat *) jarray_body(ra);
+    GLfloat *a = (GLfloat *) jarray_body(aa);
+    GLfloat *b = (GLfloat *) jarray_body(ba);
     float p = 2.f * vec_mul_inner(aa, ba);
     int i;
     for (i = 0; i < 4; ++i)
@@ -407,9 +407,9 @@ int org_mini_glfw_utils_Gutil_vec4_slerp(Runtime *runtime, JClass *clazz) {
     Instance *ba = env->localvar_getRefer(runtime->localvar, pos++);
     Int2Float i2f;
     i2f.i = env->localvar_getInt(runtime->localvar, pos++);
-    GLfloat *r = (GLfloat *) ra->arr_body;
-    GLfloat *a = (GLfloat *) aa->arr_body;
-    GLfloat *b = (GLfloat *) ba->arr_body;
+    GLfloat *r = (GLfloat *) jarray_body(ra);
+    GLfloat *a = (GLfloat *) jarray_body(aa);
+    GLfloat *b = (GLfloat *) jarray_body(ba);
     vec4_slerp(r, a, b, i2f.f);
     env->push_ref(runtime->stack, ra);
     return 0;
@@ -420,8 +420,8 @@ int org_mini_glfw_utils_Gutil_vec4_from_mat4x4(Runtime *runtime, JClass *clazz) 
     int pos = 0;
     Instance *ra = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *aa = env->localvar_getRefer(runtime->localvar, pos++);
-    GLfloat *r = (GLfloat *) ra->arr_body;
-    GLfloat *a = (GLfloat *) aa->arr_body;
+    GLfloat *r = (GLfloat *) jarray_body(ra);
+    GLfloat *a = (GLfloat *) jarray_body(aa);
     quat_from_mat4x4(r, (vec4 *) a);
     env->push_ref(runtime->stack, ra);
     return 0;
@@ -433,13 +433,13 @@ int org_mini_glfw_utils_Gutil_vec_mul_cross(Runtime *runtime, JClass *clazz) {
     Instance *ra = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *aa = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *ba = env->localvar_getRefer(runtime->localvar, pos++);
-    GLfloat *r = (GLfloat *) ra->arr_body;
-    GLfloat *a = (GLfloat *) aa->arr_body;
-    GLfloat *b = (GLfloat *) ba->arr_body;
+    GLfloat *r = (GLfloat *) jarray_body(ra);
+    GLfloat *a = (GLfloat *) jarray_body(aa);
+    GLfloat *b = (GLfloat *) jarray_body(ba);
     r[0] = a[1] * b[2] - a[2] * b[1];
     r[1] = a[2] * b[0] - a[0] * b[2];
     r[2] = a[0] * b[1] - a[1] * b[0];
-    if (ra->arr_length > 3)r[3] = 1.f;
+    if (jarray_length(ra) > 3)r[3] = 1.f;
     env->push_ref(runtime->stack, ra);
     return 0;
 }
@@ -448,7 +448,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_identity(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     int pos = 0;
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
-    mat4x4_identity((vec4 *) r->arr_body);
+    mat4x4_identity((vec4 *) jarray_body(r));
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -458,7 +458,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_dup(Runtime *runtime, JClass *clazz) {
     int pos = 0;
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
-    mat4x4_dup((vec4 *) r->arr_body, (vec4 *) m1->arr_body);
+    mat4x4_dup((vec4 *) jarray_body(r), (vec4 *) jarray_body(m1));
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -469,7 +469,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_row(Runtime *runtime, JClass *clazz) {
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
     int row = env->localvar_getInt(runtime->localvar, pos++);
-    mat4x4_row((GLfloat *) r->arr_body, (vec4 *) m1->arr_body, row);
+    mat4x4_row((GLfloat *) jarray_body(r), (vec4 *) jarray_body(m1), row);
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -480,7 +480,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_col(Runtime *runtime, JClass *clazz) {
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
     int col = env->localvar_getInt(runtime->localvar, pos++);
-    mat4x4_col((GLfloat *) r->arr_body, (vec4 *) m1->arr_body, col);
+    mat4x4_col((GLfloat *) jarray_body(r), (vec4 *) jarray_body(m1), col);
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -490,7 +490,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_transpose(Runtime *runtime, JClass *clazz) 
     int pos = 0;
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
-    mat4x4_transpose((vec4 *) r->arr_body, (vec4 *) m1->arr_body);
+    mat4x4_transpose((vec4 *) jarray_body(r), (vec4 *) jarray_body(m1));
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -501,7 +501,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_add(Runtime *runtime, JClass *clazz) {
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m2 = env->localvar_getRefer(runtime->localvar, pos++);
-    mat4x4_add((vec4 *) r->arr_body, (vec4 *) m1->arr_body, (vec4 *) m2->arr_body);
+    mat4x4_add((vec4 *) jarray_body(r), (vec4 *) jarray_body(m1), (vec4 *) jarray_body(m2));
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -512,7 +512,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_sub(Runtime *runtime, JClass *clazz) {
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m2 = env->localvar_getRefer(runtime->localvar, pos++);
-    mat4x4_sub((vec4 *) r->arr_body, (vec4 *) m1->arr_body, (vec4 *) m2->arr_body);
+    mat4x4_sub((vec4 *) jarray_body(r), (vec4 *) jarray_body(m1), (vec4 *) jarray_body(m2));
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -523,7 +523,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_mul(Runtime *runtime, JClass *clazz) {
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m2 = env->localvar_getRefer(runtime->localvar, pos++);
-    mat4x4_mul((vec4 *) r->arr_body, (vec4 *) m1->arr_body, (vec4 *) m2->arr_body);
+    mat4x4_mul((vec4 *) jarray_body(r), (vec4 *) jarray_body(m1), (vec4 *) jarray_body(m2));
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -534,7 +534,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_mul_vec4(Runtime *runtime, JClass *clazz) {
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m2 = env->localvar_getRefer(runtime->localvar, pos++);
-    mat4x4_mul_vec4((GLfloat *) r->arr_body, (vec4 *) m1->arr_body, (GLfloat *) m2->arr_body);
+    mat4x4_mul_vec4((GLfloat *) jarray_body(r), (vec4 *) jarray_body(m1), (GLfloat *) jarray_body(m2));
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -545,7 +545,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_from_vec3_mul_outer(Runtime *runtime, JClas
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m2 = env->localvar_getRefer(runtime->localvar, pos++);
-    mat4x4_from_vec3_mul_outer((vec4 *) r->arr_body, (GLfloat *) m1->arr_body, (GLfloat *) m2->arr_body);
+    mat4x4_from_vec3_mul_outer((vec4 *) jarray_body(r), (GLfloat *) jarray_body(m1), (GLfloat *) jarray_body(m2));
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -558,7 +558,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_translate(Runtime *runtime, JClass *clazz) 
     x.i = env->localvar_getInt(runtime->localvar, pos++);
     y.i = env->localvar_getInt(runtime->localvar, pos++);
     z.i = env->localvar_getInt(runtime->localvar, pos++);
-    mat4x4_translate((vec4 *) r->arr_body, x.f, y.f, z.f);
+    mat4x4_translate((vec4 *) jarray_body(r), x.f, y.f, z.f);
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -571,7 +571,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_translate_in_place(Runtime *runtime, JClass
     x.i = env->localvar_getInt(runtime->localvar, pos++);
     y.i = env->localvar_getInt(runtime->localvar, pos++);
     z.i = env->localvar_getInt(runtime->localvar, pos++);
-    mat4x4_translate_in_place((vec4 *) r->arr_body, x.f, y.f, z.f);
+    mat4x4_translate_in_place((vec4 *) jarray_body(r), x.f, y.f, z.f);
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -583,7 +583,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_scale(Runtime *runtime, JClass *clazz) {
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
     Int2Float f;
     f.i = env->localvar_getInt(runtime->localvar, pos++);
-    mat4x4_scale((vec4 *) r->arr_body, (vec4 *) m1->arr_body, f.f);
+    mat4x4_scale((vec4 *) jarray_body(r), (vec4 *) jarray_body(m1), f.f);
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -597,7 +597,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_scale_aniso(Runtime *runtime, JClass *clazz
     x.i = env->localvar_getInt(runtime->localvar, pos++);
     y.i = env->localvar_getInt(runtime->localvar, pos++);
     z.i = env->localvar_getInt(runtime->localvar, pos++);
-    mat4x4_scale_aniso((vec4 *) r->arr_body, (vec4 *) m1->arr_body, x.f, y.f, z.f);
+    mat4x4_scale_aniso((vec4 *) jarray_body(r), (vec4 *) jarray_body(m1), x.f, y.f, z.f);
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -612,7 +612,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_rotate(Runtime *runtime, JClass *clazz) {
     y.i = env->localvar_getInt(runtime->localvar, pos++);
     z.i = env->localvar_getInt(runtime->localvar, pos++);
     a.i = env->localvar_getInt(runtime->localvar, pos++);
-    mat4x4_rotate((vec4 *) r->arr_body, (vec4 *) m1->arr_body, x.f, y.f, z.f, a.f);
+    mat4x4_rotate((vec4 *) jarray_body(r), (vec4 *) jarray_body(m1), x.f, y.f, z.f, a.f);
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -624,7 +624,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_rotateX(Runtime *runtime, JClass *clazz) {
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
     Int2Float f;
     f.i = env->localvar_getInt(runtime->localvar, pos++);
-    mat4x4_rotate_X((vec4 *) r->arr_body, (vec4 *) m1->arr_body, f.f);
+    mat4x4_rotate_X((vec4 *) jarray_body(r), (vec4 *) jarray_body(m1), f.f);
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -636,7 +636,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_rotateY(Runtime *runtime, JClass *clazz) {
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
     Int2Float f;
     f.i = env->localvar_getInt(runtime->localvar, pos++);
-    mat4x4_rotate_Y((vec4 *) r->arr_body, (vec4 *) m1->arr_body, f.f);
+    mat4x4_rotate_Y((vec4 *) jarray_body(r), (vec4 *) jarray_body(m1), f.f);
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -648,7 +648,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_rotateZ(Runtime *runtime, JClass *clazz) {
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
     Int2Float f;
     f.i = env->localvar_getInt(runtime->localvar, pos++);
-    mat4x4_rotate_Z((vec4 *) r->arr_body, (vec4 *) m1->arr_body, f.f);
+    mat4x4_rotate_Z((vec4 *) jarray_body(r), (vec4 *) jarray_body(m1), f.f);
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -658,7 +658,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_invert(Runtime *runtime, JClass *clazz) {
     int pos = 0;
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
-    mat4x4_invert((vec4 *) r->arr_body, (vec4 *) m1->arr_body);
+    mat4x4_invert((vec4 *) jarray_body(r), (vec4 *) jarray_body(m1));
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -668,7 +668,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_orthonormalize(Runtime *runtime, JClass *cl
     int pos = 0;
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *m1 = env->localvar_getRefer(runtime->localvar, pos++);
-    mat4x4_orthonormalize((vec4 *) r->arr_body, (vec4 *) m1->arr_body);
+    mat4x4_orthonormalize((vec4 *) jarray_body(r), (vec4 *) jarray_body(m1));
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -684,7 +684,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_ortho(Runtime *runtime, JClass *clazz) {
     t.i = env->localvar_getInt(runtime->localvar, pos++);
     n.i = env->localvar_getInt(runtime->localvar, pos++);
     f.i = env->localvar_getInt(runtime->localvar, pos++);
-    mat4x4_ortho((vec4 *) ra->arr_body, l.f, r.f, b.f, t.f, n.f, f.f);
+    mat4x4_ortho((vec4 *) jarray_body(ra), l.f, r.f, b.f, t.f, n.f, f.f);
     env->push_ref(runtime->stack, ra);
     return 0;
 }
@@ -700,7 +700,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_frustum(Runtime *runtime, JClass *clazz) {
     t.i = env->localvar_getInt(runtime->localvar, pos++);
     n.i = env->localvar_getInt(runtime->localvar, pos++);
     f.i = env->localvar_getInt(runtime->localvar, pos++);
-    mat4x4_frustum((vec4 *) ra->arr_body, l.f, r.f, b.f, t.f, n.f, f.f);
+    mat4x4_frustum((vec4 *) jarray_body(ra), l.f, r.f, b.f, t.f, n.f, f.f);
     env->push_ref(runtime->stack, ra);
     return 0;
 }
@@ -714,7 +714,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_perspective(Runtime *runtime, JClass *clazz
     aspect.i = env->localvar_getInt(runtime->localvar, pos++);
     n.i = env->localvar_getInt(runtime->localvar, pos++);
     f.i = env->localvar_getInt(runtime->localvar, pos++);
-    mat4x4_perspective((vec4 *) r->arr_body, y_fov.f, aspect.f, n.f, f.f);
+    mat4x4_perspective((vec4 *) jarray_body(r), y_fov.f, aspect.f, n.f, f.f);
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -726,9 +726,9 @@ int org_mini_glfw_utils_Gutil_mat4x4_look_at(Runtime *runtime, JClass *clazz) {
     Instance *vec3_eye = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *vec3_center = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *vec3_up = env->localvar_getRefer(runtime->localvar, pos++);
-    mat4x4_look_at((vec4 *) r->arr_body, (float *) vec3_eye->arr_body,
-                   (float *) vec3_center->arr_body,
-                   (float *) vec3_up->arr_body);
+    mat4x4_look_at((vec4 *) jarray_body(r), (float *) jarray_body(vec3_eye),
+                   (float *) jarray_body(vec3_center),
+                   (float *) jarray_body(vec3_up));
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -740,9 +740,9 @@ int org_mini_glfw_utils_Gutil_mat4x4_trans_rotate_scale(Runtime *runtime, JClass
     Instance *vec3_trans = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *vec4_rotate = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *vec3_scale = env->localvar_getRefer(runtime->localvar, pos++);
-    mat4x4_trans_rotate_scale((vec4 *) r->arr_body, (float *) vec3_trans->arr_body,
-                              (float *) vec4_rotate->arr_body,
-                              (float *) vec3_scale->arr_body);
+    mat4x4_trans_rotate_scale((vec4 *) jarray_body(r), (float *) jarray_body(vec3_trans),
+                              (float *) jarray_body(vec4_rotate),
+                              (float *) jarray_body(vec3_scale));
     env->push_ref(runtime->stack, r);
     return 0;
 }
@@ -798,17 +798,17 @@ s32 org_mini_glfw_utils_Gutil_img_fill(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     Instance *canvasArr = localvar_getRefer(runtime->localvar, pos++);// byte array
     if (!canvasArr)return 0;
-    u8 *canvas = (u8 *) canvasArr->arr_body;
+    u8 *canvas = (u8 *) jarray_body(canvasArr);
     s32 ioffset = localvar_getInt(runtime->localvar, pos++);
     s32 ilen = localvar_getInt(runtime->localvar, pos++);
     if (ioffset < 0)ioffset = 0;
-    if (ioffset + ilen > canvasArr->arr_length / BYTES_PER_PIXEL)ilen = canvasArr->arr_length / BYTES_PER_PIXEL - ioffset;
+    if (ioffset + ilen > jarray_length(canvasArr) / BYTES_PER_PIXEL)ilen = jarray_length(canvasArr) / BYTES_PER_PIXEL - ioffset;
     s32 offset = ioffset * BYTES_PER_PIXEL;
     s32 len = ilen * BYTES_PER_PIXEL;
     Int2Float argb;//argb.c3--a  argb.c2--b   argb.c1--g  argb.c0--r
     argb.i = localvar_getInt(runtime->localvar, pos++);
 
-    if (canvasArr->arr_length < offset || len == 0 || argb.c3 == 0) {
+    if (jarray_length(canvasArr) < offset || len == 0 || argb.c3 == 0) {
         //
     } else {
         u8 a = argb.c3;
@@ -898,10 +898,10 @@ s32 org_mini_glfw_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
     if (!canvasArr || !imgArr || alpha == 0.f || canvasWidth == 0 || imgWidth == 0 || clip.w == 0 || clip.h == 0) {
         //do nothing
     } else {
-        u8 *canvas = (u8 *) canvasArr->arr_body;
-        u8 *img = (u8 *) imgArr->arr_body;
-        s32 canvasHeight = canvasArr->arr_length / CELL_BYTES / canvasWidth;
-        s32 imgHeight = imgArr->arr_length / CELL_BYTES / imgWidth;
+        u8 *canvas = (u8 *) jarray_body(canvasArr);
+        u8 *img = (u8 *) jarray_body(imgArr);
+        s32 canvasHeight = jarray_length(canvasArr) / CELL_BYTES / canvasWidth;
+        s32 imgHeight = jarray_length(imgArr) / CELL_BYTES / imgWidth;
 
         //fix clip in canvas range
         if (clip.x < 0)clip.x = 0;
@@ -970,7 +970,7 @@ s32 org_mini_glfw_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
 
         //translate , rotate , scale draw, loop full image
         if (!process) {
-            u8 *canvas = (u8 *) canvasArr->arr_body;
+            u8 *canvas = (u8 *) jarray_body(canvasArr);
 
             s32 imgRowBytes = imgWidth * CELL_BYTES;
             s32 cvsRowBytes = canvasWidth * CELL_BYTES;
@@ -1012,11 +1012,18 @@ int org_mini_glfw_Glfw_glfwSetCallback(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
-    refers.glfw_callback = env->localvar_getRefer(runtime->localvar, pos++);
+    Instance *new_callback = env->localvar_getRefer(runtime->localvar, pos++);
 
     //this object not refered by jvm , so needs to hold by jni manaul
-    if (refers.glfw_callback) env->instance_release_from_thread(refers.glfw_callback, runtime);
-    env->instance_hold_to_thread(refers.glfw_callback, runtime);
+    if (new_callback && env->instance_hold_to_thread(new_callback, runtime) != 0) {
+        if (runtime->jvm->out_of_memory_error) {
+            env->push_ref(runtime->stack, runtime->jvm->out_of_memory_error);
+        }
+        return RUNTIME_STATUS_EXCEPTION;
+    }
+    Instance *old_callback = refers.glfw_callback;
+    refers.glfw_callback = new_callback;
+    if (old_callback) env->instance_release_from_thread(old_callback, runtime);
 
     glfwSetErrorCallback(_callback_error);
     glfwSetKeyCallback(window, _callback_key);
@@ -1213,7 +1220,7 @@ int org_mini_glfw_Glfw_glfwCreateWindow(Runtime *runtime, JClass *clazz) {
     s32 width = env->localvar_getInt(runtime->localvar, pos++);
     s32 height = env->localvar_getInt(runtime->localvar, pos++);
     Instance *title_arr = env->localvar_getRefer(runtime->localvar, pos++);
-    c8 *title = title_arr->arr_body;
+    c8 *title = jarray_body(title_arr);
     GLFWmonitor *monitor = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
     GLFWwindow *share = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
@@ -1583,8 +1590,8 @@ int org_mini_glfw_Glfw_glfwGetJoystickAxes(Runtime *runtime, JClass *clazz) {
     f32 *buf = (f32 *) glfwGetJoystickAxes(jid, &count);
     if (farr && buf) {
         s32 i;
-        for (i = 0; i < count && i < farr->arr_length; i++) {
-            *((f32 *) (farr->arr_body) + i) = buf[i];
+        for (i = 0; i < count && i < jarray_length(farr); i++) {
+            *((f32 *) (jarray_body(farr)) + i) = buf[i];
         }
     }
     env->push_int(runtime->stack, count);
@@ -1600,8 +1607,8 @@ int org_mini_glfw_Glfw_glfwGetJoystickButtons(Runtime *runtime, JClass *clazz) {
     u8 *buf = (u8 *) glfwGetJoystickButtons(jid, &count);
     if (farr && buf) {
         s32 i;
-        for (i = 0; i < count && i < farr->arr_length; i++) {
-            *((u8 *) (farr->arr_body) + i) = buf[i];
+        for (i = 0; i < count && i < jarray_length(farr); i++) {
+            *((u8 *) (jarray_body(farr)) + i) = buf[i];
         }
     }
     env->push_int(runtime->stack, count);

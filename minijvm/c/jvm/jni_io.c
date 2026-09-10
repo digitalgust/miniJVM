@@ -281,7 +281,7 @@ s32 org_mini_net_SocketNative_open0(Runtime *runtime, JClass *clazz) {
         jthread_block_exit(runtime);
         return exception_throw_out_of_memory(runtime);
     }
-    mbedtls_net_context *ctx = &((VmSock *) vmarr->arr_body)->contex;
+    mbedtls_net_context *ctx = &((VmSock *) jarray_body(vmarr))->contex;
     mbedtls_net_init(ctx);
     jthread_block_exit(runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -300,10 +300,10 @@ s32 org_mini_net_SocketNative_bind0(Runtime *runtime, JClass *clazz) {
     s32 proto = localvar_getInt(runtime->localvar, 3);
     s32 ret = -1;
     if (vmarr && host && port) {
-        VmSock *vmsock = (VmSock *) vmarr->arr_body;
+        VmSock *vmsock = (VmSock *) jarray_body(vmarr);
         mbedtls_net_context *ctx = &vmsock->contex;
         jthread_block_enter(runtime);
-        ret = mbedtls_net_bind(ctx, strlen(host->arr_body) == 0 ? "0.0.0.0" : host->arr_body, port->arr_body, proto);
+        ret = mbedtls_net_bind(ctx, strlen(jarray_body(host)) == 0 ? "0.0.0.0" : jarray_body(host), jarray_body(port), proto);
         if (ret >= 0)ret = mbedtls_net_set_nonblock(ctx); //set as non_block , for vm destroy
         jthread_block_exit(runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -318,10 +318,10 @@ s32 org_mini_net_SocketNative_bind0(Runtime *runtime, JClass *clazz) {
 s32 org_mini_net_SocketNative_accept0(Runtime *runtime, JClass *clazz) {
     Instance *vmarr = localvar_getRefer(runtime->localvar, 0);
     if (vmarr) {
-        mbedtls_net_context *ctx = &((VmSock *) vmarr->arr_body)->contex;
+        mbedtls_net_context *ctx = &((VmSock *) jarray_body(vmarr))->contex;
         Instance *cltarr = jarray_create_by_type_index(runtime, sizeof(VmSock), DATATYPE_BYTE);
         if (!cltarr) return exception_throw_out_of_memory(runtime);
-        VmSock *cltsock = (VmSock *) cltarr->arr_body;
+        VmSock *cltsock = (VmSock *) jarray_body(cltarr);
         gc_obj_hold(runtime->jvm->collector, cltarr);
         s32 ret = 0;
         while (1) {
@@ -366,17 +366,17 @@ s32 org_mini_net_SocketNative_connect0(Runtime *runtime, JClass *clazz) {
 
     s32 ret = -1;
     if (vmarr && host && port) {
-        VmSock *vmsock = (VmSock *) vmarr->arr_body;
+        VmSock *vmsock = (VmSock *) jarray_body(vmarr);
         mbedtls_net_context *ctx = &vmsock->contex;
 
-        s32 hostlen = host->arr_length;
+        s32 hostlen = jarray_length(host);
         if (hostlen > sizeof(vmsock->hostname)) {
             hostlen = sizeof(vmsock->hostname);
         }
-        memcpy(&vmsock->hostname, host->arr_body, hostlen); //copy with 0
-        memcpy(&vmsock->hostport, port->arr_body, port->arr_length);
+        memcpy(&vmsock->hostname, jarray_body(host), hostlen); //copy with 0
+        memcpy(&vmsock->hostport, jarray_body(port), jarray_length(port));
         jthread_block_enter(runtime);
-        ret = mbedtls_net_connect(ctx, host->arr_body, port->arr_body, proto);
+        ret = mbedtls_net_connect(ctx, jarray_body(host), jarray_body(port), proto);
         jthread_block_exit(runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 5
         invoke_deepth(runtime);
@@ -444,10 +444,10 @@ s32 org_mini_net_SocketNative_readBuf(Runtime *runtime, JClass *clazz) {
     s32 count = localvar_getInt(runtime->localvar, 3);
     s32 ret = -1;
     if (vmarr && jbyte_arr) {
-        VmSock *vmsock = (VmSock *) vmarr->arr_body;
+        VmSock *vmsock = (VmSock *) jarray_body(vmarr);
 
         jthread_block_enter(runtime);
-        ret = sock_recv(vmsock, (u8 *) jbyte_arr->arr_body + offset, count, runtime);
+        ret = sock_recv(vmsock, (u8 *) jarray_body(jbyte_arr) + offset, count, runtime);
         jthread_block_exit(runtime);
     }
     push_int(runtime->stack, ret);
@@ -463,7 +463,7 @@ s32 org_mini_net_SocketNative_readByte(Runtime *runtime, JClass *clazz) {
     s32 ret = -1;
     u8 b = 0;
     if (vmarr) {
-        VmSock *vmsock = (VmSock *) vmarr->arr_body;
+        VmSock *vmsock = (VmSock *) jarray_body(vmarr);
         jthread_block_enter(runtime);
         ret = sock_recv(vmsock, &b, 1, runtime);
         jthread_block_exit(runtime);
@@ -485,10 +485,10 @@ s32 org_mini_net_SocketNative_writeBuf(Runtime *runtime, JClass *clazz) {
     s32 count = localvar_getInt(runtime->localvar, 3);
     s32 ret = -1;
     if (vmarr && jbyte_arr) {
-        VmSock *vmsock = (VmSock *) vmarr->arr_body;
+        VmSock *vmsock = (VmSock *) jarray_body(vmarr);
         mbedtls_net_context *ctx = &vmsock->contex;
         jthread_block_enter(runtime);
-        ret = mbedtls_net_send(ctx, (const u8 *) jbyte_arr->arr_body + offset, count);
+        ret = mbedtls_net_send(ctx, (const u8 *) jarray_body(jbyte_arr) + offset, count);
         jthread_block_exit(runtime);
         if (ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
             ret = 0;
@@ -510,7 +510,7 @@ s32 org_mini_net_SocketNative_writeByte(Runtime *runtime, JClass *clazz) {
     u8 b = (u8) val;
     s32 ret = -1;
     if (vmarr) {
-        VmSock *vmsock = (VmSock *) vmarr->arr_body;
+        VmSock *vmsock = (VmSock *) jarray_body(vmarr);
         mbedtls_net_context *ctx = &vmsock->contex;
         jthread_block_enter(runtime);
         ret = mbedtls_net_send(ctx, &b, 1);
@@ -540,7 +540,7 @@ s32 org_mini_net_SocketNative_available0(Runtime *runtime, JClass *clazz) {
 
 s32 org_mini_net_SocketNative_close0(Runtime *runtime, JClass *clazz) {
     Instance *vmarr = localvar_getRefer(runtime->localvar, 0);
-    VmSock *vmsock = (VmSock *) vmarr->arr_body;
+    VmSock *vmsock = (VmSock *) jarray_body(vmarr);
     mbedtls_net_context *ctx = &vmsock->contex;
     mbedtls_net_free(ctx);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -557,7 +557,7 @@ s32 org_mini_net_SocketNative_setOption0(Runtime *runtime, JClass *clazz) {
     s32 val2 = localvar_getInt(runtime->localvar, 3);
     s32 ret = -1;
     if (vmarr) {
-        ret = sock_option((VmSock *) vmarr->arr_body, type, val, val2);
+        ret = sock_option((VmSock *) jarray_body(vmarr), type, val, val2);
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -574,7 +574,7 @@ s32 org_mini_net_SocketNative_getOption0(Runtime *runtime, JClass *clazz) {
 
     s32 ret = -1;
     if (vmarr) {
-        ret = sock_get_option((VmSock *) vmarr->arr_body, type);
+        ret = sock_get_option((VmSock *) jarray_body(vmarr), type);
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -589,7 +589,7 @@ s32 org_mini_net_SocketNative_getSockAddr(Runtime *runtime, JClass *clazz) {
     Instance *vmarr = localvar_getRefer(runtime->localvar, 0);
     s32 mode = localvar_getInt(runtime->localvar, 1);
     if (vmarr) {
-        VmSock *vmsock = (VmSock *) vmarr->arr_body;
+        VmSock *vmsock = (VmSock *) jarray_body(vmarr);
         struct sockaddr_storage sock;
         socklen_t slen = sizeof(sock);
         if (mode == 0) {
@@ -638,13 +638,13 @@ s32 org_mini_net_SocketNative_host2ip(Runtime *runtime, JClass *clazz) {
     if (host) {
         c8 buf[50];
         jthread_block_enter(runtime);
-        s32 ret = host_2_ip(host->arr_body, buf, sizeof(buf));
+        s32 ret = host_2_ip(jarray_body(host), buf, sizeof(buf));
         jthread_block_exit(runtime);
         if (ret >= 0) {
             s32 buflen = strlen(buf);
             jbyte_arr = jarray_create_by_type_index(runtime, buflen, DATATYPE_BYTE);
             if (!jbyte_arr) return exception_throw_out_of_memory(runtime);
-            memmove(jbyte_arr->arr_body, buf, buflen);
+            memmove(jarray_body(jbyte_arr), buf, buflen);
         }
     }
     push_ref(runtime->stack, jbyte_arr);
@@ -671,7 +671,7 @@ s32 org_mini_net_SocketNative_sslc_init(Runtime *runtime, JClass *clazz) {
     Instance *jbyte_arr = (Instance *) localvar_getRefer(runtime->localvar, 0);
     if (jbyte_arr) {
         jthread_block_enter(runtime);
-        v = sslc_init((SSLC_Entry *) jbyte_arr->arr_body);
+        v = sslc_init((SSLC_Entry *) jarray_body(jbyte_arr));
         jthread_block_exit(runtime);
     }
     push_int(runtime->stack, v);
@@ -688,9 +688,9 @@ s32 org_mini_net_SocketNative_sslc_wrap(Runtime *runtime, JClass *clazz) {
     Instance *conn_arr = (Instance *) localvar_getRefer(runtime->localvar, 1);
     Instance *host_arr = (Instance *) localvar_getRefer(runtime->localvar, 2);
     if (jbyte_arr && conn_arr && host_arr) {
-        VmSock *vmsock = (VmSock *) conn_arr->arr_body;
+        VmSock *vmsock = (VmSock *) jarray_body(conn_arr);
         mbedtls_net_context *ctx = &vmsock->contex;
-        ret = sslc_wrap((SSLC_Entry *) jbyte_arr->arr_body, ctx->fd, host_arr->arr_body);
+        ret = sslc_wrap((SSLC_Entry *) jarray_body(jbyte_arr), ctx->fd, jarray_body(host_arr));
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -707,7 +707,7 @@ s32 org_mini_net_SocketNative_sslc_connect(Runtime *runtime, JClass *clazz) {
     Instance *port_arr = (Instance *) localvar_getRefer(runtime->localvar, 2);
     if (jbyte_arr && host_arr && port_arr) {
         jthread_block_enter(runtime);
-        ret = sslc_connect((SSLC_Entry *) jbyte_arr->arr_body, host_arr->arr_body, port_arr->arr_body);
+        ret = sslc_connect((SSLC_Entry *) jarray_body(jbyte_arr), jarray_body(host_arr), jarray_body(port_arr));
         jthread_block_exit(runtime);
     }
     push_int(runtime->stack, ret);
@@ -723,7 +723,7 @@ s32 org_mini_net_SocketNative_sslc_close(Runtime *runtime, JClass *clazz) {
     Instance *jbyte_arr = (Instance *) localvar_getRefer(runtime->localvar, 0);
     if (jbyte_arr) {
         jthread_block_enter(runtime);
-        ret = sslc_close((SSLC_Entry *) jbyte_arr->arr_body);
+        ret = sslc_close((SSLC_Entry *) jarray_body(jbyte_arr));
         jthread_block_exit(runtime);
     }
     push_int(runtime->stack, ret);
@@ -742,7 +742,7 @@ s32 org_mini_net_SocketNative_sslc_read(Runtime *runtime, JClass *clazz) {
     s32 len = localvar_getInt(runtime->localvar, 3);
     if (jbyte_arr && data_arr) {
         jthread_block_enter(runtime);
-        ret = sslc_read((SSLC_Entry *) jbyte_arr->arr_body, data_arr->arr_body + offset, len);
+        ret = sslc_read((SSLC_Entry *) jarray_body(jbyte_arr), jarray_body(data_arr) + offset, len);
         jthread_block_exit(runtime);
     }
     push_int(runtime->stack, ret < 0 ? -1 : ret);
@@ -761,7 +761,7 @@ s32 org_mini_net_SocketNative_sslc_write(Runtime *runtime, JClass *clazz) {
     s32 len = localvar_getInt(runtime->localvar, 3);
     if (jbyte_arr && data_arr) {
         jthread_block_enter(runtime);
-        ret = sslc_write((SSLC_Entry *) jbyte_arr->arr_body, data_arr->arr_body + offset, len);
+        ret = sslc_write((SSLC_Entry *) jarray_body(jbyte_arr), jarray_body(data_arr) + offset, len);
         jthread_block_exit(runtime);
     }
     push_int(runtime->stack, ret < 0 ? -1 : ret);
@@ -796,11 +796,11 @@ s32 org_mini_fs_InnerFile_openFile(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 0);
     Instance *mode_arr = localvar_getRefer(runtime->localvar, 1);
     if (name_arr) {
-        Utf8String *filepath = utf8_create_c(name_arr->arr_body);
+        Utf8String *filepath = utf8_create_c(jarray_body(name_arr));
         ByteBuf *platformPath = bytebuf_create(0);
         conv_utf8_2_platform_encoding(platformPath, filepath);
 
-        FILE *fd = fopen(platformPath->buf, mode_arr->arr_body);
+        FILE *fd = fopen(platformPath->buf, jarray_body(mode_arr));
         push_long(runtime->stack, (s64) (intptr_t) fd);
 
         bytebuf_destroy(platformPath);
@@ -820,7 +820,7 @@ s32 org_mini_fs_InnerFile_openFD(Runtime *runtime, JClass *clazz) {
     s32 pfd = localvar_getInt(runtime->localvar, 0);
     Instance *mode_arr = localvar_getRefer(runtime->localvar, 1);
     if (pfd >= 0) {
-        FILE *fd = fdopen(pfd, mode_arr->arr_body);
+        FILE *fd = fdopen(pfd, jarray_body(mode_arr));
         push_long(runtime->stack, (s64) (intptr_t) fd);
     } else {
         push_long(runtime->stack, 0);
@@ -930,9 +930,9 @@ s32 org_mini_fs_InnerFile_readbuf(Runtime *runtime, JClass *clazz) {
         return 0;
     }
     if (fd && bytes_arr && bytes_arr->mb.type == MEM_TYPE_ARR) {
-        arr_length = bytes_arr->arr_length;
-        if (bytes_arr->arr_body && offset >= 0 && len >= 0 && offset <= arr_length && len <= arr_length - offset) {
-        ret = (s32) fread(bytes_arr->arr_body + offset, 1, len, fd);
+        arr_length = jarray_length(bytes_arr);
+        if (arr_length > 0 && offset >= 0 && len >= 0 && offset <= arr_length && len <= arr_length - offset) {
+        ret = (s32) fread(jarray_body(bytes_arr) + offset, 1, len, fd);
         }
     }
     if (ret == 0) {
@@ -963,9 +963,9 @@ s32 org_mini_fs_InnerFile_writebuf(Runtime *runtime, JClass *clazz) {
         return 0;
     }
     if (fd && bytes_arr && bytes_arr->mb.type == MEM_TYPE_ARR) {
-        arr_length = bytes_arr->arr_length;
-        if (bytes_arr->arr_body && offset >= 0 && len >= 0 && offset <= arr_length && len <= arr_length - offset) {
-            ret = (s32) fwrite(bytes_arr->arr_body + offset, 1, len, fd);
+        arr_length = jarray_length(bytes_arr);
+        if (arr_length > 0 && offset >= 0 && len >= 0 && offset <= arr_length && len <= arr_length - offset) {
+            ret = (s32) fwrite(jarray_body(bytes_arr) + offset, 1, len, fd);
         }
         if (ret == 0) {
             ret = -1;
@@ -1086,7 +1086,7 @@ s32 org_mini_fs_InnerFile_loadFS(Runtime *runtime, JClass *clazz) {
     Instance *fd = localvar_getRefer(runtime->localvar, 1);
     s32 ret = RUNTIME_STATUS_NORMAL;
     if (name_arr) {
-        Utf8String *filepath = utf8_create_part_c(name_arr->arr_body, 0, name_arr->arr_length);
+        Utf8String *filepath = utf8_create_part_c(jarray_body(name_arr), 0, jarray_length(name_arr));
         struct stat buf;
         ByteBuf *platformPath = bytebuf_create(0);
         s32 len = conv_utf8_2_platform_encoding(platformPath, filepath);
@@ -1136,7 +1136,7 @@ s32 org_mini_fs_InnerFile_loadFS(Runtime *runtime, JClass *clazz) {
 s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 0);
     if (name_arr) {
-        Utf8String *filepath = utf8_create_part_c(name_arr->arr_body, 0, name_arr->arr_length);
+        Utf8String *filepath = utf8_create_part_c(jarray_body(name_arr), 0, jarray_length(name_arr));
 
         ArrayList *files = arraylist_create(0);
         DIR *dirp;
@@ -1145,6 +1145,7 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
         conv_utf8_2_platform_encoding(platformPath, filepath);
         dirp = opendir(platformPath->buf); // pointer to the opened directory
         if (dirp) {
+            s32 root_failed = 0;
             while ((dp = readdir(dirp)) != NULL) {
                 // read the directory through the directory pointer
                 if (strcmp(dp->d_name, ".") == 0) {
@@ -1157,13 +1158,26 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
                 Utf8String *ustr = utf8_create();
                 conv_platform_encoding_2_utf8(ustr, dp->d_name); //
                 Instance *jstr = jstring_create(ustr, runtime);
-                instance_hold_to_thread(jstr, runtime);
                 utf8_destroy(ustr);
-                arraylist_push_back(files, jstr);
+                if (!jstr || instance_hold_to_thread(jstr, runtime) != 0 ||
+                    !arraylist_push_back(files, jstr)) {
+                    if (jstr) instance_release_from_thread(jstr, runtime);
+                    root_failed = 1;
+                    break;
+                }
             }
             (void) closedir(dirp); // close the directory
 
             s32 i;
+            if (root_failed) {
+                for (i = 0; i < files->length; i++) {
+                    instance_release_from_thread(arraylist_get_value(files, i), runtime);
+                }
+                bytebuf_destroy(platformPath);
+                arraylist_destroy(files);
+                utf8_destroy(filepath);
+                return exception_throw_out_of_memory(runtime);
+            }
             Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
             Instance *jarr = jarray_create_by_type_name(runtime, files->length, ustr, NULL);
             utf8_destroy(ustr);
@@ -1251,7 +1265,7 @@ s32 org_mini_fs_InnerFile_chmod(Runtime *runtime, JClass *clazz) {
     Instance *path_arr = localvar_getRefer(runtime->localvar, 0);
     s32 mode = localvar_getInt(runtime->localvar, 1);
     if (path_arr) {
-        Utf8String *filepath = utf8_create_c(path_arr->arr_body);
+        Utf8String *filepath = utf8_create_c(jarray_body(path_arr));
         ByteBuf *platformPath = bytebuf_create(0);
         conv_utf8_2_platform_encoding(platformPath, filepath);
 
@@ -1274,11 +1288,11 @@ s32 org_mini_fs_InnerFile_rename0(Runtime *runtime, JClass *clazz) {
     Instance *old_arr = localvar_getRefer(runtime->localvar, 0);
     Instance *new_arr = localvar_getRefer(runtime->localvar, 1);
     if (old_arr && new_arr) {
-        Utf8String *filepath = utf8_create_c(old_arr->arr_body);
+        Utf8String *filepath = utf8_create_c(jarray_body(old_arr));
         ByteBuf *oldPath = bytebuf_create(0);
         conv_utf8_2_platform_encoding(oldPath, filepath);
         utf8_clear(filepath);
-        utf8_append_c(filepath, new_arr->arr_body);
+        utf8_append_c(filepath, jarray_body(new_arr));
         ByteBuf *newPath = bytebuf_create(0);
         conv_utf8_2_platform_encoding(newPath, filepath);
 
@@ -1336,7 +1350,7 @@ s32 org_mini_fs_InnerFile_mkdir0(Runtime *runtime, JClass *clazz) {
     Instance *path_arr = localvar_getRefer(runtime->localvar, 0);
     s32 ret = -1;
     if (path_arr) {
-        Utf8String *filepath = utf8_create_c(path_arr->arr_body);
+        Utf8String *filepath = utf8_create_c(jarray_body(path_arr));
         ByteBuf *platformPath = bytebuf_create(0);
         conv_utf8_2_platform_encoding(platformPath, filepath);
 
@@ -1371,7 +1385,7 @@ s32 org_mini_fs_InnerFile_delete0(Runtime *runtime, JClass *clazz) {
     Instance *path_arr = localvar_getRefer(runtime->localvar, 0);
     s32 ret = -1;
     if (path_arr) {
-        Utf8String *filepath = utf8_create_c(path_arr->arr_body);
+        Utf8String *filepath = utf8_create_c(jarray_body(path_arr));
         ByteBuf *platformPath = bytebuf_create(0);
         conv_utf8_2_platform_encoding(platformPath, filepath);
 
@@ -1406,7 +1420,7 @@ s32 org_mini_zip_ZipFile_getEntryIndex0(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
     s32 ret = -1;
     if (zip_path_arr && name_arr) {
-        ret = zip_get_file_index(zip_path_arr->arr_body, name_arr->arr_body);
+        ret = zip_get_file_index(jarray_body(zip_path_arr), jarray_body(name_arr));
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1421,7 +1435,7 @@ s32 org_mini_zip_ZipFile_getEntrySize0(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
     s64 ret = -1;
     if (zip_path_arr && name_arr) {
-        ret = zip_get_file_unzip_size(zip_path_arr->arr_body, name_arr->arr_body);
+        ret = zip_get_file_unzip_size(jarray_body(zip_path_arr), jarray_body(name_arr));
     }
     push_long(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1436,11 +1450,11 @@ s32 org_mini_zip_ZipFile_getEntry0(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
     s32 ret = -1;
     if (zip_path_arr && name_arr) {
-        s64 filesize = zip_get_file_unzip_size(zip_path_arr->arr_body, name_arr->arr_body);
+        s64 filesize = zip_get_file_unzip_size(jarray_body(zip_path_arr), jarray_body(name_arr));
         if (filesize >= 0) {
             Instance *arr = jarray_create_by_type_index(runtime, (s32) filesize, DATATYPE_BYTE);
             if (!arr) return exception_throw_out_of_memory(runtime);
-            ret = zip_loadfile_to_mem(zip_path_arr->arr_body, name_arr->arr_body, arr->arr_body, filesize);
+            ret = zip_loadfile_to_mem(jarray_body(zip_path_arr), jarray_body(name_arr), jarray_body(arr), filesize);
             if (ret == 0) {
                 push_ref(runtime->stack, arr);
             }
@@ -1462,8 +1476,8 @@ s32 org_mini_zip_ZipFile_putEntry0(Runtime *runtime, JClass *clazz) {
     Instance *content_arr = localvar_getRefer(runtime->localvar, 2);
     s32 ret = -1;
     if (zip_path_arr && name_arr) {
-        zip_savefile_mem(zip_path_arr->arr_body, name_arr->arr_body, content_arr ? content_arr->arr_body : NULL,
-                         content_arr ? content_arr->arr_length : 0);
+        zip_savefile_mem(jarray_body(zip_path_arr), jarray_body(name_arr), content_arr ? jarray_body(content_arr) : NULL,
+                         content_arr ? jarray_length(content_arr) : 0);
         ret = 0;
     }
     push_int(runtime->stack, ret);
@@ -1479,7 +1493,7 @@ s32 org_mini_zip_ZipFile_fileCount0(Runtime *runtime, JClass *clazz) {
 
     s32 ret = 0;
     if (zip_path_arr) {
-        ret = zip_filecount(zip_path_arr->arr_body);
+        ret = zip_filecount(jarray_body(zip_path_arr));
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1493,7 +1507,7 @@ s32 org_mini_zip_ZipFile_listFiles0(Runtime *runtime, JClass *clazz) {
     Instance *zip_path_arr = localvar_getRefer(runtime->localvar, 0);
     s32 ret = -1;
     if (zip_path_arr) {
-        ArrayList *list = zip_get_filenames(zip_path_arr->arr_body);
+        ArrayList *list = zip_get_filenames(jarray_body(zip_path_arr));
         if (list) {
             Utf8String *clustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
             Instance *jarr = jarray_create_by_type_name(runtime, list->length, clustr, NULL);
@@ -1502,7 +1516,10 @@ s32 org_mini_zip_ZipFile_listFiles0(Runtime *runtime, JClass *clazz) {
                 zip_destroy_filenames_list(list);
                 return exception_throw_out_of_memory(runtime);
             }
-            instance_hold_to_thread(jarr, runtime);
+            if (instance_hold_to_thread(jarr, runtime) != 0) {
+                zip_destroy_filenames_list(list);
+                return exception_throw_out_of_memory(runtime);
+            }
             s32 i;
             for (i = 0; i < list->length; i++) {
                 Utf8String *ustr = arraylist_get_value_unsafe(list, i);
@@ -1530,7 +1547,7 @@ s32 org_mini_zip_ZipFile_isDirectory0(Runtime *runtime, JClass *clazz) {
     s32 index = localvar_getInt(runtime->localvar, 1);
     s32 ret = -1;
     if (zip_path_arr) {
-        ret = zip_is_directory(zip_path_arr->arr_body, index);
+        ret = zip_is_directory(jarray_body(zip_path_arr), index);
     }
 
     push_int(runtime->stack, ret);
@@ -1547,7 +1564,7 @@ s32 org_mini_zip_ZipFile_extract0(Runtime *runtime, JClass *clazz) {
     s32 ret = 0;
     ByteBuf *data = bytebuf_create(0);
     if (zip_data) {
-        ret = zip_extract(zip_data->arr_body, zip_data->arr_length, data);
+        ret = zip_extract(jarray_body(zip_data), jarray_length(zip_data), data);
     }
     if (ret == -1) {
         push_ref(runtime->stack, NULL);
@@ -1557,7 +1574,7 @@ s32 org_mini_zip_ZipFile_extract0(Runtime *runtime, JClass *clazz) {
             bytebuf_destroy(data);
             return exception_throw_out_of_memory(runtime);
         }
-        bytebuf_read_batch(data, byte_arr->arr_body, data->wp);
+        bytebuf_read_batch(data, jarray_body(byte_arr), data->wp);
         push_ref(runtime->stack, byte_arr);
     }
     bytebuf_destroy(data);
@@ -1573,7 +1590,7 @@ s32 org_mini_zip_ZipFile_compress0(Runtime *runtime, JClass *clazz) {
     s32 ret = 0;
     ByteBuf *zip_data = bytebuf_create(0);
     if (data) {
-        ret = zip_compress(data->arr_body, data->arr_length, zip_data);
+        ret = zip_compress(jarray_body(data), jarray_length(data), zip_data);
     }
     if (ret == -1) {
         push_ref(runtime->stack, NULL);
@@ -1583,7 +1600,7 @@ s32 org_mini_zip_ZipFile_compress0(Runtime *runtime, JClass *clazz) {
             bytebuf_destroy(zip_data);
             return exception_throw_out_of_memory(runtime);
         }
-        bytebuf_read_batch(zip_data, byte_arr->arr_body, zip_data->wp);
+        bytebuf_read_batch(zip_data, jarray_body(byte_arr), zip_data->wp);
         push_ref(runtime->stack, byte_arr);
     }
     bytebuf_destroy(zip_data);
@@ -1599,7 +1616,7 @@ s32 org_mini_zip_ZipFile_gzipExtract0(Runtime *runtime, JClass *clazz) {
     s32 ret = 0;
     ByteBuf *data = bytebuf_create(0);
     if (gzip_data) {
-        ret = gzip_extract(gzip_data->arr_body, gzip_data->arr_length, data);
+        ret = gzip_extract(jarray_body(gzip_data), jarray_length(gzip_data), data);
     }
     if (ret == -1) {
         push_ref(runtime->stack, NULL);
@@ -1609,7 +1626,7 @@ s32 org_mini_zip_ZipFile_gzipExtract0(Runtime *runtime, JClass *clazz) {
             bytebuf_destroy(data);
             return exception_throw_out_of_memory(runtime);
         }
-        bytebuf_read_batch(data, byte_arr->arr_body, data->wp);
+        bytebuf_read_batch(data, jarray_body(byte_arr), data->wp);
         push_ref(runtime->stack, byte_arr);
     }
     bytebuf_destroy(data);
@@ -1626,7 +1643,7 @@ s32 org_mini_zip_ZipFile_zlibExtract0(Runtime *runtime, JClass *clazz) {
     s32 ret = 0;
     ByteBuf *data = bytebuf_create(0);
     if (zlib_data) {
-        ret = zlib_extract(zlib_data->arr_body, zlib_data->arr_length, expected_size, data);
+        ret = zlib_extract(jarray_body(zlib_data), jarray_length(zlib_data), expected_size, data);
     }
     if (ret == -1) {
         push_ref(runtime->stack, NULL);
@@ -1636,7 +1653,7 @@ s32 org_mini_zip_ZipFile_zlibExtract0(Runtime *runtime, JClass *clazz) {
             bytebuf_destroy(data);
             return exception_throw_out_of_memory(runtime);
         }
-        bytebuf_read_batch(data, byte_arr->arr_body, data->wp);
+        bytebuf_read_batch(data, jarray_body(byte_arr), data->wp);
         push_ref(runtime->stack, byte_arr);
     }
     bytebuf_destroy(data);
@@ -1652,7 +1669,7 @@ s32 org_mini_zip_ZipFile_zlibCompress0(Runtime *runtime, JClass *clazz) {
     s32 ret = 0;
     ByteBuf *zlib_data = bytebuf_create(0);
     if (data) {
-        ret = zlib_compress(data->arr_body, data->arr_length, zlib_data);
+        ret = zlib_compress(jarray_body(data), jarray_length(data), zlib_data);
     }
     if (ret == -1) {
         push_ref(runtime->stack, NULL);
@@ -1662,7 +1679,7 @@ s32 org_mini_zip_ZipFile_zlibCompress0(Runtime *runtime, JClass *clazz) {
             bytebuf_destroy(zlib_data);
             return exception_throw_out_of_memory(runtime);
         }
-        bytebuf_read_batch(zlib_data, byte_arr->arr_body, zlib_data->wp);
+        bytebuf_read_batch(zlib_data, jarray_body(byte_arr), zlib_data->wp);
         push_ref(runtime->stack, byte_arr);
     }
     bytebuf_destroy(zlib_data);
@@ -1678,7 +1695,7 @@ s32 org_mini_zip_ZipFile_gzipCompress0(Runtime *runtime, JClass *clazz) {
     s32 ret = 0;
     ByteBuf *gzip_data = bytebuf_create(0);
     if (data) {
-        ret = gzip_compress(data->arr_body, data->arr_length, gzip_data);
+        ret = gzip_compress(jarray_body(data), jarray_length(data), gzip_data);
     }
     if (ret == -1) {
         push_ref(runtime->stack, NULL);
@@ -1688,7 +1705,7 @@ s32 org_mini_zip_ZipFile_gzipCompress0(Runtime *runtime, JClass *clazz) {
             bytebuf_destroy(gzip_data);
             return exception_throw_out_of_memory(runtime);
         }
-        bytebuf_read_batch(gzip_data, byte_arr->arr_body, gzip_data->wp);
+        bytebuf_read_batch(gzip_data, jarray_body(byte_arr), gzip_data->wp);
         push_ref(runtime->stack, byte_arr);
     }
     bytebuf_destroy(gzip_data);
@@ -1704,12 +1721,12 @@ s32 org_mini_crypt_XorCrypt_encrypt(Runtime *runtime, JClass *clazz) {
     Instance *data = localvar_getRefer(runtime->localvar, pos++);
     Instance *key = localvar_getRefer(runtime->localvar, pos++);
     if (data && key) {
-        Instance *r = jarray_create_by_type_index(runtime, data->arr_length, DATATYPE_BYTE);
+        Instance *r = jarray_create_by_type_index(runtime, jarray_length(data), DATATYPE_BYTE);
         if (!r) return exception_throw_out_of_memory(runtime);
         s32 i, j, imax, jmax;
-        for (i = 0, imax = data->arr_length; i < imax; i++) {
+        for (i = 0, imax = jarray_length(data); i < imax; i++) {
             u32 v = jarray_get_field(data, i) & 0xff;
-            for (j = 0, jmax = key->arr_length; j < jmax; j++) {
+            for (j = 0, jmax = jarray_length(key); j < jmax; j++) {
                 u32 k = jarray_get_field(key, j) & 0xff;
 
                 u32 bitshift = k % 8;
@@ -1734,12 +1751,12 @@ s32 org_mini_crypt_XorCrypt_decrypt(Runtime *runtime, JClass *clazz) {
     Instance *data = localvar_getRefer(runtime->localvar, pos++);
     Instance *key = localvar_getRefer(runtime->localvar, pos++);
     if (data && key) {
-        Instance *r = jarray_create_by_type_index(runtime, data->arr_length, DATATYPE_BYTE);
+        Instance *r = jarray_create_by_type_index(runtime, jarray_length(data), DATATYPE_BYTE);
         if (!r) return exception_throw_out_of_memory(runtime);
         s32 i, j, imax;
-        for (i = 0, imax = data->arr_length; i < imax; i++) {
+        for (i = 0, imax = jarray_length(data); i < imax; i++) {
             u32 v = jarray_get_field(data, i) & 0xff;
-            for (j = key->arr_length - 1; j >= 0; j--) {
+            for (j = jarray_length(key) - 1; j >= 0; j--) {
                 u32 k = jarray_get_field(key, j) & 0xff;
                 v = (v ^ k) & 0xff;
 

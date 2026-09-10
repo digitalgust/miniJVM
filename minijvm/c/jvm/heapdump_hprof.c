@@ -343,10 +343,10 @@ static void hprof_heap_bb_write_object_array_dump(ByteBuf *seg, u32 id_size, Ins
     bytebuf_write_byte(seg, (c8) 0x22);
     hprof_bb_write_id(seg, id_size, (u64) (uintptr_t) arr);
     bytebuf_write_int(seg, 0);
-    bytebuf_write_int(seg, arr ? arr->arr_length : 0);
+    bytebuf_write_int(seg, arr ? jarray_length(arr) : 0);
     hprof_bb_write_id(seg, id_size, (u64) (uintptr_t) (arr ? arr->mb.clazz : NULL));
     if (!arr) return;
-    for (s32 i = 0; i < arr->arr_length; i++) {
+    for (s32 i = 0; i < jarray_length(arr); i++) {
         s64 v = jarray_get_field(arr, i);
         hprof_bb_write_id(seg, id_size, (u64) (uintptr_t) (void *) (intptr_t) v);
     }
@@ -356,30 +356,30 @@ static void hprof_heap_bb_write_primitive_array_dump(ByteBuf *seg, u32 id_size, 
     bytebuf_write_byte(seg, (c8) 0x23);
     hprof_bb_write_id(seg, id_size, (u64) (uintptr_t) arr);
     bytebuf_write_int(seg, 0);
-    bytebuf_write_int(seg, arr ? arr->arr_length : 0);
+    bytebuf_write_int(seg, arr ? jarray_length(arr) : 0);
     u8 t = hprof_type_from_array_class(arr ? arr->mb.clazz : NULL);
     bytebuf_write_byte(seg, (c8) t);
     if (!arr) return;
-    c8 *p = arr->arr_body;
+    c8 *p = jarray_body(arr);
     if (t == DATATYPE_BOOLEAN || t == DATATYPE_BYTE) {
-        bytebuf_write_batch(seg, p, arr->arr_length);
+        bytebuf_write_batch(seg, p, jarray_length(arr));
     } else if (t == DATATYPE_JCHAR || t == DATATYPE_SHORT) {
-        for (s32 i = 0; i < arr->arr_length; i++) {
+        for (s32 i = 0; i < jarray_length(arr); i++) {
             s16 v = *((s16 *) (p + i * 2));
             bytebuf_write_short(seg, v);
         }
     } else if (t == DATATYPE_INT || t == DATATYPE_FLOAT) {
-        for (s32 i = 0; i < arr->arr_length; i++) {
+        for (s32 i = 0; i < jarray_length(arr); i++) {
             s32 v = *((s32 *) (p + i * 4));
             bytebuf_write_int(seg, v);
         }
     } else if (t == DATATYPE_LONG || t == DATATYPE_DOUBLE) {
-        for (s32 i = 0; i < arr->arr_length; i++) {
+        for (s32 i = 0; i < jarray_length(arr); i++) {
             s64 v = *((s64 *) (p + i * 8));
             bytebuf_write_long(seg, v);
         }
     } else {
-        bytebuf_write_batch(seg, p, arr->arr_length);
+        bytebuf_write_batch(seg, p, jarray_length(arr));
     }
 }
 

@@ -70,7 +70,7 @@ s32 _jarray_check_exception(Instance *arr, s32 index, Runtime *runtime) {
     if (!arr) {
         Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
         push_ref(runtime->stack, (__refer) exception);
-    } else if (index >= arr->arr_length || index < 0) {
+    } else if (index >= jarray_length(arr) || index < 0) {
         Instance *exception = exception_create(JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, runtime);
         push_ref(runtime->stack, (__refer) exception);
     } else {
@@ -986,10 +986,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                r->ival1 = *((s32 *) (r->ins->arr_body) + r->idx);
+                                r->ival1 = *((s32 *) (jarray_body(r->ins)) + r->idx);
                                 (sp++)->ivalue = r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1008,10 +1008,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                r->lval1 = *(((s64 *) r->ins->arr_body) + r->idx);
+                                r->lval1 = *(((s64 *) jarray_body(r->ins)) + r->idx);
                                 (sp++)->lvalue = r->lval1;
                                 (sp++);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1030,10 +1030,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                r->rval1 = *(((__refer *) r->ins->arr_body) + r->idx);
+                                r->rval1 = *(((__refer *) jarray_body(r->ins)) + r->idx);
                                 (sp++)->rvalue = r->rval1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1052,10 +1052,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                r->ival1 = *(((s8 *) r->ins->arr_body) + r->idx);
+                                r->ival1 = *(((s8 *) jarray_body(r->ins)) + r->idx);
                                 (sp++)->ivalue = r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1074,10 +1074,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                r->ival1 = *(((u16 *) r->ins->arr_body) + r->idx);
+                                r->ival1 = *(((u16 *) jarray_body(r->ins)) + r->idx);
                                 (sp++)->ivalue = r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1096,10 +1096,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                r->ival1 = *(((s16 *) r->ins->arr_body) + r->idx);
+                                r->ival1 = *(((s16 *) jarray_body(r->ins)) + r->idx);
                                 (sp++)->ivalue = r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1232,10 +1232,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                *(((s32 *) r->ins->arr_body) + r->idx) = r->ival1;
+                                *(((s32 *) jarray_body(r->ins)) + r->idx) = r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(r);
@@ -1256,10 +1256,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                *(((s64 *) r->ins->arr_body) + r->idx) = r->lval1;
+                                *(((s64 *) jarray_body(r->ins)) + r->idx) = r->lval1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(r);
@@ -1278,12 +1278,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else if (!jarray_reference_store_check(r->ins, r->rval1)) {
                                 goto label_arraystore_throw;
                             } else {
-                                *(((__refer *) r->ins->arr_body) + r->idx) = r->rval1;
+                                *(((__refer *) jarray_body(r->ins)) + r->idx) = r->rval1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(r);
@@ -1302,10 +1302,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                *(((s8 *) r->ins->arr_body) + r->idx) = (s8) r->ival1;
+                                *(((s8 *) jarray_body(r->ins)) + r->idx) = (s8) r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(r);
@@ -1324,10 +1324,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                *(((u16 *) r->ins->arr_body) + r->idx) = (u16) r->ival1;
+                                *(((u16 *) jarray_body(r->ins)) + r->idx) = (u16) r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(r);
@@ -1346,10 +1346,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                *(((s16 *) r->ins->arr_body) + r->idx) = (s16) r->ival1;
+                                *(((s16 *) jarray_body(r->ins)) + r->idx) = (s16) r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(r);
@@ -3264,12 +3264,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(r);
-                            jvm_printf("arraylength  [%llx].arr_body[%llx] len:%d  \n", (s64) (intptr_t) r->ins, (s64) (intptr_t) r->ins->arr_body, r->ins->arr_length);
+                            jvm_printf("arraylength  [%llx].arr_body[%llx] len:%d  \n", (s64) (intptr_t) r->ins, (s64) (intptr_t) jarray_body(r->ins), jarray_length(r->ins));
 #endif
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                (sp++)->ivalue = r->ins->arr_length;
+                                (sp++)->ivalue = jarray_length(r->ins);
                                 r->pc++;
                             }
                             break;
@@ -3696,7 +3696,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
 
                                 (sp++)->rvalue = *((__refer *) r->ptr);
                                 r->pc += 3;
@@ -3715,7 +3715,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
 
                                 (sp++)->lvalue = *((s64 *) r->ptr);
                                 sp++;
@@ -3735,7 +3735,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
 
                                 (sp++)->ivalue = *((s32 *) r->ptr);
                                 r->pc += 3;
@@ -3754,7 +3754,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
 
                                 (sp++)->ivalue = *((s16 *) r->ptr);
                                 r->pc += 3;
@@ -3773,7 +3773,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
 
                                 (sp++)->ivalue = *((u16 *) r->ptr);
                                 r->pc += 3;
@@ -3792,7 +3792,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
 
                                 (sp++)->ivalue = *((s8 *) r->ptr);
                                 r->pc += 3;
@@ -3813,7 +3813,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 goto label_null_throw;
                             } else {
                                 // check variable type to determain long/s32/f64/f32
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
                                 *((__refer *) r->ptr) = r->rval1;
                                 r->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -3833,7 +3833,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
                                 *((s64 *) r->ptr) = r->lval1;
                                 r->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -3852,7 +3852,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
                                 *((s32 *) r->ptr) = r->ival1;
                                 r->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -3871,7 +3871,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
                                 *((s16 *) r->ptr) = (s16) r->ival1;
                                 r->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -3890,7 +3890,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
                                 *((s8 *) r->ptr) = (s8) r->ival1;
                                 r->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5

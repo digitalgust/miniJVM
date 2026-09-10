@@ -48,4 +48,14 @@ public class Util {
         return lastString;
     }
 
+    /* miniJVM Instance layout accessor expressions (keep in sync with jvm.h).
+     * Generated C uses these instead of touching Instance members directly. */
+    public static String jarrBody(String v) {
+        return "jarray_body(" + v + ")";
+    }
+
+    public static String jarrLen(String v) {
+        return "jarray_length(" + v + ")";
+    }
+
 }

@@ -229,7 +229,7 @@ public class Nanovg_java_2_c {
                             pushCode += "    if (_ptr_re_val) {\n"
                                     + "        s32 _j_t_bytes = sizeof(" + cType + ");\n"
                                     + "        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, " + jvmType + ");\n"
-                                    + "        memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);\n"
+                                    + "        memcpy(jarray_body(_arr), _ptr_re_val,_struct_bytes);\n"
                                     + "        env->push_ref(runtime->stack, _arr);\n"
                                     + "    } else {\n"
                                     + "        env->push_ref(runtime->stack, NULL);\n"
@@ -345,7 +345,7 @@ public class Nanovg_java_2_c {
                             varCode += "    Instance *" + argvName + " = env->localvar_getRefer(runtime->localvar, pos++);\n";
                             varCode += "    __refer ptr_" + argvName + " = NULL;\n";
                             varCode += "    if(" + argvName + "){\n";
-                            varCode += "        ptr_" + argvName + " = " + argvName + "->arr_body" + ";\n";
+                            varCode += "        ptr_" + argvName + " = " + JniUtil.jarrBody(argvName) + ";\n";
                             varCode += "    }\n";
                             if (JniUtil.isStruct(nativeArgvs[nativei])) {
                                 curArgvType = "*(" + nativeArgvs[nativei] + "*)";
@@ -379,6 +379,27 @@ public class Nanovg_java_2_c {
                     funcBodyCode = funcBodyCode.replace(NATIVE_ARGV, nativeArgvCode);
                     funcBodyCode = funcBodyCode.replace(RELEASE_MEM, releaseMemCode);
                     funcTableLine = funcTableLine.replace(JAVA_ARGV, javaArgvCode);
+
+                    /* This mobile-only diagnostic used to be patched directly
+                     * into the generated C file.  Keep it in the generator so
+                     * regeneration is lossless and idempotent. */
+                    if ("stbi_load_from_memory".equals(methodName)) {
+                        String call = "    stbi_uc*/*ptr*/ _re_val = stbi_load_from_memory((stbi_uc const*/*ptr*/)(pbuffer), (int)plen, (int*)(ptr_px), (int*)(ptr_py), (int*)(ptr_pcomp), (int)preq_comp);\n";
+                        String diagnostic =
+                                "    if (pbuffer == 0 || plen <= 0) {\n"
+                                + "        jvm_printf(\"[NATIVE][stbi_load_from_memory] invalid input pbuffer=%p plen=%d req_comp=%d\\n\",\n"
+                                + "                   (void *) (intptr_t) pbuffer, plen, preq_comp);\n"
+                                + "    }\n"
+                                + call
+                                + "    if (_re_val == NULL) {\n"
+                                + "        jvm_printf(\"[NATIVE][stbi_load_from_memory] decode failed pbuffer=%p plen=%d req_comp=%d x=%d y=%d comp=%d\\n\",\n"
+                                + "                   (void *) (intptr_t) pbuffer, plen, preq_comp,\n"
+                                + "                   ptr_px ? *((int *) ptr_px) : -1,\n"
+                                + "                   ptr_py ? *((int *) ptr_py) : -1,\n"
+                                + "                   ptr_pcomp ? *((int *) ptr_pcomp) : -1);\n"
+                                + "    }\n";
+                        funcBodyCode = funcBodyCode.replace(call, diagnostic);
+                    }
 
                     if (!isTypes(ignore_list, methodName)) {
                         bw.write(funcBodyCode);

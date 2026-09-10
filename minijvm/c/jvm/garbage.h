@@ -26,7 +26,7 @@ struct _GcCollectorType {
     // A lawless zone, a holder that prevents garbage collection.
     // Objects placed in it and other objects they reference will not be collected.
     Hashset *objs_holder;
-    MemoryBlock *header, *tmp_header, *tmp_tailer;
+    GcObjectLink *header, *tmp_header, *tmp_tailer; //external registration nodes
     s64 obj_count;
     s64 obj_heap_size;
     s64 jit_heap_size;
@@ -43,6 +43,21 @@ struct _GcCollectorType {
     ArrayList *runtime_refer_copy;
     //
 
+    // Recycled node slab for GcObjectLink allocation (managed accounting).
+    struct {
+        GcObjectLink *free_list;
+        GcObjectLink **chunks;
+        s32 chunk_count;
+        s32 chunk_cap;
+        s32 live_links;
+        spinlock_t lock;
+    } link_slab;
+
+    // Classic (malloc backend) pending re-mark queue: objects that ran
+    // finalize() or were enqueued as weak references this cycle and must
+    // survive the sweep (replaces MemoryBlock.tmp_next).
+    ArrayList *classic_pending;
+
     // Immix (block backend) integration state. immix_heap is NULL when the
     // malloc backend is active and the classic linked-list collector owns
     // object storage.
@@ -52,6 +67,7 @@ struct _GcCollectorType {
     ArrayList *immix_pending_runtimes; //dead jthread runtimes to destroy after resume
     ArrayList *immix_pending_loaders;  //dead classloaders to destroy after resume
     volatile s32 gc_request;     //async collection request from a mutator
+    s64 immix_java_tracked;      //java-heap bytes already in the tracked total (synced per cycle)
     ImmixCollectionReason gc_request_reason;
     size_t gc_requested_bytes;
     volatile s64 gc_gen;         //incremented after every completed cycle
@@ -95,9 +111,15 @@ void gc_obj_hold(GcCollector *collector, __refer ref);
 
 void gc_obj_release(GcCollector *collector, __refer ref);
 
+/* Registers ref with the collector via an external GcObjectLink.
+ * Returns 0 on success; -1 means the link slab could not grow and the
+ * caller must recycle the not-yet-published object and fail with OOM. */
 void gc_obj_reg(Runtime *runtime, __refer ref);
 
 void gc_move_objs_thread_2_gc(Runtime *runtime);
+
+/* Returns a thread's cached free GcObjectLink nodes to the slab (thread exit). */
+void gc_link_cache_flush(GcCollector *collector, JavaThreadInfo *ti);
 
 void gc_dump_runtime(GcCollector *collector);
 
@@ -110,12 +132,12 @@ s32 gc_backend_is_immix(MiniJVM *jvm);
  * Unified Java object storage entry. Returns zeroed memory sized insSize,
  * backed either by the Immix block backend or jvm_calloc.
  */
-void *gc_obj_alloc(Runtime *runtime, s32 insSize);
+void *gc_obj_alloc(Runtime *runtime, s32 insSize, ImmixObjectKind kind);
 
 /* Iterates every Java heap object (Immix blocks/LOS plus the class list). */
 typedef s32 (*GcHeapObjectIter)(MemoryBlock *mb, void *data);
 
-void gc_iterate_heap_objects(GcCollector *collector, GcHeapObjectIter iter, void *data);
+s32 gc_iterate_heap_objects(GcCollector *collector, GcHeapObjectIter iter, void *data);
 
 /* System memory pressure entry for embedders (Immix backend). */
 void gc_notify_memory_pressure(MiniJVM *jvm, s32 pressure_level);

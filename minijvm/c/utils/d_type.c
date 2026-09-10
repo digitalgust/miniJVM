@@ -5,6 +5,13 @@
 
 #include <stdarg.h>
 
+#if defined(_WIN32)
+#include <io.h>
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
 
 #if __JVM_OS_ANDROID__
 
@@ -17,6 +24,34 @@ FILE *logfile = NULL;
 static s64 last_flush = 0;
 
 extern s64 currentTimeMillis();
+
+void jvm_fatal_oom(const c8 *phase, size_t requested) {
+    c8 message[512];
+    int length;
+#if __JVM_PRI_ALLOC__
+    unsigned long long used = (unsigned long long) pri_alloc_get_live_bytes();
+    unsigned long long limit = (unsigned long long) pri_alloc_get_limit();
+    unsigned long long ceiling = (unsigned long long) pri_alloc_get_max_ceiling();
+#else
+    unsigned long long used = 0, limit = 0, ceiling = 0;
+#endif
+    if (!phase) phase = "unknown";
+    length = snprintf(message, sizeof(message),
+                      "[FATAL] miniJVM critical VM memory failure\n"
+                      "phase=%s requested=%llu used=%llu xmx=%llu xmxmax=%llu\n"
+                      "GC/VM state cannot remain correct; process terminated.\n",
+                      phase, (unsigned long long) requested,
+                      used, limit, ceiling);
+    if (length < 0) length = 0;
+    if ((size_t) length >= sizeof(message)) length = (int) sizeof(message) - 1;
+#if defined(_WIN32)
+    if (length > 0) _write(2, message, (unsigned int) length);
+    ExitProcess(125);
+#else
+    if (length > 0) (void) write(2, message, (size_t) length);
+    _exit(125);
+#endif
+}
 
 
 void open_log() {
@@ -130,7 +165,7 @@ static void pri_alloc_latch_gc_if_needed(s64 current) {
     s64 limit = pri_alloc_atomic_load64(&g_jvm_allocator.pool_size);
     s64 trigger;
     if (limit <= 0) return;
-    trigger = limit - limit / 5; /* 80%, avoids current * 100 overflow */
+    trigger = limit - limit / 5; /* 80% occupancy arms the GC request */
     if (current >= trigger) {
         pri_alloc_atomic_store32(&g_jvm_allocator.need_gc, 1);
     }
@@ -163,8 +198,18 @@ s32 pri_alloc_should_gc(void) {
 s32 pri_alloc_would_exceed(size_t incoming_bytes) {
     u64 live = pri_alloc_get_live_bytes();
     u64 limit = pri_alloc_get_limit();
+    u64 trigger;
     if (limit == 0) return 0;
-    return live >= limit || (u64) incoming_bytes >= limit - live;
+    trigger = limit - limit / 5u; /* soft trigger at 80% of Xmx */
+    return live >= trigger || (u64) incoming_bytes >= trigger - live;
+}
+
+s32 pri_alloc_over_hard_ceiling(size_t incoming_bytes) {
+    u64 live = pri_alloc_get_live_bytes();
+    u64 ceiling = pri_alloc_get_max_ceiling();
+    if (ceiling == 0) return 0;
+    if (live >= ceiling) return 1;
+    return incoming_bytes >= ceiling - live;
 }
 
 void pri_alloc_recalculate_gc_request(void) {

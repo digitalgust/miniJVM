@@ -117,6 +117,14 @@ s32 jvm_init_mem_alloc();
 
 s32 jvm_destroy_mem_alloc();
 
+/* Allocation-free fatal path for VM/GC metadata failures.  This function
+ * writes directly to stderr and terminates without running VM shutdown. */
+#if defined(_MSC_VER)
+__declspec(noreturn) void jvm_fatal_oom(const c8 *phase, size_t requested);
+#else
+void jvm_fatal_oom(const c8 *phase, size_t requested) __attribute__((noreturn));
+#endif
+
 //======================= memory manage =============================
 
 #if __JVM_PRI_ALLOC__
@@ -133,6 +141,7 @@ typedef struct {
     volatile s32 alloc_pause;
     volatile s32 need_gc;
 } jvm_allocator_t;
+
 
 extern jvm_allocator_t g_jvm_allocator;
 
@@ -154,6 +163,11 @@ u64 pri_alloc_get_peak_bytes(void);
 u64 pri_alloc_get_limit(void);
 
 u64 pri_alloc_get_max_ceiling(void);
+
+/* Non-zero only past the FINAL ceiling (max_vm_memory), not the soft Xmx
+ * trigger. Callers use it to decide between nudging the GC thread and
+ * actually blocking/failing. */
+s32 pri_alloc_over_hard_ceiling(size_t incoming_bytes);
 
 s32 pri_alloc_should_gc(void);
 

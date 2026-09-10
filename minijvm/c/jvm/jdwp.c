@@ -830,19 +830,19 @@ void writeArrayRegion(JdwpPacket *res, Instance *arr, s32 firstIndex, s32 length
     for (i = 0; i < length; i++) {
         switch (tag) {
             case '1':
-                jdwppacket_write_byte(res, getFieldByte(&arr->arr_body[(firstIndex + i)]));
+                jdwppacket_write_byte(res, getFieldByte(&jarray_body(arr)[(firstIndex + i)]));
                 break;
             case '2':
-                jdwppacket_write_short(res, getFieldShort(&arr->arr_body[(firstIndex + i) * 2]));
+                jdwppacket_write_short(res, getFieldShort(&jarray_body(arr)[(firstIndex + i) * 2]));
                 break;
             case '4':
-                jdwppacket_write_int(res, getFieldInt(&arr->arr_body[(firstIndex + i) * 4]));
+                jdwppacket_write_int(res, getFieldInt(&jarray_body(arr)[(firstIndex + i) * 4]));
                 break;
             case '8':
-                jdwppacket_write_long(res, getFieldLong(&arr->arr_body[(firstIndex + i) * 8]));
+                jdwppacket_write_long(res, getFieldLong(&jarray_body(arr)[(firstIndex + i) * 8]));
                 break;
             case 'R': {
-                Instance *elem = getFieldRefer(&arr->arr_body[(firstIndex + i) * sizeof(__refer)]);
+                Instance *elem = getFieldRefer(&jarray_body(arr)[(firstIndex + i) * sizeof(__refer)]);
                 if (elem)
                     jdwppacket_write_byte(res, getInstanceOfClassTag(elem));
                 else
@@ -1895,7 +1895,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                         //jvm_printf("[JDWP]VirtualMachine_AllThreads: %llx\n", (s64) (intptr_t) t);
                         Instance *jarr_name = jthread_get_name_value(jdwpserver->jvm, t->thrd_info->jthread);
                         Utf8String *ustr = utf8_create();
-                        unicode_2_utf8((u16 *) jarr_name->arr_body, ustr, jarr_name->arr_length);
+                        unicode_2_utf8((u16 *) jarray_body(jarr_name), ustr, jarray_length(jarr_name));
                         //printf("[JDWP]%s\n", utf8_cstr(ustr));
                         utf8_destroy(ustr);
                     }
@@ -2560,15 +2560,12 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                     }
 
                     // Check for potential integer overflow in size calculation
+                    // (array header size included, per the current layout)
                     s32 typeIdx = arrayType->mb.arr_type_index;
-                    s32 width = DATA_TYPE_BYTES[typeIdx];
-                    if (length > 0 && width > 0) {
-                        // Check if length * width would overflow (use 2147483647 as max s32)
-                        if (length > (2147483647 - instance_base_size()) / width) {
-                            jdwppacket_set_err(res, JDWP_ERROR_OUT_OF_MEMORY);
-                            jdwp_packet_put(jdwpserver, res);
-                            break;
-                        }
+                    if (jvm_array_alloc_size(typeIdx, length) < 0) {
+                        jdwppacket_set_err(res, JDWP_ERROR_OUT_OF_MEMORY);
+                        jdwp_packet_put(jdwpserver, res);
+                        break;
                     }
 
                     gc_pause(jdwpserver->jvm->collector);
@@ -2812,7 +2809,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 if (r) {
                     Instance *jarr_name = jthread_get_name_value(jdwpserver->jvm, jthread);
                     Utf8String *ustr = utf8_create();
-                    unicode_2_utf8((u16 *) jarr_name->arr_body, ustr, jarr_name->arr_length);
+                    unicode_2_utf8((u16 *) jarray_body(jarr_name), ustr, jarray_length(jarr_name));
 
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                     jdwppacket_write_utf(res, ustr);
@@ -3035,11 +3032,11 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 Instance *arr = jdwppacket_read_refer(req);
                 //                if (gc_is_alive(arr)) {
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                jdwppacket_write_int(res, arr->arr_length);
+                jdwppacket_write_int(res, jarray_length(arr));
                 //                } else {
                 //                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_ARRAY);
                 //                }
-                //jvm_printf("[JDWP]ArrayReference_Length:%d\n", arr->arr_length);
+                //jvm_printf("[JDWP]ArrayReference_Length:%d\n", jarray_length(arr));
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
@@ -3048,7 +3045,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 Instance *arr = jdwppacket_read_refer(req);
                 s32 firstIndex = jdwppacket_read_int(req);
                 s32 length = jdwppacket_read_int(req);
-                if (arr->arr_length < firstIndex + length) {
+                if (jarray_length(arr) < firstIndex + length) {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_LENGTH);
                     jdwp_packet_put(jdwpserver, res);
                     break;
@@ -3063,7 +3060,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 Instance *arr = jdwppacket_read_refer(req);
                 s32 firstIndex = jdwppacket_read_int(req);
                 s32 length = jdwppacket_read_int(req);
-                if (arr->arr_length < firstIndex + length) {
+                if (jarray_length(arr) < firstIndex + length) {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_LENGTH);
                     jdwp_packet_put(jdwpserver, res);
                     break;

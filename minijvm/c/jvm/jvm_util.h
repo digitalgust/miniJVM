@@ -23,8 +23,6 @@ s32 isDir(Utf8String *path);
 
 void swap_endian_little_big(u8 *ptr, s32 size);
 
-s32 instance_base_size();
-
 s32 getDataTypeIndex(c8 ch);
 
 c8 *getDataTypeFullName(c8 ch);
@@ -53,7 +51,7 @@ void sys_properties_set_c(MiniJVM *jvm, c8 const *key, c8 const *val);
 
 void instance_release_from_thread(Instance *ref, Runtime *runtime);
 
-void instance_hold_to_thread(Instance *ins, Runtime *runtime);
+s32 instance_hold_to_thread(Instance *ins, Runtime *runtime);
 
 void invoke_deepth(Runtime *runtime);
 
@@ -82,11 +80,11 @@ Instance *method_handles_lookup_create(Runtime *runtime, JClass *caller);
  * @return addr
  */
 static inline c8 *getInstanceFieldPtr(Instance *ins, FieldInfo *fi) {
-    return &(ins->obj_fields[fi->offset_instance]);
+    return instance_fields(ins) + fi->offset_instance;
 }
 
 static inline c8 *getInstanceFieldPtrByOffset(Instance *ins, u16 offset) {
-    return &(ins->obj_fields[offset]);
+    return instance_fields(ins) + offset;
 }
 
 static inline c8 *getStaticFieldPtr(FieldInfo *fi) {

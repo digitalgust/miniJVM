@@ -14,7 +14,7 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <stddef.h>
 
 #include "../utils/tinycthread.h"
 
@@ -722,19 +722,49 @@ void profile_slow_call_unregister_class(MiniJVM *jvm, JClass *clazz);
 #define GCFLAG_JTHREAD_GET(reg_v) (0x08 & reg_v)
 #define GCFLAG_JTHREAD_CLEAR(reg_v) (reg_v = ((~0x08) & reg_v))
 
+/* Object header: the three GC links live in external structures
+ * (GcObjectLink slab / GcTempRootTable / classic_pending), the body
+ * pointer slot is gone — fields and elements are inline storage. */
 typedef struct _MemoryBlock {
-    JClass *clazz;
-    struct _MemoryBlock *next; //reg for gc
-    struct _MemoryBlock *hold_next; //hold by thread
-    struct _MemoryBlock *tmp_next; //for gc finalize
-    ThreadLock *volatile thread_lock;
-
-    s32 heap_size; //objsize of jclass or jarray or jclass , but not memoryblock
-    u8 type; //type of array or object runtime,class
-    u8 garbage_mark;
-    u8 gcflag; //flag for weak / finalize / reg / classloader
-    u8 arr_type_index;
+    JClass *clazz;                    //x64:  0..7
+    ThreadLock *volatile thread_lock; //x64:  8..15
+    s32 heap_size;                    //x64: 16..19
+    u8 type;                          //x64: 20
+    u8 garbage_mark;                  //x64: 21
+    u8 gcflag;                        //x64: 22
+    u8 arr_type_index;                //x64: 23
 } MemoryBlock;
+
+/* GC registration, thread temp roots and finalize pending state live in
+ * external structures rather than consuming per-object header space. */
+
+/* External GC registration node (replaces MemoryBlock.next). Objects are
+ * never touched when registered; classes always use it and every Java
+ * object does on the malloc backend. Nodes come from a recycled slab. */
+typedef struct _GcObjectLink {
+    MemoryBlock *object;
+    struct _GcObjectLink *next;
+} GcObjectLink;
+
+/* Per-thread temporary root entry (replaces MemoryBlock.hold_next).
+ * Repeated holds of the same object bump ref_count; the object is only
+ * unrooted when the count drops to zero. */
+typedef struct _GcTempRootEntry {
+    Instance *object;
+    u32 ref_count;
+} GcTempRootEntry;
+
+#define GC_TEMP_ROOT_INLINE_CAPACITY 16
+
+typedef struct _GcTempRootTable {
+    GcTempRootEntry *entries;
+    s32 count;
+    s32 capacity;
+    /* JNI helpers normally hold only a handful of values.  Keeping the
+     * common case inline removes an allocation and leaves a reserve that is
+     * available even while native memory is tight. */
+    GcTempRootEntry inline_entries[GC_TEMP_ROOT_INLINE_CAPACITY];
+} GcTempRootTable;
 
 void memoryblock_destroy(__refer ref);
 
@@ -1284,15 +1314,90 @@ void class_clear_refer(PeerClassLoader *cloader, JClass *clazz);
 
 struct _InstanceType {
     MemoryBlock mb;
-
-    //
-    union {
-        c8 *obj_fields; //object fieldRef body
-        c8 *arr_body; //array body
-    };
-
-    s32 arr_length;
+    /* Java instance fields follow inline at JVM_OBJECT_BODY_OFFSET */
 };
+
+/* Array layout: shared 24B MemoryBlock + length + reserved (must stay 0,
+ * never holds a Java reference) so the element area is 8-byte aligned. */
+typedef struct _JArrayHeader {
+    MemoryBlock mb;   //x64:  0..23
+    s32 length;       //x64: 24..27
+    u32 reserved;     //x64: 28..31, zeroed on creation
+    /* array elements follow inline at JVM_ARRAY_BODY_OFFSET */
+} JArrayHeader;
+
+/* ================ object layout access layer ================
+ * Single place that knows where instance fields, array length and
+ * array elements live. All runtime code must use these accessors
+ * (JIT emitters use the central JVM_*_OFFSET description instead),
+ * never the obj_fields / arr_body / arr_length members directly.
+ * Fields/elements are inline storage behind a fixed header
+ * (24B object / 32B array on x64).
+ * ============================================================ */
+
+#define JVM_OBJECT_BODY_OFFSET  ((s32) sizeof(Instance))
+#define JVM_ARRAY_LENGTH_OFFSET ((s32) offsetof(JArrayHeader, length))
+#define JVM_ARRAY_BODY_OFFSET   ((s32) sizeof(JArrayHeader))
+
+static inline c8 *instance_fields(Instance *ins) {
+    return ins ? (c8 *) ins + JVM_OBJECT_BODY_OFFSET : NULL;
+}
+
+static inline const c8 *instance_fields_const(const Instance *ins) {
+    return ins ? (const c8 *) ins + JVM_OBJECT_BODY_OFFSET : NULL;
+}
+
+static inline s32 jarray_length(Instance *arr) {
+    return arr ? ((JArrayHeader *) (void *) arr)->length : 0;
+}
+
+static inline void jarray_set_length(Instance *arr, s32 length) {
+    ((JArrayHeader *) (void *) arr)->length = length;
+}
+
+static inline c8 *jarray_body(Instance *arr) {
+    return arr ? (c8 *) arr + JVM_ARRAY_BODY_OFFSET : NULL;
+}
+
+static inline const c8 *jarray_body_const(const Instance *arr) {
+    return arr ? (const c8 *) arr + JVM_ARRAY_BODY_OFFSET : NULL;
+}
+
+/* generic data base for Unsafe-style access: arrays return the element
+ * area, plain objects the field area */
+static inline c8 *instance_data_base(Instance *ins) {
+    if (!ins) return NULL;
+    return ins->mb.type == MEM_TYPE_ARR ? jarray_body(ins) : instance_fields(ins);
+}
+
+#define JVM_INSTANCE_HEADER_SIZE ((s32) sizeof(Instance))
+#define JVM_ARRAY_HEADER_SIZE    ((s32) sizeof(JArrayHeader))
+
+/* Total requested size of a plain object (header + inline fields),
+ * -1 on overflow. */
+static inline s32 jvm_instance_alloc_size(JClass *clazz) {
+    if (!clazz || clazz->field_instance_len < 0) return -1;
+    s64 total = (s64) JVM_INSTANCE_HEADER_SIZE + (s64) clazz->field_instance_len;
+    return total > INT32_MAX ? -1 : (s32) total;
+}
+
+/* Total requested size of an array (header + inline elements), -1 on
+ * negative count / invalid width / overflow. */
+static inline s32 jvm_array_alloc_size(s32 arr_type_index, s32 count) {
+    if (count < 0 || arr_type_index < 0 || arr_type_index >= DATATYPE_COUNT) return -1;
+    if (DATA_TYPE_BYTES[arr_type_index] <= 0) return -1;
+    s64 total = (s64) JVM_ARRAY_HEADER_SIZE + (s64) DATA_TYPE_BYTES[arr_type_index] * count;
+    return total > INT32_MAX ? -1 : (s32) total;
+}
+
+/* Compile-time layout checks (C99 negative-array form). The 24/32B
+ * acceptance values are enforced on 64-bit builds; 32-bit builds keep
+ * their natural 16/24B layout. */
+typedef char jvm_static_assert_mb_x64[(sizeof(void *) != 8 || sizeof(MemoryBlock) == 24) ? 1 : -1];
+typedef char jvm_static_assert_ins_x64[(sizeof(void *) != 8 || sizeof(Instance) == 24) ? 1 : -1];
+typedef char jvm_static_assert_arrhdr_x64[(sizeof(void *) != 8 || sizeof(JArrayHeader) == 32) ? 1 : -1];
+typedef char jvm_static_assert_arrlen_off[(offsetof(JArrayHeader, length) == sizeof(Instance)) ? 1 : -1];
+typedef char jvm_static_assert_body_align[(JVM_OBJECT_BODY_OFFSET % 8 == 0 && JVM_ARRAY_BODY_OFFSET % 8 == 0) ? 1 : -1];
 
 
 Instance *instance_create(Runtime *runtime, JClass *clazz);
@@ -1418,9 +1523,10 @@ struct _JavaThreadInfo {
     Instance *context_classloader;
     Runtime *top_runtime;
     MemoryBlock pack;
-    MemoryBlock *tmp_holder; //for jni hold java object
-    MemoryBlock *objs_header; //link to new instance, until garbage accept
-    MemoryBlock *objs_tailer; //link to last instance, until garbage accept
+    GcTempRootTable temp_roots; //jni temp roots for this thread, refcounted
+    GcObjectLink *objs_header; //link to new instance, until garbage accept
+    GcObjectLink *objs_tailer; //link to last instance, until garbage accept
+    GcObjectLink *link_cache; //thread-local free GcObjectLink cache (bulk refill)
     MemoryBlock *curThreadLock; //if thread is locked ,the filed save the lock
     ArrayList *held_locks; //list of locks held by this thread for precise debugging (JDWP only)
     MemoryBlock *pending_release_lock; //lock that needs to be released for suspension (JDWP only)
@@ -1937,7 +2043,7 @@ struct _JNIENV {
 
     void (*instance_release_from_thread)(Instance *ref, Runtime *runtime);
 
-    void (*instance_hold_to_thread)(Instance *ref, Runtime *runtime);
+    s32 (*instance_hold_to_thread)(Instance *ref, Runtime *runtime);
 
     s32 (*execute_method)(MethodInfo *method, Runtime *runtime);
 

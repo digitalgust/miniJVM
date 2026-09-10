@@ -333,7 +333,7 @@ s32 org_mini_reflect_ReflectArray_multiNewArray(Runtime *runtime, JClass *clazz)
         push_ref(runtime->stack, exception_create(JVM_EXCEPTION_NULLPOINTER, runtime));
         return RUNTIME_STATUS_EXCEPTION;
     }
-    if (dimarr->arr_length <= 0 || dimarr->arr_length > 255) {
+    if (jarray_length(dimarr) <= 0 || jarray_length(dimarr) > 255) {
         push_ref(runtime->stack, exception_create(JVM_EXCEPTION_ILLEGALARGUMENT, runtime));
         return RUNTIME_STATUS_EXCEPTION;
     }
@@ -348,20 +348,20 @@ s32 org_mini_reflect_ReflectArray_multiNewArray(Runtime *runtime, JClass *clazz)
            && utf8_char_at(cl->name, component_dimensions) == '[') {
         component_dimensions++;
     }
-    if (component_dimensions + dimarr->arr_length > 255) {
+    if (component_dimensions + jarray_length(dimarr) > 255) {
         push_ref(runtime->stack, exception_create(JVM_EXCEPTION_ILLEGALARGUMENT, runtime));
         return RUNTIME_STATUS_EXCEPTION;
     }
 
     s32 dimensions[255];
     s32 i;
-    for (i = 0; i < dimarr->arr_length; i++) {
-        s32 dimension = ((s32 *) dimarr->arr_body)[i];
+    for (i = 0; i < jarray_length(dimarr); i++) {
+        s32 dimension = ((s32 *) jarray_body(dimarr))[i];
         if (dimension < 0) {
             push_ref(runtime->stack, exception_create(JVM_EXCEPTION_NEGATIVEARRAYSIZE, runtime));
             return RUNTIME_STATUS_EXCEPTION;
         }
-        dimensions[dimarr->arr_length - 1 - i] = dimension;
+        dimensions[jarray_length(dimarr) - 1 - i] = dimension;
     }
 
     Utf8String *desc = utf8_create();
@@ -374,11 +374,11 @@ s32 org_mini_reflect_ReflectArray_multiNewArray(Runtime *runtime, JClass *clazz)
         utf8_append(desc, cl->name);
         utf8_append_c(desc, ";");
     }
-    for (i = 0; i < dimarr->arr_length; i++) {
+    for (i = 0; i < jarray_length(dimarr); i++) {
         utf8_insert(desc, 0, '[');
     }
 
-    Instance *arr = jarray_multi_create(runtime, dimensions, dimarr->arr_length, desc, 0);
+    Instance *arr = jarray_multi_create(runtime, dimensions, jarray_length(dimarr), desc, 0);
     utf8_destroy(desc);
     if (!arr) return exception_throw_out_of_memory(runtime);
     push_ref(runtime->stack, arr);
@@ -586,7 +586,7 @@ s32 org_mini_vm_RefNative_defineClass(Runtime *runtime, JClass *clazz) {
     s32 len = localvar_getInt(runtime->localvar, pos++);
 
     ByteBuf *bytebuf = bytebuf_create(len);
-    bytebuf_write_batch(bytebuf, bytesarr->arr_body + offset, len);
+    bytebuf_write_batch(bytebuf, jarray_body(bytesarr) + offset, len);
     JClass *cl = class_parse(cloader, bytebuf, runtime);
     bytebuf_destroy(bytebuf);
 
@@ -863,7 +863,7 @@ s32 org_mini_vm_RefNative_getSlowCallStackSnapshot(Runtime *runtime, JClass *cla
             spin_unlock(&runtime->jvm->slow_call_profile.lock);
             return exception_throw_out_of_memory(runtime);
         }
-        memcpy(jbyte_arr->arr_body, item->payload->buf, item->payload->wp);
+        memcpy(jarray_body(jbyte_arr), item->payload->buf, item->payload->wp);
     }
     spin_unlock(&runtime->jvm->slow_call_profile.lock);
 #endif
@@ -970,7 +970,7 @@ s32 org_mini_vm_RefNative_stringFromUtf8Bytes(Runtime *runtime, JClass *clazz) {
         return 0;
     }
 
-    if (offset < 0 || length < 0 || offset + length > utf8Bytes->arr_length) {
+    if (offset < 0 || length < 0 || offset + length > jarray_length(utf8Bytes)) {
         return 0;
     }
 
@@ -989,7 +989,7 @@ s32 org_mini_vm_RefNative_stringFromUtf8Bytes(Runtime *runtime, JClass *clazz) {
         return 0;
     }
 
-    c8 *bytes = (c8 *) utf8Bytes->arr_body + offset;
+    c8 *bytes = (c8 *) jarray_body(utf8Bytes) + offset;
     Utf8String *ustr = utf8_create_part_c(bytes, 0, length);
     if (!ustr) {
         return 0;
@@ -1002,7 +1002,7 @@ s32 org_mini_vm_RefNative_stringFromUtf8Bytes(Runtime *runtime, JClass *clazz) {
         return 0;
     }
 
-    if (!arr || arr->arr_length != unicode_len) {
+    if (!arr || jarray_length(arr) != unicode_len) {
         Instance *new_arr = jarray_create_by_type_index(runtime, unicode_len, DATATYPE_JCHAR);
         if (!new_arr) {
             utf8_destroy(ustr);
@@ -1012,7 +1012,7 @@ s32 org_mini_vm_RefNative_stringFromUtf8Bytes(Runtime *runtime, JClass *clazz) {
         setFieldRefer(ptr, (__refer) new_arr);
         arr = new_arr;
     }
-    if (utf8_2_unicode(ustr, (u16 *) arr->arr_body, unicode_len) != unicode_len) {
+    if (utf8_2_unicode(ustr, (u16 *) jarray_body(arr), unicode_len) != unicode_len) {
         utf8_destroy(ustr);
         return 0;
     }
@@ -1044,8 +1044,8 @@ s32 org_mini_vm_RefNative_stringToUtf8Bytes(Runtime *runtime, JClass *clazz) {
         return exception_throw_out_of_memory(runtime);
     }
 
-    if (jarr->arr_body) {
-        c8 *bytes = (c8 *) jarr->arr_body;
+    if (jarray_length(jarr) > 0) {
+        c8 *bytes = (c8 *) jarray_body(jarr);
         memcpy(bytes, ustr->data, len);
     }
 
@@ -1077,8 +1077,8 @@ s32 org_mini_vm_RefNative_toCstyleBytes(Runtime *runtime, JClass *clazz) {
         utf8_destroy(ustr);
         return exception_throw_out_of_memory(runtime);
     }
-    if (jarr->arr_body) {
-        c8 *bytes = (c8 *) jarr->arr_body;
+    if (jarray_length(jarr) > 0) {
+        c8 *bytes = (c8 *) jarray_body(jarr);
         if (ustr->length > 0) {
             memcpy(bytes, ustr->data, ustr->length);
         }
@@ -1344,7 +1344,7 @@ s32 org_mini_reflect_ReflectField_mapField(Runtime *runtime, JClass *clazz) {
 Instance *localVarTable2java(JClass *clazz, LocalVarTable *lvt, Runtime *runtime) {
     JClass *cl = classes_load_get_with_clinit_c(NULL, JDWP_CLASS_LOCALVARTABLE, runtime);
     Instance *ins = instance_create(runtime, cl);
-    instance_hold_to_thread(ins, runtime); // hold by manual
+    if (!ins || instance_hold_to_thread(ins, runtime) != 0) return NULL; // hold by manual
     instance_init(ins, runtime);
 
     if (ins && lvt) {
@@ -1427,7 +1427,7 @@ s32 org_mini_reflect_ReflectMethod_mapMethod(Runtime *runtime, JClass *clazz) {
                     Instance *jarr = jarray_create_by_type_index(runtime, ca->line_number_table_length * 2, DATATYPE_SHORT);
                     if (!jarr) return exception_throw_out_of_memory(runtime);
                     setFieldRefer(ptr, jarr);
-                    memcpy(jarr->arr_body, ca->line_number_table,
+                    memcpy(jarray_body(jarr), ca->line_number_table,
                            ca->line_number_table_length * 4);
                 }
             }
@@ -1474,7 +1474,7 @@ s32 org_mini_reflect_ReflectMethod_invokeMethod(Runtime *runtime, JClass *clazz)
     s32 ret = 0;
     if (methodInfo) {
         s32 i;
-        s32 argsLen = argsArr ? argsArr->arr_length : 0;
+        s32 argsLen = argsArr ? jarray_length(argsArr) : 0;
         //validate before anything is pushed: null cannot be unboxed into a primitive parameter
         for (i = 0; i < argsLen; i++) {
             utf8_char tag = utf8_char_at(methodInfo->paraType, i);
@@ -1698,10 +1698,10 @@ s32 org_mini_reflect_ReflectArray_mapArray(Runtime *runtime, JClass *clazz) {
         c8 *ptr;
         //
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_ARRAY, "length", "I", runtime);
-        if (ptr)setFieldInt(ptr, target->arr_length);
+        if (ptr)setFieldInt(ptr, jarray_length(target));
         //
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_ARRAY, "body_addr", "J", runtime);
-        if (ptr)setFieldLong(ptr, (u64) (intptr_t) target->arr_body);
+        if (ptr)setFieldLong(ptr, (u64) (intptr_t) jarray_body(target));
         //
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_ARRAY, "typeTag", "B", runtime);
         if (ptr)setFieldByte(ptr, (s8) utf8_char_at(target->mb.clazz->name, 1));
@@ -1714,7 +1714,7 @@ s32 org_mini_reflect_ReflectArray_getLength(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     Instance *jarr = (__refer) (intptr_t) localvar_getRefer(runtime->localvar, pos);
 
-    push_int(runtime->stack, (jarr == NULL || jarr->mb.type != MEM_TYPE_ARR) ? 0 : jarr->arr_length);
+    push_int(runtime->stack, (jarr == NULL || jarr->mb.type != MEM_TYPE_ARR) ? 0 : jarray_length(jarr));
 
     return 0;
 }
@@ -1732,7 +1732,7 @@ s32 org_mini_reflect_ReflectArray_getArrayBodyPtr(Runtime *runtime, JClass *claz
     s32 pos = 0;
     Instance *jarr = (__refer) (intptr_t) localvar_getRefer(runtime->localvar, pos);
 
-    push_long(runtime->stack, (jarr == NULL || jarr->mb.type != MEM_TYPE_ARR) ? 0 : (s64) (intptr_t) jarr->arr_body);
+    push_long(runtime->stack, (jarr == NULL || jarr->mb.type != MEM_TYPE_ARR) ? 0 : (s64) (intptr_t) jarray_body(jarr));
 
     return 0;
 }
@@ -1847,13 +1847,13 @@ s32 org_mini_reflect_DirectMemObj_copyTo0(Runtime *runtime, JClass *clazz) {
 
     s32 ret = 0;
     if (src_off + copy_len > dmo_len
-        || tgt_off + copy_len > tgt->arr_length) {
+        || tgt_off + copy_len > jarray_length(tgt)) {
         Instance *exception = exception_create(JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, runtime);
         push_ref(runtime->stack, (__refer) exception);
         ret = RUNTIME_STATUS_EXCEPTION;
     } else {
         s32 bytes = DATA_TYPE_BYTES[tgt->mb.arr_type_index];
-        memcpy((c8 *) tgt->arr_body + (bytes * tgt_off), (c8 *) memAddr + (bytes * src_off), copy_len * (bytes));
+        memcpy((c8 *) jarray_body(tgt) + (bytes * tgt_off), (c8 *) memAddr + (bytes * src_off), copy_len * (bytes));
     }
 
 
@@ -1876,14 +1876,14 @@ s32 org_mini_reflect_DirectMemObj_copyFrom0(Runtime *runtime, JClass *clazz) {
     s32 dmo_len = getFieldInt(getInstanceFieldPtr(dmo, jvm_runtime_cache->dmo_length));
 
     s32 ret = 0;
-    if (src_off + copy_len > src->arr_length
+    if (src_off + copy_len > jarray_length(src)
         || tgt_off + copy_len > dmo_len) {
         Instance *exception = exception_create(JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, runtime);
         push_ref(runtime->stack, (__refer) exception);
         ret = RUNTIME_STATUS_EXCEPTION;
     } else {
         s32 bytes = DATA_TYPE_BYTES[src->mb.arr_type_index];
-        memcpy((c8 *) memAddr + (bytes * tgt_off), (c8 *) src->arr_body + (bytes * src_off), copy_len * (bytes));
+        memcpy((c8 *) memAddr + (bytes * tgt_off), (c8 *) jarray_body(src) + (bytes * src_off), copy_len * (bytes));
     }
 
 
@@ -2138,10 +2138,9 @@ s32 com_misc_Unsafe_objectFieldBase(Runtime *runtime, JClass *clazz) {
     Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
     pos++;
     Instance *ins = localvar_getRefer(runtime->localvar, pos);
-    // obj_fields and arr_body share the same union slot (see _InstanceType in jvm.h),
-    // so this base works for both regular object fields and array elements.
+    // Generic base: arrays expose the element area, plain objects the field area.
     // JDK convention: a null base means offsets are absolute addresses (base 0).
-    push_long(runtime->stack, ins ? (s64) (intptr_t) ins->obj_fields : 0);
+    push_long(runtime->stack, ins ? (s64) (intptr_t) instance_data_base(ins) : 0);
     return 0;
 }
 
@@ -2161,7 +2160,7 @@ s32 com_misc_Unsafe_compareAndSwapInt(Runtime *runtime, JClass *clazz) {
         push_ref(runtime->stack, ex);
         return RUNTIME_STATUS_EXCEPTION;
     } else {
-        c8 *src = ins ? (c8 *) ins->arr_body + offset : (c8 *) (intptr_t) offset;
+        c8 *src = ins ? instance_data_base(ins) + offset : (c8 *) (intptr_t) offset;
         s32 *src32 = (s32 *) src;
         s32 ret = ATOMIC_CAS(src32, oldv, newv);
         push_int(runtime->stack, ret);
@@ -2185,7 +2184,7 @@ s32 com_misc_Unsafe_compareAndSwapLong(Runtime *runtime, JClass *clazz) {
         push_ref(runtime->stack, ex);
         return RUNTIME_STATUS_EXCEPTION;
     } else {
-        c8 *src = ins ? (c8 *) ins->arr_body + offset : (c8 *) (intptr_t) offset;
+        c8 *src = ins ? instance_data_base(ins) + offset : (c8 *) (intptr_t) offset;
         // ATOMIC_CAS is 32-bit on MSVC (InterlockedCompareExchange/LONG);
         // an 8-byte slot must use the 64-bit variant.
         s32 ret = (s32) ATOMIC_CAS64((s64 *) src, oldv, newv);
@@ -2210,7 +2209,7 @@ s32 com_misc_Unsafe_compareAndSwapObject(Runtime *runtime, JClass *clazz) {
         push_ref(runtime->stack, ex);
         return RUNTIME_STATUS_EXCEPTION;
     } else {
-        c8 *src = ins ? (c8 *) ins->arr_body + offset : (c8 *) (intptr_t) offset;
+        c8 *src = ins ? instance_data_base(ins) + offset : (c8 *) (intptr_t) offset;
         s32 ret = 0;
         if (sizeof(__refer) == 8) {
             ret = (s32) ATOMIC_CAS64((s64 *) src, (s64) (intptr_t) oldv, (s64) (intptr_t) newv);

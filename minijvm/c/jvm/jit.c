@@ -617,7 +617,8 @@ void _gen_arr_load(struct sljit_compiler *C, s32 datatype) {
 
     _gen_stack_peek_ref(C, 0, SLJIT_R0, 0);
     _gen_stack_peek_int(C, 1, SLJIT_R1, 0);
-    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(Instance, arr_body));
+    //elements are inline: body = arr + JVM_ARRAY_BODY_OFFSET
+    sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) JVM_ARRAY_BODY_OFFSET);
     switch (datatype) {
         case DATATYPE_BOOLEAN:
         case DATATYPE_BYTE: {
@@ -699,7 +700,8 @@ void _gen_arr_store(struct sljit_compiler *C, s32 datatype) {
 
     _gen_stack_peek_ref(C, 0, SLJIT_R1, 0);//arr
     _gen_stack_peek_int(C, 1, SLJIT_R0, 0);//index
-    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(Instance, arr_body));
+    //elements are inline: body = arr + JVM_ARRAY_BODY_OFFSET
+    sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) JVM_ARRAY_BODY_OFFSET);
     switch (datatype) {
         case DATATYPE_BOOLEAN:
         case DATATYPE_BYTE: {
@@ -1705,8 +1707,9 @@ static FieldInfo *_jit_compile_resolve_field(JClass *clazz, Runtime *runtime, u1
 }
 
 static void _jit_emit_field_ptr(struct sljit_compiler *C, sljit_s32 this_reg, FieldInfo *fi) {
-    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(this_reg), SLJIT_OFFSETOF(Instance, obj_fields));
-    sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, SLJIT_R2, 0, SLJIT_IMM, fi->offset_instance);
+    //fields are inline: address = this + JVM_OBJECT_BODY_OFFSET + offset_instance
+    sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, this_reg, 0,
+                   SLJIT_IMM, (sljit_sw) (JVM_OBJECT_BODY_OFFSET + fi->offset_instance));
 }
 
 static void _jit_emit_load_instance_field(struct sljit_compiler *C, FieldInfo *fi, sljit_s32 this_reg, sljit_s32 dst_reg) {
@@ -4263,9 +4266,9 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 _gen_stack_peek_ref(C, -1, SLJIT_R0, 0);
                 _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, JVM_EXCEPTION_NULLPOINTER, -1);
 
-                //&(ins->obj_fields[fi->offset_instance]);
-                sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(Instance, obj_fields));
-                sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, SLJIT_R2, 0, SLJIT_IMM, fi->offset_instance);
+                //field address = ins + JVM_OBJECT_BODY_OFFSET + fi->offset_instance
+                sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, SLJIT_R0, 0,
+                               SLJIT_IMM, (sljit_sw) (JVM_OBJECT_BODY_OFFSET + fi->offset_instance));
 
 
                 if (fi->isrefer) {
@@ -4363,9 +4366,9 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, JVM_EXCEPTION_NULLPOINTER, -stack_size);
 
 
-                //&(ins->obj_fields[fi->offset_instance]);
-                sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(Instance, obj_fields));
-                sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, SLJIT_R2, 0, SLJIT_IMM, fi->offset_instance);
+                //field address = ins + JVM_OBJECT_BODY_OFFSET + fi->offset_instance
+                sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, SLJIT_R0, 0,
+                               SLJIT_IMM, (sljit_sw) (JVM_OBJECT_BODY_OFFSET + fi->offset_instance));
 
                 if (fi->isrefer) {
                     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_R2), 0, SLJIT_R1, 0);
@@ -4613,7 +4616,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, -1);
 
                 _gen_stack_peek_ref(C, -1, SLJIT_R0, 0);
-                _gen_stack_set_int(C, -1, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(Instance, arr_length));
+                _gen_stack_set_int(C, -1, SLJIT_MEM1(SLJIT_R0), (sljit_sw) JVM_ARRAY_LENGTH_OFFSET);
 
                 _gen_ip_modify_imm(C, 1);
                 ip++;

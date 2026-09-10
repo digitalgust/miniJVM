@@ -20,6 +20,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #include "d_type.h"
 #include "arraylist.h"
@@ -81,30 +82,56 @@ void arraylist_destroy(ArrayList *arraylist) {
     }
 }
 
-static inline int arraylist_enlarge(ArrayList *arraylist) {
+int arraylist_ensure_capacity_unsafe(ArrayList *arraylist, int capacity) {
     ArrayListValue *data;
     int newsize;
 
-    /* Double the allocated size */
+    if (!arraylist || capacity < 0) return 0;
+    if (capacity <= arraylist->_alloced) return 1;
+    if ((size_t) capacity > SIZE_MAX / sizeof(ArrayListValue) ||
+        (size_t) capacity > UINT32_MAX / sizeof(ArrayListValue)) return 0;
 
-    newsize = arraylist->_alloced * 2;
-    int newBytes = newsize * sizeof(ArrayListValue);
+    newsize = arraylist->_alloced > 0 ? arraylist->_alloced : 16;
+    while (newsize < capacity) {
+        if (newsize > INT_MAX / 2) {
+            newsize = capacity;
+            break;
+        }
+        newsize *= 2;
+    }
 
     /* Reallocate the array to the new size */
 
-    data = jvm_calloc(newBytes);
+    data = jvm_calloc((size_t) newsize * sizeof(ArrayListValue));
 
     if (data == NULL) {
-        printf("[ERROR]arraylist alloc mem fail, size:%d bytes\n", newBytes);
+        printf("[ERROR]arraylist alloc mem fail, size:%llu bytes\n",
+               (unsigned long long) ((size_t) newsize * sizeof(ArrayListValue)));
         return 0;
     } else {
-        memcpy(data, arraylist->data, arraylist->_alloced * sizeof(ArrayListValue));
+        memcpy(data, arraylist->data, (size_t) arraylist->length * sizeof(ArrayListValue));
         jvm_free(arraylist->data);
         arraylist->data = data;
         arraylist->_alloced = newsize;
 
         return 1;
     }
+}
+
+int arraylist_ensure_capacity(ArrayList *arraylist, int capacity) {
+    int result;
+    if (!arraylist) return 0;
+    spin_lock(&arraylist->spinlock);
+    result = arraylist_ensure_capacity_unsafe(arraylist, capacity);
+    spin_unlock(&arraylist->spinlock);
+    return result;
+}
+
+static inline int arraylist_enlarge(ArrayList *arraylist) {
+    if (!arraylist || arraylist->_alloced == INT_MAX) return 0;
+    return arraylist_ensure_capacity_unsafe(
+            arraylist,
+            arraylist->_alloced > INT_MAX / 2 ? INT_MAX : arraylist->_alloced * 2);
 }
 
 static inline int _arraylist_insert_impl(ArrayList *arraylist, int index, ArrayListValue data) {

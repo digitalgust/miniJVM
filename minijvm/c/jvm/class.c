@@ -15,6 +15,7 @@
 JClass *class_create(Runtime *runtime) {
     s32 jcsize = sizeof(JClass);
     JClass *clazz = jvm_calloc(jcsize);
+    if (!clazz) return NULL;
     clazz->mb.heap_size = jcsize;
     clazz->mb.clazz = clazz;
     clazz->mb.type = MEM_TYPE_CLASS;
@@ -29,6 +30,13 @@ JClass *class_create(Runtime *runtime) {
     clazz->insFieldPtrIndex = arraylist_create(8);
     clazz->staticFieldPtrIndex = arraylist_create(4);
     clazz->supers = arraylist_create(4);
+    if (!clazz->constantPool.utf8CP || !clazz->constantPool.classRef ||
+        !clazz->constantPool.stringRef || !clazz->constantPool.fieldRef ||
+        !clazz->constantPool.methodRef || !clazz->constantPool.interfaceMethodRef ||
+        !clazz->arr_class_type || !clazz->insFieldPtrIndex ||
+        !clazz->staticFieldPtrIndex || !clazz->supers) {
+        jvm_fatal_oom("class-core-metadata", sizeof(JClass));
+    }
     gc_obj_reg(runtime, clazz);
     return clazz;
 }
