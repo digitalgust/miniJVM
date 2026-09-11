@@ -336,15 +336,21 @@ public class JsonParser<T> {
         }
     }
 
-    private static final Map<Class, Map<String, FieldBinder>> BINDER_CACHE = new HashMap<>();
+    /* Keep reflection metadata scoped to this parser.  A static cache pins
+     * every Class used as a key (and FieldBinder also refers back to its
+     * Method/Field/value Class), which prevents an application's ClassLoader
+     * from being collected after closeApp().  Per-parser caching preserves
+     * the important reuse within one parse, especially for arrays of objects,
+     * while allowing the whole cache to die with the parser. */
+    private final Map<Class, Map<String, FieldBinder>> binderCache = new HashMap<>();
 
-    private static FieldBinder findBinder(Class<?> clazz, String name) {
+    private FieldBinder findBinder(Class<?> clazz, String name) {
         Map<String, FieldBinder> classBinders;
-        synchronized (BINDER_CACHE) {
-            classBinders = BINDER_CACHE.get(clazz);
+        synchronized (binderCache) {
+            classBinders = binderCache.get(clazz);
             if (classBinders == null) {
                 classBinders = new HashMap<>();
-                BINDER_CACHE.put(clazz, classBinders);
+                binderCache.put(clazz, classBinders);
             }
         }
         synchronized (classBinders) {

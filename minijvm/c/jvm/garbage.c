@@ -20,8 +20,8 @@ void _garbage_clear(GcCollector *collector);
 
 void _gc_copy_objs(MiniJVM *jvm);
 
-s32 _gc_big_search(GcCollector *collector);
 
+s32 _gc_big_search(GcCollector *collector);
 s32 _gc_pause_the_world(MiniJVM *jvm);
 
 s32 _gc_resume_the_world(MiniJVM *jvm);
@@ -2064,6 +2064,8 @@ void _gc_copy_objs(MiniJVM *jvm) {
 s32 _gc_copy_objs_from_thread(Runtime *pruntime) {
     GcCollector *collector = pruntime->jvm->collector;
     arraylist_push_back_unsafe(collector->runtime_refer_copy, pruntime->thrd_info->jthread);
+    if (pruntime->thrd_info->thread_status != THREAD_STATUS_ZOMBIE) {
+    }
     //a live thread's context classloader is a strong reference (JVM semantics);
     //unscanned it would dangle after the loader unloads
     if (pruntime->thrd_info->context_classloader) {

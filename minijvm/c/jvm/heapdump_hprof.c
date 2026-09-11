@@ -270,7 +270,11 @@ static s32 hprof_instance_value_bytes(JClass *clazz, u32 id_size) {
         chain[depth++] = clazz;
         clazz = clazz->superclass;
     }
-    for (s32 i = depth - 1; i >= 0; i--) {
+    /* HPROF INSTANCE_DUMP values are ordered by the runtime class first,
+     * followed by its superclass, then the superclass' superclass, etc.
+     * Keep this traversal in the same order as the value writer below.
+     * CLASS_DUMP contains only the fields declared by that one class. */
+    for (s32 i = 0; i < depth; i++) {
         FieldPool *fp = &chain[i]->fieldPool;
         for (s32 j = 0; j < fp->field_used; j++) {
             FieldInfo *fi = &fp->field[j];
@@ -301,7 +305,11 @@ static void hprof_heap_bb_write_instance_dump(ByteBuf *seg, u32 id_size, Instanc
         chain[depth++] = clazz;
         clazz = clazz->superclass;
     }
-    for (s32 i = depth - 1; i >= 0; i--) {
+    /* HPROF 1.0.2 requires: class fields, then superclass fields, then
+     * successively higher superclasses.  Writing the hierarchy in the
+     * opposite direction shifts every inherited value onto the wrong field
+     * when readers such as VisualVM decode the instance. */
+    for (s32 i = 0; i < depth; i++) {
         FieldPool *fp = &chain[i]->fieldPool;
         for (s32 j = 0; j < fp->field_used; j++) {
             FieldInfo *fi = &fp->field[j];
@@ -511,16 +519,11 @@ int hprof_write_heap(GcCollector *collector, const char *path) {
         if (v) hprof_heap_bb_write_root_unknown(seg, id_size, (u64) (uintptr_t) v);
     }
     
-    // Custom classloader classes as ROOT
-    MiniJVM *jvm = collector->jvm;
-    for (s32 i = 0; i < jvm->classloaders->length; i++) {
-        PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
-        hashtable_iterate(pcl->classes, &hti);
-        while (hashtable_iter_has_more(&hti)) {
-            HashtableValue v = hashtable_iter_next_value(&hti);
-            if (v) hprof_heap_bb_write_root_unknown(seg, id_size, (u64) (uintptr_t) v);
-        }
-    }
+    /* Do not emit every custom-loader class as ROOT_UNKNOWN.  Such classes
+     * are unloadable together with their ClassLoader; declaring them roots in
+     * HPROF fabricates retention paths and hides the real reference that is
+     * preventing a loader from unloading.  Their CLASS_DUMP records are still
+     * emitted below. */
     
     // Thread objects as ROOT_THREAD_OBJ
     {
