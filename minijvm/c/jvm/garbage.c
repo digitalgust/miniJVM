@@ -37,7 +37,8 @@ s64 _garbage_collect(GcCollector *collector);
 void _gc_print_obj_list(GcCollector *pType);
 
 static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *out_mem_free,
-                             Utf8String **out_threads_dump, s64 *stw_start_ns);
+                             Utf8String **out_threads_dump, s64 *stw_start_ns,
+                             s64 *out_stw_spent_ms);
 
 static s32 _gc_immix_is_live(void *context, MemoryBlock *object);
 
@@ -1243,7 +1244,8 @@ static s32 _gc_immix_dead_capture(MemoryBlock *mb, void *data) {
  * Java-level execution is deferred until the world has resumed.
  */
 static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *out_mem_free,
-                             Utf8String **out_threads_dump, s64 *stw_start_ns) {
+                             Utf8String **out_threads_dump, s64 *stw_start_ns,
+                             s64 *out_stw_spent_ms) {
     MiniJVM *jvm = collector->jvm;
     ImmixHeap *heap = (ImmixHeap *) collector->immix_heap;
     ImmixStats stats_before, stats_after;
@@ -1256,6 +1258,7 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
 #if _JVM_DEBUG_LOG_LEVEL > 1
     s64 t_pause_ns = 0, t_begin_ns = 0, t_mark_ns = 0, t_threaddump_ns = 0;
     s64 t_finalize_ns = 0, t_capture_ns = 0, t_sweep_ns_pre = 0;
+    s64 t_class_ns = 0, t_resume_ns = 0;
 #endif
     s64 start_ms = currentTimeMillis();
     u32 i, len;
@@ -1295,9 +1298,21 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
         //publish every mutator's bump cursor before any heap inspection
         immix_flush_all_mutators(heap);
 
-        /* Both snapshots must describe the same STW cycle. Reading before
-         * pausing or after resuming lets concurrent allocations leak into
-         * only one side of the GC log. */
+        /* Safety net: finish any lazy sweep left over from the previous
+         * cycle. Must run BEFORE the epoch increments and before
+         * immix_collection_begin clears line marks, so is_live still sees
+         * the garbage_mark values produced by that previous cycle. */
+        {
+            ImmixSweepOps early_ops;
+            early_ops.context = collector;
+            early_ops.is_live = _gc_immix_is_live;
+            early_ops.before_reclaim = _gc_immix_before_reclaim;
+            immix_sweep_pending_objects(heap, &early_ops); /* no-op when drained */
+        }
+
+        /* Both snapshots must describe the same STW cycle (taken after the
+         * safety-net drain so its refinements land in stats_before, not in
+         * this cycle's del/reclaim diffs). */
         immix_get_stats(heap, &stats_before);
 
         collector->mark_cnt++;
@@ -1455,6 +1470,9 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
 
         //classes (and any classic-list object) reclamation
         {
+#if _JVM_DEBUG_LOG_LEVEL > 1
+            t_class_ns = nanoTime();
+#endif
             GcObjectLink *freed_links = NULL;
             s32 freed_count = 0;
             GcObjectLink *nextlink = collector->header;
@@ -1495,24 +1513,17 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
             _gc_link_free_batch(collector, freed_links, freed_count);
         }
 
-        immix_get_stats(heap, &stats_after);
-
-        spin_lock(&collector->lock);
-        reason = collector->gc_request ? collector->gc_request_reason : reason;
-        {
-            size_t requested_bytes = collector->gc_requested_bytes;
-            spin_unlock(&collector->lock);
-            _gc_immix_adjust_soft_limit(collector, &stats_after, reason,
-                                        requested_bytes);
-        }
-
         collector->isworldstoped = 0;
+#if _JVM_DEBUG_LOG_LEVEL > 1
+        t_resume_ns = nanoTime();
+#endif
         _gc_resume_the_world(jvm);
         {
             s64 stw_spent_ns = nanoTime() - *stw_start_ns;
             if (stw_spent_ns > 0) {
                 ATOMIC_ADD64(&collector->stw_total_ns, stw_spent_ns);
             }
+            *out_stw_spent_ms = stw_spent_ns / 1000000;
         }
     }
     vm_share_unlock(jvm);
@@ -1521,6 +1532,24 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
      * history or deferred native cleanup. Wake them immediately after STW so
      * an unrelated slow finalizer cannot turn allocation into a 5 s timeout. */
     _gc_signal_completed_cycle(collector);
+
+    /* Lazy sweep completion (world running): clear deferred dead-object
+     * start bits and release quarantined blocks back to the allocator. */
+    immix_sweep_pending_objects(heap, &sweep_ops);
+
+    /* Post-drain snapshot: pending blocks contributed line-granular estimates
+     * during STW; the drain walks every object anyway, so taking the stats
+     * here turns those estimates into exact counts at zero extra cost. */
+    immix_get_stats(heap, &stats_after);
+
+    spin_lock(&collector->lock);
+    reason = collector->gc_request ? collector->gc_request_reason : reason;
+    {
+        size_t requested_bytes = collector->gc_requested_bytes;
+        spin_unlock(&collector->lock);
+        _gc_immix_adjust_soft_limit(collector, &stats_after, reason,
+                                    requested_bytes);
+    }
 
     //deferred Java-level execution and native destruction, world running
     if (collector->_garbage_thread_status == GARBAGE_THREAD_NORMAL) {
@@ -1564,14 +1593,16 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
     }
 
 #if _JVM_DEBUG_LOG_LEVEL > 1
-    jvm_printf("[INFO]immix stw ms: pause=%.2f begin=%.2f mark=%.2f threaddump=%.2f finalize=%.2f capture=%.2f sweep=%.2f\n",
+    jvm_printf("[INFO]immix stw ms: pause=%.2f begin=%.2f mark=%.2f threaddump=%.2f finalize=%.2f capture=%.2f sweep=%.2f class=%.2f total=%.2f\n",
                (t_pause_ns - *stw_start_ns) / 1000000.0,
                (t_begin_ns - t_pause_ns) / 1000000.0,
                (t_mark_ns - t_begin_ns) / 1000000.0,
                (t_threaddump_ns - t_mark_ns) / 1000000.0,
                (t_finalize_ns - t_threaddump_ns) / 1000000.0,
                (t_capture_ns - t_finalize_ns) / 1000000.0,
-               (t_sweep_ns_pre - t_capture_ns) / 1000000.0);
+               (t_sweep_ns_pre - t_capture_ns) / 1000000.0,
+               (t_class_ns - t_sweep_ns_pre) / 1000000.0,
+               (t_resume_ns - *stw_start_ns) / 1000000.0);
 #endif
 
     del = (s64) (stats_after.reclaimed_object_count - stats_before.reclaimed_object_count)
@@ -1599,14 +1630,15 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
 #endif
 
 #if _JVM_DEBUG_LOG_LEVEL > 1
-    jvm_printf("[INFO]immix gc: reason=%d del=%lld live=%llu objs=%llu committed=%llu blocks(f=%u,r=%u,full=%u) chunks=%u stw=%lldms pending(f=%d,w=%d)\n",
+    jvm_printf("[INFO]immix gc: reason=%d del=%lld live=%llu objs=%llu committed=%llu blocks(f=%u,r=%u,full=%u) chunks=%u stw=%lldms drain+fin=%.0fms pending(f=%d,w=%d)\n",
                reason, del,
                (unsigned long long) stats_after.live_bytes,
                (unsigned long long) stats_after.live_object_count,
                (unsigned long long) stats_after.committed_bytes,
                stats_after.free_block_count, stats_after.recyclable_block_count,
                stats_after.full_block_count, stats_after.chunk_count,
-               currentTimeMillis() - start_ms,
+               *out_stw_spent_ms,
+               (double) (currentTimeMillis() - start_ms) - (double) *out_stw_spent_ms,
                pending.finalized, pending.enqueued);
 #endif
 
@@ -1644,13 +1676,15 @@ s64 _garbage_collect(GcCollector *collector) {
     s64 del = 0;
     s64 time, start;
     s64 stw_start_ns = 0;
+    s64 immix_stw_ms = 0;
     Utf8String *threads_dump = NULL;
     MiniJVM *jvm = collector->jvm;
 
     start = time = currentTimeMillis();
 
     if (collector->immix_heap) {
-        del = _gc_immix_collect(collector, &mem_total, &mem_free, &threads_dump, &stw_start_ns);
+        del = _gc_immix_collect(collector, &mem_total, &mem_free, &threads_dump,
+                                &stw_start_ns, &immix_stw_ms);
         if (del < 0) {
             collector->isgc = 0;
             return del;
@@ -1849,7 +1883,11 @@ s64 _garbage_collect(GcCollector *collector) {
         spin_unlock(&collector->lock);
     }
 
-    s64 time_stopWorld = currentTimeMillis() - start;
+    /* For immix the world resumes inside _gc_immix_collect; the remainder of
+     * this function (lazy drain, finalizers, history) runs with the world
+     * live and must not be charged to the pause. */
+    s64 time_stopWorld = collector->immix_heap ? immix_stw_ms
+                                               : currentTimeMillis() - start;
     time = currentTimeMillis();
     //
 

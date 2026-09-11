@@ -278,6 +278,11 @@ void immix_notify_memory_pressure(ImmixHeap *heap,
 
 ImmixResult immix_trim(ImmixHeap *heap, size_t target_committed_bytes);
 
+/* Lazy sweep completion: clears deferred dead-object start bits. Called
+ * post-resume by the GC thread and synchronously at the next collection
+ * begin as a safety net. */
+ImmixResult immix_sweep_pending_objects(ImmixHeap *heap, const ImmixSweepOps *ops);
+
 /* Raises or lowers the allocation limit without rebuilding the heap. */
 ImmixResult immix_set_heap_limit(ImmixHeap *heap, size_t heap_limit);
 
