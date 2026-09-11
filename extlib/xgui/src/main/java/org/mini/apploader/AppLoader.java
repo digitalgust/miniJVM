@@ -113,54 +113,82 @@ public final class AppLoader {
         AppManager.getInstance().active();
     }
 
+    /** Class loader of the app currently being launched: set before the main
+     * class loads (clinit window) and cleared after its threads are adopted. */
+    static volatile ClassLoader launchingCL;
+    static final List<Thread> pendingThreads = new ArrayList<>();
+
     static class XuiThreadHandler implements ThreadLifeHandler {
+
         @Override
         public void threadCreated(Thread thread) {
-
-            //从调用栈中查找创建者
-            Throwable callStack = new Throwable();
-            GApplication creator = findCreator(callStack);
-            if (creator != null) {
-                //System.out.println(creator.getClass().getClassLoader() + " CREATED+++++ " + thread);
-                creator.addThread(thread);
+            GApplication owner = resolveOwner(thread);
+            if (owner != null) {
+                owner.addThread(thread);
+            } else if (launchingCL != null && belongsToLaunching(thread)) {
+                //thread whose task belongs to the app being launched (clinit/
+                //constructor window): park it, runApp adopts it right after
+                //the application instance exists
+                synchronized (pendingThreads) {
+                    pendingThreads.add(thread);
+                }
             }
         }
 
         @Override
         public void threadDestroy(Thread thread) {
-            //谁创建的线程
-            GApplication creator = findCreator(thread);
-            if (creator != null) {
-                //System.out.println(creator.getClass().getClassLoader() + " DESTROYED----- " + thread);
-                creator.removeThread(thread);
+            for (GApplication a : AppManager.getInstance().getRunningApps()) {
+                if (a.ownsThread(thread)) {
+                    a.removeThread(thread);
+                    return;
+                }
             }
         }
 
-        private GApplication findCreator(Throwable callStack) {
-            for (GApplication a : AppManager.getInstance().getRunningApps()) {
-                ClassLoader appClassLoader = a.getClass().getClassLoader();
-                for (StackTraceElement e : callStack.getStackTrace()) {
-                    String cname = e.getClassName();
-                    try {
-                        Class c = Class.forName(cname, true, appClassLoader);
-                        if (c != null && c.getClassLoader() == appClassLoader) {//调用栈中如果有和app的classloader相同的类，则说明此线程为这个app创建的
-                            return a;
-                        }
-                    } catch (Exception ex) {
-                        //ex.printStackTrace();
-                    }
-                }
+        /**
+         * Deterministic attribution by class-loader identity - no stack
+         * walking, no Class.forName (which could mis-attribute on same-name
+         * classes across apps and trigger foreign static init):
+         * 1. the Thread subclass's loader (class Worker extends Thread)
+         * 2. the target runnable's loader (new Thread(appTask))
+         * 3. the creating thread's context class loader (framework factory
+         *    executing app work on a boot thread)
+         * 4. pure boot -> not an app thread
+         */
+        private GApplication resolveOwner(Thread thread) {
+            ClassLoader cl = taskClassLoader(thread);
+            if (isBoot(cl)) {
+                cl = Thread.currentThread().getContextClassLoader();
             }
-            return null;
+            if (isBoot(cl) || cl == null) {
+                return null;
+            }
+            for (GApplication a : AppManager.getInstance().getRunningApps()) {
+                if (a.getClass().getClassLoader() == cl) return a;
+            }
+            return null; //launching window handled by the caller
         }
 
-        private GApplication findCreator(Thread thread) {
-            for (GApplication a : AppManager.getInstance().getRunningApps()) {
-                if (a.threads.contains(thread)) {
-                    return a;
+        private boolean belongsToLaunching(Thread thread) {
+            return taskClassLoader(thread) == launchingCL
+                    || Thread.currentThread().getContextClassLoader() == launchingCL;
+        }
+
+        private ClassLoader taskClassLoader(Thread thread) {
+            ClassLoader cl = thread.getClass().getClassLoader();
+            if (isBoot(cl)) {
+                //native access to the private target field: keeps Thread's
+                //API stock so code compiles against a stock JDK too
+                Runnable task = org.mini.vm.RefNative.getThreadTarget(thread);
+                if (task != null) {
+                    cl = task.getClass().getClassLoader();
                 }
             }
-            return null;
+            return cl;
+        }
+
+        private boolean isBoot(ClassLoader cl) {
+            return cl == null || cl == ClassLoader.getSystemClassLoader();
         }
     }
 
@@ -434,6 +462,7 @@ public final class AppLoader {
 
                 StandalongGuiAppClassLoader sgacl = new StandalongGuiAppClassLoader(paths, ClassLoader.getSystemClassLoader());
                 Thread.currentThread().setContextClassLoader(sgacl);
+                launchingCL = sgacl; //clinit/constructor threads park until adoption
                 Class c = sgacl.loadClass(className);
 
                 return c;
@@ -575,6 +604,33 @@ public final class AppLoader {
         }
     }
 
+    /** True when cl belongs to a running app or to the app being launched.
+     * Used by GCmdHandler.runWork to refuse installing a closed app's loader. */
+    public static boolean isLiveAppClassLoader(ClassLoader cl) {
+        if (cl == null) return false;
+        //the system loader IS the desktop: always live. Returning false here
+        //broke GuiSecurityManager's runWork escape for desktop GCmds (they
+        //run with a stale app context CL and got their writes denied)
+        if (cl == ClassLoader.getSystemClassLoader()) return true;
+        if (cl == launchingCL) return true;
+        for (GApplication a : AppManager.getInstance().getRunningApps()) {
+            if (a.getClass().getClassLoader() == cl) return true;
+        }
+        return false;
+    }
+
+    static void adoptPendingThreads(GApplication app) {
+        if (app == null) return;
+        synchronized (pendingThreads) {
+            if (!pendingThreads.isEmpty()) {
+                for (Thread t : pendingThreads) {
+                    app.addThread(t);
+                }
+                pendingThreads.clear();
+            }
+        }
+    }
+
     public static GApplication runApp(String jarName) {
         GApplication app = null;
         try {
@@ -590,12 +646,17 @@ public final class AppLoader {
                     app = (GApplication) c.newInstance();
                     app.setJarName(jarName);
                     app.setOldStyle(oldStyle);
+                    adoptPendingThreads(app);
                     GCallBack.getInstance().setApplication(app);
                 }
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
+            launchingCL = null;
+            if (app != null && app != AppManager.getInstance()) {
+                adoptPendingThreads(app); //late strays from the launch window
+            }
             if (app == null) {
                 app = AppManager.getInstance();
                 Thread.currentThread().setContextClassLoader(app.getClass().getClassLoader());

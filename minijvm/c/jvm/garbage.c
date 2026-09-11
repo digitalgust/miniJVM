@@ -1902,6 +1902,7 @@ static s32 _gc_count_thread_roots(Runtime *runtime, size_t *count) {
     if (!runtime || !runtime->thrd_info || !runtime->stack || !count) return -1;
     if (*count == SIZE_MAX) return -1;
     (*count)++; /* JavaThreadInfo.jthread, including a NULL slot */
+    if (runtime->thrd_info->context_classloader) (*count)++;
     stack = runtime->stack;
     for (i = 0, imax = stack_size(stack); i < imax; i++) {
         if (stack->store[i].rvalue) {
@@ -1982,6 +1983,12 @@ void _gc_copy_objs(MiniJVM *jvm) {
 s32 _gc_copy_objs_from_thread(Runtime *pruntime) {
     GcCollector *collector = pruntime->jvm->collector;
     arraylist_push_back_unsafe(collector->runtime_refer_copy, pruntime->thrd_info->jthread);
+    //a live thread's context classloader is a strong reference (JVM semantics);
+    //unscanned it would dangle after the loader unloads
+    if (pruntime->thrd_info->context_classloader) {
+        arraylist_push_back_unsafe(collector->runtime_refer_copy,
+                                   pruntime->thrd_info->context_classloader);
+    }
 
     Runtime *runtime = pruntime;
     RuntimeStack *stack = runtime->stack;

@@ -505,6 +505,24 @@ s32 org_mini_vm_RefNative_getFrameCount(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+s32 org_mini_vm_RefNative_getThreadTarget(Runtime *runtime, JClass *clazz) {
+    RuntimeStack *stack = runtime->stack;
+    Instance *ins_thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
+    if (!ins_thread) {
+        push_ref(stack, NULL);
+        return 0;
+    }
+    FieldInfo *fi = find_fieldInfo_by_name_c("java/lang/Thread", "target",
+                                             "Ljava/lang/Runnable;", NULL, runtime);
+    if (!fi) {
+        push_ref(stack, NULL);
+        return 0;
+    }
+    c8 *ptr = getInstanceFieldPtr(ins_thread, fi);
+    push_ref(stack, ptr ? getFieldRefer(ptr) : NULL);
+    return 0;
+}
+
 s32 org_mini_vm_RefNative_stopThread(Runtime *runtime, JClass *clazz) {
     Instance *thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Instance *ins = localvar_getRefer(runtime->localvar, 1);
@@ -2332,6 +2350,7 @@ static java_native_method METHODS_REFLECT_TABLE[] = {
     {"org/mini/vm/RefNative", "getSuspendCount", "(Ljava/lang/Thread;)I", org_mini_vm_RefNative_getSuspendCount},
     {"org/mini/vm/RefNative", "getFrameCount", "(Ljava/lang/Thread;)I", org_mini_vm_RefNative_getFrameCount},
     {"org/mini/vm/RefNative", "stopThread", "(Ljava/lang/Thread;Ljava/lang/Object;)I", org_mini_vm_RefNative_stopThread},
+    {"org/mini/vm/RefNative", "getThreadTarget", "(Ljava/lang/Thread;)Ljava/lang/Runnable;", org_mini_vm_RefNative_getThreadTarget},
     {"org/mini/vm/RefNative", "getStackFrame", "(Ljava/lang/Thread;)J", org_mini_vm_RefNative_getStackFrame},
     {"org/mini/vm/RefNative", "getGarbageMarkCounter", "()I", org_mini_vm_RefNative_getGarbageMarkCounter},
     {"org/mini/vm/RefNative", "getGarbageStatus", "()I", org_mini_vm_RefNative_getGarbageStatus},

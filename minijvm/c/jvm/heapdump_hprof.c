@@ -181,11 +181,14 @@ static int hprof_write_load_class(FILE *fp, Hashtable *str2id, u32 id_size, u32 
 }
 
 static void hprof_heap_bb_write_root_unknown(ByteBuf *seg, u32 id_size, u64 obj_id) {
+    //ROOT_UNKNOWN = 0xFF (verified against jhat's HprofReader switch:
+    //0xFF -> readID only; 0x01 is JNI-GLOBAL with an extra u4)
     bytebuf_write_byte(seg, (c8) 0xFF);
     hprof_bb_write_id(seg, id_size, obj_id);
 }
 
-// ROOT_THREAD_OBJ (0x08): thread object root
+// ROOT_THREAD_OBJECT = 0x08 (verified against jhat's HprofReader:
+// case 8 reads ID + u4 thread serial + u4 stack serial)
 // Format: tag(1) | object ID(id_size) | thread serial(4) | stack trace serial(4)
 static void hprof_heap_bb_write_root_thread_obj(ByteBuf *seg, u32 id_size, u64 obj_id, u32 thread_serial) {
     bytebuf_write_byte(seg, (c8) 0x08);

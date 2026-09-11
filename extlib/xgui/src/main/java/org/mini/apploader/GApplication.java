@@ -309,6 +309,10 @@ public abstract class GApplication implements FormHolder {
         }
     }
 
+    public boolean ownsThread(Thread t) {
+        return threads.contains(t);
+    }
+
     public void removeThread(Thread t) {
         synchronized (threads) {
             threads.remove(t);
@@ -316,13 +320,45 @@ public abstract class GApplication implements FormHolder {
     }
 
     public void closeThreads() {
+        //1) ask politely
         for (Thread t : threads) {
             try {
-                //System.out.println(this + " INTERRUPT " + t);
-                t.interrupt();//不能stop,会造成锁未释放，主线程死锁，操作无响应
+                t.interrupt();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+        //2) give them a grace period to exit on the interrupt
+        long deadline = System.currentTimeMillis() + 2000;
+        for (Thread t : threads) {
+            long remain = deadline - System.currentTimeMillis();
+            if (remain <= 0) break;
+            try {
+                t.join(remain);
+            } catch (InterruptedException ignore) {
+                Thread.currentThread().interrupt();
+                return; //the closing thread itself was interrupted
+            }
+        }
+        //3) force stop survivors: a live thread keeps its Thread instance as a
+        //GC root and pins the whole app classloader forever. The is_stop flag
+        //unwinds at the next bytecode boundary (no async native APC), which
+        //avoids the historical monitor-deadlock risk of a hard stop.
+        for (Thread t : threads) {
+            if (t.isAlive()) {
+                try {
+                    SysLog.warn("app thread ignored interrupt, stopping: " + t);
+                    t.stop();
+                    t.join(1000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                if (t.isAlive()) {
+                    SysLog.warn("app thread refused to die (blocked in native?): " + t
+                            + " - its classloader cannot unload");
+                }
+            }
+        }
+        threads.clear();
     }
 }
