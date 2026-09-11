@@ -28,7 +28,7 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage  , 03=class_load & jit info, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_LOG_LEVEL 0
+#define _JVM_DEBUG_LOG_LEVEL 02
 //_JVM_DEBUG_GARBAGE_DUMP 01=count instance , 02=print every object create/destroy
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_METHOD_PROFILE 0
@@ -723,7 +723,7 @@ void profile_slow_call_unregister_class(MiniJVM *jvm, JClass *clazz);
 #define GCFLAG_JTHREAD_CLEAR(reg_v) (reg_v = ((~0x08) & reg_v))
 
 /* Object header: the three GC links live in external structures
- * (GcObjectLink slab / GcTempRootTable / classic_pending), the body
+ * (registration ArrayLists / GcTempRootTable / classic_pending), the body
  * pointer slot is gone — fields and elements are inline storage. */
 typedef struct _MemoryBlock {
     JClass *clazz;                    //x64:  0..7
@@ -737,14 +737,6 @@ typedef struct _MemoryBlock {
 
 /* GC registration, thread temp roots and finalize pending state live in
  * external structures rather than consuming per-object header space. */
-
-/* External GC registration node (replaces MemoryBlock.next). Objects are
- * never touched when registered; classes always use it and every Java
- * object does on the malloc backend. Nodes come from a recycled slab. */
-typedef struct _GcObjectLink {
-    MemoryBlock *object;
-    struct _GcObjectLink *next;
-} GcObjectLink;
 
 /* Per-thread temporary root entry (replaces MemoryBlock.hold_next).
  * Repeated holds of the same object bump ref_count; the object is only
@@ -1524,9 +1516,7 @@ struct _JavaThreadInfo {
     Runtime *top_runtime;
     MemoryBlock pack;
     GcTempRootTable temp_roots; //jni temp roots for this thread, refcounted
-    GcObjectLink *objs_header; //link to new instance, until garbage accept
-    GcObjectLink *objs_tailer; //link to last instance, until garbage accept
-    GcObjectLink *link_cache; //thread-local free GcObjectLink cache (bulk refill)
+    ArrayList *objs_array; //thread's registered objects, spliced to the GC at pause
     MemoryBlock *curThreadLock; //if thread is locked ,the filed save the lock
     ArrayList *held_locks; //list of locks held by this thread for precise debugging (JDWP only)
     MemoryBlock *pending_release_lock; //lock that needs to be released for suspension (JDWP only)
@@ -1535,7 +1525,7 @@ struct _JavaThreadInfo {
     ArrayList *stacktrack; //save methodrawindex, the pos 0 is the throw point
     ArrayList *lineNo; //save methodrawindex, the pos 0 is the throw point
 
-    s64 objs_heap_of_thread; // heap use for objs_header, if translate to gc ,the var need clear to 0
+    s64 objs_heap_of_thread; // heap use for objs_array, cleared when spliced to the GC
     spinlock_t lock;
     u16 volatile suspend_count; //for jdwp suspend ,>0 suspend, ==0 resume
     u16 volatile no_pause; //can't pause when clinit

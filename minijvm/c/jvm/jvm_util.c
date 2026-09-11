@@ -1938,6 +1938,7 @@ JavaThreadInfo *threadinfo_create() {
     threadInfo->temp_roots.capacity = GC_TEMP_ROOT_INLINE_CAPACITY;
     threadInfo->stacktrack = arraylist_create(16);
     threadInfo->lineNo = arraylist_create(16);
+    threadInfo->objs_array = arraylist_create(256);
     threadInfo->jdwp_step = jvm_calloc(sizeof(JdwpStep));
     spin_init(&threadInfo->lock, 0);
     return threadInfo;
@@ -1956,6 +1957,14 @@ void threadinfo_destroy(JavaThreadInfo *threadInfo) {
     threadInfo->temp_roots.capacity = 0;
     arraylist_destroy(threadInfo->lineNo);
     arraylist_destroy(threadInfo->stacktrack);
+    if (threadInfo->objs_array) {
+        if (threadInfo->objs_array->length > 0) {
+            jvm_printf("[WARN] thread exit with %d unspliced registered objects\n",
+                       threadInfo->objs_array->length);
+        }
+        arraylist_destroy(threadInfo->objs_array);
+        threadInfo->objs_array = NULL;
+    }
 #if _JVM_DEBUG_SLOW_CALL_PROFILE
     if (threadInfo->slow_call_ctx) {
         if (threadInfo->slow_call_ctx->nodes) jvm_free(threadInfo->slow_call_ctx->nodes);

@@ -291,7 +291,7 @@ void pri_alloc_print_debug_info() {
                pri_alloc_should_gc(),
                (unsigned long long) pri_alloc_atomic_load64(&g_jvm_allocator.accounting_errors));
 
-    mi_stats_print(NULL);
+    //mi_stats_print(NULL);
     fflush(stderr);
     fflush(stdout);
 }

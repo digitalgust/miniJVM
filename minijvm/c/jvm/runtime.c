@@ -127,14 +127,13 @@ Runtime *runtime_create(MiniJVM *jvm) {
 }
 
 void runtime_destroy(Runtime *runtime) {
-    //top runtimes own the per-thread Immix allocation context and link cache
+    //top runtimes own the per-thread Immix allocation context
     if (runtime->thrd_info && runtime->thrd_info->top_runtime == runtime &&
         runtime->jvm && runtime->jvm->collector) {
         if (runtime->thrd_info->immix_mutator) {
             immix_mutator_detach((ImmixMutator *) runtime->thrd_info->immix_mutator);
             runtime->thrd_info->immix_mutator = NULL;
         }
-        gc_link_cache_flush(runtime->jvm->collector, runtime->thrd_info);
     }
     runtime_destroy_inl(runtime);
 }

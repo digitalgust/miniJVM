@@ -26,7 +26,15 @@ struct _GcCollectorType {
     // A lawless zone, a holder that prevents garbage collection.
     // Objects placed in it and other objects they reference will not be collected.
     Hashset *objs_holder;
-    GcObjectLink *header, *tmp_header, *tmp_tailer; //external registration nodes
+    // Registered objects (classes always; every Java object on the malloc
+    // backend). Threads append to their own objs_array and hand them to
+    // objs_stage at thread boundaries; the GC splices stage into objs_array
+    // once the world is stopped — after that only the GC thread mutates it
+    // (the classic finalize/sweep walks run post-resume), so the walks are
+    // race-free. Contiguous pointer arrays walk with hardware prefetch and
+    // compact in place, unlike the old external link chain.
+    ArrayList *objs_array;
+    ArrayList *objs_stage;
     s64 obj_count;
     s64 obj_heap_size;
     s64 jit_heap_size;
@@ -42,16 +50,6 @@ struct _GcCollectorType {
     //
     ArrayList *runtime_refer_copy;
     //
-
-    // Recycled node slab for GcObjectLink allocation (managed accounting).
-    struct {
-        GcObjectLink *free_list;
-        GcObjectLink **chunks;
-        s32 chunk_count;
-        s32 chunk_cap;
-        s32 live_links;
-        spinlock_t lock;
-    } link_slab;
 
     // Classic (malloc backend) pending re-mark queue: objects that ran
     // finalize() or were enqueued as weak references this cycle and must
@@ -118,15 +116,11 @@ void gc_obj_hold(GcCollector *collector, __refer ref);
 
 void gc_obj_release(GcCollector *collector, __refer ref);
 
-/* Registers ref with the collector via an external GcObjectLink.
- * Returns 0 on success; -1 means the link slab could not grow and the
- * caller must recycle the not-yet-published object and fail with OOM. */
+/* Registers ref with the collector by appending it to the thread's
+ * objs_array; the GC splices that array into the global one at pause. */
 void gc_obj_reg(Runtime *runtime, __refer ref);
 
 void gc_move_objs_thread_2_gc(Runtime *runtime);
-
-/* Returns a thread's cached free GcObjectLink nodes to the slab (thread exit). */
-void gc_link_cache_flush(GcCollector *collector, JavaThreadInfo *ti);
 
 /* Immix side-list registration (no-op on the malloc backend). */
 void gc_side_register_instance(Runtime *runtime, Instance *ins);
