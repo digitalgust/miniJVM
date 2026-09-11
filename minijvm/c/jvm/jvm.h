@@ -28,7 +28,7 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage  , 03=class_load & jit info, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_LOG_LEVEL 02
+#define _JVM_DEBUG_LOG_LEVEL 0
 //_JVM_DEBUG_GARBAGE_DUMP 01=count instance , 02=print every object create/destroy
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_METHOD_PROFILE 0
@@ -1517,6 +1517,9 @@ struct _JavaThreadInfo {
     MemoryBlock pack;
     GcTempRootTable temp_roots; //jni temp roots for this thread, refcounted
     ArrayList *objs_array; //thread's registered objects, spliced to the GC at pause
+    ThreadLock *owned_lock_head; //monitors this thread currently owns (intrusive chain)
+    ThreadLock *waiting_lock; //monitor parked in Object.wait()
+    ThreadLock *entering_lock; //monitor blocked in monitorenter
     MemoryBlock *curThreadLock; //if thread is locked ,the filed save the lock
     ArrayList *held_locks; //list of locks held by this thread for precise debugging (JDWP only)
     MemoryBlock *pending_release_lock; //lock that needs to be released for suspension (JDWP only)
@@ -2143,11 +2146,27 @@ typedef struct _ShortCut {
 } ShortCut;
 
 
+/* Java object monitor state (design: ai/object-header-threadlock-owned-chain-design.md).
+ * Flat OS mutex held ONCE across the whole synchronized region; java
+ * re-entry is recursion_count only. The owner chain is an intrusive
+ * doubly-linked list on JavaThreadInfo so a force-stopped thread can
+ * release every monitor it still owns. metadata_lock publishes owner /
+ * counts / chain state (never block on mutex_lock while holding it). */
 struct _ThreadLock {
     cnd_t thread_cond;
-    mtx_t mutex_lock; //互斥锁
-    JavaThreadInfo *owner_thread; // 锁的所有者线程
-    int count; // 重入计数
+    mtx_t mutex_lock; //held once per synchronized region (mtx_timed, non-recursive)
+
+    JavaThreadInfo *owner_thread; //current owner (NULL when free/waiting)
+    u32 recursion_count; //java re-entry depth
+
+    MemoryBlock *object; //reverse pointer: held/waiting/entering GC root
+
+    ThreadLock *owner_prev; //intrusive owner chain
+    ThreadLock *owner_next;
+
+    u32 enter_waiter_count; //threads blocked in monitorenter
+    u32 wait_waiter_count; //threads parked in Object.wait()
+    spinlock_t metadata_lock; //publishes owner/counts/chain
 };
 
 typedef struct _SlowCallProfile {
@@ -2196,6 +2215,7 @@ struct _MiniJVM {
     Hashtable *table_jstring_const; //for cache same string
 
     ThreadLock threadlock;
+    spinlock_t monitor_create_lock; //guards lazy ThreadLock creation (objects)
 
     Utf8String *startup_dir;
 

@@ -1,5 +1,7 @@
 package test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 class Foo3 {
@@ -34,13 +36,13 @@ class Foo3 {
 
 
     static public String result = "";
-    static Vector list = new Vector();
+    static List list = new ArrayList();
 
     static void t7() {
         final int MAX = 5000000;
         final int PRINT_COUNT = 10000;
         Thread t = new Thread(new Runnable() {
-            public Vector list = new Vector(MAX);
+            public List list = new ArrayList(MAX);
             public String result = "";
 
             public void run() {
@@ -60,8 +62,8 @@ class Foo3 {
                 for (int i = 0; i < MAX; i++) {
                     c = a + b + i;
                     result = c;
-                    list.addElement(c);
-                    list.removeElementAt(0);
+                    list.add(c);
+                    list.remove(0);
                     if (i % PRINT_COUNT == 0) {
                         //System.out.println(this + " thread i=" + i);
                     }
@@ -85,8 +87,8 @@ class Foo3 {
         for (int i = 0; i < MAX; i++) {
             c = a + b + i;
             result = c;
-            list.addElement(c);
-            list.removeElementAt(0);
+            list.add(c);
+            list.remove(0);
             if (i % PRINT_COUNT == 0) {
                 //System.out.println("main i=" + i);
             }
@@ -118,7 +120,7 @@ class Foo3 {
             return null;
         }
 
-        protected void finalize() {
+        public void finalize() {
             System.out.println("destory thine later");
         }
     }

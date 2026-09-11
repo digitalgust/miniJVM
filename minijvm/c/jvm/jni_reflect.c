@@ -530,6 +530,10 @@ s32 org_mini_vm_RefNative_stopThread(Runtime *runtime, JClass *clazz) {
     Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);
     if (trun) {
         trun->thrd_info->is_stop = 1;
+        /* Wake it now if parked in Object.wait(): is_stop alone is only
+         * observed at method entry / park boundaries, and a thread stuck
+         * on a monitor nobody notifies must not outlive its app. */
+        jthread_wakeup(trun);
         push_int(runtime->stack, 0);
 
         //putin an exception to target thread

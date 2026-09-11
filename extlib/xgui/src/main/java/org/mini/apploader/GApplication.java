@@ -329,7 +329,7 @@ public abstract class GApplication implements FormHolder {
             }
         }
         //2) give them a grace period to exit on the interrupt
-        long deadline = System.currentTimeMillis() + 2000;
+        long deadline = System.currentTimeMillis() + 300;
         for (Thread t : threads) {
             long remain = deadline - System.currentTimeMillis();
             if (remain <= 0) break;

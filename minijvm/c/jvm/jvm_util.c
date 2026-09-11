@@ -352,14 +352,14 @@ void thread_stop_all(MiniJVM *jvm) {
         //jthread_suspend(r);
         r->thrd_info->no_pause = 1;
         r->thrd_info->is_stop = 1; //stop thread that's sleeping state
-        MemoryBlock *tl = r->thrd_info->curThreadLock;
-        if (tl) {
-            jthread_lock(tl, r);
-            jthread_notify(tl, r); //wake up thread that's waiting state
-            jthread_unlock(tl, r);
-        }
     }
     spin_unlock(&jvm->thread_list->spinlock);
+    //wake wait-parked threads outside the thread_list lock: jthread_wakeup
+    //bounded-locks the monitor mutex, which must not happen under it
+    for (i = 0; i < jvm->thread_list->length; i++) {
+        Runtime *r = arraylist_get_value_unsafe(jvm->thread_list, i);
+        jthread_wakeup(r);
+    }
 }
 
 
@@ -368,7 +368,7 @@ void thread_lock_init(ThreadLock *lock) {
         cnd_init(&lock->thread_cond);
         mtx_init(&lock->mutex_lock, mtx_recursive | mtx_timed);
         lock->owner_thread = NULL;
-        lock->count = 0;
+        lock->recursion_count = 0;
     }
 }
 
@@ -717,6 +717,12 @@ s32 jthread_run(void *para) {
         print_exception(runtime);
     }
 
+    /* Unified exit cleanup: release every monitor this thread still owns
+     * (a Thread.stop() kill unwinds past all monitorexits) on the dying
+     * OS thread itself. Idempotent; normal exits reach it with an empty
+     * chain. */
+    jthread_release_all_owned(runtime);
+
     //run Thread.exit()
     utf8_clear(methodName);
     utf8_clear(methodType);
@@ -732,10 +738,7 @@ s32 jthread_run(void *para) {
     execute_method_impl(method, runtime);
 
     runtime->thrd_info->thread_status = THREAD_STATUS_ZOMBIE;
-
-    if (runtime->thrd_info->curThreadLock) {
-        jthread_unlock(runtime->thrd_info->curThreadLock, runtime);
-    }
+    jthread_assert_no_owned_locks(runtime->thrd_info);
 
     utf8_destroy(methodName);
     utf8_destroy(methodType);
@@ -757,6 +760,9 @@ s32 jthread_run(void *para) {
  */
 s32 jthread_run_finalize(Runtime *runtime) {
     if (!runtime)return -1;
+    //GC-captured dead thread: report protocol holes instead of unlocking
+    //from the wrong (GC) OS thread
+    jthread_assert_no_owned_locks(runtime->thrd_info);
     Instance *jthread = runtime->thrd_info->jthread;
     if (jthread) {
         // if the thread status is NEW, then jthread is NULL
@@ -821,154 +827,187 @@ void jthread_set_daemon_value(Instance *ins, Runtime *runtime, s32 daemon) {
 }
 
 void jthreadlock_create(Runtime *runtime, MemoryBlock *mb) {
-    spin_lock(&runtime->jvm->lock_cloader);
+    /* lazy object-monitor creation. mtx_timed (non-recursive): the java
+     * re-entry lives in recursion_count; timedlock needs the timed flag
+     * on this tinycthread build. */
+    spin_lock(&runtime->jvm->monitor_create_lock);
     if (!mb->thread_lock) {
         ThreadLock *tl = jvm_calloc(sizeof(ThreadLock));
-        thread_lock_init(tl);
-        mb->thread_lock = tl;
+        if (tl) {
+            cnd_init(&tl->thread_cond);
+            mtx_init(&tl->mutex_lock, mtx_timed);
+            spin_init(&tl->metadata_lock, 0);
+            tl->object = mb;
+            mb->thread_lock = tl;
+        }
     }
-    spin_unlock(&runtime->jvm->lock_cloader);
+    spin_unlock(&runtime->jvm->monitor_create_lock);
+}
+
+static ThreadLock *jthreadlock_get_or_create(Runtime *runtime, MemoryBlock *mb) {
+    ThreadLock *tl = mb->thread_lock;
+    if (!tl) {
+        jthreadlock_create(runtime, mb);
+        tl = mb->thread_lock;
+    }
+    return tl; //NULL only on monitor OOM: callers must fail closed
 }
 
 void jthreadlock_destroy(MemoryBlock *mb) {
-    thread_lock_dispose(mb->thread_lock);
-    if (mb->thread_lock) {
-        jvm_free(mb->thread_lock);
+    ThreadLock *tl = mb->thread_lock;
+    if (tl) {
+        if (tl->owner_thread || tl->recursion_count || tl->enter_waiter_count ||
+            tl->wait_waiter_count || tl->owner_prev || tl->owner_next) {
+            //root-scan or thread-exit protocol defect: keep it, report it
+            jvm_printf("[ERROR] jthreadlock_destroy: active monitor object=%p owner=%p rec=%u ew=%u ww=%u\n",
+                       (void *) mb, (void *) tl->owner_thread, tl->recursion_count,
+                       tl->enter_waiter_count, tl->wait_waiter_count);
+            return;
+        }
+        thread_lock_dispose(tl);
+        jvm_free(tl);
         mb->thread_lock = NULL;
     }
 }
 
+//=====================  owner intrusive chain  =========================
+
+static void owned_lock_link(JavaThreadInfo *ti, ThreadLock *lock) {
+    lock->owner_prev = NULL;
+    lock->owner_next = ti->owned_lock_head;
+    if (ti->owned_lock_head) ti->owned_lock_head->owner_prev = lock;
+    ti->owned_lock_head = lock;
+}
+
+static void owned_lock_unlink(JavaThreadInfo *ti, ThreadLock *lock) {
+    if (lock->owner_prev) lock->owner_prev->owner_next = lock->owner_next;
+    else if (ti->owned_lock_head == lock) ti->owned_lock_head = lock->owner_next;
+    if (lock->owner_next) lock->owner_next->owner_prev = lock->owner_prev;
+    lock->owner_prev = NULL;
+    lock->owner_next = NULL;
+}
+
+//=====================  monitorenter / monitorexit  =====================
+
 s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) {
-    //可能会重入，同一个线程多次锁同一对象
+    //flat OS mutex held once; java re-entry is recursion_count only
     if (mb == NULL)return -1;
-    if (!mb->thread_lock) {
-        jthreadlock_create(runtime, mb);
+    ThreadLock *tl = jthreadlock_get_or_create(runtime, mb);
+    if (!tl) {
+        return -1; //monitor OOM: fail closed, never run synchronized code unlocked
     }
-    ThreadLock *jtl = mb->thread_lock;
-    s32 i = 0;
-#if _JVM_DEBUG_LOG_LEVEL > 5
-    s64 waitTime = currentTimeMillis();
-#endif
-    struct timespec t;
-    t.tv_nsec = 5 * NANO_2_MILLS_SCALE;
-    t.tv_sec = 0;
-
-    //can pause when lock
-    while (mtx_timedlock(&jtl->mutex_lock, &t) != thrd_success) {
-        // 检查是否有被挂起的线程持有该锁（仅JDWP模式）
-        if (IS_JDWP_ENABLED(runtime)) {
-            JavaThreadInfo *owner_snap = mb->thread_lock->owner_thread;
-            Runtime *lock_holder = owner_snap ? owner_snap->top_runtime : NULL;
-            if (lock_holder && lock_holder != runtime &&
-                lock_holder->thrd_info->suspend_count > 0) {
-                //                jvm_printf("[LOCK_CONTENTION] Thread %llx waiting for lock %llx held by suspended thread %llx\n",
-                //                           (s64) (intptr_t) runtime->thrd_info->jthread,
-                //                           (s64) (intptr_t) mb,
-                //                           (s64) (intptr_t) lock_holder->thrd_info->jthread);
-
-                // 临时恢复被挂起的线程直到它释放锁
-                temporarily_resume_for_lock_release(lock_holder, mb);
+    JavaThreadInfo *ti = runtime->thrd_info;
+    if (tl->owner_thread == ti) {
+        //re-entry fast path (owner reads its own writes)
+        tl->recursion_count++;
+        return 0;
+    }
+    {
+        struct timespec t;
+        spin_lock(&ti->lock);
+        ti->entering_lock = tl; //root + stop visibility while blocked
+        spin_unlock(&ti->lock);
+        spin_lock(&tl->metadata_lock);
+        tl->enter_waiter_count++;
+        spin_unlock(&tl->metadata_lock);
+        while (mtx_timedlock(&tl->mutex_lock, &t) != thrd_success) {
+            timespec_get(&t, TIME_UTC);
+            t.tv_nsec += 5 * NANO_2_MILLS_SCALE;
+            if (t.tv_nsec >= 1000000000L) {
+                t.tv_nsec -= 1000000000L;
+                t.tv_sec += 1;
             }
+            if (mtx_timedlock(&tl->mutex_lock, &t) == thrd_success) break;
+            if (IS_JDWP_ENABLED(runtime)) {
+                JavaThreadInfo *owner_snap = tl->owner_thread;
+                Runtime *lock_holder = owner_snap ? owner_snap->top_runtime : NULL;
+                if (lock_holder && lock_holder != runtime &&
+                    lock_holder->thrd_info->suspend_count > 0) {
+                    temporarily_resume_for_lock_release(lock_holder, mb);
+                }
+            }
+            check_suspend_and_pause(runtime);
+            if (ti->is_stop) {
+                //Thread.stop while blocked on monitorenter: die here
+                spin_lock(&tl->metadata_lock);
+                tl->enter_waiter_count--;
+                spin_unlock(&tl->metadata_lock);
+                spin_lock(&ti->lock);
+                ti->entering_lock = NULL;
+                spin_unlock(&ti->lock);
+                return RUNTIME_STATUS_ERROR;
+            }
+            if (ti->type == THREAD_TYPE_JDWP) {
+                break;
+            }
+            jthread_yield(runtime);
         }
-
-        check_suspend_and_pause(runtime);
-        if (runtime->thrd_info->type == THREAD_TYPE_JDWP) {
-            break;
-        }
-        jthread_yield(runtime);
-        i++;
+        spin_lock(&tl->metadata_lock);
+        tl->enter_waiter_count--;
+        spin_unlock(&tl->metadata_lock);
+        spin_lock(&ti->lock);
+        ti->entering_lock = NULL;
+        spin_unlock(&ti->lock);
     }
-
-    //获得锁之后，检查是否锁重入
-    void *current_thread = (void *) (intptr_t) (runtime->thrd_info);
-    if (jtl->owner_thread == current_thread) {
-        // 当前线程已经持有此锁，递增计数器
-        jtl->count++;
-    } else {
-        // 成功获取锁后，设置锁的所有者和计数
-        jtl->owner_thread = current_thread;
-        jtl->count = 1;
-        // 第一次获得锁时，记录锁对象（用于调试）
-        if (!runtime->thrd_info->held_locks || runtime->thrd_info->held_locks->length == 0) {
-            runtime->thrd_info->curThreadLock = mb;
-        }
-        // 添加到精确的锁跟踪列表
-        thread_add_held_lock(runtime, mb);
-    }
-
-#if _JVM_DEBUG_LOG_LEVEL > 5
-    if (i > 0) {
-        waitTime = currentTimeMillis() - waitTime;
-        invoke_deepth(runtime);
-        jvm_printf("  lock holder: %s , lock count: %d waitTime: %lld \n", utf8_cstr(mb->clazz->name), i, waitTime);
-    }
-#endif
+    //acquired: publish owner, then link (chain read by GC under STW)
+    spin_lock(&tl->metadata_lock);
+    tl->owner_thread = ti;
+    tl->recursion_count = 1;
+    spin_unlock(&tl->metadata_lock);
+    owned_lock_link(ti, tl);
+    thread_add_held_lock(runtime, mb); //JDWP debug view (phase A)
     return 0;
 }
 
 s32 jthread_unlock(MemoryBlock *mb, Runtime *runtime) {
     if (mb == NULL)return -1;
-    if (!mb->thread_lock) {
-        jthreadlock_create(runtime, mb);
-    }
-    ThreadLock *jtl = mb->thread_lock;
-
-    //释放锁之前， 检查当前线程是否是锁的拥有者
-    void *current_thread = (void *) (intptr_t) (runtime->thrd_info);
-    if (jtl->owner_thread != current_thread || jtl->count <= 0) {
-        jvm_printf("[ERROR]Thread %llx trying to unlock a mutex owned by another thread %llx, count: %d\n",
-                   (s64) (intptr_t) current_thread,
-                   (s64) (intptr_t) jtl->owner_thread,
-                   jtl->count);
-        // 打印调用栈帮助调试
+    ThreadLock *tl = mb->thread_lock; //never create on unlock
+    if (!tl) return -1;
+    JavaThreadInfo *ti = runtime->thrd_info;
+    if (tl->owner_thread != ti || tl->recursion_count == 0) {
+        jvm_printf("[ERROR]Thread %p trying to unlock a mutex owned by %p\n",
+                   (void *) ti, (void *) tl->owner_thread);
         print_runtime_stack(runtime);
         return -1;
     }
-
-    // 递减计数器，只有当计数器为0时才真正释放锁
-    jtl->count--;
-    if (jtl->count == 0) {
-        jtl->owner_thread = NULL;
-        // 当完全不持有任何锁时，清除 curThreadLock
-        if (!runtime->thrd_info->held_locks || runtime->thrd_info->held_locks->length <= 1) {
-            runtime->thrd_info->curThreadLock = NULL;
-        }
-        // 从精确的锁跟踪列表中移除
-        thread_remove_held_lock(runtime, mb);
+    if (tl->recursion_count > 1) {
+        tl->recursion_count--;
+        return 0;
     }
-    s32 ret = mtx_unlock(&jtl->mutex_lock);
+    //full release: clear chain/owner state FIRST, then the OS mutex, so the
+    //next owner never observes stale metadata
+    owned_lock_unlink(ti, tl);
+    spin_lock(&tl->metadata_lock);
+    tl->owner_thread = NULL;
+    tl->recursion_count = 0;
+    spin_unlock(&tl->metadata_lock);
+    s32 ret = mtx_unlock(&tl->mutex_lock);
     if (ret != thrd_success) {
-        jvm_printf("[ERROR] unlocking mutex in jthread_unlock. Thread: %llx, mutex: %llx\n",
-                   (s64) (intptr_t) (runtime->thrd_info->jthread),
-                   (s64) (intptr_t) mb);
-        // 发生错误时打印当前线程的调用栈，帮助调试
-        print_runtime_stack(runtime);
+        jvm_printf("[ERROR] unlocking mutex in jthread_unlock. Thread: %llx\n",
+                   (s64) (intptr_t) ti->jthread);
         return -1;
     }
-
-#if _JVM_DEBUG_LOG_LEVEL > 5
-    invoke_deepth(runtime);
-    jvm_printf("unlock: %llx   lock holder: %s, \n", (s64) (intptr_t) (runtime->thrd_info->jthread),
-               utf8_cstr(mb->clazz->name));
-#endif
+    thread_remove_held_lock(runtime, mb); //JDWP debug view (phase A)
     return 0;
 }
 
 s32 jthread_notify(MemoryBlock *mb, Runtime *runtime) {
     if (mb == NULL)return -1;
-    if (mb->thread_lock == NULL) {
-        jthreadlock_create(runtime, mb);
+    ThreadLock *tl = mb->thread_lock;
+    if (!tl || tl->owner_thread != runtime->thrd_info || tl->recursion_count == 0) {
+        return -1; //not owner: IllegalMonitorState
     }
-    cnd_signal(&mb->thread_lock->thread_cond);
+    cnd_signal(&tl->thread_cond);
     return 0;
 }
 
 s32 jthread_notifyAll(MemoryBlock *mb, Runtime *runtime) {
     if (mb == NULL)return -1;
-    if (mb->thread_lock == NULL) {
-        jthreadlock_create(runtime, mb);
+    ThreadLock *tl = mb->thread_lock;
+    if (!tl || tl->owner_thread != runtime->thrd_info || tl->recursion_count == 0) {
+        return -1; //not owner: IllegalMonitorState
     }
-    cnd_broadcast(&mb->thread_lock->thread_cond);
+    cnd_broadcast(&tl->thread_cond);
     return 0;
 }
 
@@ -1016,61 +1055,151 @@ s32 jthread_resume(Runtime *runtime) {
 
 s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     if (mb == NULL)return -1;
-    if (!mb->thread_lock) {
-        jthreadlock_create(runtime, mb);
+    ThreadLock *tl = mb->thread_lock;
+    JavaThreadInfo *ti = runtime->thrd_info;
+    if (!tl) {
+        /* miniJVM semantic: synchronized METHODS are lock-free without a
+         * JDWP session (jdwp_is_ignore_sync), so Thread.join()'s
+         * synchronized wait() legitimately arrives at a never-locked
+         * object. Adopt the monitor implicitly instead of failing. */
+        tl = jthreadlock_get_or_create(runtime, mb);
+        if (!tl) return -1;
     }
-    jthread_block_enter(runtime);
-    u8 thread_status = runtime->thrd_info->thread_status;
-    runtime->thrd_info->thread_status = THREAD_STATUS_WAIT;
-
-    // wait会释放锁，因此保存锁的拥有者和计数
-    void *saveThread = mb->thread_lock->owner_thread;
-    s32 saveCount = mb->thread_lock->count;
-    // wait期间减少锁计数，因为锁会被释放
-    if (IS_JDWP_ENABLED(runtime) && saveCount > 0) {
-        // 从 held_locks 中临时移除该锁
-        arraylist_remove(runtime->thrd_info->held_locks, mb);
-        if (runtime->thrd_info->held_locks->length == 0) {
-            runtime->thrd_info->curThreadLock = NULL;
+    if (tl->owner_thread != ti || tl->recursion_count == 0) {
+        if (tl->owner_thread == NULL && tl->wait_waiter_count + tl->enter_waiter_count == 0) {
+            /* free monitor adopted by a lock-free synchronized-method waiter */
+            spin_lock(&tl->metadata_lock);
+            tl->owner_thread = ti;
+            tl->recursion_count = 1;
+            spin_unlock(&tl->metadata_lock);
+            owned_lock_link(ti, tl);
+        } else {
+            return -1; //genuinely owned by someone else: IllegalMonitorState
         }
     }
-    mb->thread_lock->owner_thread = NULL;
-    mb->thread_lock->count = 0;
+    u32 saved_recursion = tl->recursion_count;
+    //fully release the java monitor for the park
+    owned_lock_unlink(ti, tl);
+    spin_lock(&tl->metadata_lock);
+    tl->owner_thread = NULL;
+    tl->recursion_count = 0;
+    tl->wait_waiter_count++;
+    spin_unlock(&tl->metadata_lock);
+    //publish the park target before leaving the owned chain (GC root continuity)
+    spin_lock(&ti->lock);
+    ti->waiting_lock = tl;
+    spin_unlock(&ti->lock);
+    if (IS_JDWP_ENABLED(runtime) && saved_recursion > 0) {
+        arraylist_remove(ti->held_locks, mb);
+        if (ti->held_locks->length == 0) {
+            ti->curThreadLock = NULL;
+        }
+    }
+    jthread_block_enter(runtime);
+    u8 thread_status = ti->thread_status;
+    ti->thread_status = THREAD_STATUS_WAIT;
     if (waitms) {
         waitms += currentTimeMillis();
         struct timespec t;
-        //clock_gettime(CLOCK_REALTIME, &t);
-        t.tv_sec = waitms / 1000;
-        t.tv_nsec = (waitms % 1000) * 1000000;
-        cnd_timedwait(&mb->thread_lock->thread_cond, &mb->thread_lock->mutex_lock, &t);
+        t.tv_sec = (time_t) (waitms / 1000);
+        t.tv_nsec = (long) ((waitms % 1000) * 1000000);
+        cnd_timedwait(&tl->thread_cond, &tl->mutex_lock, &t);
     } else {
-        cnd_wait(&mb->thread_lock->thread_cond, &mb->thread_lock->mutex_lock);
+        /* Single unlimited park (chunking drops notifies between slices).
+         * stop/interrupt reach a parked thread through jthread_wake_waiting(),
+         * which takes this mutex before broadcasting. */
+        cnd_wait(&tl->thread_cond, &tl->mutex_lock);
     }
-    //jvm_printf("!!!!!wake: %llx   \n", (s64) (intptr_t) (&mb->thread_lock->thread_cond));
-    runtime->thrd_info->thread_status = thread_status;
-
-    //wait结束时，获得锁后恢复锁的拥有者和计数
-    mb->thread_lock->owner_thread = saveThread;
-    mb->thread_lock->count = saveCount;
-    // 恢复锁计数和 curThreadLock 状态
-    if (IS_JDWP_ENABLED(runtime) && saveCount > 0) {
-        // 重新添加到 held_locks
-        arraylist_push_back(runtime->thrd_info->held_locks, mb);
-        if (runtime->thrd_info->held_locks->length == 1) {
-            runtime->thrd_info->curThreadLock = mb;
+    ti->thread_status = thread_status;
+    //cnd_wait returned holding the flat mutex: restore the monitor fully
+    spin_lock(&tl->metadata_lock);
+    tl->owner_thread = ti;
+    tl->recursion_count = saved_recursion;
+    tl->wait_waiter_count--;
+    spin_unlock(&tl->metadata_lock);
+    owned_lock_link(ti, tl);
+    spin_lock(&ti->lock);
+    ti->waiting_lock = NULL;
+    spin_unlock(&ti->lock);
+    if (IS_JDWP_ENABLED(runtime) && saved_recursion > 0) {
+        arraylist_push_back(ti->held_locks, mb);
+        if (ti->held_locks->length == 1) {
+            ti->curThreadLock = mb;
         }
     }
     jthread_block_exit(runtime);
+    /* Thread.stop() while parked: die now instead of waiting for the next
+     * java method entry (a catch-everything loop parked here may never
+     * call one). The monitor just reacquired is released by the unified
+     * thread-exit cleanup. */
+    if (ti->is_stop) {
+        return RUNTIME_STATUS_ERROR;
+    }
     return check_throw_interruptexception(runtime);
 }
 
 //if the thread is waiting , wake it up
+//stop/interrupt helper: wake a thread parked in Object.wait(). Takes the
+//monitor mutex (bounded) before broadcasting so the signal cannot land in
+//the gap before the waiter parks; never blocks holding thread_list locks.
 s32 jthread_wakeup(Runtime *runtime) {
-    MemoryBlock *tl = runtime->thrd_info->curThreadLock;
-    jthread_lock(tl, runtime);
-    jthread_notify(tl, runtime);
-    jthread_unlock(tl, runtime);
+    ThreadLock *tl;
+    spin_lock(&runtime->thrd_info->lock);
+    tl = runtime->thrd_info->waiting_lock;
+    spin_unlock(&runtime->thrd_info->lock);
+    if (!tl) {
+        return 0;
+    }
+    {
+        struct timespec t;
+        timespec_get(&t, TIME_UTC);
+        t.tv_nsec += 20 * NANO_2_MILLS_SCALE;
+        if (t.tv_nsec >= 1000000000L) {
+            t.tv_nsec -= 1000000000L;
+            t.tv_sec += 1;
+        }
+        if (mtx_timedlock(&tl->mutex_lock, &t) == thrd_success) {
+            cnd_broadcast(&tl->thread_cond);
+            mtx_unlock(&tl->mutex_lock);
+        }
+    }
     return 0;
+}
+
+/* Unified thread-exit cleanup: release EVERY monitor this thread still
+ * owns (a Thread.stop() kill unwinds past all monitorexits). Runs on the
+ * dying OS thread itself; idempotent. */
+void jthread_release_all_owned(Runtime *runtime) {
+    JavaThreadInfo *ti = runtime->thrd_info;
+    ThreadLock *tl = ti->owned_lock_head;
+    while (tl) {
+        ThreadLock *next = tl->owner_next;
+        owned_lock_unlink(ti, tl);
+        spin_lock(&tl->metadata_lock);
+        tl->owner_thread = NULL;
+        tl->recursion_count = 0;
+        spin_unlock(&tl->metadata_lock);
+        mtx_unlock(&tl->mutex_lock); //flat mutex: one unlock regardless of depth
+        cnd_broadcast(&tl->thread_cond); //wake enter/exit competitors
+        tl = next;
+    }
+    ti->owned_lock_head = NULL;
+}
+
+/* teardown assertion: report protocol holes instead of cross-thread unlock */
+void jthread_assert_no_owned_locks(JavaThreadInfo *ti) {
+    if (ti->owned_lock_head) {
+        jvm_printf("[ERROR] thread exit with owned monitors (head=%p)\n",
+                   (void *) ti->owned_lock_head);
+    }
+    if (ti->waiting_lock) {
+        jvm_printf("[ERROR] thread exit marked waiting (lock=%p)\n",
+                   (void *) ti->waiting_lock);
+    }
+    if (ti->entering_lock) {
+        jvm_printf("[ERROR] thread exit marked entering (lock=%p)\n",
+                   (void *) ti->entering_lock);
+    }
 }
 
 s32 jthread_sleep(Runtime *runtime, s64 ms) {

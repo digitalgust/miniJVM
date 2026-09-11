@@ -1001,7 +1001,11 @@ Runtime *jdwp_get_runtime(JdwpServer *srv) {
 }
 
 s32 jdwp_is_ignore_sync(JdwpServer *srv) {
-    if (!srv)return 1; //srv==NULL mean that vm is creating ,there isn't multi thread,so can be ignore
+    /* No JDWP server == normal production run: synchronized methods take
+     * the FULL lock path. Only an explicit debugger request may bypass
+     * method sync. The old `if (!srv) return 1` left Thread.join()'s
+     * synchronized wait() on a never-locked monitor. */
+    if (!srv)return 0;
     return srv->thread_sync_ignore != 0;
 }
 

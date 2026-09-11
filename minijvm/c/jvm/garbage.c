@@ -303,6 +303,7 @@ s32 gc_create(MiniJVM *jvm) {
     collector->runtime->thrd_info->type = THREAD_TYPE_GC;
     collector->_garbage_thread_status = GARBAGE_THREAD_PAUSE;
     thread_lock_init(&jvm->threadlock);
+    spin_init(&jvm->monitor_create_lock, 0);
 
     collector->lastgc = currentTimeMillis();
     collector->dump_flag = 0;
@@ -1280,6 +1281,8 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
                 MemoryBlock *mb = arraylist_get_value(collector->side_weakrefs, i);
                 Instance *target = getFieldRefer(getInstanceFieldPtr(
                         (Instance *) mb, collector->jvm->shortcut.reference_target));
+                if (target) {
+                }
                 if (target && target->mb.garbage_mark != collector->mark_cnt) {
                     if (!arraylist_push_back_unsafe(collector->immix_pending_enqueue, mb)) {
                         jvm_fatal_oom("gc-pending-weak", 0);
@@ -1865,6 +1868,14 @@ s32 _gc_pause_the_world(MiniJVM *jvm) {
         if (all_thread_paused) {
             break;
         }
+        /* System.exit() marked every thread no_pause=1 (thread_stop_all);
+         * they will NEVER park, and this loop has no other exit - the GC
+         * would hang the whole process. Abandon the cycle instead: the
+         * caller unwinds and re-arms. */
+        if (collector->exit_flag) {
+            _gc_resume_the_world(jvm); //undo the suspend requests we armed
+            return -1;
+        }
     }
 
     arraylist_iter_safe(thread_list, _list_iter_thread_move_objs_2_gc, NULL);
@@ -2081,12 +2092,33 @@ s32 _gc_copy_objs_from_thread(Runtime *pruntime) {
     for (i = 0, imax = stack_size(stack); i < imax; i++) {
         entry = stack->store + i;
         if (entry->rvalue) {
+            MemoryBlock *mb = (MemoryBlock *) entry->rvalue;
+            if (mb->clazz && strstr(utf8_cstr(mb->clazz->name), "MarkObj")) {
+            }
             arraylist_push_back_unsafe(collector->runtime_refer_copy, entry->rvalue);
         }
     }
     GcTempRootTable *temp_roots = &runtime->thrd_info->temp_roots;
     for (i = 0; i < temp_roots->count; i++) {
         arraylist_push_back_unsafe(collector->runtime_refer_copy, temp_roots->entries[i].object);
+        /* monitor roots: objects held (owned chain), waited on, or
+         * being contended (entering) must survive without a
+         * Java-stack reference */
+        {
+            ThreadLock *tl = runtime->thrd_info->owned_lock_head;
+            while (tl) {
+                arraylist_push_back_unsafe(collector->runtime_refer_copy, tl->object);
+                tl = tl->owner_next;
+            }
+            if (runtime->thrd_info->waiting_lock) {
+                arraylist_push_back_unsafe(collector->runtime_refer_copy,
+                                           runtime->thrd_info->waiting_lock->object);
+            }
+            if (runtime->thrd_info->entering_lock) {
+                arraylist_push_back_unsafe(collector->runtime_refer_copy,
+                                           runtime->thrd_info->entering_lock->object);
+            }
+        }
     }
 
     //jvm_printf("[%llx] notified\n", (s64) (intptr_t) pruntime->threadInfo->jthread);
@@ -2103,6 +2135,8 @@ static inline void _gc_instance_mark(GcCollector *collector, Instance *ins, u8 f
         for (i = 0, len = fiList->length; i < len; i++) {
             FieldInfo *fi = arraylist_get_value_unsafe(fiList, i);
 
+            if (GCFLAG_WEAKREFERENCE_GET(ins->mb.gcflag)) {
+            }
             if (fi->is_ref_target && GCFLAG_WEAKREFERENCE_GET(ins->mb.gcflag)) continue; //skip weakreference target mark, but others mark need
             c8 *ptr = getInstanceFieldPtr(ins, fi);
             if (ptr) {
@@ -2309,8 +2343,7 @@ void gc_obj_reg(Runtime *runtime, __refer ref) {
     Utf8String *sus = utf8_create();
     _gc_get_obj_name(runtime->jvm->collector, mb, sus);
     getRuntimeStackWithOutReturn(runtime, sus);
-    jvm_printf("R: [%llx]%s
-", (s64) (intptr_t) mb, utf8_cstr(sus));
+    jvm_printf("R: [%llx]%s\n", (s64) (intptr_t) mb, utf8_cstr(sus));
     utf8_destroy(sus);
 #endif
 }
