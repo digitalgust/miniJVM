@@ -337,6 +337,9 @@ s32 gc_create(MiniJVM *jvm) {
 
     collector->runtime_refer_copy = arraylist_create(256);
     collector->classic_pending = arraylist_create(64);
+    collector->side_weakrefs = arraylist_create(16);
+    collector->side_finalizable = arraylist_create(16);
+    collector->side_capturable = arraylist_create(16);
     spin_init(&collector->link_slab.lock, 0);
 
     collector->immix_pending_finalize = arraylist_create(64);
@@ -448,6 +451,9 @@ void gc_destroy(MiniJVM *jvm) {
     arraylist_destroy(collector->immix_pending_runtimes);
     arraylist_destroy(collector->immix_pending_loaders);
     arraylist_destroy(collector->classic_pending);
+    arraylist_destroy(collector->side_weakrefs);
+    arraylist_destroy(collector->side_finalizable);
+    arraylist_destroy(collector->side_capturable);
     _gc_link_slab_destroy(collector);
     spin_destroy(&collector->link_slab.lock);
 
@@ -1104,6 +1110,58 @@ typedef struct _ImmixPendingData {
  * Phase-B decision pass: objects that must survive this cycle are selected
  * here; the actual finalize()/enqueue Java calls run after the world resumes.
  */
+/* Side-list registration helpers (immix backend only). Checked pushes -
+ * failure follows the allocation-fatal policy. */
+static void _gc_side_register(Runtime *runtime, Instance *ins, ArrayList *list) {
+    if (!ins) return;
+    if (!arraylist_push_back_unsafe(list, ins)) {
+        jvm_fatal_oom("gc-side-list", sizeof(void *));
+    }
+}
+
+void gc_side_register_instance(Runtime *runtime, Instance *ins) {
+    if (!runtime || !ins || !runtime->jvm) return;
+    if (!gc_backend_is_immix(runtime->jvm)) return;
+    GcCollector *collector = runtime->jvm->collector;
+    if (GCFLAG_WEAKREFERENCE_GET(ins->mb.gcflag)) {
+        _gc_side_register(runtime, ins, collector->side_weakrefs);
+    }
+    if (ins->mb.clazz->finalizeMethod) {
+        _gc_side_register(runtime, ins, collector->side_finalizable);
+    }
+    if (GCFLAG_JLOADER_GET(ins->mb.gcflag)) {
+        _gc_side_register(runtime, ins, collector->side_capturable);
+    }
+}
+
+void gc_side_register_jthread_for_jvm(MiniJVM *jvm, Instance *ins) {
+    if (!jvm || !ins || !jvm->collector) return;
+    if (!gc_backend_is_immix(jvm)) return;
+    if (!arraylist_push_back_unsafe(jvm->collector->side_capturable, ins)) {
+        jvm_fatal_oom("gc-side-list", sizeof(void *));
+    }
+}
+
+/* Drop entries whose storage died this cycle (garbage_mark != current epoch).
+ * All objects are still valid here: called after the pending re-mark and
+ * before the sweep reclaims storage. */
+static void _gc_side_compact(GcCollector *collector, ArrayList *list) {
+    s32 w = 0;
+    s32 i;
+    for (i = 0; i < list->length; i++) {
+        MemoryBlock *mb = arraylist_get_value(list, i);
+        if (mb->garbage_mark == collector->mark_cnt) {
+            if (w != i) {
+                list->data[w] = list->data[i];
+            }
+            w++;
+        }
+    }
+    while (list->length > w) {
+        arraylist_pop_back_unsafe(list);
+    }
+}
+
 static s32 _gc_immix_finalize_decision(MemoryBlock *mb, void *data) {
     ImmixPendingData *ctx = (ImmixPendingData *) data;
     GcCollector *collector = ctx->collector;
@@ -1195,6 +1253,10 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
     ImmixResult immix_rc;
     s64 del = 0;
     s64 class_total = 0, class_free = 0, class_count = 0, class_del = 0;
+#if _JVM_DEBUG_LOG_LEVEL > 1
+    s64 t_pause_ns = 0, t_begin_ns = 0, t_mark_ns = 0, t_threaddump_ns = 0;
+    s64 t_finalize_ns = 0, t_capture_ns = 0, t_sweep_ns_pre = 0;
+#endif
     s64 start_ms = currentTimeMillis();
     u32 i, len;
 
@@ -1218,6 +1280,9 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
             return -1;
         }
         collector->isworldstoped = 1;
+#if _JVM_DEBUG_LOG_LEVEL > 1
+        t_pause_ns = nanoTime();
+#endif
 
         //merge class registrations from mutator threads (classic list)
         if (collector->tmp_header) {
@@ -1249,8 +1314,14 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
             return -1;
         }
 
+#if _JVM_DEBUG_LOG_LEVEL > 1
+        t_begin_ns = nanoTime();
+#endif
         _gc_copy_objs(jvm);
         _gc_big_search(collector); //exact roots; marks objects and covered lines
+#if _JVM_DEBUG_LOG_LEVEL > 1
+        t_mark_ns = nanoTime();
+#endif
 
         if (collector->dump_flag == 1) {
             collector->dump_flag = 2;
@@ -1259,6 +1330,9 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
             collector->dump_flag = 3;
         }
         *out_threads_dump = _gc_build_thread_dump(collector);
+#if _JVM_DEBUG_LOG_LEVEL > 1
+        t_threaddump_ns = nanoTime();
+#endif
 
         //finalize / weak-reference decisions (objects survive this sweep)
         pending.collector = collector;
@@ -1270,14 +1344,38 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
         arraylist_clear(collector->immix_pending_runtimes);
         arraylist_clear(collector->immix_pending_loaders);
 
-        /* Deferred queues keep their capacity across cycles and every push
-         * is checked (failure -> the fatal path below); counting the whole
-         * heap first only added an extra full enumeration per cycle. */
+        /* Finalize/weak decisions from the side lists: O(list) instead of
+         * a full-heap enumeration (registration happens at creation). */
         if (collector->_garbage_thread_status == GARBAGE_THREAD_NORMAL) {
-            if (gc_iterate_heap_objects(collector, _gc_immix_finalize_decision, &pending) != 0 ||
-                pending.failed) {
-                jvm_fatal_oom("gc-pending-finalize", 0);
+            //finalizable: same predicate as the old heap walk
+            len = collector->side_finalizable->length;
+            for (i = 0; i < len; i++) {
+                MemoryBlock *mb = arraylist_get_value(collector->side_finalizable, i);
+                if (mb->garbage_mark != collector->mark_cnt &&
+                    mb->clazz->finalizeMethod && !GCFLAG_FINALIZED_GET(mb->gcflag)) {
+                    if (!arraylist_push_back_unsafe(collector->immix_pending_finalize, mb)) {
+                        jvm_fatal_oom("gc-pending-finalize", 0);
+                    }
+                    GCFLAG_FINALIZED_SET(mb->gcflag);
+                    pending.finalized++;
+                }
             }
+            //weak references: clear dead targets while all mutators are stopped
+            len = collector->side_weakrefs->length;
+            for (i = 0; i < len; i++) {
+                MemoryBlock *mb = arraylist_get_value(collector->side_weakrefs, i);
+                Instance *target = getFieldRefer(getInstanceFieldPtr(
+                        (Instance *) mb, collector->jvm->shortcut.reference_target));
+                if (target && target->mb.garbage_mark != collector->mark_cnt) {
+                    if (!arraylist_push_back_unsafe(collector->immix_pending_enqueue, mb)) {
+                        jvm_fatal_oom("gc-pending-weak", 0);
+                    }
+                    setFieldRefer(getInstanceFieldPtr(
+                            (Instance *) mb, collector->jvm->shortcut.reference_target), NULL);
+                    pending.enqueued++;
+                }
+            }
+            //re-mark pending so they survive this sweep
             len = collector->immix_pending_finalize->length;
             for (i = 0; i < len; i++) {
                 _gc_mark_object(collector, arraylist_get_value(collector->immix_pending_finalize, i),
@@ -1290,14 +1388,50 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
             }
         }
 
-        //native capture for dead Immix objects (loaders, never-started threads);
-        //the pointers are extracted while storage is still valid, destruction
-        //runs after the world resumes to keep the STW window short
-        if (gc_iterate_heap_objects(collector, _gc_immix_dead_capture, &pending) != 0 ||
-            pending.failed) {
-            jvm_fatal_oom("gc-pending-native", 0);
+#if _JVM_DEBUG_LOG_LEVEL > 1
+        t_finalize_ns = nanoTime();
+#endif
+        //dead capture from the capturable side list (loaders, never-started
+        //threads): pointers extracted while storage is still valid,
+        //destruction deferred until after the world resumes
+        {
+            len = collector->side_capturable->length;
+            for (i = 0; i < len; i++) {
+                MemoryBlock *mb = arraylist_get_value(collector->side_capturable, i);
+                if (mb->garbage_mark == collector->mark_cnt) continue;
+                if (mb->type != MEM_TYPE_INS || !mb->clazz) continue;
+                if (GCFLAG_JLOADER_GET(mb->gcflag)) {
+                    PeerClassLoader *pcl = classLoaders_find_by_instance(collector->jvm, (Instance *) mb);
+                    if (pcl && !pcl->in_pending_destroy) {
+                        if (!arraylist_push_back_unsafe(collector->immix_pending_loaders, pcl)) {
+                            jvm_fatal_oom("gc-pending-native", 0);
+                        }
+                        pcl->in_pending_destroy = 1;
+                        classloaders_remove(collector->jvm, pcl); //unlink now, destroy later
+                    }
+                } else if (GCFLAG_JTHREAD_GET(mb->gcflag)) {
+                    Runtime *ort = jthread_get_stackframe_value(collector->jvm, (Instance *) mb);
+                    if (ort && !ort->in_pending_destroy) {
+                        if (!arraylist_push_back_unsafe(collector->immix_pending_runtimes, ort)) {
+                            jvm_fatal_oom("gc-pending-native", 0);
+                        }
+                        ort->in_pending_destroy = 1;
+                        jthread_set_stackframe_value(collector->jvm, (Instance *) mb, NULL);
+                    }
+                }
+            }
+            //compact all side lists: drop entries about to be reclaimed
+            _gc_side_compact(collector, collector->side_finalizable);
+            _gc_side_compact(collector, collector->side_weakrefs);
+            _gc_side_compact(collector, collector->side_capturable);
         }
+#if _JVM_DEBUG_LOG_LEVEL > 1
+        t_capture_ns = nanoTime();
+#endif
 
+#if _JVM_DEBUG_LOG_LEVEL > 1
+        t_sweep_ns_pre = nanoTime();
+#endif
         /* Reclaim Java objects before their JClass metadata.  Header
          * validation and instance destruction may dereference mb->clazz. */
         sweep_ops.context = collector;
@@ -1428,6 +1562,17 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
         arraylist_clear(collector->immix_pending_runtimes);
         arraylist_clear(collector->immix_pending_loaders);
     }
+
+#if _JVM_DEBUG_LOG_LEVEL > 1
+    jvm_printf("[INFO]immix stw ms: pause=%.2f begin=%.2f mark=%.2f threaddump=%.2f finalize=%.2f capture=%.2f sweep=%.2f\n",
+               (t_pause_ns - *stw_start_ns) / 1000000.0,
+               (t_begin_ns - t_pause_ns) / 1000000.0,
+               (t_mark_ns - t_begin_ns) / 1000000.0,
+               (t_threaddump_ns - t_mark_ns) / 1000000.0,
+               (t_finalize_ns - t_threaddump_ns) / 1000000.0,
+               (t_capture_ns - t_finalize_ns) / 1000000.0,
+               (t_sweep_ns_pre - t_capture_ns) / 1000000.0);
+#endif
 
     del = (s64) (stats_after.reclaimed_object_count - stats_before.reclaimed_object_count)
           + class_del;

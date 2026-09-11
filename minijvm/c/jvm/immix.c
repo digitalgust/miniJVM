@@ -1143,7 +1143,8 @@ ImmixResult immix_verify(const ImmixHeap *heap) {
                                  (size_t) bit * heap->config.object_alignment;
                 MemoryBlock *mb = (MemoryBlock *) addr;
                 size_t size;
-                if (mb->heap_size <= 0 || !immix_object_header_valid(mb) ||
+                if (mb->heap_size <= 0 ||
+                    (heap->config.enable_validation && !immix_object_header_valid(mb)) ||
                     immix_block_object_size(heap, b, addr,
                                             (size_t) mb->heap_size,
                                             &size) != IMMIX_OK) {
@@ -1965,7 +1966,8 @@ static ImmixResult immix_block_sweep(ImmixHeap *heap, const ImmixSweepOps *ops) 
                 u8 *addr = b->start + (size_t) bit * heap->config.object_alignment;
                 MemoryBlock *mb = (MemoryBlock *) addr;
                 size_t size;
-                if (mb->heap_size <= 0 || !immix_object_header_valid(mb) ||
+                if (mb->heap_size <= 0 ||
+                    (heap->config.enable_validation && !immix_object_header_valid(mb)) ||
                     immix_block_object_size(heap, b, addr,
                                             (size_t) mb->heap_size,
                                             &size) != IMMIX_OK) {
@@ -2095,7 +2097,8 @@ static ImmixResult immix_block_visit_objects(ImmixHeap *heap,
                                        ? IMMIX_OBJECT_ARRAY
                                        : IMMIX_OBJECT_INSTANCE;
                 size_t size;
-                if (mb->heap_size <= 0 || !immix_object_header_valid(mb) ||
+                if (mb->heap_size <= 0 ||
+                    (heap->config.enable_validation && !immix_object_header_valid(mb)) ||
                     immix_block_object_size(heap, b, addr,
                                             (size_t) mb->heap_size,
                                             &size) != IMMIX_OK) {

@@ -58,6 +58,13 @@ struct _GcCollectorType {
     // survive the sweep (replaces MemoryBlock.tmp_next).
     ArrayList *classic_pending;
 
+    //Immix side lists (immix backend only): registration at creation turns
+    //the per-cycle finalize/weak/capture decisions into O(list) work instead
+    //of full-heap enumerations. Compacted during the cycle.
+    ArrayList *side_weakrefs;   //instances with GCFLAG_WEAKREFERENCE
+    ArrayList *side_finalizable;//instances whose class has finalizeMethod
+    ArrayList *side_capturable; //JLOADER or JTHREAD instances (dead capture)
+
     // Immix (block backend) integration state. immix_heap is NULL when the
     // malloc backend is active and the classic linked-list collector owns
     // object storage.
@@ -120,6 +127,10 @@ void gc_move_objs_thread_2_gc(Runtime *runtime);
 
 /* Returns a thread's cached free GcObjectLink nodes to the slab (thread exit). */
 void gc_link_cache_flush(GcCollector *collector, JavaThreadInfo *ti);
+
+/* Immix side-list registration (no-op on the malloc backend). */
+void gc_side_register_instance(Runtime *runtime, Instance *ins);
+void gc_side_register_jthread_for_jvm(MiniJVM *jvm, Instance *ins);
 
 void gc_dump_runtime(GcCollector *collector);
 

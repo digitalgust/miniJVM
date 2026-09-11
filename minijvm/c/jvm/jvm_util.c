@@ -797,7 +797,12 @@ __refer jthread_get_stackframe_value(MiniJVM *jvm, Instance *ins) {
 void jthread_set_stackframe_value(MiniJVM *jvm, Instance *ins, __refer val) {
     c8 *ptr = getInstanceFieldPtr(ins, jvm->shortcut.thread_stackFrame);
     setFieldLong(ptr, (s64) (intptr_t) val);
-    GCFLAG_JTHREAD_SET(ins->mb.gcflag);
+    if (val && !GCFLAG_JTHREAD_GET(ins->mb.gcflag)) {
+        //first attach: register in the capturable side list (immix only);
+        //later clears keep the flag but pass val=NULL so no re-registration
+        GCFLAG_JTHREAD_SET(ins->mb.gcflag);
+        gc_side_register_jthread_for_jvm(jvm, ins);
+    }
 }
 
 s32 jthread_get_daemon_value(Instance *ins, Runtime *runtime) {
@@ -1310,6 +1315,8 @@ Instance *instance_create(Runtime *runtime, JClass *clazz) {
     //    }
     if (!gc_backend_is_immix(runtime->jvm)) { //immix: enumerated by block bitmap
         gc_obj_reg(runtime, ins);
+    } else {
+        gc_side_register_instance(runtime, ins); //weak/finalizable/loader side lists
     }
     return ins;
 }
