@@ -349,6 +349,8 @@ s32 gc_create(MiniJVM *jvm) {
     collector->immix_pending_loaders = arraylist_create(64);
     if (!collector->objs_holder || !collector->objs_2_count ||
         !collector->runtime_refer_copy || !collector->classic_pending ||
+        !collector->side_weakrefs || !collector->side_finalizable ||
+        !collector->side_capturable ||
         !collector->immix_pending_finalize || !collector->immix_pending_enqueue ||
         !collector->immix_pending_runtimes || !collector->immix_pending_loaders) {
         jvm_fatal_oom("gc-core-metadata", 0);
@@ -515,7 +517,8 @@ void *gc_obj_alloc(Runtime *runtime, s32 insSize, ImmixObjectKind kind) {
          * per allocation serialized the mutators.  The java-heap share of
          * the tracked total is reconciled once per collection cycle from
          * immix live_bytes (see _gc_immix_collect); the immix heap keeps
-         * enforcing its own limit on every slow path. */
+         * enforcing its own limit on every slow path.  Recycled block
+         * memory is zeroed by the allocator itself (zero_on_allocate). */
         return mem;
     }
 #if __JVM_PRI_ALLOC__
@@ -1112,10 +1115,13 @@ typedef struct _ImmixPendingData {
  * here; the actual finalize()/enqueue Java calls run after the world resumes.
  */
 /* Side-list registration helpers (immix backend only). Checked pushes -
- * failure follows the allocation-fatal policy. */
+ * failure follows the allocation-fatal policy. Registration runs on mutator
+ * threads inside instance_create, so the push MUST take the list spinlock
+ * (_gc_side_compact may stay lock-free: it runs under STW with every
+ * registrar suspended). */
 static void _gc_side_register(Runtime *runtime, Instance *ins, ArrayList *list) {
     if (!ins) return;
-    if (!arraylist_push_back_unsafe(list, ins)) {
+    if (!arraylist_push_back(list, ins)) {
         jvm_fatal_oom("gc-side-list", sizeof(void *));
     }
 }
@@ -1138,7 +1144,7 @@ void gc_side_register_instance(Runtime *runtime, Instance *ins) {
 void gc_side_register_jthread_for_jvm(MiniJVM *jvm, Instance *ins) {
     if (!jvm || !ins || !jvm->collector) return;
     if (!gc_backend_is_immix(jvm)) return;
-    if (!arraylist_push_back_unsafe(jvm->collector->side_capturable, ins)) {
+    if (!arraylist_push_back(jvm->collector->side_capturable, ins)) {
         jvm_fatal_oom("gc-side-list", sizeof(void *));
     }
 }
@@ -1251,6 +1257,8 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
     ImmixStats stats_before, stats_after;
     ImmixSweepOps sweep_ops;
     ImmixCollectionReason reason = IMMIX_GC_EXPLICIT;
+    ImmixCollectionReason report_reason = reason;
+    size_t report_requested_bytes = 0;
     ImmixPendingData pending;
     ImmixResult immix_rc;
     s64 del = 0;
@@ -1307,7 +1315,10 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
             early_ops.context = collector;
             early_ops.is_live = _gc_immix_is_live;
             early_ops.before_reclaim = _gc_immix_before_reclaim;
-            immix_sweep_pending_objects(heap, &early_ops); /* no-op when drained */
+            if (immix_sweep_pending_objects(heap, &early_ops) != IMMIX_OK) {
+                jvm_printf("[WARN] immix safety-net drain failed - blocks "
+                           "stay quarantined for the next cycle\n");
+            }
         }
 
         /* Both snapshots must describe the same STW cycle (taken after the
@@ -1513,6 +1524,16 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
             _gc_link_free_batch(collector, freed_links, freed_count);
         }
 
+        /* Snapshot the request parameters while still under STW:
+         * _gc_signal_completed_cycle resets them, and the soft-limit/Xmx
+         * extension decision must see what actually triggered this cycle
+         * (including requests that arrived during the mark/sweep window). */
+        spin_lock(&collector->lock);
+        report_reason = collector->gc_request ? collector->gc_request_reason
+                                              : reason;
+        report_requested_bytes = collector->gc_requested_bytes;
+        spin_unlock(&collector->lock);
+
         collector->isworldstoped = 0;
 #if _JVM_DEBUG_LOG_LEVEL > 1
         t_resume_ns = nanoTime();
@@ -1528,28 +1549,28 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
     }
     vm_share_unlock(jvm);
 
-    /* Allocation slow paths only need the reclaimed heap, not Java finalizer,
-     * history or deferred native cleanup. Wake them immediately after STW so
-     * an unrelated slow finalizer cannot turn allocation into a 5 s timeout. */
-    _gc_signal_completed_cycle(collector);
-
     /* Lazy sweep completion (world running): clear deferred dead-object
-     * start bits and release quarantined blocks back to the allocator. */
-    immix_sweep_pending_objects(heap, &sweep_ops);
+     * start bits and release quarantined blocks back to the allocator.
+     * This MUST finish before the completed-cycle signal: allocation slow
+     * paths retry exactly once after waking, and reclaimed blocks are only
+     * acquirable once the drain has classified them. */
+    if (immix_sweep_pending_objects(heap, &sweep_ops) != IMMIX_OK) {
+        jvm_printf("[WARN] immix lazy sweep drain failed - dead starts may "
+                   "remain set; quarantined blocks retained\n");
+    }
 
     /* Post-drain snapshot: pending blocks contributed line-granular estimates
      * during STW; the drain walks every object anyway, so taking the stats
      * here turns those estimates into exact counts at zero extra cost. */
     immix_get_stats(heap, &stats_after);
 
-    spin_lock(&collector->lock);
-    reason = collector->gc_request ? collector->gc_request_reason : reason;
-    {
-        size_t requested_bytes = collector->gc_requested_bytes;
-        spin_unlock(&collector->lock);
-        _gc_immix_adjust_soft_limit(collector, &stats_after, reason,
-                                    requested_bytes);
-    }
+    _gc_immix_adjust_soft_limit(collector, &stats_after, report_reason,
+                                report_requested_bytes);
+
+    /* Wake allocation waiters only now: the heap is published and the soft
+     * limit already reflects this cycle. Slow Java finalizers below still
+     * run after the signal and cannot delay allocation. */
+    _gc_signal_completed_cycle(collector);
 
     //deferred Java-level execution and native destruction, world running
     if (collector->_garbage_thread_status == GARBAGE_THREAD_NORMAL) {
@@ -1631,7 +1652,7 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
 
 #if _JVM_DEBUG_LOG_LEVEL > 1
     jvm_printf("[INFO]immix gc: reason=%d del=%lld live=%llu objs=%llu committed=%llu blocks(f=%u,r=%u,full=%u) chunks=%u stw=%lldms drain+fin=%.0fms pending(f=%d,w=%d)\n",
-               reason, del,
+               report_reason, del,
                (unsigned long long) stats_after.live_bytes,
                (unsigned long long) stats_after.live_object_count,
                (unsigned long long) stats_after.committed_bytes,

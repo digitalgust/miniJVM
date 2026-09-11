@@ -1935,26 +1935,43 @@ static ImmixResult immix_block_mark_object(ImmixHeap *heap,
  * Shared by the STW fast path (active blocks) and the lazy completion.
  * Does NOT touch pending_obj_sweep: the caller clears the flag under
  * heap->lock together with the block's list re-classification, so the
- * chunk-release/trim guards stay effective for the whole sweep window. */
+ * chunk-release/trim guards stay effective for the whole sweep window.
+ * Reclaimed accounting is returned, not applied: callers fold it into
+ * heap->stats under the lock they already hold.
+ * validate_live_only: the lazy drain runs after the STW phase already
+ * freed dead JClasses, and immix_object_header_valid dereferences
+ * mb->clazz - for a dead object that pointer may dangle. Live objects
+ * always outlive their class, so the drain validates survivors only. */
 static ImmixResult immix_block_sweep_objects(ImmixHeap *heap, ImmixBlock *b,
                                              const ImmixSweepOps *ops,
+                                             s32 validate_live_only,
                                              u32 *out_live_bytes,
-                                             u32 *out_live_objects) {
+                                             u32 *out_live_objects,
+                                             u64 *out_reclaimed_bytes,
+                                             u32 *out_reclaimed_objects) {
     u32 block_live_bytes = 0;
     u32 block_live_objects = 0;
+    u64 block_reclaimed_bytes = 0;
+    u32 block_reclaimed_objects = 0;
     u32 bit = 0;
     while (immix_next_start_bit(heap, b, bit, &bit)) {
         u8 *addr = b->start + (size_t) bit * heap->config.object_alignment;
         MemoryBlock *mb = (MemoryBlock *) addr;
         size_t size;
+        s32 live;
         if (mb->heap_size <= 0 ||
-            (heap->config.enable_validation && !immix_object_header_valid(mb)) ||
             immix_block_object_size(heap, b, addr,
                                     (size_t) mb->heap_size,
                                     &size) != IMMIX_OK) {
             return IMMIX_ERR_INVALID_STATE;
         }
-        if (ops->is_live(ops->context, mb)) {
+        live = ops->is_live(ops->context, mb);
+        if (heap->config.enable_validation &&
+            (!validate_live_only || live) &&
+            !immix_object_header_valid(mb)) {
+            return IMMIX_ERR_INVALID_STATE;
+        }
+        if (live) {
             if (immix_block_mark_range(heap, b, addr, size) != IMMIX_OK) {
                 return IMMIX_ERR_INVALID_STATE;
             }
@@ -1965,13 +1982,15 @@ static ImmixResult immix_block_sweep_objects(ImmixHeap *heap, ImmixBlock *b,
                 ops->before_reclaim(ops->context, mb);
             }
             immix_start_bit_clear(heap, b, addr);
-            heap->stats.reclaimed_bytes += (u64) size;
-            heap->stats.reclaimed_object_count++;
+            block_reclaimed_bytes += (u64) size;
+            block_reclaimed_objects++;
         }
         bit++;
     }
     if (out_live_bytes) *out_live_bytes = block_live_bytes;
     if (out_live_objects) *out_live_objects = block_live_objects;
+    if (out_reclaimed_bytes) *out_reclaimed_bytes = block_reclaimed_bytes;
+    if (out_reclaimed_objects) *out_reclaimed_objects = block_reclaimed_objects;
     return IMMIX_OK;
 }
 
@@ -1996,7 +2015,9 @@ static void immix_block_classify_into_lists(ImmixHeap *heap, ImmixBlock *b) {
  * running) and at the next collection begin (safety net, world stopped).
  * Each block is popped and re-classified under heap->lock but swept outside
  * it so mutator slow paths stay live; no mutator can reach a quarantined
- * block's start bitmap or line marks. */
+ * block's start bitmap or line marks. On a sweep failure the block is
+ * pushed back onto the pending list (still quarantined) so its capacity is
+ * never silently dropped from the allocator. */
 ImmixResult immix_sweep_pending_objects(ImmixHeap *heap, const ImmixSweepOps *ops) {
     if (!immix_heap_is_valid(heap) || !ops || !ops->is_live) {
         return IMMIX_ERR_INVALID_ARGUMENT;
@@ -2004,6 +2025,8 @@ ImmixResult immix_sweep_pending_objects(ImmixHeap *heap, const ImmixSweepOps *op
     for (;;) {
         ImmixBlock *b;
         u32 live_bytes = 0, live_objects = 0;
+        u64 reclaimed_bytes = 0;
+        u32 reclaimed_objects = 0;
         ImmixResult rc;
 
         spin_lock(&heap->lock);
@@ -2011,13 +2034,23 @@ ImmixResult immix_sweep_pending_objects(ImmixHeap *heap, const ImmixSweepOps *op
         spin_unlock(&heap->lock);
         if (!b) break;
 
-        rc = immix_block_sweep_objects(heap, b, ops, &live_bytes, &live_objects);
-        if (rc != IMMIX_OK) return rc;
+        rc = immix_block_sweep_objects(heap, b, ops, 1, &live_bytes,
+                                       &live_objects, &reclaimed_bytes,
+                                       &reclaimed_objects);
+        if (rc != IMMIX_OK) {
+            spin_lock(&heap->lock);
+            immix_block_list_push(&heap->pending_sweep_blocks, b);
+            spin_unlock(&heap->lock);
+            return rc;
+        }
 
         spin_lock(&heap->lock);
         /* refine the line-mark estimate the STW phase recorded */
         heap->stats.live_bytes += (u64) live_bytes - (u64) b->live_bytes;
+        heap->stats.requested_bytes += (u64) live_bytes - (u64) b->live_bytes;
         heap->stats.live_object_count += live_objects;
+        heap->stats.reclaimed_bytes += reclaimed_bytes;
+        heap->stats.reclaimed_object_count += reclaimed_objects;
         b->live_bytes = live_bytes;
         b->live_object_count = live_objects;
         b->pending_obj_sweep = 0;
@@ -2067,13 +2100,19 @@ static ImmixResult immix_block_sweep(ImmixHeap *heap, const ImmixSweepOps *ops) 
             if (b->state == IMMIX_BLOCK_ACTIVE) {
                 /* the parked owner resumes bump-allocating into this block
                  * immediately after resume: dead starts must be cleared now */
-                ImmixResult rc = immix_block_sweep_objects(heap, b, ops,
+                u64 block_reclaimed_bytes = 0;
+                u32 block_reclaimed_objects = 0;
+                ImmixResult rc = immix_block_sweep_objects(heap, b, ops, 0,
                                                            &block_live_bytes,
-                                                           &block_live_objects);
+                                                           &block_live_objects,
+                                                           &block_reclaimed_bytes,
+                                                           &block_reclaimed_objects);
                 if (rc != IMMIX_OK) {
                     spin_unlock(&heap->lock);
                     return rc;
                 }
+                heap->stats.reclaimed_bytes += block_reclaimed_bytes;
+                heap->stats.reclaimed_object_count += block_reclaimed_objects;
             } else if (b->state != IMMIX_BLOCK_DECOMMITTED) {
                 /* lazy sweep: defer the start-bit walk out of the STW. The
                  * block stays ONLY in pending_sweep_blocks (intrusive lists
