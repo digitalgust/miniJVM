@@ -206,6 +206,11 @@ static ImmixResult immix_platform_commit_default(void *context, void *address, s
     return IMMIX_OK;
 #else
     (void) context;
+#if defined(__APPLE__)
+    /* Pairs with MADV_FREE_REUSABLE in decommit; makes the pages valid for
+     * reuse again.  Harmless on never-reusable ranges. */
+    (void) madvise(address, size, MADV_FREE_REUSE);
+#endif
     if (mprotect(address, size, PROT_READ | PROT_WRITE) != 0) {
         return IMMIX_ERR_OUT_OF_MEMORY;
     }
@@ -222,8 +227,18 @@ static ImmixResult immix_platform_decommit_default(void *context, void *address,
     }
     return IMMIX_OK;
 #else
-    /* Discards physical pages; the next touch sees zeroed memory. */
     (void) context;
+#if defined(__APPLE__)
+    /* Darwin treats MADV_DONTNEED as a hint: it returns success but keeps
+     * the pages resident with their old contents, so a trimmed block would
+     * come back with stale bytes and no memory would be returned at all.
+     * MADV_FREE_REUSABLE actually queues the pages for reclaim; contents
+     * after reuse are unspecified, so the allocator must not rely on
+     * recommitted blocks being pre-zeroed (see immix_block_try_acquire). */
+    if (madvise(address, size, MADV_FREE_REUSABLE) == 0) {
+        return IMMIX_OK;
+    }
+#endif
     if (madvise(address, size, MADV_DONTNEED) != 0) {
         return IMMIX_ERR_OUT_OF_MEMORY;
     }
@@ -1596,7 +1611,14 @@ static s32 immix_block_try_acquire(ImmixHeap *heap, ImmixMutator *mutator,
             return 0;
         }
         scan->decommitted = 0;
-        scan->ever_used = 0;
+        /* Do NOT reset ever_used here.  Fresh chunk blocks enter this same
+         * branch with ever_used == 0 (mmap guarantees zero pages, so the bump
+         * path may skip the memset), but a block decommitted by trim may come
+         * back with stale contents: Windows zero-fills MEM_COMMIT pages and
+         * Linux MADV_DONTNEED discards them, but Darwin pages are only
+         * lazily reclaimed and reuse yields unspecified bytes.  Keeping
+         * ever_used == 1 makes immix_block_bump memset every object on
+         * recommitted blocks. */
         heap->stats.committed_bytes += heap->config.block_size;
         scan->chunk->committed_size += heap->config.block_size;
     }

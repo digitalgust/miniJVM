@@ -440,9 +440,18 @@ public final class StringFormatImpl {
         if (radix == 10 || longValue > -1) {
             val = Long.toString(longValue, radix);
         } else {
-            final long upper = 0xFFFFFFFFL & (longValue >> 31);
-            final long lower = 0xFFFFFFFFL & (longValue);
-            val = Long.toString(upper, radix) + Long.toString(lower, radix);
+            // format as unsigned: split into 32-bit halves. The shift must be
+            // the unsigned >>> 32 (a signed >> 31 mixes a sign bit into the
+            // upper half), and the lower half must be zero-padded so the two
+            // halves concatenate to the correct digit string.
+            final long upper = 0xFFFFFFFFL & (longValue >>> 32);
+            final long lower = 0xFFFFFFFFL & longValue;
+            String lowerStr = Long.toString(lower, radix);
+            final int halfDigits = radix == 16 ? 8 : (radix == 8 ? 11 : 1);
+            while (lowerStr.length() < halfDigits) {
+                lowerStr = "0" + lowerStr;
+            }
+            val = Long.toString(upper, radix) + lowerStr;
         }
         appendify(a, val, flags, width, precision);
     }
