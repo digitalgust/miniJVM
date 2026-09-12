@@ -13,6 +13,11 @@ public class MaContext extends MaNativeObject {
 
     @Override
     public void finalize() {
+        dispose();
+    }
+
+    /* uninit without touching owners */
+    synchronized void dispose() {
         if (handle != 0) {
             MiniAudio.ma_context_uninit(handle);
             handle = 0;

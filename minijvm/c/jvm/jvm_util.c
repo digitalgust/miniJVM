@@ -124,7 +124,6 @@ s32 classes_remove(MiniJVM *jvm, JClass *clazz) {
             profile_slow_call_remove_class_cache(jvm, clazz->name);
 #endif
             hashtable_remove(pcl->classes, clazz->name, 0);
-            class_clear_cached_virtualmethod(jvm, clazz);
         }
         return 0;
     }

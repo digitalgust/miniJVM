@@ -2045,6 +2045,20 @@ ImmixResult immix_sweep_pending_objects(ImmixHeap *heap, const ImmixSweepOps *op
         }
 
         spin_lock(&heap->lock);
+        /* The object sweep above may have ADDED line marks (objects that
+         * were only garbage_mark-alive at STW, e.g. the classloader grace
+         * keep-alive).  Re-derive the allocator view (line_state /
+         * free_line_count) from the updated line marks before the block
+         * re-enters the availability lists, or stale FREE lines would be
+         * handed out over live objects. */
+        {
+            u32 line;
+            for (line = 0; line < heap->lines_per_block; line++) {
+                b->line_state[line] = b->line_marks[line]
+                                      ? IMMIX_LINE_LIVE : IMMIX_LINE_FREE;
+            }
+            b->free_line_count = immix_count_free_lines(heap, b);
+        }
         /* refine the line-mark estimate the STW phase recorded */
         heap->stats.live_bytes += (u64) live_bytes - (u64) b->live_bytes;
         heap->stats.requested_bytes += (u64) live_bytes - (u64) b->live_bytes;

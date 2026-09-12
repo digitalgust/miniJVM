@@ -97,13 +97,28 @@ public class MaDevice extends MaNativeObject {
         }
     }
 
-    @Override
-    public void finalize() {
+    /**
+     * uninit this device and its private context; a device dereferences its
+     * context on uninit, so the context must go down after the device
+     */
+    public synchronized void close() {
         if (handle != 0) {
+            if (MiniAudio.ma_device_is_started(handle) == 1) {
+                MiniAudio.ma_device_stop(handle);
+            }
             MiniAudio.ma_device_uninit(handle);
             devices.remove(handle);
             handle = 0;
         }
+        if (context != null) {
+            context.dispose();
+            context = null;
+        }
+    }
+
+    @Override
+    public void finalize() {
+        close();
     }
 
     public static int getFormatBytes(int format) {

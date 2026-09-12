@@ -199,10 +199,10 @@ public class AudioManager implements MaDeviceListener {
     }
 
     public static void playStop() {
-        if (playDevice != null && playDevice.isStarted()) {
-            playDevice.stop();
+        if (playDevice != null) {
+            playDevice.close();
+            playDevice = null;
         }
-        playDevice = null;
     }
 
     /**
@@ -240,8 +240,8 @@ public class AudioManager implements MaDeviceListener {
         if (capDevice != null) {
             capStartAt = 0;
             instace.setAudioListener(null);
-            capDevice.stop();
-            capDevice = null;//release capDevice for uninit
+            capDevice.close();
+            capDevice = null;
         }
     }
 

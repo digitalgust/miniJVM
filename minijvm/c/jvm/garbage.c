@@ -87,6 +87,50 @@ static void _gc_append_thread_name(Runtime *runtime, Utf8String *ustr) {
     }
 }
 
+/*
+ * Inline caches (cmr->virtual_methods) pair a receiver class with the
+ * MethodInfo resolved for it, and that target may live in a class being
+ * unloaded this cycle; the raw pointers dangle once the class memory is
+ * freed.  When any class dies, drop every entry of every class.  Runs while
+ * the world is stopped and before any class is reclaimed; a cleared cache
+ * only makes pairlist_get() miss and the interpreter re-resolves on the
+ * slow path.
+ */
+static void _gc_clear_virtual_method_caches(GcCollector *collector) {
+    ArrayList *objs = collector->objs_array;
+    s32 i, dying_class = 0;
+    for (i = 0; i < objs->length; i++) {
+        MemoryBlock *mb = (MemoryBlock *) objs->data[i];
+        if (mb->type == MEM_TYPE_CLASS && mb->garbage_mark != collector->mark_cnt) {
+            dying_class = 1;
+            break;
+        }
+    }
+    if (!dying_class) {
+        return;
+    }
+    for (i = 0; i < objs->length; i++) {
+        JClass *clazz = (JClass *) objs->data[i];
+        ArrayList *pools[2];
+        s32 p, c;
+        if (clazz->mb.type != MEM_TYPE_CLASS) {
+            continue;
+        }
+        pools[0] = clazz->constantPool.methodRef;
+        pools[1] = clazz->constantPool.interfaceMethodRef;
+        for (p = 0; p < 2; p++) {
+            ArrayList *pool = pools[p];
+            if (!pool) continue;
+            for (c = 0; c < pool->length; c++) {
+                ConstantMethodRef *cmr = (ConstantMethodRef *) arraylist_get_value_unsafe(pool, c);
+                if (cmr && cmr->virtual_methods) {
+                    cmr->virtual_methods->count = 0;
+                }
+            }
+        }
+    }
+}
+
 static Utf8String *_gc_build_thread_dump(GcCollector *collector) {
     if (!collector || !collector->jvm || !collector->jvm->thread_list) return NULL;
     MiniJVM *jvm = collector->jvm;
@@ -1062,78 +1106,32 @@ static void _gc_side_compact(GcCollector *collector, ArrayList *list) {
     }
 }
 
-static s32 _gc_immix_finalize_decision(MemoryBlock *mb, void *data) {
-    ImmixPendingData *ctx = (ImmixPendingData *) data;
-    GcCollector *collector = ctx->collector;
-
-    if (mb->type != MEM_TYPE_INS || !mb->clazz) return 0;
-    if (mb->garbage_mark != collector->mark_cnt &&
-        mb->clazz->finalizeMethod && !GCFLAG_FINALIZED_GET(mb->gcflag)) {
-        if (!arraylist_push_back_unsafe(collector->immix_pending_finalize, mb)) {
-            ctx->failed = 1;
-            return 1;
-        }
-        GCFLAG_FINALIZED_SET(mb->gcflag);
-        ctx->finalized++;
-    }
-    /* A Reference wrapper is normally reachable; reachability of its weak
-     * target, not of the wrapper, decides whether it must be cleared. */
-    if (GCFLAG_WEAKREFERENCE_GET(mb->gcflag)) {
-        Instance *target = getFieldRefer(getInstanceFieldPtr(
-                (Instance *) mb, collector->jvm->shortcut.reference_target));
-        if (target && target->mb.garbage_mark != collector->mark_cnt) {
-            /* Clear while all mutators are stopped. The target storage is
-             * reclaimed in this cycle, whereas enqueue() runs after resume;
-             * leaving the slot non-null exposes a dangling/reused pointer to
-             * WeakReference.get() in that interval. */
-            if (!arraylist_push_back_unsafe(collector->immix_pending_enqueue, mb)) {
-                ctx->failed = 1;
-                return 1;
-            }
-            setFieldRefer(getInstanceFieldPtr(
-                    (Instance *) mb, collector->jvm->shortcut.reference_target), NULL);
-            ctx->enqueued++;
-        }
-    }
-    return 0;
-}
-
 /*
- * STW capture pass for dead Immix objects. While instance storage is still
- * valid: detach the runtime pointer from never-started/dead thread instances
- * and unlink dead classloaders. Heavy native destruction runs post-resume.
+ * Drop side-list entries whose object memory was already reclaimed and
+ * recycled (the entry outlived its object); the scans below must never
+ * dereference such a stale address.  Valid entries are exact immix object
+ * starts (or large objects); anything else is garbage from reuse.
  */
-static s32 _gc_immix_dead_capture(MemoryBlock *mb, void *data) {
-    ImmixPendingData *ctx = (ImmixPendingData *) data;
-    GcCollector *collector = ctx->collector;
-
-    if (mb->garbage_mark == collector->mark_cnt) return 0;
-    if (mb->type != MEM_TYPE_INS || !mb->clazz) return 0;
-
-    if (GCFLAG_JLOADER_GET(mb->gcflag)) {
-        PeerClassLoader *pcl = classLoaders_find_by_instance(collector->jvm, (Instance *) mb);
-        if (pcl && !pcl->in_pending_destroy) {
-            if (!arraylist_push_back_unsafe(collector->immix_pending_loaders, pcl)) {
-                ctx->failed = 1;
-                return 1;
-            }
-            pcl->in_pending_destroy = 1;
-            classloaders_remove(collector->jvm, pcl); //unlink now, destroy later
+static void _gc_side_list_scrub(GcCollector *collector, ArrayList *list) {
+    ImmixHeap *heap = (ImmixHeap *) collector->immix_heap;
+    s32 w = 0;
+    s32 i;
+    if (!heap) return; /* classic backend: side lists follow block lifetime */
+    for (i = 0; i < list->length; i++) {
+        MemoryBlock *mb = (MemoryBlock *) arraylist_get_value(list, i);
+        if (!immix_is_object_start(heap, mb) && !immix_is_large_object(heap, mb)) {
+            jvm_printf("[WARN] gc side list stale entry %llx dropped\n",
+                       (s64) (intptr_t) mb);
+            continue;
         }
-    } else if (GCFLAG_JTHREAD_GET(mb->gcflag)) {
-        //process thread if it created but not started
-        Runtime *ort = jthread_get_stackframe_value(collector->jvm, (Instance *) mb);
-        if (ort && !ort->in_pending_destroy) {
-            if (!arraylist_push_back_unsafe(collector->immix_pending_runtimes, ort)) {
-                ctx->failed = 1;
-                return 1;
-            }
-            ort->in_pending_destroy = 1;
-            //detach while the instance storage is still valid
-            jthread_set_stackframe_value(collector->jvm, (Instance *) mb, NULL);
+        if (w != i) {
+            list->data[w] = list->data[i];
         }
+        w++;
     }
-    return 0;
+    while (list->length > w) {
+        arraylist_pop_back_unsafe(list);
+    }
 }
 
 /*
@@ -1261,6 +1259,9 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
 
         /* Finalize/weak decisions from the side lists: O(list) instead of
          * a full-heap enumeration (registration happens at creation). */
+        _gc_side_list_scrub(collector, collector->side_finalizable);
+        _gc_side_list_scrub(collector, collector->side_weakrefs);
+        _gc_side_list_scrub(collector, collector->side_capturable);
         if (collector->_garbage_thread_status == GARBAGE_THREAD_NORMAL) {
             //finalizable: same predicate as the old heap walk
             len = collector->side_finalizable->length;
@@ -1320,11 +1321,33 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
                 if (GCFLAG_JLOADER_GET(mb->gcflag)) {
                     PeerClassLoader *pcl = classLoaders_find_by_instance(collector->jvm, (Instance *) mb);
                     if (pcl && !pcl->in_pending_destroy) {
-                        if (!arraylist_push_back_unsafe(collector->immix_pending_loaders, pcl)) {
-                            jvm_fatal_oom("gc-pending-native", 0);
+                        if (hashtable_num_entries(pcl->classes) == 0) {
+                            if (!arraylist_push_back_unsafe(collector->immix_pending_loaders, pcl)) {
+                                jvm_fatal_oom("gc-pending-native", 0);
+                            }
+                            pcl->in_pending_destroy = 1;
+                            classloaders_remove(collector->jvm, pcl); //unlink now, destroy later
+                        } else {
+                            /* Its classes are reclaimed below this cycle and
+                             * classes_remove() must still find this loader.
+                             * Keep only this block alive for one cycle with a
+                             * bare mark: _gc_mark_object() would cascade into
+                             * the loader's fields and drag the dying classes
+                             * (and their statics) back to life, so the table
+                             * would never empty and the loader would leak
+                             * every cycle.  Next cycle finds the table empty
+                             * and takes the destroy path.  The loader's own
+                             * immix lines must be marked as well: allocator
+                             * liveness is tracked per line, and unmarked
+                             * lines would be handed back out while the
+                             * object is still alive. */
+                            mb->garbage_mark = collector->mark_cnt;
+                            if (collector->immix_heap) {
+                                immix_collection_mark((ImmixHeap *) collector->immix_heap, mb,
+                                                       mb->heap_size > 0 ? (size_t) mb->heap_size
+                                                                         : sizeof(MemoryBlock));
+                            }
                         }
-                        pcl->in_pending_destroy = 1;
-                        classloaders_remove(collector->jvm, pcl); //unlink now, destroy later
                     }
                 } else if (GCFLAG_JTHREAD_GET(mb->gcflag)) {
                     Runtime *ort = jthread_get_stackframe_value(collector->jvm, (Instance *) mb);
@@ -1377,6 +1400,8 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
 #endif
             ArrayList *list = collector->objs_array;
             s32 ci, cw = 0;
+            /* must precede the first class free below */
+            _gc_clear_virtual_method_caches(collector);
             for (ci = 0; ci < list->length; ci++) {
                 MemoryBlock *curmb = (MemoryBlock *) list->data[ci];
                 s32 size = curmb->heap_size;
@@ -1449,6 +1474,30 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
 
     _gc_immix_adjust_soft_limit(collector, &stats_after, report_reason,
                                 report_requested_bytes);
+
+    /* Return fully-free blocks to the OS when committed runs far past the
+     * live set: trigger at 2x live, trim toward 1.5x live, at most once per
+     * 30s.  Runs with the world running, after the lazy drain so pending
+     * blocks are classifiable; trimmed blocks stay in the free list and are
+     * recommitted on demand.  Trim only reaches whole-empty blocks, so the
+     * target is a floor, not an exact value. */
+    if (collector->immix_heap && stats_after.live_bytes > 0 &&
+        stats_after.committed_bytes > stats_after.live_bytes * 2) {
+        s64 now_ms = currentTimeMillis();
+        if (now_ms - collector->trim_last_ms > 30000) {
+            size_t trim_target = (size_t) (stats_after.live_bytes +
+                                           stats_after.live_bytes / 2);
+            if (immix_trim(heap, trim_target) == IMMIX_OK) {
+                ImmixStats trimmed;
+                collector->trim_last_ms = now_ms;
+                immix_get_stats(heap, &trimmed);
+                jvm_printf("[INFO]immix trim: live=%llu committed=%llu -> %llu\n",
+                           (unsigned long long) stats_after.live_bytes,
+                           (unsigned long long) stats_after.committed_bytes,
+                           (unsigned long long) trimmed.committed_bytes);
+            }
+        }
+    }
 
     /* Wake allocation waiters only now: the heap is published and the soft
      * limit already reflects this cycle. Slow Java finalizers below still
@@ -1637,6 +1686,9 @@ s64 _garbage_collect(GcCollector *collector) {
                 collector->dump_flag = 3;
             }
             threads_dump = _gc_build_thread_dump(collector);
+
+            /* must run before the world resumes and before any class free below */
+            _gc_clear_virtual_method_caches(collector);
 
             /* Keep-alive pushes below are checked and fatal on failure; the
              * queue keeps its capacity across cycles (clear never shrinks),

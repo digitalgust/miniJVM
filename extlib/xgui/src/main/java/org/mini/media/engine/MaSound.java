@@ -18,6 +18,7 @@ public class MaSound extends MaNativeObject {
 
         this.engine = engine;
         handle = MiniAudio.ma_sound_init_from_file(engine.getHandle(), toCstyleBytes(filePath), MA_SOUND_FLAG_DECODE, 0, 0);
+        engine.addSound(this);
     }
 
     public MaSound(MaEngine engine, MaSound src) {
@@ -27,6 +28,7 @@ public class MaSound extends MaNativeObject {
 
         this.engine = engine;
         handle = MiniAudio.ma_sound_init_copy(engine.getHandle(), src.getHandle(), MA_SOUND_FLAG_DECODE, 0);
+        engine.addSound(this);
     }
 
     public MaSound(MaEngine engine, MaDataSource dataSource) {
@@ -37,6 +39,7 @@ public class MaSound extends MaNativeObject {
         this.engine = engine;
         this.dataSource = dataSource;//hold the decoder, else it would be gc
         handle = MiniAudio.ma_sound_init_from_data_source(engine.getHandle(), dataSource.getHandle(), 0, 0);
+        engine.addSound(this);
     }
 
     public MaSound(MaEngine engine, MaDataSource dataSource, int initFlag) {
@@ -47,6 +50,7 @@ public class MaSound extends MaNativeObject {
         this.engine = engine;
         this.dataSource = dataSource;//hold the decoder, else it would be gc
         handle = MiniAudio.ma_sound_init_from_data_source(engine.getHandle(), dataSource.getHandle(), initFlag, 0);
+        engine.addSound(this);
     }
 
     public void start() {
@@ -118,10 +122,22 @@ public class MaSound extends MaNativeObject {
         MiniAudio.ma_sound_set_fade_in_milliseconds(handle, -1f, 0f, ms);
     }
 
-    @Override
-    public void finalize() {
-        //System.out.println("clean " + this + " " + handle);
-        MiniAudio.ma_sound_uninit(handle);
-        handle = 0;
+    /**
+     * the native side is owned by the engine and swept when the engine goes down,
+     * close() only releases earlier when this sound is no longer needed
+     */
+    public synchronized void close() {
+        dispose();
+        if (engine != null) {
+            engine.removeSound(this);
+        }
+    }
+
+    /* uninit without touching the engine's registry */
+    synchronized void dispose() {
+        if (handle != 0) {
+            MiniAudio.ma_sound_uninit(handle);
+            handle = 0;
+        }
     }
 }

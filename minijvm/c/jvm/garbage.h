@@ -76,6 +76,7 @@ struct _GcCollectorType {
     ImmixCollectionReason gc_request_reason;
     size_t gc_requested_bytes;
     volatile s64 gc_gen;         //incremented after every completed cycle
+    s64 trim_last_ms;            //wall clock of the last immix trim (cooldown)
 
     u8 _garbage_thread_status;
     u8 mark_cnt;
