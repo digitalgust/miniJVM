@@ -20,6 +20,18 @@ void thread_boundle(Runtime *runtime) {
     runtime->thrd_info->jthread = t; //Thread.init currentThread() need this
     //runtime->clazz = thread_clazz;
     instance_init(t, runtime);
+    //name the bootstrap thread 'main' so debuggers can address it (jdb: thread main)
+    {
+        Instance *nameArr = jarray_create_by_type_index(runtime, 4, DATATYPE_JCHAR);
+        if (nameArr) {
+            ((u16 *) jarray_body(nameArr))[0] = 'm';
+            ((u16 *) jarray_body(nameArr))[1] = 'a';
+            ((u16 *) jarray_body(nameArr))[2] = 'i';
+            ((u16 *) jarray_body(nameArr))[3] = 'n';
+            c8 *namePtr = getInstanceFieldPtr(t, runtime->jvm->shortcut.thread_name);
+            setFieldRefer(namePtr, nameArr);
+        }
+    }
     //destroy old runtime
     Runtime *r = jthread_get_stackframe_value(runtime->jvm, t);
     if (r) {

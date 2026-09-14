@@ -109,6 +109,8 @@ void gc_stop(GcCollector *collector);
 
 void gc_pause(GcCollector *collector);
 
+void gc_make_room(MiniJVM *jvm);
+
 void gc_resume(GcCollector *collector);
 
 MemoryBlock *gc_is_alive(GcCollector *collector, __refer obj);

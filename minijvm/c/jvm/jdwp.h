@@ -484,7 +484,9 @@ s32 jdwp_stop_server(MiniJVM *jvm);
 
 Runtime *jdwp_get_runtime(JdwpServer *srv);
 
-s32 jdwp_is_ignore_sync(JdwpServer *srv);
+s32 jdwp_is_ignore_sync(JdwpServer *srv, Runtime *runtime);
+
+s32 jdwp_is_invoking(JdwpServer *srv);
 
 s32 jdwp_set_breakpoint(JdwpServer *jdwpserver, s32 setOrClear, JClass *clazz, MethodInfo *methodInfo, s64 execIndex);
 
@@ -500,9 +502,13 @@ void event_on_thread_start(JdwpServer *jdwpserver, Instance *jthread);
 
 void event_on_vmstart(JdwpServer *jdwpserver, Instance *jthread);
 
+void event_on_vmdeath(JdwpServer *jdwpserver);
+
 void jdwp_check_breakpoint(Runtime *runtime);
 
 void jdwp_check_debug_step(Runtime *runtime);
+
+void jdwp_check_debug_step_on_return(Runtime *runtime);
 
 void jdwp_apply_suspend_policy(JdwpServer *jdwpserver, u8 suspendPolicy, Runtime *event_thread);
 

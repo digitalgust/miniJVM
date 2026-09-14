@@ -351,14 +351,14 @@ void thread_stop_all(MiniJVM *jvm) {
         //jthread_suspend(r);
         r->thrd_info->no_pause = 1;
         r->thrd_info->is_stop = 1; //stop thread that's sleeping state
-    }
-    spin_unlock(&jvm->thread_list->spinlock);
-    //wake wait-parked threads outside the thread_list lock: jthread_wakeup
-    //bounded-locks the monitor mutex, which must not happen under it
-    for (i = 0; i < jvm->thread_list->length; i++) {
-        Runtime *r = arraylist_get_value_unsafe(jvm->thread_list, i);
+        /* Keep the list lock while resolving the Runtime pointer. The old
+         * second unlocked pass raced GC/thread finalization and could call
+         * jthread_wakeup through a freed Runtime. The monitor acquisition in
+         * jthread_wakeup is bounded (20ms), so it cannot permanently pin the
+         * list lock. */
         jthread_wakeup(r);
     }
+    spin_unlock(&jvm->thread_list->spinlock);
 }
 
 
@@ -784,6 +784,12 @@ thrd_t jthread_start(Instance *ins, Runtime *parent) {
     runtime->thrd_info->context_classloader = parent->thrd_info->context_classloader; //copy context classloader
 
     jthread_init(runtime->jvm, ins);
+    if (jdwp_is_invoking(runtime->jvm->jdwpserver)) {
+        //born during a debugger invoke: the invoke assumes it is the only
+        //java executor (locks are skipped), so start parked - jdwp_invoke_end
+        //releases threads that appeared while it was running
+        jthread_suspend(runtime);
+    }
     thrd_create(&runtime->thrd_info->pthread, jthread_run, runtime);
     return runtime->thrd_info->pthread;
 }
@@ -937,9 +943,6 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) {
                 spin_unlock(&ti->lock);
                 return RUNTIME_STATUS_ERROR;
             }
-            if (ti->type == THREAD_TYPE_JDWP) {
-                break;
-            }
             jthread_yield(runtime);
         }
         spin_lock(&tl->metadata_lock);
@@ -965,6 +968,12 @@ s32 jthread_unlock(MemoryBlock *mb, Runtime *runtime) {
     if (!tl) return -1;
     JavaThreadInfo *ti = runtime->thrd_info;
     if (tl->owner_thread != ti || tl->recursion_count == 0) {
+        if (jdwp_is_ignore_sync(runtime->jvm->jdwpserver, runtime)) {
+            //invoke skips monitorenter, so a stray unlock here is expected
+            //(e.g. an exception-unwind path releasing a never-taken monitor).
+            //Silent no-op instead of the not-owner error.
+            return 0;
+        }
         jvm_printf("[ERROR]Thread %p trying to unlock a mutex owned by %p\n",
                    (void *) ti, (void *) tl->owner_thread);
         print_runtime_stack(runtime);
@@ -1047,7 +1056,13 @@ void jthread_block_exit(Runtime *runtime) {
 
 s32 jthread_resume(Runtime *runtime) {
     spin_lock(&runtime->thrd_info->lock);
-    if (runtime->thrd_info->suspend_count > 0)runtime->thrd_info->suspend_count--;
+    if (runtime->thrd_info->suspend_count > 0) {
+        runtime->thrd_info->suspend_count--;
+        //wake parked threads immediately; the 100ms poll in
+        //check_suspend_and_pause is only a fallback. Without the
+        //notify a JDWP resume races the debugger's next command.
+        vm_share_notifyall(runtime->jvm);
+    }
     //jvm_printf("[DEBUG] Thread %llx is resumed    %d\n", (s64) (intptr_t) (runtime->thrd_info->jthread), runtime->thrd_info->suspend_count);
     spin_unlock(&runtime->thrd_info->lock);
     return 0;
@@ -1098,17 +1113,31 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     jthread_block_enter(runtime);
     u8 thread_status = ti->thread_status;
     ti->thread_status = THREAD_STATUS_WAIT;
-    if (waitms) {
-        waitms += currentTimeMillis();
-        struct timespec t;
-        t.tv_sec = (time_t) (waitms / 1000);
-        t.tv_nsec = (long) ((waitms % 1000) * 1000000);
-        cnd_timedwait(&tl->thread_cond, &tl->mutex_lock, &t);
-    } else {
-        /* Single unlimited park (chunking drops notifies between slices).
-         * stop/interrupt reach a parked thread through jthread_wake_waiting(),
-         * which takes this mutex before broadcasting. */
-        cnd_wait(&tl->thread_cond, &tl->mutex_lock);
+    {
+        /* A stop/interrupt broadcaster can observe waiting_lock before this
+         * thread has actually entered cnd_wait.  Its bounded mutex acquire
+         * may then time out and the signal would be lost, leaving wait(0)
+         * parked forever during VM shutdown.  Use short timed slices and
+         * re-check the persistent stop/interrupt predicates.  A real notify
+         * still returns thrd_success immediately (spurious wakeups are legal
+         * for Object.wait). */
+        s64 deadline = waitms > 0 ? currentTimeMillis() + waitms : 0;
+        while (!ti->is_stop && !ti->is_interrupt) {
+            s64 now = currentTimeMillis();
+            if (deadline && now >= deadline) break;
+            s64 slice_deadline = now + 100;
+            if (deadline && slice_deadline > deadline) slice_deadline = deadline;
+            struct timespec t;
+            t.tv_sec = (time_t) (slice_deadline / 1000);
+            t.tv_nsec = (long) ((slice_deadline % 1000) * 1000000);
+            s32 wait_result = cnd_timedwait(&tl->thread_cond, &tl->mutex_lock, &t);
+            if (wait_result != thrd_timedout) break;
+            /* Object.wait is allowed to return spuriously.  Return after a
+             * slice so Java-level condition loops (including every join
+             * overload) can observe state changes even though miniJVM does
+             * not yet issue a VM-generated notifyAll on thread termination. */
+            break;
+        }
     }
     ti->thread_status = thread_status;
     //cnd_wait returned holding the flat mutex: restore the monitor fully
@@ -2506,7 +2535,11 @@ void thread_remove_held_lock(Runtime *runtime, MemoryBlock *lock) {
             threadInfo->pending_release_lock = NULL;
             //            jvm_printf("[ACTIVE_SUSPEND] Thread %llx released pending lock %llx, checking suspension\n",
             //                       (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
-            // 主动检查是否需要挂起
+            // 主动检查是否需要挂起。lock-rescue 已把挂起计数清零，必须先
+            // 重新武装计数再停驻，否则线程会在救援者的 5ms 轮询窗口内自由运行
+            if (threadInfo->suspend_count == 0) {
+                jthread_suspend(runtime); //0 -> 1
+            }
             check_suspend_and_pause(runtime);
         }
     }
@@ -2557,8 +2590,10 @@ void temporarily_resume_for_lock_release(Runtime *suspended_thread, MemoryBlock 
     // 设置待释放的锁，用于主动挂起
     threadInfo->pending_release_lock = lock;
 
-    // 临时恢复线程
-    threadInfo->suspend_count = 0;
+    // 临时恢复线程（用 jthread_resume 以便条件变量立刻唤醒挂起中的线程）
+    while (threadInfo->suspend_count > 0) {
+        jthread_resume(suspended_thread);
+    }
 
     // 等待线程释放锁（或者主动挂起）
     s32 max_wait_cycles = 1000; // 最大等待周期
@@ -2568,10 +2603,14 @@ void temporarily_resume_for_lock_release(Runtime *suspended_thread, MemoryBlock 
         threadSleep(5); // 等待5毫秒
         cycles++;
 
-        // 检查是否已经主动挂起
+        // 检查是否已经主动挂起（jthread_unlock 的自挂起闭环）
         if (threadInfo->suspend_count > 0) {
             //            jvm_printf("[LOCK_RESOLVE] Thread %llx actively suspended after releasing lock %llx\n",
             //                       (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
+            //自挂起只补了 1 级计数，多级挂起（如 ALL 策略叠加）在这里补齐
+            while (threadInfo->suspend_count < original_suspend_count) {
+                jthread_suspend(suspended_thread);
+            }
             return; // 已经主动挂起，无需继续等待
         }
     }

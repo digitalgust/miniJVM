@@ -317,21 +317,26 @@ s32 checkcast(Runtime *runtime, Instance *ins, s32 typeIdx) {
  * @param father  Runtime of the parent
  * @param son     Runtime of the child
  */
-static inline void _synchronized_lock_method(MethodInfo *method, Runtime *runtime) {
+static inline s32 _synchronized_lock_method(MethodInfo *method, Runtime *runtime) {
     //synchronized process
-    if (!jdwp_is_ignore_sync(runtime->jvm->jdwpserver)) {
+    runtime->lock = NULL;
+    if (!jdwp_is_ignore_sync(runtime->jvm->jdwpserver, runtime)) {
         if (method->is_static) {
             runtime->lock = (MemoryBlock *) runtime->clazz;
         } else {
             runtime->lock = (MemoryBlock *) localvar_getRefer(runtime->localvar, 0);
         }
-        jthread_lock(runtime->lock, runtime);
+        if (jthread_lock(runtime->lock, runtime) != 0) {
+            runtime->lock = NULL;
+            return RUNTIME_STATUS_ERROR;
+        }
     }
+    return RUNTIME_STATUS_NORMAL;
 }
 
 static inline void _synchronized_unlock_method(MethodInfo *method, Runtime *runtime) {
     //synchronized process
-    if (!jdwp_is_ignore_sync(runtime->jvm->jdwpserver)) {
+    if (runtime->lock) {
         jthread_unlock(runtime->lock, runtime);
         runtime->lock = NULL;
     }
@@ -571,7 +576,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             localvar_init(r, ca->max_locals, method->para_slots);
 
             //method sync begin
-            if (method->is_sync)_synchronized_lock_method(method, r);
+            if (method->is_sync && _synchronized_lock_method(method, r) != RUNTIME_STATUS_NORMAL) {
+                ret = RUNTIME_STATUS_ERROR;
+                goto label_exit_while;
+            }
 
             if (r->thrd_info->is_stop) {
                 //if stop=1 then exit thread
@@ -3339,7 +3347,16 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             stack->sp = sp;
                             if (!r->ins)goto label_null_throw;
-                            jthread_lock(&r->ins->mb, r);
+                            //jdwp invoke: all java threads are frozen, the jdwp
+                            //dispatcher is the only executor - locking is
+                            //skipped (a real lock could be owned by a frozen
+                            //thread and deadlock the dispatcher)
+                            if (!jdwp_is_ignore_sync(r->jvm->jdwpserver, r)) {
+                                if (jthread_lock(&r->ins->mb, r) != RUNTIME_STATUS_NORMAL) {
+                                    ret = RUNTIME_STATUS_ERROR;
+                                    goto label_exit_while;
+                                }
+                            }
                             sp = stack->sp;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(r);
@@ -3354,9 +3371,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             stack->sp = sp;
                             if (!r->ins)goto label_null_throw;
-                            int ret = jthread_unlock(&r->ins->mb, r);
-                            if (ret < 0) {
-                                s32 debug = 1;
+                            //symmetric with op_monitorenter: never unlock a
+                            //monitor that was acquired with locking skipped
+                            if (!jdwp_is_ignore_sync(r->jvm->jdwpserver, r)) {
+                                int ret = jthread_unlock(&r->ins->mb, r);
+                                if (ret < 0) {
+                                    s32 debug = 1;
+                                }
                             }
                             sp = stack->sp;
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -4160,36 +4181,41 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             //if stop=1 then exit thread
             ret = RUNTIME_STATUS_ERROR;
         } else if (method->native_func) {
-            if (method->is_sync)_synchronized_lock_method(method, r);
-            ret = method->native_func(r, clazz);
-            if (method->is_sync)_synchronized_unlock_method(method, r);
-            if (ret) {
-                r->ins = pop_ref(stack);
-                localvar_dispose(r);
-                push_ref(stack, r->ins);
+            if (method->is_sync && _synchronized_lock_method(method, r) != RUNTIME_STATUS_NORMAL) {
+                ret = RUNTIME_STATUS_ERROR;
             } else {
-                switch (method->return_slots) {
-                    case 0: {
-                        // V
-                        localvar_dispose(r);
-                        break;
-                    }
-                    case 1: {
-                        // F I R
-                        peek_entry(stack->sp - method->return_slots, &r->entry);
-                        localvar_dispose(r);
-                        push_entry(stack, &r->entry);
-                        break;
-                    }
-                    case 2: {
-                        //J D return type , 2slots
-                        r->lval1 = pop_long(stack);
-                        localvar_dispose(r);
-                        push_long(stack, r->lval1);
-                        break;
-                    }
-                    default: {
-                        break;
+                ret = method->native_func(r, clazz);
+                if (method->is_sync)_synchronized_unlock_method(method, r);
+            }
+            if (ret != RUNTIME_STATUS_ERROR) {
+                if (ret) {
+                    r->ins = pop_ref(stack);
+                    localvar_dispose(r);
+                    push_ref(stack, r->ins);
+                } else {
+                    switch (method->return_slots) {
+                        case 0: {
+                            // V
+                            localvar_dispose(r);
+                            break;
+                        }
+                        case 1: {
+                            // F I R
+                            peek_entry(stack->sp - method->return_slots, &r->entry);
+                            localvar_dispose(r);
+                            push_entry(stack, &r->entry);
+                            break;
+                        }
+                        case 2: {
+                            //J D return type , 2slots
+                            r->lval1 = pop_long(stack);
+                            localvar_dispose(r);
+                            push_long(stack, r->lval1);
+                            break;
+                        }
+                        default: {
+                            break;
+                        }
                     }
                 }
             }
@@ -4237,6 +4263,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     //profile_method_print(pruntime->jvm);
 #endif
 #endif
+    //jdwp: stepping out of the outermost java frame (parent is the thread
+    //root runtime, e.g. a native GLFW/JNI callback or main itself) never
+    //reaches another interpreter instruction, so the pending step would be
+    //lost and the debugger would wait forever. Complete it here instead.
+    if (pruntime && pruntime->method == NULL
+        && IS_JDWP_ENABLED(r) && jdwp_client_count(r->jvm->jdwpserver)) {
+        jdwp_check_debug_step_on_return(r);
+    }
     runtime_destroy_inl(r);
     pruntime->son = NULL; //must clear , required for getLastSon()
 

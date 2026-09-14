@@ -499,6 +499,7 @@ extern const c8 STR_CLASS_JAVA_LANG_DOUBLE[];
 extern const c8 STR_CLASS_JAVA_LANG_FLOAT[];
 extern const c8 STR_CLASS_JAVA_LANG_OBJECT[];
 extern const c8 STR_CLASS_JAVA_LANG_THREAD[];
+extern const c8 STR_CLASS_JAVA_LANG_THREAD_GROUP[];
 extern const c8 STR_CLASS_JAVA_LANG_INTERRUPTED[];
 extern const c8 STR_CLASS_JAVA_LANG_CLASS[];
 extern const c8 STR_CLASS_JAVA_LANG_CLASSLOADER[];
@@ -1625,6 +1626,7 @@ struct _Runtime {
     s32 offset;
     s32 count;
     u8 in_pending_destroy; //immix gc: runtime destruction deferred to post-resume
+    u8 *jdwp_bp_skip_pc; //jdwp: pc of last reported breakpoint, suppress re-report until pc moves
 #if _JVM_DEBUG_SLOW_CALL_PROFILE
     s64 slow_profile_start_at;
     s64 slow_profile_child_spent;

@@ -345,6 +345,7 @@ static inline Runtime *runtime_create_inl(Runtime *parent) {
         runtime->parent = parent;
         parent->son = runtime;
     }
+    runtime->jdwp_bp_skip_pc = NULL; //pooled runtime may carry a stale skip pc
     return runtime;
 }
 

@@ -2263,7 +2263,9 @@ s32 com_misc_Unsafe_pack(Runtime *runtime, JClass *clazz) {
     }
 
     Runtime *rt = runtime; // current thread
-    jthread_lock(&rt->thrd_info->pack, rt);
+    if (jthread_lock(&rt->thrd_info->pack, rt) != RUNTIME_STATUS_NORMAL) {
+        return 0;
+    }
     for (;;) {
         if (rt->thrd_info->is_unparked) {
             rt->thrd_info->is_unparked = 0;
@@ -2306,12 +2308,16 @@ s32 com_misc_Unsafe_unpack(Runtime *runtime, JClass *clazz) {
     Runtime *rt = jthread_get_stackframe_value(runtime->jvm, thrd);
     if (!rt) return 0; // not started or already reaped: nothing to signal
 
-    jthread_lock(&rt->thrd_info->pack, rt);
+    //The caller OS thread owns this mutex. Attribute monitor ownership to the
+    //caller runtime, not to the target thread being unparked.
+    if (jthread_lock(&rt->thrd_info->pack, runtime) != RUNTIME_STATUS_NORMAL) {
+        return 0;
+    }
     if (rt->thrd_info->thread_status != THREAD_STATUS_ZOMBIE) {
         rt->thrd_info->is_unparked = 1;
-        jthread_notify(&rt->thrd_info->pack, rt);
+        jthread_notify(&rt->thrd_info->pack, runtime);
     }
-    jthread_unlock(&rt->thrd_info->pack, rt);
+    jthread_unlock(&rt->thrd_info->pack, runtime);
     return 0;
 }
 

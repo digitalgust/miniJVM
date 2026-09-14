@@ -783,6 +783,44 @@ void _garbage_clear(GcCollector *collector) {
 }
 
 
+//Run one collection while the caller holds the JDWP freeze. Called before a
+//debugger invoke executes: the invoked method allocates under a paused
+//collector, and an allocation slow path there is refused with OOM
+//(_gc_request_collection never waits while paused). Collecting HERE is
+//race-free: every java thread is parked (is_suspend/is_blocking both count
+//as safepoints) and the jdwp runtime has not started executing, so its
+//not-yet-handed-over allocations cannot be mis-swept.
+void gc_make_room(MiniJVM *jvm) {
+    GcCollector *collector = jvm->collector;
+    if (!collector)return;
+    if (collector->_garbage_thread_status != GARBAGE_THREAD_PAUSE)return;
+    //Lazy gate: only pay for a cycle when the immix heuristics actually ask
+    //for one (allocation debt / heap-limit trigger / system pressure). An
+    //unconditional collection per invoke cost a full STW cycle for every
+    //debugger value evaluation while the app sits parked at a breakpoint.
+    //1MB is the headroom estimate for typical invoke allocations.
+    if (collector->immix_heap &&
+        !immix_should_collect((const ImmixHeap *) collector->immix_heap, 1024 * 1024)) {
+        return;
+    }
+    s64 gen_before;
+    spin_lock(&collector->lock);
+    gen_before = collector->gc_gen;
+    spin_unlock(&collector->lock);
+    gc_resume(collector);
+    _gc_request_collection_async(jvm, IMMIX_GC_EXPLICIT, 0);
+    s64 deadline = currentTimeMillis() + 3000;
+    while (currentTimeMillis() < deadline) {
+        s32 completed;
+        spin_lock(&collector->lock);
+        completed = collector->gc_gen != gen_before;
+        spin_unlock(&collector->lock);
+        if (completed)break;
+        threadSleep(2);
+    }
+    gc_pause(collector); //waits out any in-flight cycle
+}
+
 void gc_pause(GcCollector *collector) {
     vm_share_lock(collector->jvm);
     collector->_garbage_thread_status = GARBAGE_THREAD_PAUSE;

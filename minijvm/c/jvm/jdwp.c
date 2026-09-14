@@ -34,6 +34,7 @@ struct _JdwpServer {
     volatile u8 exit;
     u8 mode;
     u8 thread_sync_ignore; //for jdwp invokemethod , the flag indicate that method need not synchronized ,because all of java thread were suspended.
+    volatile u8 invoking; //jdwp invoke in flight: other threads run, swallow bp/step events
 };
 
 struct _JdwpClient {
@@ -68,6 +69,22 @@ void resume_all_thread(MiniJVM *jvm);
 void suspend_all_thread(MiniJVM *jvm);
 
 s32 is_class_exists(MiniJVM *jvm, JClass *clazz);
+
+static Instance *jdwp_threadgroup_of(MiniJVM *jvm, Runtime *r, Instance *jthread);
+
+static Instance *jdwp_threadgroup_parent(MiniJVM *jvm, Runtime *r, Instance *group);
+
+static void jdwp_threadgroup_name(MiniJVM *jvm, Runtime *r, Instance *group, Utf8String *out);
+
+static s32 jdwp_map_thread_status(u8 status);
+
+static s16 jdwp_validate_suspended_thread(JdwpServer *jdwpserver, Instance *jthread, Runtime **thread_runtime);
+
+static s16 jdwp_validate_suspended_frame(JdwpServer *jdwpserver, Instance *jthread, Runtime *frame);
+
+static FieldInfo *jdwp_find_field_id(JClass *clazz, FieldInfo *field_id);
+
+static MethodInfo *jdwp_find_method_id(JClass *clazz, MethodInfo *method_id);
 
 s32 jdwp_thread_dispacher(void *para);
 
@@ -201,6 +218,8 @@ s32 jdwp_start_server(MiniJVM *jvm) {
     jdwpserver->event_sets = pairlist_create(32);
     jdwpserver->runtime_jdwp = runtime_create(jvm);
     jdwpserver->runtime_jdwp->thrd_info->type = THREAD_TYPE_JDWP;
+    jdwpserver->jdwp_eventset_requestid = 1; //request id 0 is reserved ("no request") in JDWP
+    jdwpserver->invoking = 0;
     mtx_init(&jdwpserver->event_sets_lock, mtx_recursive | mtx_timed);
     netlock_init(jdwpserver);
     jvm->jdwpserver = jdwpserver;
@@ -214,6 +233,12 @@ s32 jdwp_start_server(MiniJVM *jvm) {
 s32 jdwp_stop_server(MiniJVM *jvm) {
     if (!jvm->jdwp_enable)return 0;
     JdwpServer *jdwpserver = jvm->jdwpserver;
+    //notify attached debuggers before tearing the connection down,
+    //otherwise jdb reports a raw disconnect instead of VM exit
+    if (jdwpserver->clients->length) {
+        event_on_vmdeath(jdwpserver);
+        threadSleep(150); //let the dispatcher flush the packet
+    }
     jdwpserver->exit = 1;
     mbedtls_net_free(&jdwpserver->srvsock);
     while (jdwpserver->mode != 0) {
@@ -742,6 +767,32 @@ void writeValueType(JdwpPacket *res, ValueType *vt) {
     }
 }
 
+//SetValues commands (ClassType 3.2 / ObjectReference 9.3) carry UNTAGGED
+//values on the wire: the field descriptor pre-sets the type, only the raw
+//bytes follow. Reading a tag byte here (like tagged values) misparses them.
+void readValueType_untagged(JdwpPacket *req, ValueType *vt) {
+    switch (getSimpleTag(vt->type)) {
+        case '1':
+            vt->value = jdwppacket_read_byte(req);
+            break;
+        case '2':
+            vt->value = jdwppacket_read_short(req);
+            break;
+        case '4':
+            vt->value = jdwppacket_read_int(req);
+            break;
+        case '8':
+            vt->value = jdwppacket_read_long(req);
+            break;
+        case 'R':
+            vt->value = (s64) (intptr_t) jdwppacket_read_refer(req);
+            break;
+        default:
+            vt->value = 0;
+            break;
+    }
+}
+
 void readValueType(JdwpPacket *req, ValueType *vt) {
     vt->type = jdwppacket_read_byte(req);
     switch (getSimpleTag(vt->type)) {
@@ -922,9 +973,20 @@ void jdwp_print_packet(JdwpPacket *packet) {
 }
 
 void jdwp_check_breakpoint(Runtime *runtime) {
-    u32 index = (u32) (runtime->pc - runtime->method->converted_code->code);
     MethodInfo *method = runtime->method;
-    if ((method->breakpoint) && pairlist_getl(method->breakpoint, index)) {
+    if (runtime->jvm->jdwpserver && runtime->jvm->jdwpserver->invoking)return; //events suppressed during invoke
+    //JDWP semantics: resuming from a breakpoint must not re-report the same
+    //location. Skip checks at the reported pc until the pc moves on.
+    if (runtime->jdwp_bp_skip_pc && runtime->jdwp_bp_skip_pc != runtime->pc) {
+        runtime->jdwp_bp_skip_pc = NULL;
+    }
+    if (!method->breakpoint || !method->converted_code)return;
+    if (runtime->jdwp_bp_skip_pc == runtime->pc) {
+        return;
+    }
+    u32 index = (u32) (runtime->pc - runtime->method->converted_code->code);
+    if (pairlist_getl(method->breakpoint, index)) {
+        runtime->jdwp_bp_skip_pc = runtime->pc;
         event_on_breakpoint(runtime->jvm->jdwpserver, runtime); //
     }
 }
@@ -933,6 +995,7 @@ void jdwp_check_debug_step(Runtime *runtime) {
     JdwpServer *jdwpserver = runtime->jvm->jdwpserver;
     JdwpStep *step = (runtime->thrd_info->jdwp_step);
 
+    if (jdwpserver && jdwpserver->invoking) return; //events suppressed during invoke
     if (!step->active) return;
 
     // Only check stepping for the specific target thread
@@ -1000,13 +1063,39 @@ Runtime *jdwp_get_runtime(JdwpServer *srv) {
     return srv->runtime_jdwp;
 }
 
-s32 jdwp_is_ignore_sync(JdwpServer *srv) {
+void jdwp_check_debug_step_on_return(Runtime *runtime) {
+    JdwpStep *step = runtime->thrd_info->jdwp_step;
+    if (!step || !step->active)return;
+    if (step->target_thread != runtime->thrd_info->jthread)return;
+    if (!runtime->method || !runtime->method->converted_code)return; //native frame has no bytecode location
+    //called from execute_method_impl when the outermost java frame returns
+    //into native (GLFW/JNI callback, main): no further bytecode will run,
+    //so a step waiting for a depth decrease must complete here or it is lost
+    s32 depth_after_return = getRuntimeDepth(runtime->thrd_info->top_runtime) - 1;
+    if (depth_after_return < step->start_depth) {
+        step->active = 0;
+        event_on_debug_step(runtime->jvm->jdwpserver, runtime);
+        //park in the epilogue while the frame is still readable, so the
+        //debugger can query frames before the thread vanishes into native
+        check_suspend_and_pause(runtime);
+    }
+}
+
+s32 jdwp_is_invoking(JdwpServer *srv) {
+    //true while a debugger invoke is in flight (all java threads frozen,
+    //locks skipped, events suppressed)
+    if (!srv)return 0;
+    return srv->invoking != 0;
+}
+
+s32 jdwp_is_ignore_sync(JdwpServer *srv, Runtime *runtime) {
     /* No JDWP server == normal production run: synchronized methods take
      * the FULL lock path. Only an explicit debugger request may bypass
      * method sync. The old `if (!srv) return 1` left Thread.join()'s
      * synchronized wait() on a never-locked monitor. */
-    if (!srv)return 0;
-    return srv->thread_sync_ignore != 0;
+    if (!srv || !runtime || !srv->runtime_jdwp)return 0;
+    return srv->thread_sync_ignore != 0 &&
+           runtime->thrd_info == srv->runtime_jdwp->thrd_info;
 }
 
 //==================================================    event suspend helper    ==================================================
@@ -1089,7 +1178,9 @@ void event_on_vmstart(JdwpServer *jdwpserver, Instance *jthread) {
     JdwpPacket *req = jdwppacket_create();
     jdwppacket_set_id(req, jdwpserver->jdwp_eventset_commandid++);
     jdwppacket_set_cmd(req, JDWP_CMD_Event_Composite);
-    jdwppacket_write_byte(req, JDWP_SUSPENDPOLICY_ALL);
+    //the suspend policy must reflect the real suspend state of the vm,
+    //otherwise the debugger's suspend accounting gets out of sync.
+    jdwppacket_write_byte(req, jdwpserver->jvm->jdwp_suspend_on_start ? JDWP_SUSPENDPOLICY_ALL : JDWP_SUSPENDPOLICY_NONE);
     jdwppacket_write_int(req, 1);
     jdwppacket_write_byte(req, JDWP_EVENTKIND_VM_START);
     jdwppacket_write_int(req, 0);
@@ -1142,13 +1233,14 @@ void event_on_class_prepare(JdwpServer *jdwpserver, Runtime *runtime, JClass *cl
                                 classNameMatch = utf8_indexof(clazz->name, prefix) >= 0;
                             }
                             if (classNameMatch) {
-                                send_class_prepare(jdwpserver, runtime, clazz, set, str);
-                                // Apply suspend policy for class prepare events
+                                //arm the suspend before the packet is queued
                                 jdwp_apply_suspend_policy(jdwpserver, set->suspendPolicy, runtime);
+                                send_class_prepare(jdwpserver, runtime, clazz, set, str);
                             }
                         }
                     }
                 } else {
+                    jdwp_apply_suspend_policy(jdwpserver, set->suspendPolicy, runtime);
                     send_class_prepare(jdwpserver, runtime, clazz, set, str);
                 }
             }
@@ -1185,6 +1277,17 @@ void event_on_class_unload(JdwpServer *jdwpserver, JClass *clazz) {
         mtx_unlock(&jdwpserver->event_sets_lock);
         utf8_destroy(str);
     }
+}
+
+void event_on_vmdeath(JdwpServer *jdwpserver) {
+    JdwpPacket *req = jdwppacket_create();
+    jdwppacket_set_id(req, jdwpserver->jdwp_eventset_commandid++);
+    jdwppacket_set_cmd(req, JDWP_CMD_Event_Composite);
+    jdwppacket_write_byte(req, JDWP_SUSPENDPOLICY_NONE);
+    jdwppacket_write_int(req, 1); //event count
+    jdwppacket_write_byte(req, JDWP_EVENTKIND_VM_DEATH);
+    jdwppacket_write_int(req, 0); //request id
+    jdwp_packet_put(jdwpserver, req);
 }
 
 void event_on_thread_start(JdwpServer *jdwpserver, Instance *jthread) {
@@ -1241,10 +1344,11 @@ void event_on_breakpoint(JdwpServer *jdwpserver, Runtime *breakpoint_runtime) {
                     jdwppacket_write_int(req, set->requestId);
                     jdwppacket_write_refer(req, ei.thread);
                     writeLocation(req, &ei.loc);
-                    jdwp_packet_put(jdwpserver, req);
-
-                    // Apply suspend policy based on EventSet configuration
+                    //arm the suspend BEFORE queueing: the dispatcher may
+                    //deliver within microseconds and the debugger would
+                    //query a thread whose suspend count is not armed yet
                     jdwp_apply_suspend_policy(jdwpserver, set->suspendPolicy, breakpoint_runtime);
+                    jdwp_packet_put(jdwpserver, req);
                 }
             }
         }
@@ -1279,15 +1383,12 @@ void event_on_debug_step(JdwpServer *jdwpserver, Runtime *step_runtime) {
                 jdwppacket_write_int(req, set->requestId);
                 jdwppacket_write_refer(req, ei.thread);
                 writeLocation(req, &ei.loc);
-                jdwp_packet_put(jdwpserver, req);
-
-                MethodInfo *methodInfo = ei.loc.methodID;
-                // if (utf8_equals_c(methodInfo->name, "wait")) {
-                //     s32 debug = 1;
-                // }
-
-                // Apply suspend policy for step events
+                //apply the suspend policy BEFORE the packet is queued: the
+                //dispatcher may deliver the event within microseconds and the
+                //debugger would otherwise query a thread whose suspend count
+                //is not armed yet (IncompatibleThreadStateException)
                 jdwp_apply_suspend_policy(jdwpserver, set->suspendPolicy, step_runtime);
+                jdwp_packet_put(jdwpserver, req);
             }
         }
     }
@@ -1297,6 +1398,10 @@ void event_on_debug_step(JdwpServer *jdwpserver, Runtime *step_runtime) {
 s32 jdwp_set_breakpoint(JdwpServer *jdwpserver, s32 setOrClear, JClass *clazz, MethodInfo *methodInfo, s64 execIndex) {
     if (!is_class_exists(jdwpserver->jvm, clazz)) {
         return JDWP_ERROR_INVALID_CLASS;
+    }
+    methodInfo = jdwp_find_method_id(clazz, methodInfo);
+    if (!methodInfo) {
+        return JDWP_ERROR_INVALID_METHODID;
     }
     if (!methodInfo->breakpoint) {
         methodInfo->breakpoint = pairlist_create(4);
@@ -1308,7 +1413,7 @@ s32 jdwp_set_breakpoint(JdwpServer *jdwpserver, s32 setOrClear, JClass *clazz, M
         } else {
             pairlist_removel(methodInfo->breakpoint, (intptr_t) execIndex);
             if (methodInfo->breakpoint->count == 0) {
-                jvm_free(methodInfo->breakpoint);
+                pairlist_destroy(methodInfo->breakpoint);
                 methodInfo->breakpoint = NULL;
             }
             return JDWP_ERROR_NONE;
@@ -1656,6 +1761,141 @@ s32 is_class_exists(MiniJVM *jvm, JClass *clazz) {
     return exist;
 }
 
+static FieldInfo *jdwp_find_field_id(JClass *clazz, FieldInfo *field_id) {
+    while (clazz) {
+        s32 i;
+        for (i = 0; i < clazz->fieldPool.field_used; i++) {
+            if (&clazz->fieldPool.field[i] == field_id) return &clazz->fieldPool.field[i];
+        }
+        clazz = getSuperClass(clazz);
+    }
+    return NULL;
+}
+
+static MethodInfo *jdwp_find_method_id(JClass *clazz, MethodInfo *method_id) {
+    while (clazz) {
+        s32 i;
+        for (i = 0; i < clazz->methodPool.method_used; i++) {
+            if (&clazz->methodPool.method[i] == method_id) return &clazz->methodPool.method[i];
+        }
+        clazz = getSuperClass(clazz);
+    }
+    return NULL;
+}
+
+typedef struct {
+    Runtime *runtime;
+    s32 suspend_count; //count the debugger had when the invoke started
+    u8 we_suspended;   //we moved it 0 -> 1 for the single-executor window
+} JdwpInvokeSnapshot;
+
+//Invoke execution model: the invoked method runs on the jdwp dispatcher and
+//ALL java threads stay frozen (zero frame drift, single executor). Under
+//that invariant mutual exclusion is trivially satisfied, so monitorenter /
+//monitorexit are skipped (jdwp_is_ignore_sync) instead of taking real locks -
+//which would deadlock whenever a frozen thread owns the monitor.
+static void jdwp_invoke_end(JdwpServer *jdwpserver, ArrayList *snapshot);
+
+static s16 jdwp_invoke_begin(JdwpServer *jdwpserver, ArrayList **snapshot_out) {
+    MiniJVM *jvm = jdwpserver->jvm;
+    ArrayList *snapshot = arraylist_create(8);
+    //Publish this before taking the snapshot. A thread created concurrently
+    //will then either already be in the snapshot or observe invoking=1 and
+    //start suspended; there is no untracked runnable window between the two.
+    jdwpserver->invoking = 1;
+    spin_lock(&jvm->thread_list->spinlock);
+    {
+        s32 i;
+        for (i = 0; i < jvm->thread_list->length; i++) {
+            Runtime *t = arraylist_get_value_unsafe(jvm->thread_list, i);
+            JdwpInvokeSnapshot *snap = jvm_calloc(sizeof(JdwpInvokeSnapshot));
+            snap->runtime = t;
+            snap->suspend_count = t->thrd_info->suspend_count;
+            arraylist_push_back(snapshot, snap);
+        }
+    }
+    spin_unlock(&jvm->thread_list->spinlock);
+
+    s32 i;
+    for (i = 0; i < snapshot->length; i++) {
+        JdwpInvokeSnapshot *snap = arraylist_get_value_unsafe(snapshot, i);
+        if (snap->suspend_count == 0) {
+            //enforce the single-executor invariant: a running thread parks at
+            //its next interpreter check point; one deep in native executes no
+            //java code and parks as soon as it returns
+            jthread_suspend(snap->runtime);
+            snap->suspend_count = 1;
+            snap->we_suspended = 1;
+        }
+    }
+    *snapshot_out = snapshot;
+
+    //Do not rely on suspend_count alone: an event arms that count before the
+    //event thread reaches its park point. Starting the lock-free invoke in
+    //that interval would leave two Java executors. Native blocking regions
+    //are safe because jthread_block_exit parks before returning to Java.
+    for (i = 0; i < snapshot->length; i++) {
+        JdwpInvokeSnapshot *snap = arraylist_get_value_unsafe(snapshot, i);
+        JavaThreadInfo *ti = snap->runtime->thrd_info;
+        s32 spin;
+        for (spin = 0; spin < 500 &&
+             !ti->is_suspend && !ti->is_blocking &&
+             ti->thread_status != THREAD_STATUS_ZOMBIE; spin++) {
+            threadSleep(1);
+        }
+        if (!ti->is_suspend && !ti->is_blocking &&
+            ti->thread_status != THREAD_STATUS_ZOMBIE) {
+            jdwp_invoke_end(jdwpserver, snapshot);
+            *snapshot_out = NULL;
+            return JDWP_ERROR_INTERNAL;
+        }
+    }
+    return JDWP_ERROR_NONE;
+}
+
+static s32 jdwp_invoke_in_snapshot(ArrayList *snapshot, Runtime *t) {
+    s32 i;
+    for (i = 0; i < snapshot->length; i++) {
+        if (((JdwpInvokeSnapshot *) arraylist_get_value_unsafe(snapshot, i))->runtime == t)return 1;
+    }
+    return 0;
+}
+
+static void jdwp_invoke_end(JdwpServer *jdwpserver, ArrayList *snapshot) {
+    MiniJVM *jvm = jdwpserver->jvm;
+    jdwpserver->invoking = 0;
+    if (!snapshot)return;
+    s32 i;
+    for (i = 0; i < snapshot->length; i++) {
+        JdwpInvokeSnapshot *snap = arraylist_get_value_unsafe(snapshot, i);
+        //the thread may have died during the invoke
+        if (snap->we_suspended &&
+            find_jthread_from_threadlist(jvm, snap->runtime->thrd_info->jthread) == snap->runtime) {
+            jthread_resume(snap->runtime);
+        }
+    }
+    //threads born during the invoke start parked (jthread_start checks the
+    //invoking flag): release exactly those - i.e. suspended threads that were
+    //not present when the invoke began
+    spin_lock(&jvm->thread_list->spinlock);
+    {
+        s32 k;
+        for (k = 0; k < jvm->thread_list->length; k++) {
+            Runtime *t = arraylist_get_value_unsafe(jvm->thread_list, k);
+            if (t->thrd_info->suspend_count > 0 && !jdwp_invoke_in_snapshot(snapshot, t)) {
+                spin_unlock(&jvm->thread_list->spinlock);
+                jthread_resume(t);
+                spin_lock(&jvm->thread_list->spinlock);
+            }
+        }
+    }
+    spin_unlock(&jvm->thread_list->spinlock);
+    for (i = 0; i < snapshot->length; i++) {
+        jvm_free(arraylist_get_value_unsafe(snapshot, i));
+    }
+    arraylist_destroy(snapshot);
+}
+
 void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *client) {
     JdwpServer *jdwpserver = client->jdwpserver;
     GcCollector *collector = client->jvm->collector;
@@ -1663,7 +1903,7 @@ void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *
     Runtime *runtime = jdwp_get_runtime(jdwpserver);
     JClass *clazz;
     Instance *thread;
-    Instance *object;
+    Instance *object = NULL;
     if (call_mode == CALL_MODE_STATIC) {
         clazz = jdwppacket_read_refer(req);
         thread = jdwppacket_read_refer(req);
@@ -1672,8 +1912,41 @@ void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *
         thread = jdwppacket_read_refer(req);
         clazz = jdwppacket_read_refer(req);
     }
-    MethodInfo *methodInfo = jdwppacket_read_refer(req);
+    MethodInfo *method_id = jdwppacket_read_refer(req);
     s32 arguments = jdwppacket_read_int(req);
+    s16 validation_error = JDWP_ERROR_NONE;
+    Runtime *target_runtime = find_jthread_from_threadlist(client->jvm, thread);
+    MethodInfo *methodInfo = NULL;
+    if (!is_class_exists(client->jvm, clazz)) {
+        validation_error = JDWP_ERROR_INVALID_CLASS;
+    } else if (!target_runtime) {
+        validation_error = JDWP_ERROR_INVALID_THREAD;
+    } else if (target_runtime->thrd_info->suspend_count == 0) {
+        validation_error = JDWP_ERROR_THREAD_NOT_SUSPENDED;
+    } else if (!(methodInfo = jdwp_find_method_id(clazz, method_id))) {
+        validation_error = JDWP_ERROR_INVALID_METHODID;
+    } else if (arguments < 0) {
+        validation_error = JDWP_ERROR_INVALID_LENGTH;
+    } else if (call_mode == CALL_MODE_STATIC && !(methodInfo->access_flags & ACC_STATIC)) {
+        validation_error = JDWP_ERROR_INVALID_METHODID;
+    } else if (call_mode == CALL_MODE_INSTANCE &&
+               ((methodInfo->access_flags & ACC_STATIC) || !object || !instance_of(object, clazz))) {
+        validation_error = JDWP_ERROR_INVALID_OBJECT;
+    }
+    if (validation_error != JDWP_ERROR_NONE) {
+        jdwppacket_set_err(res, validation_error);
+        jdwp_packet_put(jdwpserver, res);
+        gc_resume(collector);
+        return;
+    }
+    ArrayList *invoke_snapshot = NULL;
+    s16 invoke_error = jdwp_invoke_begin(jdwpserver, &invoke_snapshot);
+    if (invoke_error != JDWP_ERROR_NONE) {
+        jdwppacket_set_err(res, invoke_error);
+        jdwp_packet_put(jdwpserver, res);
+        gc_resume(collector);
+        return;
+    }
 
     s32 stacksize = stack_size(runtime->stack);
     if (!(methodInfo->is_static)) {
@@ -1696,10 +1969,25 @@ void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *
                 push_int(runtime->stack, (s32) vt.value);
         }
     }
+    (void) jdwppacket_read_int(req); //invoke options; execution model is documented above
+
+    //headroom for the invoked method: without a fresh collection its first
+    //slow-path allocation is refused with OOM (collector stays paused for
+    //the whole invoke - see the execution model note above)
+    gc_make_room(jdwpserver->jvm);
 
     jdwpserver->thread_sync_ignore = 1;
     s32 ret = execute_method_impl(methodInfo, runtime);
     jdwpserver->thread_sync_ignore = 0;
+    jdwp_invoke_end(jdwpserver, invoke_snapshot);
+
+    if (ret == RUNTIME_STATUS_ERROR) {
+        runtime->stack->sp = runtime->stack->store + stacksize;
+        jdwppacket_set_err(res, JDWP_ERROR_INTERNAL);
+        jdwp_packet_put(jdwpserver, res);
+        gc_resume(collector);
+        return;
+    }
 
     jdwppacket_set_err(res, JDWP_ERROR_NONE);
 
@@ -1776,7 +2064,6 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
     s32 packetCount = 0;
     while ((req = jdwp_readpacket(client)) != NULL) {
         u16 cmd = jdwppacket_get_cmd_err(req);
-        //jvm_printf("[JDWP]jdwp receiv cmd: %x\n", cmd);
         JdwpPacket *res = jdwppacket_create();
         jdwppacket_set_flag(res, JDWP_PACKET_RESPONSE);
         s32 reqid = jdwppacket_get_id(req);
@@ -1805,7 +2092,9 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                     threadSleep(20);
                 }
                 Runtime *mainthread = (Runtime *) arraylist_get_value(jdwpserver->jvm->thread_list, 0);
-                if (jdwpserver->jvm->jdwp_suspend_on_start)event_on_vmstart(jdwpserver, mainthread->thrd_info->jthread);
+                //JDI attach waits for the VM_START event unconditionally;
+                //it must be sent even when suspend=n (policy NONE above).
+                event_on_vmstart(jdwpserver, mainthread->thrd_info->jthread);
                 break;
             }
             case JDWP_CMD_VirtualMachine_ClassesBySignature: {
@@ -1908,12 +2197,38 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 break;
             }
             case JDWP_CMD_VirtualMachine_TopLevelThreadGroups: {
-                //1.5
-
+                //1.5 collect root groups by walking every live thread's group chain
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
-
-                jdwppacket_write_int(res, 0);
-                //jdwppacket_write_refer(res, 0);
+                Runtime *jr = jdwp_get_runtime(jdwpserver);
+                gc_pause(jvm->collector);
+                ArrayList *roots = arraylist_create(2);
+                spin_lock(&jvm->thread_list->spinlock);
+                {
+                    s32 i;
+                    for (i = 0; i < jvm->thread_list->length; i++) {
+                        Runtime *t = arraylist_get_value_unsafe(jvm->thread_list, i);
+                        Instance *grp = t->thrd_info->jthread ? jdwp_threadgroup_of(jvm, jr, t->thrd_info->jthread) : NULL;
+                        while (grp) {
+                            Instance *parent = jdwp_threadgroup_parent(jvm, jr, grp);
+                            if (!parent) {
+                                if (arraylist_index_of(roots, arraylist_compare_ptr, grp) < 0) {
+                                    arraylist_push_back(roots, grp);
+                                }
+                                break;
+                            }
+                            grp = parent;
+                        }
+                    }
+                }
+                spin_unlock(&jvm->thread_list->spinlock);
+                jdwppacket_write_int(res, roots->length);
+                s32 i;
+                for (i = 0; i < roots->length; i++) {
+                    jdwppacket_write_refer(res, arraylist_get_value_unsafe(roots, i));
+                }
+                arraylist_destroy(roots);
+                gc_move_objs_thread_2_gc(jr);
+                gc_resume(jvm->collector);
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
@@ -2005,8 +2320,43 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
             case JDWP_CMD_VirtualMachine_ClassPaths: {
                 //1.13
-                jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
-                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                //jdb calls VM.classPath() unconditionally during connect,
+                //NOT_IMPLEMENTED here aborts the whole jdb session.
+                jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                Utf8String *empty = utf8_create_c("");
+                jdwppacket_write_utf(res, empty); //baseDir
+                utf8_destroy(empty);
+
+                //classpath from java.class.path property
+                {
+                    Utf8String *key = utf8_create_c(STR_VM_JAVA_CLASS_PATH);
+                    Utf8String *cp = (Utf8String *) hashtable_get(jvm->sys_prop, key);
+                    utf8_destroy(key);
+                    Utf8String *part = utf8_create();
+                    s32 cnt = 0, i;
+                    for (i = 0;; i++) {
+                        utf8_clear(part);
+                        utf8_split_get_part(cp, PATHSEPARATOR, i, part);
+                        if (!part->length)break;
+                        cnt++;
+                    }
+                    jdwppacket_write_int(res, cnt);
+                    for (i = 0; i < cnt; i++) {
+                        utf8_clear(part);
+                        utf8_split_get_part(cp, PATHSEPARATOR, i, part);
+                        jdwppacket_write_utf(res, part);
+                    }
+                    utf8_destroy(part);
+                }
+                //bootclasspath from boot classloader entries
+                {
+                    PeerClassLoader *bootcl = jvm->boot_classloader;
+                    jdwppacket_write_int(res, bootcl->classpath->length);
+                    s32 i;
+                    for (i = 0; i < bootcl->classpath->length; i++) {
+                        jdwppacket_write_utf(res, (Utf8String *) arraylist_get_value_unsafe(bootcl->classpath, i));
+                    }
+                }
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
@@ -2064,29 +2414,10 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 break;
             }
             case JDWP_CMD_VirtualMachine_AllClassesWithGeneric: {
-                //1.20
-                PeerClassLoader *boot_classloader = jdwpserver->jvm->boot_classloader;
+                //1.20 same layout as AllClasses plus a (generic) signature field
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                jdwppacket_write_int(res, (s32) boot_classloader->classes->entries);
 
                 Utf8String *ustr = utf8_create();
-                HashtableIterator hti;
-                hashtable_iterate(boot_classloader->classes, &hti);
-                for (; hashtable_iter_has_more(&hti);) {
-                    Utf8String *k = hashtable_iter_next_key(&hti);
-                    JClass *cl = hashtable_get(boot_classloader->classes, k);
-
-                    jdwppacket_write_byte(res, getClassType(cl));
-                    jdwppacket_write_refer(res, cl);
-                    utf8_clear(ustr);
-                    utf8_append(ustr, cl->name);
-                    nameToSignature(ustr);
-                    //jvm_printf("jdwp:%s\n", utf8_cstr(ustr));
-                    jdwppacket_write_utf(res, ustr);
-                    utf8_clear(ustr);
-                    jdwppacket_write_utf(res, ustr);
-                    jdwppacket_write_int(res, getClassStatus(cl));
-                }
 
                 MiniJVM *jvm = jdwpserver->jvm;
                 spin_lock(&jvm->lock_cloader);
@@ -2107,10 +2438,9 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                             utf8_clear(ustr);
                             utf8_append(ustr, cl->name);
                             nameToSignature(ustr);
-                            //jvm_printf("jdwp:%s\n", utf8_cstr(ustr));
                             jdwppacket_write_utf(res, ustr);
                             utf8_clear(ustr);
-                            jdwppacket_write_utf(res, ustr);
+                            jdwppacket_write_utf(res, ustr); //generic signature is unavailable
                             jdwppacket_write_int(res, getClassStatus(cl));
                         }
                     }
@@ -2212,11 +2542,16 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                     gc_pause(jdwpserver->jvm->collector);
                     Runtime *runtime = jdwp_get_runtime(jdwpserver);
                     s32 fields = jdwppacket_read_int(req);
-                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                    jdwppacket_write_int(res, fields);
+                    jdwppacket_set_err(res, fields < 0 ? JDWP_ERROR_INVALID_LENGTH : JDWP_ERROR_NONE);
+                    if (fields >= 0) jdwppacket_write_int(res, fields);
                     s32 i;
                     for (i = 0; i < fields; i++) {
-                        FieldInfo *fi = jdwppacket_read_refer(req);
+                        FieldInfo *field_id = jdwppacket_read_refer(req);
+                        FieldInfo *fi = jdwp_find_field_id(ref, field_id);
+                        if (!fi || !(fi->access_flags & ACC_STATIC)) {
+                            jdwppacket_set_err(res, JDWP_ERROR_INVALID_FIELDID);
+                            break;
+                        }
                         ValueType vt;
                         vt.type = getJdwpTag(fi->descriptor);
                         c8 *ptr = getStaticFieldPtr(fi);
@@ -2385,17 +2720,20 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                     gc_pause(jdwpserver->jvm->collector);
                     Runtime *runtime = jdwp_get_runtime(jdwpserver);
                     s32 fields = jdwppacket_read_int(req);
-                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    jdwppacket_set_err(res, fields < 0 ? JDWP_ERROR_INVALID_LENGTH : JDWP_ERROR_NONE);
                     s32 i;
                     for (i = 0; i < fields; i++) {
-                        FieldInfo *fi = jdwppacket_read_refer(req);
+                        FieldInfo *field_id = jdwppacket_read_refer(req);
+                        FieldInfo *fi = jdwp_find_field_id(ref, field_id);
+                        if (!fi || !(fi->access_flags & ACC_STATIC)) {
+                            jdwppacket_set_err(res, JDWP_ERROR_INVALID_FIELDID);
+                            break;
+                        }
                         ValueType vt;
                         vt.type = getJdwpTag(fi->descriptor);
-                        readValueType(req, &vt);
-                        if (fi->access_flags & ACC_STATIC) {
-                            c8 *ptr = getStaticFieldPtr(fi);
-                            setPtrValue(vt.type, ptr, vt.value);
-                        }
+                        readValueType_untagged(req, &vt);
+                        c8 *ptr = getStaticFieldPtr(fi);
+                        setPtrValue(vt.type, ptr, vt.value);
                     }
                     jdwp_packet_put(jdwpserver, res);
 
@@ -2426,13 +2764,25 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                     }
 
                     Instance *thread = jdwppacket_read_refer(req);
-                    MethodInfo *constructor = jdwppacket_read_refer(req);
+                    MethodInfo *constructor_id = jdwppacket_read_refer(req);
                     s32 arguments = jdwppacket_read_int(req);
+                    Runtime *target_runtime = find_jthread_from_threadlist(jdwpserver->jvm, thread);
+                    MethodInfo *constructor = jdwp_find_method_id(clazz, constructor_id);
 
                     // Validate constructor
                     if (!constructor || constructor->_this_class != clazz ||
-                        utf8_equals_c(constructor->name, "<init>") != 1) {
+                        utf8_equals_c(constructor->name, "<init>") != 1 || arguments < 0) {
                         jdwppacket_set_err(res, JDWP_ERROR_INVALID_METHODID);
+                        jdwp_packet_put(jdwpserver, res);
+                        break;
+                    }
+                    if (!target_runtime) {
+                        jdwppacket_set_err(res, JDWP_ERROR_INVALID_THREAD);
+                        jdwp_packet_put(jdwpserver, res);
+                        break;
+                    }
+                    if (target_runtime->thrd_info->suspend_count == 0) {
+                        jdwppacket_set_err(res, JDWP_ERROR_THREAD_NOT_SUSPENDED);
                         jdwp_packet_put(jdwpserver, res);
                         break;
                     }
@@ -2448,7 +2798,8 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                         // Create parameter stack for constructor
                         RuntimeStack *paraStack = NULL;
                         if (arguments > 0) {
-                            paraStack = stack_create(arguments);
+                            //long/double arguments occupy two VM stack slots
+                            paraStack = stack_create(arguments * 2 + 1);
                             s32 i;
                             for (i = 0; i < arguments; i++) {
                                 ValueType vt;
@@ -2466,8 +2817,20 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                                 }
                             }
                         }
+                        (void) jdwppacket_read_int(req); //invoke options
 
                         // Execute constructor using instance_init_with_para
+                        ArrayList *ctor_snapshot = NULL;
+                        s16 invoke_error = jdwp_invoke_begin(jdwpserver, &ctor_snapshot);
+                        if (invoke_error != JDWP_ERROR_NONE) {
+                            if (paraStack) stack_destroy(paraStack);
+                            jdwppacket_set_err(res, invoke_error);
+                            jdwp_packet_put(jdwpserver, res);
+                            gc_move_objs_thread_2_gc(runtime);
+                            gc_resume(jdwpserver->jvm->collector);
+                            break;
+                        }
+                        gc_make_room(jdwpserver->jvm); //headroom, see invoke_method
                         jdwpserver->thread_sync_ignore = 1;
 
                         // Save current stack state
@@ -2479,6 +2842,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                         utf8_destroy(methodSig);
 
                         jdwpserver->thread_sync_ignore = 0;
+                        jdwp_invoke_end(jdwpserver, ctor_snapshot);
 
                         // Check if constructor threw exception
                         s32 current_stack_size = stack_size(runtime->stack);
@@ -2608,21 +2972,28 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 __refer refType = jdwppacket_read_refer(req);
                 JClass *ref = (JClass *) (refType);
                 if (is_class_exists(jdwpserver->jvm, ref)) {
-                    MethodInfo *method = jdwppacket_read_refer(req);
+                    MethodInfo *method_id = jdwppacket_read_refer(req);
+                    MethodInfo *method = jdwp_find_method_id(ref, method_id);
+                    if (!method) {
+                        jdwppacket_set_err(res, JDWP_ERROR_INVALID_METHODID);
+                        jdwp_packet_put(jdwpserver, res);
+                        break;
+                    }
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                    CodeAttribute *ca = getCodeAttribute(method);
+                    CodeAttribute *ca = method->converted_code;
                     if (method->is_native) {
                         jdwppacket_write_long(res, -1);
                         jdwppacket_write_long(res, -1);
+                        jdwppacket_write_int(res, 0);
                     } else {
                         jdwppacket_write_long(res, 0);
-                        jdwppacket_write_long(res, ca->code_length);
-                    }
-                    jdwppacket_write_int(res, ca->line_number_table_length);
-                    s32 i;
-                    for (i = 0; i < ca->line_number_table_length; i++) {
-                        jdwppacket_write_long(res, ca->line_number_table[i].start_pc);
-                        jdwppacket_write_int(res, ca->line_number_table[i].line_number);
+                        jdwppacket_write_long(res, ca ? ca->code_length : 0);
+                        jdwppacket_write_int(res, ca ? ca->line_number_table_length : 0);
+                        s32 i;
+                        for (i = 0; ca && i < ca->line_number_table_length; i++) {
+                            jdwppacket_write_long(res, ca->line_number_table[i].start_pc);
+                            jdwppacket_write_int(res, ca->line_number_table[i].line_number);
+                        }
                     }
                 } else {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
@@ -2635,13 +3006,20 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 __refer refType = jdwppacket_read_refer(req);
                 JClass *ref = (JClass *) (refType);
                 if (is_class_exists(jdwpserver->jvm, ref)) {
-                    MethodInfo *method = jdwppacket_read_refer(req);
-                    CodeAttribute *ca = getCodeAttribute(method);
+                    MethodInfo *method_id = jdwppacket_read_refer(req);
+                    MethodInfo *method = jdwp_find_method_id(ref, method_id);
+                    if (!method) {
+                        jdwppacket_set_err(res, JDWP_ERROR_INVALID_METHODID);
+                        jdwp_packet_put(jdwpserver, res);
+                        break;
+                    }
+                    CodeAttribute *ca = method->converted_code;
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    s32 tablen = ca ? ca->local_var_table_length : 0;
                     jdwppacket_write_int(res, method->para_slots); //slot count
-                    jdwppacket_write_int(res, ca->local_var_table_length); // para count
+                    jdwppacket_write_int(res, tablen); // para count
                     s32 i;
-                    for (i = 0; i < ca->local_var_table_length; i++) {
+                    for (i = 0; i < tablen; i++) {
                         LocalVarTable *tab = &ca->local_var_table[i];
                         jdwppacket_write_long(res, tab->start_pc);
                         jdwppacket_write_utf(res, class_get_utf8_string(ref, tab->name_index));
@@ -2699,13 +3077,28 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 gc_pause(jdwpserver->jvm->collector);
                 Runtime *runtime = jdwp_get_runtime(jdwpserver);
                 Instance *obj = (Instance *) jdwppacket_read_refer(req);
+                if (!obj || !gc_is_alive(jdwpserver->jvm->collector, obj)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_OBJECT);
+                    jdwp_packet_put(jdwpserver, res);
+                    gc_resume(jdwpserver->jvm->collector);
+                    break;
+                }
                 JClass *ref = obj->mb.clazz;
                 s32 fields = jdwppacket_read_int(req);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                jdwppacket_write_int(res, fields);
+                jdwppacket_set_err(res, fields < 0 ? JDWP_ERROR_INVALID_LENGTH : JDWP_ERROR_NONE);
+                //values count MUST lead the reply: without it the debugger
+                //parses the first tag byte into the count (garbage ~2 billion)
+                //and dies rendering - the "statics show OOM / cannot expand"
+                //IDE symptom
+                if (fields >= 0) jdwppacket_write_int(res, fields);
                 s32 i;
                 for (i = 0; i < fields; i++) {
-                    FieldInfo *fi = jdwppacket_read_refer(req);
+                    FieldInfo *field_id = jdwppacket_read_refer(req);
+                    FieldInfo *fi = jdwp_find_field_id(ref, field_id);
+                    if (!fi || (fi->access_flags & ACC_STATIC)) {
+                        jdwppacket_set_err(res, JDWP_ERROR_INVALID_FIELDID);
+                        break;
+                    }
                     ValueType vt;
                     vt.type = getJdwpTag(fi->descriptor);
                     c8 *ptr = getFieldPtr_byName(obj, obj->mb.clazz->name, fi->name, fi->descriptor, runtime);
@@ -2723,17 +3116,27 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 gc_pause(jdwpserver->jvm->collector);
                 Runtime *runtime = jdwp_get_runtime(jdwpserver);
                 Instance *obj = (Instance *) jdwppacket_read_refer(req);
+                if (!obj) {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_OBJECT);
+                    jdwp_packet_put(jdwpserver, res);
+                    gc_resume(jdwpserver->jvm->collector);
+                    break;
+                }
                 JClass *ref = obj->mb.clazz;
                 s32 fields = jdwppacket_read_int(req);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                jdwppacket_write_int(res, fields);
+                jdwppacket_set_err(res, fields < 0 ? JDWP_ERROR_INVALID_LENGTH : JDWP_ERROR_NONE);
                 s32 i;
                 for (i = 0; i < fields; i++) {
-                    FieldInfo *fi = jdwppacket_read_refer(req);
+                    FieldInfo *field_id = jdwppacket_read_refer(req);
+                    FieldInfo *fi = jdwp_find_field_id(ref, field_id);
+                    if (!fi || (fi->access_flags & ACC_STATIC)) {
+                        jdwppacket_set_err(res, JDWP_ERROR_INVALID_FIELDID);
+                        break;
+                    }
                     ValueType vt;
                     vt.type = getJdwpTag(fi->descriptor);
-                    readValueType(req, &vt);
-                    c8 *ptr = getFieldPtr_byName(obj, obj->mb.clazz->name, fi->name, fi->descriptor, runtime);
+                    readValueType_untagged(req, &vt);
+                    c8 *ptr = getInstanceFieldPtr(obj, fi);
                     setPtrValue(vt.type, ptr, vt.value);
                 }
                 jdwp_packet_put(jdwpserver, res);
@@ -2857,8 +3260,12 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                    jdwppacket_write_int(res, r->thrd_info->thread_status);
-                    jdwppacket_write_int(res, (r->thrd_info->is_suspend || r->thrd_info->is_blocking)
+                    jdwppacket_write_int(res, jdwp_map_thread_status(r->thrd_info->thread_status));
+                    //JDWP suspend status means "suspended by the debugger".
+                    //A thread merely blocking in native/sleep/lock (is_blocking) is
+                    //NOT suspended; reporting it as such makes the debugger cache
+                    //frames read at that moment and later display stale locations.
+                    jdwppacket_write_int(res, r->thrd_info->suspend_count > 0
                                                   ? JDWP_SUSPEND_STATUS_SUSPENDED
                                                   : 0);
                 } else {
@@ -2873,8 +3280,12 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 Instance *jthread = jdwppacket_read_refer(req);
                 Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
+                    Runtime *jr = jdwp_get_runtime(jdwpserver);
+                    gc_pause(jvm->collector);
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                    jdwppacket_write_refer(res, 0);
+                    jdwppacket_write_refer(res, jdwp_threadgroup_of(jvm, jr, jthread));
+                    gc_move_objs_thread_2_gc(jr);
+                    gc_resume(jvm->collector);
                 } else {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_THREAD);
                 }
@@ -2884,42 +3295,47 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             case JDWP_CMD_ThreadReference_Frames: {
                 //11.6
                 Instance *jthread = jdwppacket_read_refer(req);
-                Runtime *rt = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
+                Runtime *rt = NULL;
                 s32 startFrame = jdwppacket_read_int(req);
                 s32 length = jdwppacket_read_int(req);
-                if (rt) {
-                    //jvm_printf("[JDWP]ThreadReference_Frames: startFrame=%d, len=%d\n", startFrame, length);
-                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                    s32 deepth = getRuntimeDepth(rt);
-                    if (length == -1) {
-                        // return all remaining if the value is -1
-                        length = deepth - startFrame;
+                s16 validation = jdwp_validate_suspended_thread(jdwpserver, jthread, &rt);
+                if (validation != JDWP_ERROR_NONE) {
+                    jdwppacket_set_err(res, validation);
+                    jdwp_packet_put(jdwpserver, res);
+                    break;
+                }
+                s32 depth = getRuntimeDepth(rt);
+                if (startFrame < 0 || startFrame > depth) {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_INDEX);
+                    jdwp_packet_put(jdwpserver, res);
+                    break;
+                }
+                if (length < -1) {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_LENGTH);
+                    jdwp_packet_put(jdwpserver, res);
+                    break;
+                }
+                s32 remaining = depth - startFrame;
+                if (length == -1 || length > remaining) length = remaining;
+                //jvm_printf("[JDWP]ThreadReference_Frames: startFrame=%d, len=%d\n", startFrame, length);
+                jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                jdwppacket_write_int(res, length);
+                Runtime *r = getLastSon(rt);
+                s32 i;
+                for (i = 0; r && i < startFrame + length; i++) {
+                    if (i >= startFrame) {
+                        jdwppacket_write_refer(res, r);
+                        Location loc;
+                        loc.typeTag = getClassType(r->clazz);
+                        loc.classID = r->clazz;
+                        loc.methodID = r->method;
+                        if (r->method->converted_code)
+                            loc.execIndex = (s64) (intptr_t) r->pc - (s64) (intptr_t) r->method->converted_code->code;
+                        else
+                            loc.execIndex = 0;
+                        writeLocation(res, &loc);
                     }
-                    jdwppacket_write_int(res, length);
-                    Runtime *r = getLastSon(rt);
-                    ////jvm_printf("[JDWP]deepth:" + frame.getDeepth());
-                    s32 i;
-                    for (i = 0; i < deepth; i++) {
-                        if (i >= startFrame && i < startFrame + length) {
-                            // return the stack frame at the specified level
-                            jdwppacket_write_refer(res, r);
-                            Location loc;
-                            loc.typeTag = getClassType(r->clazz);
-                            loc.classID = r->clazz;
-                            loc.methodID = r->method;
-                            if (r->method->converted_code)
-                                loc.execIndex = (s64) (intptr_t) r->pc - (s64) (intptr_t) r->method->converted_code->code;
-                            else
-                                loc.execIndex = 0;
-                            writeLocation(res, &loc);
-                        }
-                        r = r->parent;
-                        if (r == NULL) {
-                            break;
-                        }
-                    }
-                } else {
-                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_THREAD);
+                    r = r->parent;
                 }
                 jdwp_packet_put(jdwpserver, res);
                 break;
@@ -2928,6 +3344,12 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 //11.7
                 Instance *jthread = jdwppacket_read_refer(req);
                 Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
+                if (r && r->thrd_info->suspend_count == 0) {
+                    r = NULL;
+                    jdwppacket_set_err(res, JDWP_ERROR_THREAD_NOT_SUSPENDED);
+                    jdwp_packet_put(jdwpserver, res);
+                    break;
+                }
                 if (r) {
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                     jdwppacket_write_int(res, getRuntimeDepth(r));
@@ -2971,6 +3393,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
                     r->thrd_info->is_stop = 1;
+                    jthread_wakeup(r);
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 } else {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_THREAD);
@@ -3011,22 +3434,72 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
 
             case JDWP_CMD_ThreadGroupReference_Name: {
                 //12.1
-                jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
-                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                Instance *group = jdwppacket_read_refer(req);
+                Runtime *jr = jdwp_get_runtime(jdwpserver);
+                gc_pause(jvm->collector);
+                jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                Utf8String *ustr = utf8_create();
+                jdwp_threadgroup_name(jvm, jr, group, ustr);
+                jdwppacket_write_utf(res, ustr);
+                utf8_destroy(ustr);
+                gc_move_objs_thread_2_gc(jr);
+                gc_resume(jvm->collector);
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
             case JDWP_CMD_ThreadGroupReference_Parent: {
                 //12.2
-                jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
-                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                Instance *group = jdwppacket_read_refer(req);
+                Runtime *jr = jdwp_get_runtime(jdwpserver);
+                gc_pause(jvm->collector);
+                jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                jdwppacket_write_refer(res, jdwp_threadgroup_parent(jvm, jr, group));
+                gc_move_objs_thread_2_gc(jr);
+                gc_resume(jvm->collector);
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
             case JDWP_CMD_ThreadGroupReference_Children: {
-                //12.3
-                jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
-                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                //12.3 child threads live in thread_list, child groups are
+                //inferred from those threads' group.parent chains
+                Instance *group = jdwppacket_read_refer(req);
+                Runtime *jr = jdwp_get_runtime(jdwpserver);
+                gc_pause(jvm->collector);
+                jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                ArrayList *threads = arraylist_create(4);
+                ArrayList *groups = arraylist_create(4);
+                spin_lock(&jvm->thread_list->spinlock);
+                {
+                    s32 i;
+                    for (i = 0; i < jvm->thread_list->length; i++) {
+                        Runtime *t = arraylist_get_value_unsafe(jvm->thread_list, i);
+                        Instance *jthread = t->thrd_info->jthread;
+                        Instance *grp = jthread ? jdwp_threadgroup_of(jvm, jr, jthread) : NULL;
+                        if (grp == group) {
+                            arraylist_push_back(threads, jthread);
+                        } else if (grp) {
+                            Instance *parent = jdwp_threadgroup_parent(jvm, jr, grp);
+                            if (parent == group &&
+                                arraylist_index_of(groups, arraylist_compare_ptr, grp) < 0) {
+                                arraylist_push_back(groups, grp);
+                            }
+                        }
+                    }
+                }
+                spin_unlock(&jvm->thread_list->spinlock);
+                jdwppacket_write_int(res, threads->length);
+                s32 i;
+                for (i = 0; i < threads->length; i++) {
+                    jdwppacket_write_refer(res, arraylist_get_value_unsafe(threads, i));
+                }
+                jdwppacket_write_int(res, groups->length);
+                for (i = 0; i < groups->length; i++) {
+                    jdwppacket_write_refer(res, arraylist_get_value_unsafe(groups, i));
+                }
+                arraylist_destroy(threads);
+                arraylist_destroy(groups);
+                gc_move_objs_thread_2_gc(jr);
+                gc_resume(jvm->collector);
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
@@ -3135,10 +3608,54 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 break;
             }
             case JDWP_CMD_EventRequest_ClearAllBreakpoints: {
-                //15.3`
-
-
+                //15.3 jdb's bare `clear` relies on this removing every breakpoint
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                //drop breakpoint event sets first
+                {
+                    ArrayList *ids = arraylist_create(4);
+                    mtx_lock(&jdwpserver->event_sets_lock);
+                    {
+                        s32 i;
+                        for (i = 0; i < jdwpserver->event_sets->count; i++) {
+                            Pair pair = pairlist_get_pair(jdwpserver->event_sets, i);
+                            EventSet *set = (EventSet *) pair.right;
+                            if (set->eventKind == JDWP_EVENTKIND_BREAKPOINT) {
+                                arraylist_push_back(ids, pair.left);
+                            }
+                        }
+                    }
+                    mtx_unlock(&jdwpserver->event_sets_lock);
+                    s32 i;
+                    for (i = 0; i < ids->length; i++) {
+                        jdwp_eventset_clear(jdwpserver, (s32) (intptr_t) arraylist_get_value_unsafe(ids, i));
+                    }
+                    arraylist_destroy(ids);
+                }
+                //then strip breakpoints from every loaded method
+                {
+                    MiniJVM *jvm = jdwpserver->jvm;
+                    spin_lock(&jvm->lock_cloader);
+                    {
+                        s32 i;
+                        for (i = 0; i < jvm->classloaders->length; i++) {
+                            PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
+                            HashtableIterator hti;
+                            hashtable_iterate(pcl->classes, &hti);
+                            for (; hashtable_iter_has_more(&hti);) {
+                                JClass *cl = hashtable_iter_next_value(&hti);
+                                s32 j;
+                                for (j = 0; j < cl->methodPool.method_used; j++) {
+                                    MethodInfo *mi = &cl->methodPool.method[j];
+                                    if (mi->breakpoint) {
+                                        pairlist_destroy(mi->breakpoint);
+                                        mi->breakpoint = NULL;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    spin_unlock(&jvm->lock_cloader);
+                }
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
@@ -3147,17 +3664,30 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 //16.1
                 Instance *thread = jdwppacket_read_refer(req);
                 Runtime *frame = jdwppacket_read_refer(req);
-                if (frame->method->converted_code) {
+                s16 validation = jdwp_validate_suspended_frame(jdwpserver, thread, frame);
+                if (validation != JDWP_ERROR_NONE) {
+                    jdwppacket_set_err(res, validation);
+                    jdwp_packet_put(jdwpserver, res);
+                    break;
+                }
+                CodeAttribute *ca = frame->method->converted_code;
+                if (ca) {
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                     s32 slots = jdwppacket_read_int(req);
+                    if (slots < 0) {
+                        jdwppacket_set_err(res, JDWP_ERROR_INVALID_LENGTH);
+                        jdwp_packet_put(jdwpserver, res);
+                        break;
+                    }
                     jdwppacket_write_int(res, slots);
                     Long2Double l2d;
-                    s32 i;
+                    s32 i, invalid_slot = 0;
                     for (i = 0; i < slots; i++) {
                         s32 slot = jdwppacket_read_int(req);
                         ValueType vt;
                         vt.type = jdwppacket_read_byte(req);
-                        if (slot < frame->method->converted_code->max_locals) {
+                        vt.value = 0;
+                        if (slot >= 0 && slot < ca->max_locals) {
                             switch (getSimpleTag(vt.type)) {
                                 case 'R': {
                                     Instance *ins = localvar_getRefer(frame->localvar, slot);
@@ -3176,11 +3706,14 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                                     vt.value = localvar_getInt(frame->localvar, slot);
                                     break;
                             }
+                        } else {
+                            invalid_slot = 1;
                         }
                         writeValueType(res, &vt);
                         //jvm_printf("[JDWP]JDWP_CMD_StackFrame_GetValues,thead=%llx , frame=%llx, val=%llx\n", (s64) (intptr_t) thread,
                         //(s64) (intptr_t) frame, vt.value);
                     }
+                    if (invalid_slot) jdwppacket_set_err(res, JDWP_ERROR_INVALID_SLOT);
                 } else {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_SLOT);
                 }
@@ -3191,15 +3724,27 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 //16.2
                 Instance *thread = jdwppacket_read_refer(req);
                 Runtime *frame = jdwppacket_read_refer(req);
+                s16 validation = jdwp_validate_suspended_frame(jdwpserver, thread, frame);
+                if (validation != JDWP_ERROR_NONE) {
+                    jdwppacket_set_err(res, validation);
+                    jdwp_packet_put(jdwpserver, res);
+                    break;
+                }
 
                 s32 slotValues = jdwppacket_read_int(req);
+                if (slotValues < 0) {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_LENGTH);
+                    jdwp_packet_put(jdwpserver, res);
+                    break;
+                }
+                CodeAttribute *ca = frame->method->converted_code;
                 Long2Double l2d;
-                s32 i;
+                s32 i, invalid_slot = ca ? 0 : 1;
                 for (i = 0; i < slotValues; i++) {
                     s32 slot = jdwppacket_read_int(req);
                     ValueType vt;
                     readValueType(req, &vt);
-                    if (slot < frame->method->converted_code->max_locals) {
+                    if (ca && slot >= 0 && slot < ca->max_locals) {
                         switch (getSimpleTag(vt.type)) {
                             case 'R':
                                 localvar_setRefer(frame->localvar, slot, (__refer) (intptr_t) vt.value);
@@ -3214,14 +3759,15 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                                 localvar_setInt(frame->localvar, slot, (s32) vt.value);
                                 break;
                         }
+                    } else {
+                        invalid_slot = 1;
                     }
 
                     //jvm_printf("[JDWP]StackFrame_SetValues,thead=%llx , frame=%llx, val=%llx\n", (s64) (intptr_t) thread,
                     //(s64) (intptr_t) frame, vt.value);
                 }
 
-
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                jdwppacket_set_err(res, invalid_slot ? JDWP_ERROR_INVALID_SLOT : JDWP_ERROR_NONE);
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
@@ -3229,6 +3775,12 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 //16.3
                 Instance *thread = jdwppacket_read_refer(req);
                 Runtime *frame = jdwppacket_read_refer(req);
+                s16 validation = jdwp_validate_suspended_frame(jdwpserver, thread, frame);
+                if (validation != JDWP_ERROR_NONE) {
+                    jdwppacket_set_err(res, validation);
+                    jdwp_packet_put(jdwpserver, res);
+                    break;
+                }
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 ValueType vt;
                 if (frame->method->is_static || frame->method->is_native) {
@@ -3272,11 +3824,81 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
+            default: {
+                //every command must be answered, otherwise the debugger blocks
+                //forever waiting for the reply
+                jvm_printf("[JDWP]unknown cmd: %x\n", cmd);
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_packet_put(jdwpserver, res);
+                break;
+            }
         }
         jdwppacket_destroy(req);
         packetCount++;
     }
     return packetCount;
+}
+
+//==================================================    thread group    ==================================================
+
+static Instance *jdwp_threadgroup_of(MiniJVM *jvm, Runtime *r, Instance *jthread) {
+    c8 *ptr = getFieldPtr_byName_c(jthread, STR_CLASS_JAVA_LANG_THREAD, "group", "Ljava/lang/ThreadGroup;", r);
+    if (!ptr)return NULL;
+    return (Instance *) getFieldRefer(ptr);
+}
+
+static Instance *jdwp_threadgroup_parent(MiniJVM *jvm, Runtime *r, Instance *group) {
+    if (!group)return NULL;
+    c8 *ptr = getFieldPtr_byName_c(group, STR_CLASS_JAVA_LANG_THREAD_GROUP, "parent", "Ljava/lang/ThreadGroup;", r);
+    if (!ptr)return NULL;
+    return (Instance *) getFieldRefer(ptr);
+}
+
+static void jdwp_threadgroup_name(MiniJVM *jvm, Runtime *r, Instance *group, Utf8String *out) {
+    utf8_clear(out);
+    if (!group)return;
+    c8 *ptr = getFieldPtr_byName_c(group, STR_CLASS_JAVA_LANG_THREAD_GROUP, "name", "Ljava/lang/String;", r);
+    if (!ptr)return;
+    Instance *name = (Instance *) getFieldRefer(ptr);
+    if (name) {
+        jstring_2_utf8(name, out, r);
+    }
+}
+
+static s32 jdwp_map_thread_status(u8 status) {
+    //JDWP: ZOMBIE=0 RUNNING=1 SLEEPING=2 MONITOR=3 WAIT=4
+    switch (status) {
+        case THREAD_STATUS_RUNNING:
+            return JDWP_THREAD_RUNNING;
+        case THREAD_STATUS_SLEEPING:
+            return JDWP_THREAD_SLEEPING;
+        case THREAD_STATUS_MONITOR:
+            return JDWP_THREAD_MONITOR;
+        case THREAD_STATUS_WAIT:
+            return JDWP_THREAD_WAIT;
+        default:
+            return JDWP_THREAD_ZOMBIE;
+    }
+}
+
+static s16 jdwp_validate_suspended_thread(JdwpServer *jdwpserver, Instance *jthread, Runtime **thread_runtime) {
+    Runtime *runtime = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
+    if (thread_runtime) *thread_runtime = runtime;
+    if (!runtime) return JDWP_ERROR_INVALID_THREAD;
+    if (runtime->thrd_info->suspend_count == 0) return JDWP_ERROR_THREAD_NOT_SUSPENDED;
+    return JDWP_ERROR_NONE;
+}
+
+static s16 jdwp_validate_suspended_frame(JdwpServer *jdwpserver, Instance *jthread, Runtime *frame) {
+    Runtime *thread_runtime = NULL;
+    s16 error = jdwp_validate_suspended_thread(jdwpserver, jthread, &thread_runtime);
+    if (error != JDWP_ERROR_NONE) return error;
+    Runtime *candidate = getLastSon(thread_runtime);
+    while (candidate && candidate->parent) {
+        if (candidate == frame) return JDWP_ERROR_NONE;
+        candidate = candidate->parent;
+    }
+    return JDWP_ERROR_INVALID_FRAMEID;
 }
 
 Runtime *find_jthread_from_threadlist(MiniJVM *jvm, Instance *jthread) {

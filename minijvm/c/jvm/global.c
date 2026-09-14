@@ -40,6 +40,7 @@ const c8 STR_CLASS_JAVA_LANG_STRING[] = "java/lang/String";
 const c8 STR_CLASS_JAVA_LANG_STRINGBUILDER[] = "java/lang/StringBuilder";
 const c8 STR_CLASS_JAVA_LANG_OBJECT[] = "java/lang/Object";
 const c8 STR_CLASS_JAVA_LANG_THREAD[] = "java/lang/Thread";
+const c8 STR_CLASS_JAVA_LANG_THREAD_GROUP[] = "java/lang/ThreadGroup";
 const c8 STR_CLASS_JAVA_LANG_CLASS[] = "java/lang/Class";
 const c8 STR_CLASS_JAVA_LANG_CLASSLOADER[] = "java/lang/ClassLoader";
 const c8 STR_CLASS_JAVA_LANG_REF_REFERENCE[] = "java/lang/ref/Reference";
