@@ -909,14 +909,16 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) {
         spin_lock(&tl->metadata_lock);
         tl->enter_waiter_count++;
         spin_unlock(&tl->metadata_lock);
-        while (mtx_timedlock(&tl->mutex_lock, &t) != thrd_success) {
+        while (1) {
+            // Refresh the deadline before every attempt, including after a GC pause.
             timespec_get(&t, TIME_UTC);
-            t.tv_nsec += 5 * NANO_2_MILLS_SCALE;
+            t.tv_nsec += 2 * NANO_2_MILLS_SCALE;
             if (t.tv_nsec >= 1000000000L) {
                 t.tv_nsec -= 1000000000L;
                 t.tv_sec += 1;
             }
             if (mtx_timedlock(&tl->mutex_lock, &t) == thrd_success) break;
+            check_suspend_and_pause(runtime);
             if (IS_JDWP_ENABLED(runtime)) {
                 JavaThreadInfo *owner_snap = tl->owner_thread;
                 Runtime *lock_holder = owner_snap ? owner_snap->top_runtime : NULL;
@@ -925,7 +927,6 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) {
                     temporarily_resume_for_lock_release(lock_holder, mb);
                 }
             }
-            check_suspend_and_pause(runtime);
             if (ti->is_stop) {
                 //Thread.stop while blocked on monitorenter: die here
                 spin_lock(&tl->metadata_lock);
