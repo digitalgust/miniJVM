@@ -979,7 +979,7 @@ struct _CodeAttribute {
     u16 max_locals;
     s32 code_length;
     u8 *code; // [code_length];
-    u8 *bytecode_for_jit; // [code_length];
+    u8 *bytecode_for_jit; // [code_length]; pristine classfile bytecode: runtime rewrites hit `code`, jit (and JDWP Bytecodes) read this
     spinlock_t compile_lock;
 
     struct _Jit {

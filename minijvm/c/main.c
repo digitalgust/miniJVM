@@ -283,6 +283,11 @@ int main(int argc, char **argv) {
         } else {
             ret = call_main(jvm, main_name, java_para);
         }
+        //System.exit / JDWP VirtualMachine.Exit: honor the requested code
+        //(read before jvm_destroy frees the collector)
+        if (jvm->collector->exit_flag) {
+            ret = jvm->collector->exit_code;
+        }
         jvm_destroy(jvm);
     }
     //getchar();

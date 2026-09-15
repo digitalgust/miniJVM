@@ -1294,7 +1294,12 @@ s32 check_suspend_and_pause(Runtime *runtime) {
         vm_share_lock(jvm);
         threadInfo->is_suspend = 1;
         vm_share_notifyall(jvm);
-        while (threadInfo->suspend_count) {
+        //no_pause/is_stop (System.exit / JDWP VirtualMachine.Exit) must be
+        //able to release threads that are ALREADY parked here: no_pause only
+        //guards entry, so without this check a debugger-suspended VM never
+        //dies - the parked thread re-parks forever and the interpreter's
+        //is_stop unwind never gets a chance to run
+        while (threadInfo->suspend_count && !threadInfo->no_pause && !threadInfo->is_stop) {
             vm_share_timedwait(jvm, 100);
             //            thrd_yield();
         }
@@ -2500,9 +2505,12 @@ void thread_add_held_lock(Runtime *runtime, MemoryBlock *lock) {
         return;
     }
 
+    //Publish the lazy debug list under the same lock used by JDWP readers.
+    spin_lock(&threadInfo->lock);
     if (!threadInfo->held_locks) {
         threadInfo->held_locks = arraylist_create(0);
     }
+    spin_unlock(&threadInfo->lock);
 
     // 使用 arraylist_index_of 检查是否已经存在（防止重复添加）
     if (arraylist_index_of(threadInfo->held_locks, arraylist_compare_ptr, lock) == -1) {

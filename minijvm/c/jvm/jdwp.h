@@ -500,7 +500,7 @@ void event_on_thread_death(JdwpServer *jdwpserver, Instance *jthread);
 
 void event_on_thread_start(JdwpServer *jdwpserver, Instance *jthread);
 
-void event_on_vmstart(JdwpServer *jdwpserver, Instance *jthread);
+void event_on_vmstart(JdwpServer *jdwpserver, Instance *jthread, JdwpClient *client);
 
 void event_on_vmdeath(JdwpServer *jdwpserver);
 
@@ -511,6 +511,8 @@ void jdwp_check_debug_step(Runtime *runtime);
 void jdwp_check_debug_step_on_return(Runtime *runtime);
 
 void jdwp_apply_suspend_policy(JdwpServer *jdwpserver, u8 suspendPolicy, Runtime *event_thread);
+
+void jdwp_event_put_to(JdwpClient *client, JdwpPacket *packet);
 
 s32 jdwp_client_count(JdwpServer *jdwpserver);
 
