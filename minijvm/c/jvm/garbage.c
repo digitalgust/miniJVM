@@ -266,6 +266,9 @@ s32 gc_create(MiniJVM *jvm) {
     if (!collector) jvm_fatal_oom("gc-collector", sizeof(GcCollector));
     jvm->collector = collector;
     collector->jvm = jvm;
+    if (gc_wakeup_init(&collector->wakeup) != thrd_success) {
+        jvm_fatal_oom("gc-wakeup-init", sizeof(GcWakeup));
+    }
     collector->objs_holder = hashset_create();
     collector->objs_2_count = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
 
@@ -409,6 +412,7 @@ void gc_destroy(MiniJVM *jvm) {
     }
 
     //
+    gc_wakeup_destroy(&collector->wakeup);
     jvm_free(collector);
     jvm->collector = NULL;
 }
@@ -525,6 +529,9 @@ static void _gc_request_collection_async(MiniJVM *jvm,
         collector->gc_requested_bytes = requested_bytes;
     }
     spin_unlock(&collector->lock);
+    //Retain the wakeup even if the GC has not entered its idle wait yet.
+    //The collector lock is released before taking the independent wake lock.
+    gc_wakeup_notify(&collector->wakeup);
 }
 
 static ImmixResult _gc_request_collection(void *context,
@@ -834,12 +841,14 @@ void gc_resume(GcCollector *collector) {
     vm_share_lock(collector->jvm);
     collector->_garbage_thread_status = GARBAGE_THREAD_NORMAL;
     vm_share_unlock(collector->jvm);
+    gc_wakeup_notify(&collector->wakeup);
 }
 
 void gc_stop(GcCollector *collector) {
     vm_share_lock(collector->jvm);
     collector->_garbage_thread_status = GARBAGE_THREAD_STOP;
     vm_share_unlock(collector->jvm);
+    gc_wakeup_notify(&collector->wakeup);
 }
 
 //===============================   inner  ====================================
@@ -1034,11 +1043,20 @@ s32 _gc_thread_run(void *para) {
             continue;
         }
         if (collector->_garbage_thread_status == GARBAGE_THREAD_PAUSE) {
-            threadSleep(sleep_time);
+            gc_wakeup_wait(&collector->wakeup, sleep_time);
             continue;
         }
-        if (cur_mil - collector->lastgc < sleep_time) {
-            threadSleep(sleep_time);
+        s32 gc_requested;
+        spin_lock(&collector->lock);
+        gc_requested = collector->gc_request;
+        spin_unlock(&collector->lock);
+        //Explicit allocator requests can have a mutator waiting for memory;
+        //they must bypass the periodic collection throttle. A retained wakeup
+        //makes a request racing this snapshot restart the loop before sleeping.
+        s64 since_gc = cur_mil - collector->lastgc;
+        if (!gc_requested && since_gc < sleep_time) {
+            s32 remaining = since_gc > 0 ? sleep_time - (s32) since_gc : sleep_time;
+            gc_wakeup_wait(&collector->wakeup, remaining);
             continue;
         };
 
@@ -1048,11 +1066,7 @@ s32 _gc_thread_run(void *para) {
         s64 heap = gc_sum_heap(collector);
         s32 overload = heap >= jvm->max_heap_size * jvm->heap_overload_percent / 100;
 #endif
-        s32 gc_requested;
         s32 immix_overload = 0;
-        spin_lock(&collector->lock);
-        gc_requested = collector->gc_request;
-        spin_unlock(&collector->lock);
         if (gc_requested) overload = 1;
         if (collector->immix_heap) {
             if (gc_requested) {
@@ -1066,7 +1080,7 @@ s32 _gc_thread_run(void *para) {
             _garbage_collect(collector);
             collector->lastgc = cur_mil;
         } else {
-            threadSleep(sleep_time);
+            gc_wakeup_wait(&collector->wakeup, sleep_time);
         }
     }
     collector->_garbage_thread_status = GARBAGE_THREAD_DEAD;
@@ -1953,11 +1967,12 @@ s32 _gc_pause_the_world(MiniJVM *jvm) {
     while (1) {
         all_thread_paused = 1;
         arraylist_iter_safe(thread_list, _list_iter_thread_check_pause, &all_thread_paused);
-
-        vm_share_timedwait(jvm, 20);
         if (all_thread_paused) {
             break;
         }
+        //Release vm_share while waiting: mutators need it to publish
+        //is_suspend and notify us. Spinning with it held prevents progress.
+        vm_share_timedwait(jvm, 20);
         /* System.exit() marked every thread no_pause=1 (thread_stop_all);
          * they will NEVER park, and this loop has no other exit - the GC
          * would hang the whole process. Abandon the cycle instead: the

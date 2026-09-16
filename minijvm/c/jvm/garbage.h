@@ -9,6 +9,58 @@
 #include "jvm.h"
 #include "jvm_util.h"
 #include "immix.h"
+#include "../utils/tinycthread.h"
+
+/* Single-consumer, coalescing wakeup. Unlike a bare condition notification,
+ * pending survives notify-before-wait. Never hold this mutex while acquiring
+ * vm_share/collector locks or running a collection. */
+typedef struct {
+    mtx_t mutex;
+    cnd_t condition;
+    int pending;
+} GcWakeup;
+
+static inline int gc_wakeup_init(GcWakeup *wake) {
+    wake->pending = 0;
+    if (mtx_init(&wake->mutex, mtx_plain) != thrd_success) return thrd_error;
+    if (cnd_init(&wake->condition) != thrd_success) {
+        mtx_destroy(&wake->mutex);
+        return thrd_error;
+    }
+    return thrd_success;
+}
+
+static inline void gc_wakeup_destroy(GcWakeup *wake) {
+    cnd_destroy(&wake->condition);
+    mtx_destroy(&wake->mutex);
+}
+
+static inline void gc_wakeup_notify(GcWakeup *wake) {
+    mtx_lock(&wake->mutex);
+    wake->pending = 1;
+    cnd_signal(&wake->condition);
+    mtx_unlock(&wake->mutex);
+}
+
+static inline int gc_wakeup_wait(GcWakeup *wake, int timeout_ms) {
+    struct timespec until;
+    int result = thrd_success;
+    timespec_get(&until, TIME_UTC);
+    until.tv_sec += timeout_ms / 1000;
+    until.tv_nsec += (timeout_ms % 1000) * 1000000L;
+    if (until.tv_nsec >= 1000000000L) {
+        until.tv_nsec -= 1000000000L;
+        ++until.tv_sec;
+    }
+    mtx_lock(&wake->mutex);
+    while (!wake->pending && result == thrd_success) {
+        result = cnd_timedwait(&wake->condition, &wake->mutex, &until);
+    }
+    if (wake->pending) result = thrd_success;
+    wake->pending = 0;
+    mtx_unlock(&wake->mutex);
+    return result;
+}
 
 
 #ifdef __cplusplus
@@ -47,6 +99,7 @@ struct _GcCollectorType {
     Hashtable *objs_2_count;
 
     spinlock_t lock;
+    GcWakeup wakeup; //independent of the STW mutex; idle GC only
     //
     ArrayList *runtime_refer_copy;
     //
