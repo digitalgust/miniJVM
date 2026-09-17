@@ -272,6 +272,8 @@ static void dump_code(void *code, sljit_uw len) {
 //------------------------  tool ----------------------------
 
 static void _gen_tos_flush(struct sljit_compiler *C);
+static s32 _gen_tos_reserve(struct sljit_compiler *C, u8 datatype);
+static void _gen_tos_materialize(struct sljit_compiler *C, s32 idx);
 
 void _gen_ip_modify_imm(struct sljit_compiler *C, s32 count) {
 #if !JIT_OPT_LAZY_PC
@@ -616,79 +618,81 @@ void _gen_l_d_store(struct sljit_compiler *C, s32 index) {
 }
 
 
-/**
- * Inline version of _jarray_check_exception(arr, index, runtime).
- * arr = stack slot 0 (ref), index = stack slot 1 (int), stack size is
- * already popped by the caller. Common (valid) path is pure register
- * compare, no callout; only the throw path calls out.
- *
- * index is peeked with SLJIT_MOV_S32 (sign extended) and length is a
- * non negative s32, so one unsigned compare covers both index < 0 and
- * index >= length.
- */
-void _gen_jarray_check_exception(struct sljit_compiler *C) {
-    _gen_stack_peek_ref(C, 0, SLJIT_R0, 0);
-    _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, 0);
-
-    _gen_stack_peek_int(C, 1, SLJIT_R1, 0);
-    sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R0), (sljit_sw) JVM_ARRAY_LENGTH_OFFSET);
-    _gen_exception_check_throw_handle(C, SLJIT_GREATER_EQUAL, SLJIT_R1, 0, SLJIT_R2, 0, JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, 0);
-}
-
 void _gen_arr_load(struct sljit_compiler *C, s32 datatype) {
     // =====================================================================
     //    s32 index = pop_int(stack);
     //    Instance *arr = (Instance *) pop_ref(stack);
     //    if (!arr) throw NullPointerException;
     //    else if (index < 0 || index >= jarray_length(arr)) throw ArrayIndexOutOfBoundsException;
-    //    else {
-    //        s32 s = *((s32 *) (arr->arr_body) + index);
-    //        push_int(stack, s);
-    //    }
-    //    check generated inline by _gen_jarray_check_exception
+    //    else push arr[index];
+    //    index comes straight from the cache when possible, the loaded
+    //    element becomes a cached value (numeric types only)
     // =====================================================================
-    _gen_stack_size_modify(C, -2);
-    _gen_jarray_check_exception(C);
+    JitGenContext *ctx = jit_gen_context;
+    sljit_s32 idx_reg = SLJIT_R1;
 
+    if (ctx && ctx->tos.count > 0 && ctx->tos.v[ctx->tos.count - 1].datatype == DATATYPE_INT) {
+        s32 idx = ctx->tos.count - 1;
+        _gen_tos_materialize(C, idx);
+        idx_reg = ctx->tos.v[idx].reg;
+        ctx->tos.count = idx;
+        _gen_stack_size_modify(C, -1);
+    } else {
+        _gen_tos_flush(C);
+        _gen_stack_size_modify(C, -1);
+        _gen_stack_peek_int(C, 0, SLJIT_R1, 0);
+    }
 
-    _gen_stack_peek_ref(C, 0, SLJIT_R0, 0);
-    _gen_stack_peek_int(C, 1, SLJIT_R1, 0);
-    //elements are inline: body = arr + JVM_ARRAY_BODY_OFFSET
+    /* the throw blocks flush at compile time: deeper cached values must
+     * reach their slots on the normal path as well (consistency) */
+    _gen_tos_flush(C);
+
+    /* R0 = arr (top of the memory stack), index already in idx_reg */
+    _gen_stack_peek_ref(C, -1, SLJIT_R0, 0);
+    _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0,
+                                      SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, -1);
+    sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R0), (sljit_sw) JVM_ARRAY_LENGTH_OFFSET);
+    _gen_exception_check_throw_handle(C, SLJIT_GREATER_EQUAL, idx_reg, 0, SLJIT_R2, 0,
+                                      JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, -1);
+
+    /* pop arr; elements are inline at arr + JVM_ARRAY_BODY_OFFSET */
+    _gen_stack_size_modify(C, -1);
     sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) JVM_ARRAY_BODY_OFFSET);
-    switch (datatype) {
-        case DATATYPE_BOOLEAN:
-        case DATATYPE_BYTE: {
-            sljit_emit_op1(C, SLJIT_MOV_S8, SLJIT_R0, 0, SLJIT_MEM2(SLJIT_R2, SLJIT_R1), 0);
-            _gen_stack_push_int(C, SLJIT_R0, 0);
-            break;
+
+    if (datatype == DATATYPE_REFERENCE) {
+        sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM2(SLJIT_R2, idx_reg), SLJIT_POINTER_SHIFT);
+        _gen_stack_push_ref(C, SLJIT_R0, 0);
+    } else {
+        u8 cache_dt = (datatype == DATATYPE_LONG || datatype == DATATYPE_DOUBLE
+                       || datatype == DATATYPE_FLOAT) ? datatype : DATATYPE_INT;
+        s32 idx2 = _gen_tos_reserve(C, cache_dt);
+        sljit_s32 dst = jit_gen_context->tos.v[idx2].reg;
+        switch (datatype) {
+            case DATATYPE_BOOLEAN:
+            case DATATYPE_BYTE:
+                sljit_emit_op1(C, SLJIT_MOV_S8, dst, 0, SLJIT_MEM2(SLJIT_R2, idx_reg), 0);
+                break;
+            case DATATYPE_SHORT:
+                sljit_emit_op1(C, SLJIT_MOV_S16, dst, 0, SLJIT_MEM2(SLJIT_R2, idx_reg), 1);
+                break;
+            case DATATYPE_JCHAR:
+                sljit_emit_op1(C, SLJIT_MOV_U16, dst, 0, SLJIT_MEM2(SLJIT_R2, idx_reg), 1);
+                break;
+            case DATATYPE_FLOAT:
+                sljit_emit_fop1(C, SLJIT_MOV_F32, dst, 0, SLJIT_MEM2(SLJIT_R2, idx_reg), 2);
+                break;
+            case DATATYPE_INT:
+                sljit_emit_op1(C, SLJIT_MOV_S32, dst, 0, SLJIT_MEM2(SLJIT_R2, idx_reg), 2);
+                break;
+            default:/* DATATYPE_LONG / DOUBLE */
+                if (datatype == DATATYPE_DOUBLE) {
+                    sljit_emit_fop1(C, SLJIT_MOV_F64, dst, 0, SLJIT_MEM2(SLJIT_R2, idx_reg), 3);
+                } else {
+                    sljit_emit_op1(C, SLJIT_MOV, dst, 0, SLJIT_MEM2(SLJIT_R2, idx_reg), 3);
+                }
+                break;
         }
-        case DATATYPE_SHORT: {
-            sljit_emit_op1(C, SLJIT_MOV_S16, SLJIT_R0, 0, SLJIT_MEM2(SLJIT_R2, SLJIT_R1), 1);
-            _gen_stack_push_int(C, SLJIT_R0, 0);
-            break;
-        }
-        case DATATYPE_JCHAR: {
-            sljit_emit_op1(C, SLJIT_MOV_U16, SLJIT_R0, 0, SLJIT_MEM2(SLJIT_R2, SLJIT_R1), 1);
-            _gen_stack_push_int(C, SLJIT_R0, 0);
-            break;
-        }
-        case DATATYPE_FLOAT:
-        case DATATYPE_INT: {
-            sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R0, 0, SLJIT_MEM2(SLJIT_R2, SLJIT_R1), 2);
-            _gen_stack_push_int(C, SLJIT_R0, 0);
-            break;
-        }
-        case DATATYPE_LONG:
-        case DATATYPE_DOUBLE: {
-            sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM2(SLJIT_R2, SLJIT_R1), 3);
-            _gen_stack_push_long(C, SLJIT_R0, 0);
-            break;
-        }
-        default: {
-            sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM2(SLJIT_R2, SLJIT_R1), SLJIT_POINTER_SHIFT);
-            _gen_stack_push_ref(C, SLJIT_R0, 0);
-            break;
-        }
+        _gen_stack_size_modify(C, _tos_slots(datatype));
     }
 }
 
@@ -699,23 +703,30 @@ void _gen_arr_store(struct sljit_compiler *C, s32 datatype) {
     //    Instance *jarr = (Instance *) pop_ref(stack);
     //    if (!jarr) throw NullPointerException;
     //    else if (index < 0 || index >= jarray_length(jarr)) throw ArrayIndexOutOfBoundsException;
-    //    else {
-    //        *(((s32 *) jarr->arr_body) + index) = i;
-    //    }
-    //    check generated inline by _gen_jarray_check_exception
+    //    else jarr[index] = i;
+    //    index and the numeric value come straight from the cache when
+    //    possible; reference stores keep the legacy memory path
     // =====================================================================
-
-    s32 slots;
-    if (datatype == DATATYPE_LONG || datatype == DATATYPE_DOUBLE) {
-        slots = 2;
-    } else {
-        slots = 1;
-    }
-    _gen_stack_size_modify(C, -2 - slots);
-
-    _gen_jarray_check_exception(C);
+    JitGenContext *ctx = jit_gen_context;
+    s32 slots = (datatype == DATATYPE_LONG || datatype == DATATYPE_DOUBLE) ? 2 : 1;
+    sljit_s32 idx_reg = SLJIT_R1;
+    sljit_s32 val_reg = SLJIT_R5;
+    sljit_s32 val_freg = 0;
+    u8 val_dt = DATATYPE_INT;
 
     if (datatype == DATATYPE_REFERENCE) {
+        /* the store-check helper calls out: everything through memory */
+        _gen_tos_flush(C);
+        _gen_stack_size_modify(C, -3);
+
+        _gen_stack_peek_ref(C, 0, SLJIT_R0, 0);//arr (popped area)
+        _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0,
+                                          SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, 0);
+        _gen_stack_peek_int(C, 1, SLJIT_R1, 0);//index
+        sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R0), (sljit_sw) JVM_ARRAY_LENGTH_OFFSET);
+        _gen_exception_check_throw_handle(C, SLJIT_GREATER_EQUAL, SLJIT_R1, 0, SLJIT_R2, 0,
+                                          JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, 0);
+
         _gen_save_sp_ip(C);
         _gen_stack_peek_ref(C, 0, SLJIT_R0, 0);//arr
         _gen_stack_peek_ref(C, 2, SLJIT_R1, 0);//value
@@ -724,46 +735,104 @@ void _gen_arr_store(struct sljit_compiler *C, s32 datatype) {
         _gen_load_sp_ip(C);
         _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0,
                                           SLJIT_IMM, 0, JVM_EXCEPTION_ARRAYSTORE, 0);
+
+        _gen_stack_peek_ref(C, 0, SLJIT_R1, 0);//arr
+        _gen_stack_peek_int(C, 1, SLJIT_R0, 0);//index
+        //elements are inline: body = arr + JVM_ARRAY_BODY_OFFSET
+        sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) JVM_ARRAY_BODY_OFFSET);
+        _gen_stack_peek_ref(C, 2, SLJIT_R1, 0);
+        sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM2(SLJIT_R2, SLJIT_R0), SLJIT_POINTER_SHIFT, SLJIT_R1, 0);
+        return;
     }
 
-    _gen_stack_peek_ref(C, 0, SLJIT_R1, 0);//arr
-    _gen_stack_peek_int(C, 1, SLJIT_R0, 0);//index
-    //elements are inline: body = arr + JVM_ARRAY_BODY_OFFSET
-    sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) JVM_ARRAY_BODY_OFFSET);
+    /* value (stack top): cached when its type matches the element */
+    if (ctx && ctx->tos.count > 0
+        && ((datatype == DATATYPE_INT && (ctx->tos.v[ctx->tos.count - 1].datatype == DATATYPE_INT
+                                          || ctx->tos.v[ctx->tos.count - 1].datatype == DATATYPE_FLOAT))
+            || (datatype == DATATYPE_LONG && (ctx->tos.v[ctx->tos.count - 1].datatype == DATATYPE_LONG
+                                              || ctx->tos.v[ctx->tos.count - 1].datatype == DATATYPE_DOUBLE))
+            || (datatype != DATATYPE_INT && datatype != DATATYPE_LONG
+                && ctx->tos.v[ctx->tos.count - 1].datatype == DATATYPE_INT))) {
+        s32 idx = ctx->tos.count - 1;
+        _gen_tos_materialize(C, idx);
+        val_dt = ctx->tos.v[idx].datatype;
+        if (_tos_is_float(val_dt)) {
+            val_freg = ctx->tos.v[idx].reg;
+        } else {
+            val_reg = ctx->tos.v[idx].reg;
+        }
+        ctx->tos.count = idx;
+        _gen_stack_size_modify(C, -slots);
+    } else {
+        /* defensive: an unmatched cached top must still reach its slot
+         * before the memory path reads the stack */
+        _gen_tos_flush(C);
+        if (datatype == DATATYPE_DOUBLE) {
+            _gen_stack_peek_double(C, -2, SLJIT_FR0, 0);
+            val_freg = SLJIT_FR0;
+            val_dt = DATATYPE_DOUBLE;
+        } else if (datatype == DATATYPE_LONG) {
+            _gen_stack_peek_long(C, -2, val_reg, 0);
+            val_dt = DATATYPE_LONG;
+        } else {
+            _gen_stack_peek_int(C, -1, val_reg, 0);
+        }
+        _gen_stack_size_modify(C, -slots);
+    }
+
+    /* index */
+    if (ctx && ctx->tos.count > 0 && ctx->tos.v[ctx->tos.count - 1].datatype == DATATYPE_INT) {
+        s32 idx = ctx->tos.count - 1;
+        _gen_tos_materialize(C, idx);
+        idx_reg = ctx->tos.v[idx].reg;
+        ctx->tos.count = idx;
+        _gen_stack_size_modify(C, -1);
+    } else {
+        _gen_tos_flush(C);
+        _gen_stack_size_modify(C, -1);
+        _gen_stack_peek_int(C, 0, SLJIT_R1, 0);
+    }
+
+    /* the throw blocks flush at compile time: keep both paths consistent */
+    _gen_tos_flush(C);
+
+    /* R0 = arr (top of the memory stack), index in idx_reg, value kept */
+    _gen_stack_peek_ref(C, -1, SLJIT_R0, 0);
+    _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0,
+                                      SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, -1);
+    sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R0), (sljit_sw) JVM_ARRAY_LENGTH_OFFSET);
+    _gen_exception_check_throw_handle(C, SLJIT_GREATER_EQUAL, idx_reg, 0, SLJIT_R2, 0,
+                                      JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, -1);
+
+    _gen_stack_size_modify(C, -1);
+    sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) JVM_ARRAY_BODY_OFFSET);
+
+    if (val_freg) {
+        if (val_dt == DATATYPE_FLOAT) {
+            sljit_emit_fop1(C, SLJIT_MOV_F32, SLJIT_MEM2(SLJIT_R2, idx_reg), 2, val_freg, 0);
+        } else {
+            sljit_emit_fop1(C, SLJIT_MOV_F64, SLJIT_MEM2(SLJIT_R2, idx_reg), 3, val_freg, 0);
+        }
+        return;
+    }
     switch (datatype) {
         case DATATYPE_BOOLEAN:
-        case DATATYPE_BYTE: {
-            _gen_stack_peek_int(C, 2, SLJIT_R1, 0);
-            sljit_emit_op1(C, SLJIT_MOV_S8, SLJIT_MEM2(SLJIT_R2, SLJIT_R0), 0, SLJIT_R1, 0);
+        case DATATYPE_BYTE:
+            sljit_emit_op1(C, SLJIT_MOV_S8, SLJIT_MEM2(SLJIT_R2, idx_reg), 0, val_reg, 0);
             break;
-        }
-        case DATATYPE_SHORT: {
-            _gen_stack_peek_int(C, 2, SLJIT_R1, 0);
-            sljit_emit_op1(C, SLJIT_MOV_S16, SLJIT_MEM2(SLJIT_R2, SLJIT_R0), 1, SLJIT_R1, 0);
+        case DATATYPE_SHORT:
+            sljit_emit_op1(C, SLJIT_MOV_S16, SLJIT_MEM2(SLJIT_R2, idx_reg), 1, val_reg, 0);
             break;
-        }
-        case DATATYPE_JCHAR: {
-            _gen_stack_peek_int(C, 2, SLJIT_R1, 0);
-            sljit_emit_op1(C, SLJIT_MOV_U16, SLJIT_MEM2(SLJIT_R2, SLJIT_R0), 1, SLJIT_R1, 0);
+        case DATATYPE_JCHAR:
+            sljit_emit_op1(C, SLJIT_MOV_U16, SLJIT_MEM2(SLJIT_R2, idx_reg), 1, val_reg, 0);
             break;
-        }
         case DATATYPE_FLOAT:
-        case DATATYPE_INT: {
-            _gen_stack_peek_int(C, 2, SLJIT_R1, 0);
-            sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_MEM2(SLJIT_R2, SLJIT_R0), 2, SLJIT_R1, 0);
+        case DATATYPE_INT:
+            sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_MEM2(SLJIT_R2, idx_reg), 2, val_reg, 0);
             break;
-        }
-        case DATATYPE_LONG:
-        case DATATYPE_DOUBLE: {
-            _gen_stack_peek_long(C, 2, SLJIT_R1, 0);
-            sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM2(SLJIT_R2, SLJIT_R0), 3, SLJIT_R1, 0);
+        default:/* DATATYPE_LONG / DOUBLE */
+            sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM2(SLJIT_R2, idx_reg), 3, val_reg, 0);
             break;
-        }
-        default: {
-            _gen_stack_peek_ref(C, 2, SLJIT_R1, 0);
-            sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM2(SLJIT_R2, SLJIT_R0), SLJIT_POINTER_SHIFT, SLJIT_R1, 0);
-            break;
-        }
     }
 }
 
@@ -900,33 +969,10 @@ static void _gen_icmp_op2_regs(struct sljit_compiler *C, MethodInfo *method, u8 
         jvm_printf("label not found %s.%s pc: %d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), code_idx);
     }
 
-    sljit_s32 flag_set = 0;
-    switch (test_type) {
-        case SLJIT_SIG_GREATER:
-            flag_set = SLJIT_SET_SIG_GREATER;
-            break;
-        case SLJIT_SIG_GREATER_EQUAL:
-            flag_set = SLJIT_SET_SIG_GREATER_EQUAL;
-            break;
-        case SLJIT_SIG_LESS:
-            flag_set = SLJIT_SET_SIG_LESS;
-            break;
-        case SLJIT_SIG_LESS_EQUAL:
-            flag_set = SLJIT_SET_SIG_LESS_EQUAL;
-            break;
-        case SLJIT_EQUAL:
-        case SLJIT_NOT_EQUAL:
-            flag_set = SLJIT_SET_Z;
-            break;
-    }
-    /* R0=value2(top), R1=value1(deeper) */
-    sljit_emit_op2u(C, SLJIT_SUB | flag_set, SLJIT_R1, 0, SLJIT_R0, 0);
-
-    sljit_emit_op_flags(C, SLJIT_MOV, SLJIT_R2, 0, test_type);
-
+    /* R0=value2(top), R1=value1(deeper): direct conditional jump */
     struct sljit_jump *jump_if_true, *jump_out, *jump_away;
     struct sljit_label *label_out, *label_true;
-    jump_if_true = sljit_emit_cmp(C, SLJIT_NOT_EQUAL, SLJIT_R2, 0, SLJIT_IMM, 0);
+    jump_if_true = sljit_emit_cmp(C, test_type, SLJIT_R1, 0, SLJIT_R0, 0);
     {
         jump_out = sljit_emit_jump(C, SLJIT_JUMP);
     }
@@ -1690,30 +1736,9 @@ static void _gen_tos_if2(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s
         struct sljit_label *label = (__refer) pairlist_getl(method->pos_2_label, jumpto);
         struct sljit_jump *jump_if_true, *jump_out, *jump_away;
         struct sljit_label *label_out, *label_true;
-        sljit_s32 flag_set = 0;
 
         if (!label) {
             jvm_printf("label not found %s.%s pc: %d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), code_idx);
-        }
-        switch (test_type) {
-            case SLJIT_SIG_GREATER:
-                flag_set = SLJIT_SET_SIG_GREATER;
-                break;
-            case SLJIT_SIG_GREATER_EQUAL:
-                flag_set = SLJIT_SET_SIG_GREATER_EQUAL;
-                break;
-            case SLJIT_SIG_LESS:
-                flag_set = SLJIT_SET_SIG_LESS;
-                break;
-            case SLJIT_SIG_LESS_EQUAL:
-                flag_set = SLJIT_SET_SIG_LESS_EQUAL;
-                break;
-            case SLJIT_EQUAL:
-            case SLJIT_NOT_EQUAL:
-                /* SLJIT_EQUAL == 0, SLJIT_SET(SLJIT_EQUAL) would be 0:
-                 * the zero flag has its own encoding */
-                flag_set = SLJIT_SET_Z;
-                break;
         }
         {
             sljit_s32 r1 = ctx->tos.v[0].reg;
@@ -1726,29 +1751,127 @@ static void _gen_tos_if2(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s
              * the jump (target and fall-through labels expect empty cache) */
             _gen_tos_flush(C);
 
-            /* r1 = value1 (deeper), r2 = value2 (top), same shape as _gen_icmp_op2_regs */
-            sljit_emit_op2u(C, SLJIT_SUB | flag_set, r1, 0, r2, 0);
+            /* direct conditional jump on the operand registers */
+            jump_if_true = sljit_emit_cmp(C, test_type, r1, 0, r2, 0);
+            {
+                jump_out = sljit_emit_jump(C, SLJIT_JUMP);
+            }
+            label_true = sljit_emit_label(C);
+            {
+                _gen_jump_to_suspend_check(C, ip, offset);
+                _gen_ip_modify_imm(C, offset);
+                jump_away = sljit_emit_jump(C, SLJIT_JUMP);
+                pairlist_putl(method->jump_2_pos, (s64) (intptr_t) jump_away, code_idx + offset);
+            }
+            label_out = sljit_emit_label(C);
+            sljit_set_label(jump_if_true, label_true);
+            sljit_set_label(jump_out, label_out);
+            (void) label;
         }
-        sljit_emit_op_flags(C, SLJIT_MOV, SLJIT_R2, 0, test_type);
-
-        jump_if_true = sljit_emit_cmp(C, SLJIT_NOT_EQUAL, SLJIT_R2, 0, SLJIT_IMM, 0);
-        {
-            jump_out = sljit_emit_jump(C, SLJIT_JUMP);
-        }
-        label_true = sljit_emit_label(C);
-        {
-            _gen_jump_to_suspend_check(C, ip, offset);
-            _gen_ip_modify_imm(C, offset);
-            jump_away = sljit_emit_jump(C, SLJIT_JUMP);
-            pairlist_putl(method->jump_2_pos, (s64) (intptr_t) jump_away, code_idx + offset);
-        }
-        label_out = sljit_emit_label(C);
-        sljit_set_label(jump_if_true, label_true);
-        sljit_set_label(jump_out, label_out);
     } else {
         _gen_tos_flush(C);
         _gen_icmp_op2(C, method, ip, code_idx, test_type);
     }
+}
+
+/*
+ * Fuse lcmp/fcmpl/fcmpg/dcmpl/dcmpg followed by if<cond> into a direct
+ * compare-and-jump on the original operands: skips the -1/0/1 result
+ * value and, for floats, the C helper call.  ip points at the compare
+ * opcode, ip[1..3] must be the if.  Returns 1 when both bytecodes were
+ * consumed.  Callers run outside the cache-aware set, so the operands
+ * are read from memory with an empty cache.
+ */
+static s32 _gen_fused_cmp_if(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s32 code_idx, const u8 *end, u8 cmp_op) {
+    u8 if_op;
+    s32 nan_negative;/* cmpl: NaN counts as -1, cmpg: as +1 */
+    s32 is_float;
+    s32 offset, jumpto;
+    s32 test_type;
+    struct sljit_label *label;
+    struct sljit_jump *jump_if_true, *jump_out, *jump_away;
+    struct sljit_label *label_out, *label_true;
+
+    if (ip + 4 > end) {
+        return 0;
+    }
+    if_op = ip[1];
+    if (if_op < op_ifeq || if_op > op_ifle) {
+        return 0;
+    }
+    /* nothing may branch into the middle of the pair */
+    if (pairlist_getl(method->pos_2_label, code_idx + 1)) {
+        return 0;
+    }
+
+    is_float = (cmp_op != op_lcmp);
+    nan_negative = (cmp_op == op_fcmpl || cmp_op == op_dcmpl);
+
+    if (!is_float) {
+        switch (if_op) {
+            case op_ifeq: test_type = SLJIT_EQUAL; break;
+            case op_ifne: test_type = SLJIT_NOT_EQUAL; break;
+            case op_iflt: test_type = SLJIT_SIG_LESS; break;
+            case op_ifge: test_type = SLJIT_SIG_GREATER_EQUAL; break;
+            case op_ifgt: test_type = SLJIT_SIG_GREATER; break;
+            default:      test_type = SLJIT_SIG_LESS_EQUAL; break;/* op_ifle */
+        }
+    } else {
+        /* JVM cmp result: v1<v2 -> -1, equal -> 0, v1>v2 -> +1, NaN -> -1/+1 */
+        switch (if_op) {
+            case op_ifeq: test_type = SLJIT_ORDERED_EQUAL; break;
+            case op_ifne: test_type = SLJIT_UNORDERED_OR_NOT_EQUAL; break;
+            case op_iflt: test_type = nan_negative ? SLJIT_UNORDERED_OR_LESS : SLJIT_ORDERED_LESS; break;
+            case op_ifge: test_type = nan_negative ? SLJIT_ORDERED_GREATER_EQUAL : SLJIT_UNORDERED_OR_GREATER_EQUAL; break;
+            case op_ifgt: test_type = nan_negative ? SLJIT_ORDERED_GREATER : SLJIT_UNORDERED_OR_GREATER; break;
+            default:      test_type = nan_negative ? SLJIT_UNORDERED_OR_LESS_EQUAL : SLJIT_ORDERED_LESS_EQUAL; break;/* op_ifle */
+        }
+    }
+
+    offset = *((s16 *) (ip + 2));
+    /* JVM branch offsets are relative to the ifxx opcode itself */
+    jumpto = (code_idx + 1) + offset;
+    label = (__refer) pairlist_getl(method->pos_2_label, jumpto);
+    if (!label) {
+        jvm_printf("label not found %s.%s pc: %d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), code_idx);
+        return 0;
+    }
+
+    if (!is_float) {
+        /* R0 = value2 (top), R1 = value1 (deeper) */
+        _gen_stack_peek_long(C, -2, SLJIT_R0, 0);
+        _gen_stack_peek_long(C, -4, SLJIT_R1, 0);
+        _gen_stack_size_modify(C, -4);
+        jump_if_true = sljit_emit_cmp(C, test_type, SLJIT_R1, 0, SLJIT_R0, 0);
+    } else if (cmp_op == op_fcmpl || cmp_op == op_fcmpg) {
+        /* FR0 = value1, FR1 = value2 */
+        _gen_stack_peek_float(C, -2, SLJIT_FR0, 0);
+        _gen_stack_peek_float(C, -1, SLJIT_FR1, 0);
+        _gen_stack_size_modify(C, -2);
+        jump_if_true = sljit_emit_fcmp(C, test_type | SLJIT_32, SLJIT_FR0, 0, SLJIT_FR1, 0);
+    } else {
+        _gen_stack_peek_double(C, -4, SLJIT_FR0, 0);
+        _gen_stack_peek_double(C, -2, SLJIT_FR1, 0);
+        _gen_stack_size_modify(C, -4);
+        jump_if_true = sljit_emit_fcmp(C, test_type, SLJIT_FR0, 0, SLJIT_FR1, 0);
+    }
+
+    {
+        jump_out = sljit_emit_jump(C, SLJIT_JUMP);
+    }
+    label_true = sljit_emit_label(C);
+    {
+        /* branch_ip and pc offset follow the ifxx instruction, like the
+         * non-fused emitters (current instruction = ifxx position) */
+        _gen_jump_to_suspend_check(C, ip + 1, offset);
+        _gen_ip_modify_imm(C, offset);
+        jump_away = sljit_emit_jump(C, SLJIT_JUMP);
+        pairlist_putl(method->jump_2_pos, (s64) (intptr_t) jump_away, jumpto);
+    }
+    label_out = sljit_emit_label(C);
+    sljit_set_label(jump_if_true, label_true);
+    sljit_set_label(jump_out, label_out);
+    return 1;
 }
 
 #if JIT_OPT_FUSION_EXT
@@ -2011,7 +2134,7 @@ static s32 _jit_try_emit_getfield_ireturn(struct sljit_compiler *C, MethodInfo *
         class_clinit(fi->_this_class, runtime);
     }
     _gen_local_get_ref(C, 0, SLJIT_R0, 0);
-    _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, JVM_EXCEPTION_NULLPOINTER, 0);
+    _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, 0);
     _jit_emit_load_instance_field(C, fi, SLJIT_R0, SLJIT_R0);
     _jit_emit_push_field_value(C, fi, SLJIT_R0);
     _gen_save_sp_ip(C);
@@ -2039,7 +2162,7 @@ static s32 _jit_try_emit_putfield_return(struct sljit_compiler *C, MethodInfo *m
         class_clinit(fi->_this_class, runtime);
     }
     _gen_local_get_ref(C, 0, SLJIT_R0, 0);
-    _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, JVM_EXCEPTION_NULLPOINTER, 0);
+    _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, 0);
     _jit_emit_local_get_by_field(C, 1, fi, SLJIT_R1);
     _jit_emit_store_instance_field(C, fi, SLJIT_R0, SLJIT_R1);
     _gen_save_sp_ip(C);
@@ -2611,25 +2734,13 @@ static s32 _jit_tos_interested(u8 op) {
 s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime *runtime) {
 #if JIT_DEBUG
     if (
-//            (utf8_equals_c(method->_this_class->name, "java/lang/ClassLoader")
-//             && utf8_equals_c(method->descriptor, "(Ljava/lang/String;Z)Ljava/lang/Class;")
-//             && utf8_equals_c(method->name, "loadClass"))
-//            ||
-            (utf8_equals_c(method->_this_class->name, "com/ebsee/shl/main/GamePanel")
-             && utf8_equals_c(method->descriptor, "(J)V")
-             && utf8_equals_c(method->name, "paint_title"))
+            0
             ) {
         s32 debug = 1;
 
     } else {
         return JIT_GEN_ERROR;
     }
-
-    //    if (utf8_equals_c(method->_this_class->name, "org/mini/gui/GContainer")&&utf8_equals_c(method->name, "drawObj")) {
-    //        int debug = 1;
-    //        return JIT_GEN_ERROR;
-    //    } else {
-    //    }
 #endif
 
 
@@ -2956,16 +3067,26 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 ip++;
                 break;
             }
-            case op_iaload:
-            case op_faload: {
+            case op_iaload: {
                 _gen_arr_load(C, DATATYPE_INT);
                 _gen_ip_modify_imm(C, 1);
                 ip++;
                 break;
             }
-            case op_laload:
-            case op_daload: {
+            case op_faload: {
+                _gen_arr_load(C, DATATYPE_FLOAT);
+                _gen_ip_modify_imm(C, 1);
+                ip++;
+                break;
+            }
+            case op_laload: {
                 _gen_arr_load(C, DATATYPE_LONG);
+                _gen_ip_modify_imm(C, 1);
+                ip++;
+                break;
+            }
+            case op_daload: {
+                _gen_arr_load(C, DATATYPE_DOUBLE);
                 _gen_ip_modify_imm(C, 1);
                 ip++;
                 break;
@@ -3669,6 +3790,11 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 //                s32 result = value2 == value1 ? 0 : (value2 > value1 ? 1 : -1);
                 //                push_int(stack, result);
                 // =====================================================================
+                if (_gen_fused_cmp_if(C, method, ip, code_idx, end, op_lcmp)) {
+                    _gen_ip_modify_imm(C, 4);
+                    ip += 4;
+                    break;
+                }
                 _gen_stack_peek_long(C, -2, SLJIT_R0, 0);
                 _gen_stack_peek_long(C, -4, SLJIT_R1, 0);
 //
@@ -3692,6 +3818,11 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
             case op_fcmpl:
             case op_fcmpg: {
+                if (_gen_fused_cmp_if(C, method, ip, code_idx, end, cur_inst)) {
+                    _gen_ip_modify_imm(C, 4);
+                    ip += 4;
+                    break;
+                }
                 _gen_stack_peek_float(C, -1, SLJIT_FR0, 0);
                 _gen_stack_peek_float(C, -2, SLJIT_FR1, 0);
                 sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, cur_inst);
@@ -3705,6 +3836,11 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
             case op_dcmpl:
             case op_dcmpg: {
+                if (_gen_fused_cmp_if(C, method, ip, code_idx, end, cur_inst)) {
+                    _gen_ip_modify_imm(C, 4);
+                    ip += 4;
+                    break;
+                }
                 _gen_stack_peek_double(C, -2, SLJIT_FR0, 0);
                 _gen_stack_peek_double(C, -4, SLJIT_FR1, 0);
                 sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, cur_inst);
@@ -4011,38 +4147,45 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM0(), (sljit_sw) ptr);
                     _gen_stack_push_ref(C, SLJIT_R0, 0);
                 } else {
-                    // check variable type to determine s64/s32/f64/f32
-                    s32 data_bytes = fi->datatype_bytes;
-                    switch (data_bytes) {
+                    /* numeric static: load straight into the cache */
+                    u8 cache_dt;
+                    s32 idx2;
+                    sljit_s32 dst;
+                    if (fi->datatype_bytes == 8) {
+                        cache_dt = (fi->datatype_idx == DATATYPE_DOUBLE) ? DATATYPE_DOUBLE : DATATYPE_LONG;
+                    } else if (fi->datatype_bytes == 4 && fi->datatype_idx == DATATYPE_FLOAT) {
+                        cache_dt = DATATYPE_FLOAT;
+                    } else {
+                        cache_dt = DATATYPE_INT;
+                    }
+                    idx2 = _gen_tos_reserve(C, cache_dt);
+                    dst = jit_gen_context->tos.v[idx2].reg;
+                    switch (fi->datatype_bytes) {
                         case 4: {
-                            //sp->rvalue = *((s32 *)ptr)
-                            sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R0, 0, SLJIT_MEM0(), (sljit_sw) ptr);
-                            _gen_stack_push_int(C, SLJIT_R0, 0);
+                            if (cache_dt == DATATYPE_FLOAT) {
+                                sljit_emit_fop1(C, SLJIT_MOV_F32, dst, 0, SLJIT_MEM0(), (sljit_sw) ptr);
+                            } else {
+                                sljit_emit_op1(C, SLJIT_MOV_S32, dst, 0, SLJIT_MEM0(), (sljit_sw) ptr);
+                            }
                             break;
                         }
                         case 1: {
-                            //sp->rvalue = *((s8 *)ptr)
-                            sljit_emit_op1(C, SLJIT_MOV_S8, SLJIT_R0, 0, SLJIT_MEM0(), (sljit_sw) ptr);
-                            _gen_stack_push_int(C, SLJIT_R0, 0);
-
+                            sljit_emit_op1(C, SLJIT_MOV_S8, dst, 0, SLJIT_MEM0(), (sljit_sw) ptr);
                             break;
                         }
                         case 8: {
-                            //sp->rvalue = *((s64 *)ptr)
-                            sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), (sljit_sw) ptr);
-                            _gen_stack_push_long(C, SLJIT_R0, 0);
+                            if (cache_dt == DATATYPE_DOUBLE) {
+                                sljit_emit_fop1(C, SLJIT_MOV_F64, dst, 0, SLJIT_MEM0(), (sljit_sw) ptr);
+                            } else {
+                                sljit_emit_op1(C, SLJIT_MOV, dst, 0, SLJIT_MEM0(), (sljit_sw) ptr);
+                            }
                             break;
                         }
                         case 2: {
                             if (fi->datatype_idx == DATATYPE_JCHAR) {
-                                //sp->rvalue = *((u16 *)ptr)
-                                sljit_emit_op1(C, SLJIT_MOV_U16, SLJIT_R0, 0, SLJIT_MEM0(), (sljit_sw) ptr);
-                                _gen_stack_push_int(C, SLJIT_R0, 0);
-
+                                sljit_emit_op1(C, SLJIT_MOV_U16, dst, 0, SLJIT_MEM0(), (sljit_sw) ptr);
                             } else {
-                                //sp->rvalue = *((s16 *)ptr)
-                                sljit_emit_op1(C, SLJIT_MOV_S16, SLJIT_R0, 0, SLJIT_MEM0(), (sljit_sw) ptr);
-                                _gen_stack_push_int(C, SLJIT_R0, 0);
+                                sljit_emit_op1(C, SLJIT_MOV_S16, dst, 0, SLJIT_MEM0(), (sljit_sw) ptr);
                             }
                             break;
                         }
@@ -4050,6 +4193,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                             break;
                         }
                     }
+                    _gen_stack_size_modify(C, _tos_slots(cache_dt));
                 }
 
                 _gen_ip_modify_imm(C, 3);
@@ -4125,7 +4269,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 }
 
                 _gen_stack_peek_ref(C, -1, SLJIT_R0, 0);
-                _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, JVM_EXCEPTION_NULLPOINTER, -1);
+                _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, -1);
 
                 //field address = ins + JVM_OBJECT_BODY_OFFSET + fi->offset_instance
                 sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, SLJIT_R0, 0,
@@ -4136,39 +4280,45 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_R2), 0);
                     _gen_stack_set_ref(C, -1, SLJIT_R0, 0);
                 } else {
-                    // check variable type to determine s64/s32/f64/f32
-                    s32 data_bytes = fi->datatype_bytes;
-                    switch (data_bytes) {
+                    /* numeric field: pop this, load straight into the cache */
+                    u8 cache_dt;
+                    s32 idx2;
+                    sljit_s32 dst;
+                    if (fi->datatype_bytes == 8) {
+                        cache_dt = (fi->datatype_idx == DATATYPE_DOUBLE) ? DATATYPE_DOUBLE : DATATYPE_LONG;
+                    } else if (fi->datatype_bytes == 4 && fi->datatype_idx == DATATYPE_FLOAT) {
+                        cache_dt = DATATYPE_FLOAT;
+                    } else {
+                        cache_dt = DATATYPE_INT;
+                    }
+                    idx2 = _gen_tos_reserve(C, cache_dt);
+                    dst = jit_gen_context->tos.v[idx2].reg;
+                    switch (fi->datatype_bytes) {
                         case 4: {
-                            //sp->rvalue = *((s32 *)ptr)
-                            sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_R2), 0);
-                            _gen_stack_set_int(C, -1, SLJIT_R0, 0);
+                            if (cache_dt == DATATYPE_FLOAT) {
+                                sljit_emit_fop1(C, SLJIT_MOV_F32, dst, 0, SLJIT_MEM1(SLJIT_R2), 0);
+                            } else {
+                                sljit_emit_op1(C, SLJIT_MOV_S32, dst, 0, SLJIT_MEM1(SLJIT_R2), 0);
+                            }
                             break;
                         }
                         case 1: {
-                            //sp->rvalue = *((s8 *)ptr)
-                            sljit_emit_op1(C, SLJIT_MOV_S8, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_R2), 0);
-                            _gen_stack_set_int(C, -1, SLJIT_R0, 0);
-
+                            sljit_emit_op1(C, SLJIT_MOV_S8, dst, 0, SLJIT_MEM1(SLJIT_R2), 0);
                             break;
                         }
                         case 8: {
-                            //sp->rvalue = *((s64 *)ptr)
-                            sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_R2), 0);
-                            _gen_stack_set_long(C, -1, SLJIT_R0, 0);
-                            _gen_stack_size_modify(C, 1);
+                            if (cache_dt == DATATYPE_DOUBLE) {
+                                sljit_emit_fop1(C, SLJIT_MOV_F64, dst, 0, SLJIT_MEM1(SLJIT_R2), 0);
+                            } else {
+                                sljit_emit_op1(C, SLJIT_MOV, dst, 0, SLJIT_MEM1(SLJIT_R2), 0);
+                            }
                             break;
                         }
                         case 2: {
                             if (fi->datatype_idx == DATATYPE_JCHAR) {
-                                //sp->rvalue = *((u16 *)ptr)
-                                sljit_emit_op1(C, SLJIT_MOV_U16, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_R2), 0);
-                                _gen_stack_set_int(C, -1, SLJIT_R0, 0);
-
+                                sljit_emit_op1(C, SLJIT_MOV_U16, dst, 0, SLJIT_MEM1(SLJIT_R2), 0);
                             } else {
-                                //sp->rvalue = *((s16 *)ptr)
-                                sljit_emit_op1(C, SLJIT_MOV_S16, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_R2), 0);
-                                _gen_stack_set_int(C, -1, SLJIT_R0, 0);
+                                sljit_emit_op1(C, SLJIT_MOV_S16, dst, 0, SLJIT_MEM1(SLJIT_R2), 0);
                             }
                             break;
                         }
@@ -4176,6 +4326,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                             break;
                         }
                     }
+                    /* pop this, push the cached value */
+                    _gen_stack_size_modify(C, -1 + _tos_slots(cache_dt));
                 }
                 //ip
                 _gen_ip_modify_imm(C, 3);
@@ -4224,7 +4376,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 }
 
                 _gen_stack_peek_ref(C, -stack_size, SLJIT_R0, 0);
-                _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, JVM_EXCEPTION_NULLPOINTER, -stack_size);
+                _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, -stack_size);
 
 
                 //field address = ins + JVM_OBJECT_BODY_OFFSET + fi->offset_instance
