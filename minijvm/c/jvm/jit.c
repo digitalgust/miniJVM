@@ -34,7 +34,6 @@ typedef struct {
     const u8 *runtime_code;
     const u8 *current_ip;
     s32 hot_local[2];
-    s32 inline_static_workspace;
 } JitGenContext;
 
 #if defined(_MSC_VER)
@@ -591,28 +590,39 @@ void _gen_l_d_store(struct sljit_compiler *C, s32 index) {
 }
 
 
+/**
+ * Inline version of _jarray_check_exception(arr, index, runtime).
+ * arr = stack slot 0 (ref), index = stack slot 1 (int), stack size is
+ * already popped by the caller. Common (valid) path is pure register
+ * compare, no callout; only the throw path calls out.
+ *
+ * index is peeked with SLJIT_MOV_S32 (sign extended) and length is a
+ * non negative s32, so one unsigned compare covers both index < 0 and
+ * index >= length.
+ */
+void _gen_jarray_check_exception(struct sljit_compiler *C) {
+    _gen_stack_peek_ref(C, 0, SLJIT_R0, 0);
+    _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, 0);
+
+    _gen_stack_peek_int(C, 1, SLJIT_R1, 0);
+    sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R0), (sljit_sw) JVM_ARRAY_LENGTH_OFFSET);
+    _gen_exception_check_throw_handle(C, SLJIT_GREATER_EQUAL, SLJIT_R1, 0, SLJIT_R2, 0, JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, 0);
+}
+
 void _gen_arr_load(struct sljit_compiler *C, s32 datatype) {
     // =====================================================================
     //    s32 index = pop_int(stack);
     //    Instance *arr = (Instance *) pop_ref(stack);
-    //    ret = _jarray_check_exception(arr, index, runtime);
-    //    if (!ret) {
+    //    if (!arr) throw NullPointerException;
+    //    else if (index < 0 || index >= jarray_length(arr)) throw ArrayIndexOutOfBoundsException;
+    //    else {
     //        s32 s = *((s32 *) (arr->arr_body) + index);
     //        push_int(stack, s);
-    //        ip++;
-    //    } else {
-    //        goto label_exception_handle;
     //    }
+    //    check generated inline by _gen_jarray_check_exception
     // =====================================================================
     _gen_stack_size_modify(C, -2);
-    _gen_save_sp_ip(C);
-
-    _gen_stack_peek_ref(C, 0, SLJIT_R0, 0);
-    _gen_stack_peek_int(C, 1, SLJIT_R1, 0);
-    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(32, P, 32, P), SLJIT_IMM, SLJIT_FUNC_ADDR(_jarray_check_exception));
-    _gen_load_sp_ip(C);
-    _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, -1, 0);
+    _gen_jarray_check_exception(C);
 
 
     _gen_stack_peek_ref(C, 0, SLJIT_R0, 0);
@@ -661,13 +671,12 @@ void _gen_arr_store(struct sljit_compiler *C, s32 datatype) {
     //    s32 i = pop_int(stack);
     //    s32 index = pop_int(stack);
     //    Instance *jarr = (Instance *) pop_ref(stack);
-    //    ret = _jarray_check_exception(jarr, index, runtime);
-    //    if (!ret) {
+    //    if (!jarr) throw NullPointerException;
+    //    else if (index < 0 || index >= jarray_length(jarr)) throw ArrayIndexOutOfBoundsException;
+    //    else {
     //        *(((s32 *) jarr->arr_body) + index) = i;
-    //        ip++;
-    //    } else {
-    //        goto label_exception_handle;
     //    }
+    //    check generated inline by _gen_jarray_check_exception
     // =====================================================================
 
     s32 slots;
@@ -678,14 +687,7 @@ void _gen_arr_store(struct sljit_compiler *C, s32 datatype) {
     }
     _gen_stack_size_modify(C, -2 - slots);
 
-
-    _gen_save_sp_ip(C);
-    _gen_stack_peek_ref(C, 0, SLJIT_R0, 0);//arr
-    _gen_stack_peek_int(C, 1, SLJIT_R1, 0);//index
-    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(32, P, 32, P), SLJIT_IMM, SLJIT_FUNC_ADDR(_jarray_check_exception));
-    _gen_load_sp_ip(C);
-    _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, -1, 0);
+    _gen_jarray_check_exception(C);
 
     if (datatype == DATATYPE_REFERENCE) {
         _gen_save_sp_ip(C);
@@ -1214,7 +1216,7 @@ static s32 _jit_match_iload(const u8 *ip, const u8 *end, s32 *out_idx, s32 *out_
         return 1;
     }
     if (op == op_iload && ip + 1 < end) {
-        *out_idx = (s8) ip[1];
+        *out_idx = (u8) ip[1];
         *out_len = 2;
         return 1;
     }
@@ -1230,7 +1232,7 @@ static s32 _jit_match_istore(const u8 *ip, const u8 *end, s32 *out_idx, s32 *out
         return 1;
     }
     if (op == op_istore && ip + 1 < end) {
-        *out_idx = (s8) ip[1];
+        *out_idx = (u8) ip[1];
         *out_len = 2;
         return 1;
     }
@@ -1418,7 +1420,7 @@ static s32 _jit_match_fload(const u8 *ip, const u8 *end, s32 *out_idx, s32 *out_
         return 1;
     }
     if (op == op_fload && ip + 1 < end) {
-        *out_idx = (s8) ip[1];
+        *out_idx = (u8) ip[1];
         *out_len = 2;
         return 1;
     }
@@ -1434,7 +1436,7 @@ static s32 _jit_match_fstore(const u8 *ip, const u8 *end, s32 *out_idx, s32 *out
         return 1;
     }
     if (op == op_fstore && ip + 1 < end) {
-        *out_idx = (s8) ip[1];
+        *out_idx = (u8) ip[1];
         *out_len = 2;
         return 1;
     }
@@ -2132,15 +2134,6 @@ static s32 _jit_try_emit_accessor_invoke(struct sljit_compiler *C, JClass *clazz
 #endif
 
 
-static float frem(float value1, float value2) {
-    return value2 - ((s32) (value2 / value1) * value1);
-}
-
-static double drem_1(double value1, double value2) {
-    return value2 - ((s64) (value2 / value1) * value1);
-}
-
-
 static s32 fcmp(u8 bytecode, float value1, float value2) {
     if (isnan(value1) || isnan(value2)) {
         if (bytecode == op_fcmpg) {
@@ -2271,328 +2264,6 @@ static const u8 *_jit_next_instruction(const u8 *code, const u8 *ip, const u8 *e
     }
 }
 
-#if JIT_OPT_INLINE_STATIC
-#define JIT_INLINE_STATIC_MAX_DEPTH 5
-#define JIT_INLINE_STATIC_MAX_PARAMS 2
-#define JIT_INLINE_STATIC_MAX_STACK 4
-#define JIT_INLINE_STATIC_FRAME_SLOTS (JIT_INLINE_STATIC_MAX_PARAMS + JIT_INLINE_STATIC_MAX_STACK)
-#define JIT_INLINE_STATIC_MAX_BUDGET 40
-
-typedef struct {
-    MethodInfo *path[JIT_INLINE_STATIC_MAX_DEPTH];
-    s32 path_depth;
-    s32 budget;
-} JitInlineStaticAnalysis;
-
-static sljit_sw _jit_inline_static_slot_offset(s32 frame_depth, s32 slot) {
-    return sizeof(sljit_sw)
-           * (LOCAL_INLINE_STATIC_BASE + frame_depth * JIT_INLINE_STATIC_FRAME_SLOTS + slot);
-}
-
-static s32 _jit_inline_static_binary_op(u8 op, sljit_s32 *sljit_op) {
-    switch (op) {
-        case op_iadd: *sljit_op = SLJIT_ADD; return 1;
-        case op_isub: *sljit_op = SLJIT_SUB; return 1;
-        case op_imul: *sljit_op = SLJIT_MUL; return 1;
-        case op_ishl: *sljit_op = SLJIT_SHL32; return 1;
-        case op_ishr: *sljit_op = SLJIT_ASHR32; return 1;
-        case op_iushr: *sljit_op = SLJIT_LSHR32; return 1;
-        case op_iand: *sljit_op = SLJIT_AND; return 1;
-        case op_ior: *sljit_op = SLJIT_OR; return 1;
-        case op_ixor: *sljit_op = SLJIT_XOR; return 1;
-        default: return 0;
-    }
-}
-
-static s32 _jit_inline_static_method_header_ok(MethodInfo *method) {
-    CodeAttribute *ca;
-    s32 i;
-    c8 return_type;
-
-    if (!method || !method->is_static || method->is_native || method->is_sync
-        || (method->access_flags & (ACC_SYNCHRONIZED | ACC_ABSTRACT))
-        || !method->converted_code || !method->paraType || !method->returnType) {
-        return 0;
-    }
-
-    ca = method->converted_code;
-    if (!ca->bytecode_for_jit || ca->code_length <= 0 || ca->exception_table_length != 0
-        || ca->max_stack > JIT_INLINE_STATIC_MAX_STACK
-        || method->para_slots > JIT_INLINE_STATIC_MAX_PARAMS
-        || method->para_slots != method->para_count_with_this
-        || method->return_slots != 1
-        || method->_this_class->status < CLASS_STATUS_CLINITED) {
-        return 0;
-    }
-
-    for (i = 0; i < method->paraType->length; i++) {
-        if (utf8_char_at(method->paraType, i) != '4') {
-            return 0;
-        }
-    }
-
-    return_type = utf8_char_at(method->returnType, 0);
-    return return_type == 'I' || return_type == 'Z' || return_type == 'B'
-           || return_type == 'S' || return_type == 'C';
-}
-
-static s32 _jit_analyze_inline_static_method(MethodInfo *method, JitInlineStaticAnalysis *analysis) {
-    CodeAttribute *ca;
-    const u8 *ip;
-    const u8 *end;
-    s32 eval_depth = 0;
-    s32 i;
-    s32 result = 0;
-
-    if (!_jit_inline_static_method_header_ok(method)
-        || analysis->path_depth >= JIT_INLINE_STATIC_MAX_DEPTH) {
-        return 0;
-    }
-    for (i = 0; i < analysis->path_depth; i++) {
-        if (analysis->path[i] == method) {
-            return 0;
-        }
-    }
-
-    ca = method->converted_code;
-    if (analysis->budget < ca->code_length) {
-        return 0;
-    }
-    analysis->budget -= ca->code_length;
-    analysis->path[analysis->path_depth++] = method;
-
-    ip = ca->bytecode_for_jit;
-    end = ip + ca->code_length;
-    while (ip < end) {
-        u8 op = *ip;
-        sljit_s32 ignored_op;
-
-        if (op >= op_iconst_m1 && op <= op_iconst_5) {
-            eval_depth++;
-            ip++;
-        } else if (op == op_bipush) {
-            if (ip + 2 > end) goto done;
-            eval_depth++;
-            ip += 2;
-        } else if (op == op_sipush) {
-            if (ip + 3 > end) goto done;
-            eval_depth++;
-            ip += 3;
-        } else if (op == op_iload) {
-            if (ip + 2 > end || ip[1] >= method->para_slots) goto done;
-            eval_depth++;
-            ip += 2;
-        } else if (op >= op_iload_0 && op <= op_iload_3) {
-            if ((s32) (op - op_iload_0) >= method->para_slots) goto done;
-            eval_depth++;
-            ip++;
-        } else if (_jit_inline_static_binary_op(op, &ignored_op)) {
-            if (eval_depth < 2) goto done;
-            eval_depth--;
-            ip++;
-        } else if (op == op_ineg || op == op_i2b || op == op_i2c || op == op_i2s) {
-            if (eval_depth < 1) goto done;
-            ip++;
-        } else if (op == op_invokestatic) {
-            u16 idx;
-            ConstantMethodRef *cmr;
-            MethodInfo *nested;
-            if (ip + 3 > end) goto done;
-            idx = *((const u16 *) (ip + 1));
-            cmr = class_get_constant_method_ref(method->_this_class, idx);
-            nested = cmr ? cmr->methodInfo : NULL;
-            if (!nested || eval_depth < nested->para_slots
-                || !_jit_analyze_inline_static_method(nested, analysis)) {
-                goto done;
-            }
-            eval_depth = eval_depth - nested->para_slots + 1;
-            ip += 3;
-        } else if (op == op_ireturn) {
-            result = eval_depth == 1 && ip + 1 == end;
-            goto done;
-        } else if (op == op_nop) {
-            ip++;
-        } else {
-            goto done;
-        }
-
-        if (eval_depth > JIT_INLINE_STATIC_MAX_STACK) {
-            goto done;
-        }
-    }
-
-done:
-    analysis->path_depth--;
-    return result;
-}
-
-static void _jit_emit_inline_static_store(struct sljit_compiler *C, s32 frame_depth,
-                                          s32 slot, sljit_s32 src, sljit_sw srcw) {
-    sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_MEM1(SLJIT_SP),
-                   _jit_inline_static_slot_offset(frame_depth, slot), src, srcw);
-}
-
-static void _jit_emit_inline_static_load(struct sljit_compiler *C, s32 frame_depth,
-                                         s32 slot, sljit_s32 dst) {
-    sljit_emit_op1(C, SLJIT_MOV_S32, dst, 0, SLJIT_MEM1(SLJIT_SP),
-                   _jit_inline_static_slot_offset(frame_depth, slot));
-}
-
-/* Emits a validated method and leaves its single int result in R0. */
-static void _jit_emit_inline_static_method(struct sljit_compiler *C, MethodInfo *method,
-                                           s32 frame_depth) {
-    const u8 *ip = method->converted_code->bytecode_for_jit;
-    const u8 *end = ip + method->converted_code->code_length;
-    s32 eval_depth = 0;
-
-    while (ip < end) {
-        u8 op = *ip;
-        sljit_s32 binary_op;
-
-        if (op >= op_iconst_m1 && op <= op_iconst_5) {
-            _jit_emit_inline_static_store(C, frame_depth,
-                                          JIT_INLINE_STATIC_MAX_PARAMS + eval_depth,
-                                          SLJIT_IMM, (sljit_sw) op - op_iconst_0);
-            eval_depth++;
-            ip++;
-        } else if (op == op_bipush) {
-            _jit_emit_inline_static_store(C, frame_depth,
-                                          JIT_INLINE_STATIC_MAX_PARAMS + eval_depth,
-                                          SLJIT_IMM, (sljit_sw) (s8) ip[1]);
-            eval_depth++;
-            ip += 2;
-        } else if (op == op_sipush) {
-            _jit_emit_inline_static_store(C, frame_depth,
-                                          JIT_INLINE_STATIC_MAX_PARAMS + eval_depth,
-                                          SLJIT_IMM, (sljit_sw) *((const s16 *) (ip + 1)));
-            eval_depth++;
-            ip += 3;
-        } else if (op == op_iload || (op >= op_iload_0 && op <= op_iload_3)) {
-            s32 local_index = op == op_iload ? ip[1] : op - op_iload_0;
-            _jit_emit_inline_static_load(C, frame_depth, local_index, SLJIT_R0);
-            _jit_emit_inline_static_store(C, frame_depth,
-                                          JIT_INLINE_STATIC_MAX_PARAMS + eval_depth,
-                                          SLJIT_R0, 0);
-            eval_depth++;
-            ip += op == op_iload ? 2 : 1;
-        } else if (_jit_inline_static_binary_op(op, &binary_op)) {
-            s32 lhs_slot = JIT_INLINE_STATIC_MAX_PARAMS + eval_depth - 2;
-            s32 rhs_slot = JIT_INLINE_STATIC_MAX_PARAMS + eval_depth - 1;
-            _jit_emit_inline_static_load(C, frame_depth, lhs_slot, SLJIT_R0);
-            _jit_emit_inline_static_load(C, frame_depth, rhs_slot, SLJIT_R1);
-            if (binary_op == SLJIT_SHL32 || binary_op == SLJIT_ASHR32
-                || binary_op == SLJIT_LSHR32) {
-                sljit_emit_op2(C, SLJIT_AND, SLJIT_R1, 0,
-                               SLJIT_R1, 0, SLJIT_IMM, 0x1f);
-            }
-            sljit_emit_op2(C, binary_op, SLJIT_R0, 0, SLJIT_R0, 0, SLJIT_R1, 0);
-            _jit_emit_inline_static_store(C, frame_depth, lhs_slot, SLJIT_R0, 0);
-            eval_depth--;
-            ip++;
-        } else if (op == op_ineg) {
-            s32 slot = JIT_INLINE_STATIC_MAX_PARAMS + eval_depth - 1;
-            _jit_emit_inline_static_load(C, frame_depth, slot, SLJIT_R0);
-            sljit_emit_op2(C, SLJIT_SUB32, SLJIT_R0, 0,
-                           SLJIT_IMM, 0, SLJIT_R0, 0);
-            _jit_emit_inline_static_store(C, frame_depth, slot, SLJIT_R0, 0);
-            ip++;
-        } else if (op == op_i2b || op == op_i2c || op == op_i2s) {
-            s32 slot = JIT_INLINE_STATIC_MAX_PARAMS + eval_depth - 1;
-            sljit_s32 move_op = op == op_i2b ? SLJIT_MOV_S8
-                                : (op == op_i2c ? SLJIT_MOV_U16 : SLJIT_MOV_S16);
-            _jit_emit_inline_static_load(C, frame_depth, slot, SLJIT_R0);
-            sljit_emit_op1(C, move_op, SLJIT_R0, 0, SLJIT_R0, 0);
-            _jit_emit_inline_static_store(C, frame_depth, slot, SLJIT_R0, 0);
-            ip++;
-        } else if (op == op_invokestatic) {
-            u16 idx = *((const u16 *) (ip + 1));
-            ConstantMethodRef *cmr = class_get_constant_method_ref(method->_this_class, idx);
-            MethodInfo *nested = cmr->methodInfo;
-            s32 first_arg = eval_depth - nested->para_slots;
-            s32 i;
-
-            for (i = 0; i < nested->para_slots; i++) {
-                _jit_emit_inline_static_load(C, frame_depth,
-                                             JIT_INLINE_STATIC_MAX_PARAMS + first_arg + i,
-                                             SLJIT_R0);
-                _jit_emit_inline_static_store(C, frame_depth + 1, i, SLJIT_R0, 0);
-            }
-            _jit_emit_inline_static_method(C, nested, frame_depth + 1);
-            _jit_emit_inline_static_store(C, frame_depth,
-                                          JIT_INLINE_STATIC_MAX_PARAMS + first_arg,
-                                          SLJIT_R0, 0);
-            eval_depth = first_arg + 1;
-            ip += 3;
-        } else if (op == op_ireturn) {
-            _jit_emit_inline_static_load(C, frame_depth,
-                                         JIT_INLINE_STATIC_MAX_PARAMS + eval_depth - 1,
-                                         SLJIT_R0);
-            return;
-        } else {
-            /* The analysis pass guarantees this cannot be reached. */
-            ip++;
-        }
-    }
-}
-
-static s32 _jit_try_emit_inline_static(struct sljit_compiler *C, ConstantMethodRef *cmr) {
-    JitInlineStaticAnalysis analysis;
-    MethodInfo *method;
-    s32 i;
-
-    if (!cmr || !cmr->methodInfo) {
-        return 0;
-    }
-    memset(&analysis, 0, sizeof(analysis));
-    analysis.budget = JIT_INLINE_STATIC_MAX_BUDGET;
-    method = cmr->methodInfo;
-    if (!_jit_analyze_inline_static_method(method, &analysis)) {
-        return 0;
-    }
-
-    for (i = 0; i < method->para_slots; i++) {
-        _gen_stack_peek_int(C, -method->para_slots + i, SLJIT_R0, 0);
-        _jit_emit_inline_static_store(C, 0, i, SLJIT_R0, 0);
-    }
-    _jit_emit_inline_static_method(C, method, 0);
-
-    if (method->para_slots == 0) {
-        _gen_stack_push_int(C, SLJIT_R0, 0);
-    } else {
-        _gen_stack_set_int(C, -method->para_slots, SLJIT_R0, 0);
-        _gen_stack_size_modify(C, 1 - method->para_slots);
-    }
-    return 1;
-}
-
-static s32 _jit_method_has_inline_static_call(MethodInfo *method) {
-    CodeAttribute *ca = method->converted_code;
-    const u8 *ip = ca->bytecode_for_jit;
-    const u8 *end = ip + ca->code_length;
-
-    while (ip < end) {
-        if (*ip == op_invokestatic && ip + 3 <= end) {
-            u16 idx = *((const u16 *) (ip + 1));
-            ConstantMethodRef *cmr = class_get_constant_method_ref(method->_this_class, idx);
-            JitInlineStaticAnalysis analysis;
-            memset(&analysis, 0, sizeof(analysis));
-            analysis.budget = JIT_INLINE_STATIC_MAX_BUDGET;
-            if (cmr && cmr->methodInfo
-                && _jit_analyze_inline_static_method(cmr->methodInfo, &analysis)) {
-                return 1;
-            }
-        }
-        {
-            const u8 *next = _jit_next_instruction(ca->bytecode_for_jit, ip, end);
-            if (next <= ip) {
-                return 0;
-            }
-            ip = next;
-        }
-    }
-    return 0;
-}
-#endif
 
 static void _jit_local_exclude(u8 *excluded, s32 max_locals, s32 index, s32 slots) {
     s32 i;
@@ -2803,9 +2474,6 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
         jit_gen_context->runtime_code = ca->code;
         jit_gen_context->current_ip = ip;
         _jit_select_hot_int_locals(ca, jit_gen_context->hot_local);
-#if JIT_OPT_INLINE_STATIC
-        jit_gen_context->inline_static_workspace = _jit_method_has_inline_static_call(method);
-#endif
     }
 
     {// exception pc need label
@@ -2818,12 +2486,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
     JClass *clazz = method->_this_class;
 
     void *genfunc;
-    s32 native_local_slots = LOCAL_INLINE_STATIC_BASE;
-#if JIT_OPT_INLINE_STATIC
-    if (jit_gen_context && jit_gen_context->inline_static_workspace) {
-        native_local_slots = LOCAL_COUNT;
-    }
-#endif
+    s32 native_local_slots = LOCAL_COUNT;
 
     /* Start a context(function entry), have 2 arguments, discuss later */
     sljit_emit_enter(C, 0, SLJIT_ARGS2(W, P, P), JIT_SCRATCH_REGS | SLJIT_ENTER_FLOAT(3), JIT_SAVED_REGS,
@@ -3484,9 +3147,9 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 break;
             }
             case op_frem: {
-                _gen_stack_peek_float(C, -1, SLJIT_FR0, 0);
-                _gen_stack_peek_float(C, -2, SLJIT_FR1, 0);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(F32, F32, F32), SLJIT_IMM, SLJIT_FUNC_ADDR(frem));
+                _gen_stack_peek_float(C, -2, SLJIT_FR0, 0);
+                _gen_stack_peek_float(C, -1, SLJIT_FR1, 0);
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(F32, F32, F32), SLJIT_IMM, SLJIT_FUNC_ADDR(fmodf));
                 _gen_stack_set_float(C, -2, SLJIT_FR0, 0);
                 _gen_stack_size_modify(C, -1);
                 _gen_ip_modify_imm(C, 1);
@@ -3494,9 +3157,9 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 break;
             }
             case op_drem: {
-                _gen_stack_peek_double(C, -2, SLJIT_FR0, 0);
-                _gen_stack_peek_double(C, -4, SLJIT_FR1, 0);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(F64, F64, F64), SLJIT_IMM, SLJIT_FUNC_ADDR(drem_1));
+                _gen_stack_peek_double(C, -4, SLJIT_FR0, 0);
+                _gen_stack_peek_double(C, -2, SLJIT_FR1, 0);
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(F64, F64, F64), SLJIT_IMM, SLJIT_FUNC_ADDR(fmod));
                 _gen_stack_set_double(C, -4, SLJIT_FR0, 0);
                 _gen_stack_size_modify(C, -2);
                 _gen_ip_modify_imm(C, 1);
@@ -4453,16 +4116,6 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                     _gen_ip_modify_imm(C, 3);
                     ip += 3;
                     break;
-                }
-#endif
-#if JIT_OPT_INLINE_STATIC
-                if (cur_inst == op_invokestatic) {
-                    ConstantMethodRef *inline_cmr = class_get_constant_method_ref(clazz, invoke_idx);
-                    if (_jit_try_emit_inline_static(C, inline_cmr)) {
-                        _gen_ip_modify_imm(C, 3);
-                        ip += 3;
-                        break;
-                    }
                 }
 #endif
                 _gen_save_sp_ip(C);
