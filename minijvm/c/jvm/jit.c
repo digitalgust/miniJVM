@@ -32,9 +32,8 @@
 /* ---- dual top-of-stack register cache ----
  * One cached VALUE: the top 1..2 numeric values of the VM operand stack
  * live in registers (R3/R4 for int/long, FR3/FR4 for float/double)
- * instead of their stack slots.  REGISTER_SP always holds the full
- * logical depth: a cached push advances it exactly like a memory push,
- * only the store is omitted. */
+ * instead of their stack slots. The logical SP is REGISTER_SP plus
+ * sp_pending slots; stack accesses compensate for this deferred delta. */
 typedef struct {
     u8 datatype;      /* DATATYPE_INT / LONG / FLOAT / DOUBLE */
     u8 slots;         /* StackEntry slots covered: 1 or 2 */
@@ -54,6 +53,10 @@ typedef struct {
     const u8 *current_ip;
     s32 hot_local[2];
     TosCache tos;
+    s32 sp_pending;   /* stack slots REGISTER_SP lags behind the logical
+                         depth: pushes/pops only bump this, one folded
+                         add is emitted by _gen_sp_apply() before the
+                         register is read, published or jumps */
 } JitGenContext;
 
 #if defined(_MSC_VER)
@@ -272,6 +275,10 @@ static void dump_code(void *code, sljit_uw len) {
 //------------------------  tool ----------------------------
 
 static void _gen_tos_flush(struct sljit_compiler *C);
+static void _gen_tos_flush_values(struct sljit_compiler *C);
+static void _gen_sp_apply(struct sljit_compiler *C);
+static sljit_s32 _tos_is_float(u8 datatype);
+static s32 _tos_slots(u8 datatype);
 static s32 _gen_tos_reserve(struct sljit_compiler *C, u8 datatype);
 static void _gen_tos_materialize(struct sljit_compiler *C, s32 idx);
 
@@ -303,9 +310,10 @@ static const u8 *_jit_runtime_pc(const u8 *jit_ip) {
 }
 
 static void _gen_save_sp_pc_at(struct sljit_compiler *C, const u8 *jit_ip) {
-    /* cached stack values must reach their slots before the frame is
-     * published: every callout, safepoint and return funnels through here */
-    _gen_tos_flush(C);
+    /* Publish a fully materialized frame. Conditional callers must
+     * normalize SP/cache state before splitting their runtime paths. */
+    _gen_tos_flush_values(C);
+    _gen_sp_apply(C);
 
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_R0, SLJIT_R0, 0);
     _gen_flush_hot_locals(C);
@@ -326,6 +334,10 @@ void _gen_save_sp_ip(struct sljit_compiler *C) {
 }
 
 void _gen_load_sp_ip(struct sljit_compiler *C) {
+    /* The runtime supplies the complete logical SP, not the old base. */
+    if (jit_gen_context) {
+        jit_gen_context->sp_pending = 0;
+    }
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_R0, SLJIT_R0, 0);
 
     // A callout can change the VM stack pointer.
@@ -336,8 +348,30 @@ void _gen_load_sp_ip(struct sljit_compiler *C) {
 }
 
 void _gen_stack_size_modify(struct sljit_compiler *C, s32 offset) {
-    //sp += offset ;
-    sljit_emit_op2(C, SLJIT_ADD, REGISTER_SP, 0, REGISTER_SP, 0, SLJIT_IMM, sizeof(StackEntry) * offset);
+    //sp += offset ;  (deferred: folds into sp_pending, applied once later)
+    if (jit_gen_context) {
+        jit_gen_context->sp_pending += offset;
+    } else {
+        sljit_emit_op2(C, SLJIT_ADD, REGISTER_SP, 0, REGISTER_SP, 0, SLJIT_IMM, sizeof(StackEntry) * offset);
+    }
+}
+
+/* fold sp_pending into the real register; SP-relative access helpers
+ * compensate their offsets instead, this only runs before the register
+ * value itself is consumed (publish, reload, hand-written addressing) */
+static void _gen_sp_apply(struct sljit_compiler *C) {
+    JitGenContext *ctx = jit_gen_context;
+    if (!ctx || ctx->sp_pending == 0) {
+        return;
+    }
+    sljit_emit_op2(C, SLJIT_ADD, REGISTER_SP, 0, REGISTER_SP, 0,
+                   SLJIT_IMM, sizeof(StackEntry) * ctx->sp_pending);
+    ctx->sp_pending = 0;
+}
+
+/* byte compensation for SP-relative slot addressing */
+static s32 _tos_sp_adj_bytes(void) {
+    return jit_gen_context ? jit_gen_context->sp_pending * (s32) sizeof(StackEntry) : 0;
 }
 
 //------------------------  stack peek ----------------------------
@@ -345,70 +379,73 @@ void _gen_stack_size_modify(struct sljit_compiler *C, s32 offset) {
 
 void _gen_stack_set_int(struct sljit_compiler *C, s32 offset, sljit_s32 src, sljit_sw srcw) {
     //sp[offset]->ivalue = v
-    sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + SLJIT_OFFSETOF(StackEntry, ivalue), src, srcw);
+    sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, ivalue), src, srcw);
 }
 
 void _gen_stack_set_long(struct sljit_compiler *C, s32 offset, sljit_s32 src, sljit_sw srcw) {
     //sp[offset]->ivalue = v
-    sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + SLJIT_OFFSETOF(StackEntry, lvalue), src, srcw);
+    sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, lvalue), src, srcw);
 }
 
 void _gen_stack_set_ref(struct sljit_compiler *C, s32 offset, sljit_s32 src, sljit_sw srcw) {
     //sp[offset]->ivalue = value
-    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + SLJIT_OFFSETOF(StackEntry, rvalue), src, srcw);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, rvalue), src, srcw);
 }
 
 void _gen_stack_set_ra(struct sljit_compiler *C, s32 offset, sljit_s32 src, sljit_sw srcw) {
     //sp[offset]->ivalue = value
-    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + SLJIT_OFFSETOF(StackEntry, rvalue), src, srcw);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, rvalue), src, srcw);
 }
 
 void _gen_stack_set_float(struct sljit_compiler *C, s32 offset, sljit_s32 src, sljit_sw srcw) {
     //sp[offset]->fvalue = v
-    sljit_emit_fop1(C, SLJIT_MOV_F32, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + SLJIT_OFFSETOF(StackEntry, fvalue), src, srcw);
+    sljit_emit_fop1(C, SLJIT_MOV_F32, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, fvalue), src, srcw);
 }
 
 void _gen_stack_set_double(struct sljit_compiler *C, s32 offset, sljit_s32 src, sljit_sw srcw) {
     //sp[offset]->dvalue = v
-    sljit_emit_fop1(C, SLJIT_MOV_F64, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + SLJIT_OFFSETOF(StackEntry, dvalue), src, srcw);
+    sljit_emit_fop1(C, SLJIT_MOV_F64, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, dvalue), src, srcw);
 }
 
 void _gen_stack_set_entry(struct sljit_compiler *C, s32 offset, sljit_s32 val_src, sljit_sw val_srcw, sljit_s32 type_src, sljit_sw type_srcw) {
     //sp[offset]->ivalue = v
-    sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + SLJIT_OFFSETOF(StackEntry, lvalue), val_src, val_srcw);
+    sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, lvalue), val_src, val_srcw);
 }
 
 void _gen_stack_peek_int(struct sljit_compiler *C, s32 offset, sljit_s32 dst, sljit_sw dstw) {
     //dst=sp[offset]->ivalue
-    sljit_emit_op1(C, SLJIT_MOV_S32, dst, dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + SLJIT_OFFSETOF(StackEntry, ivalue));
+    sljit_emit_op1(C, SLJIT_MOV_S32, dst, dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, ivalue));
 }
 
 void _gen_stack_peek_long(struct sljit_compiler *C, s32 offset, sljit_s32 dst, sljit_sw dstw) {
     //dst=sp[offset]->lvalue
-    sljit_emit_op1(C, SLJIT_MOV, dst, dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + SLJIT_OFFSETOF(StackEntry, lvalue));
+    sljit_emit_op1(C, SLJIT_MOV, dst, dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, lvalue));
 }
 
 void _gen_stack_peek_ref(struct sljit_compiler *C, s32 offset, sljit_s32 dst, sljit_sw dstw) {
     //dst = sp[offset]->rvalue
-    sljit_emit_op1(C, SLJIT_MOV, dst, dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + SLJIT_OFFSETOF(StackEntry, rvalue));
+    sljit_emit_op1(C, SLJIT_MOV, dst, dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, rvalue));
 }
 
 void _gen_stack_peek_float(struct sljit_compiler *C, s32 offset, sljit_s32 dst, sljit_sw dstw) {
     //dst=sp[offset]->fvalue
-    sljit_emit_fop1(C, SLJIT_MOV_F32, dst, dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + SLJIT_OFFSETOF(StackEntry, fvalue));
+    sljit_emit_fop1(C, SLJIT_MOV_F32, dst, dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, fvalue));
 }
 
 void _gen_stack_peek_double(struct sljit_compiler *C, s32 offset, sljit_s32 dst, sljit_sw dstw) {
     //dst=sp[offset]->dvalue
-    sljit_emit_fop1(C, SLJIT_MOV_F64, dst, dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + SLJIT_OFFSETOF(StackEntry, dvalue));
+    sljit_emit_fop1(C, SLJIT_MOV_F64, dst, dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, dvalue));
 }
 
 
 void _gen_stack_peek_entry(struct sljit_compiler *C, s32 offset, sljit_s32 val_dst, sljit_sw val_dstw, sljit_s32 r_dst, sljit_sw r_dstw) {
+    /* dup/swap pass logical SP-relative destinations as well as sources. */
+    if (val_dst == SLJIT_MEM1(REGISTER_SP)) val_dstw += _tos_sp_adj_bytes();
+    if (r_dst == SLJIT_MEM1(REGISTER_SP)) r_dstw += _tos_sp_adj_bytes();
     //val_dst=sp[offset]->lvalue
-    sljit_emit_op1(C, SLJIT_MOV, val_dst, val_dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + SLJIT_OFFSETOF(StackEntry, lvalue));
+    sljit_emit_op1(C, SLJIT_MOV, val_dst, val_dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, lvalue));
     //rval_dst=sp[offset]->rvalue
-    sljit_emit_op1(C, SLJIT_MOV, r_dst, r_dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + SLJIT_OFFSETOF(StackEntry, rvalue));
+    sljit_emit_op1(C, SLJIT_MOV, r_dst, r_dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, rvalue));
 }
 //-------------------------  push pop  ---------------------------
 
@@ -599,7 +636,7 @@ void _gen_a_store(struct sljit_compiler *C, s32 index) {
     //
     //MUST process  returnaddress  , so can't : _gen_local_set_ref(C, index, SLJIT_R0, 0);
     //localvar[index].rvalue = src
-    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(REGISTER_LOCALVAR), sizeof(LocalVarItem) * index + SLJIT_OFFSETOF(LocalVarItem, rvalue), SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * 0 + SLJIT_OFFSETOF(StackEntry, rvalue));
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(REGISTER_LOCALVAR), sizeof(LocalVarItem) * index + SLJIT_OFFSETOF(LocalVarItem, rvalue), SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * 0 + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, rvalue));
 }
 
 void _gen_l_d_load(struct sljit_compiler *C, s32 index) {
@@ -941,6 +978,8 @@ void _gen_icmp_op1(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s32 cod
     }
 
     _gen_stack_pop_int(C, SLJIT_R0, 0);
+    /* the taken path must land with the physical SP already aligned */
+    _gen_sp_apply(C);
 
     struct sljit_jump *jump_true, *jump_out, *jump_away;
     struct sljit_label *label_out, *label_true;
@@ -992,6 +1031,7 @@ void _gen_icmp_op2(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s32 cod
     _gen_stack_peek_int(C, -1, SLJIT_R0, 0);
     _gen_stack_peek_int(C, -2, SLJIT_R1, 0);
     _gen_stack_size_modify(C, -2);
+    _gen_sp_apply(C);
     _gen_icmp_op2_regs(C, method, ip, code_idx, test_type);
 }
 
@@ -1029,6 +1069,7 @@ void _gen_cmp_reg2(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s32 cod
 
 
 void _gen_goto(struct sljit_compiler *C, MethodInfo *method, s32 code_idx, s32 offset) {
+    _gen_tos_flush(C);
     const u8 *branch_ip = jit_gen_context ? jit_gen_context->jit_code + code_idx : NULL;
     _gen_jump_to_suspend_check(C, branch_ip, offset);
     _gen_ip_modify_imm(C, offset);
@@ -1174,6 +1215,9 @@ void _gen_exception_handle(struct sljit_compiler *C) {
  */
 void _gen_exception_check_throw_handle(struct sljit_compiler *C, sljit_s32 cmp, sljit_s32 src1, sljit_sw srcw1, sljit_s32 src2, sljit_sw srcw2, s32 throw_type, s32 stack_adjust) {
 
+    /* Both paths start at the same physical SP. Materializing only inside
+     * the throw block would lose the incoming delta on the normal path. */
+    _gen_tos_flush(C);
     struct sljit_jump *jump_true, *jump_out;
     struct sljit_label *label_out, *label_true;
     jump_true = sljit_emit_cmp(C, cmp, src1, srcw1, src2, srcw2);
@@ -1218,6 +1262,8 @@ void _gen_jump_to_suspend_check(struct sljit_compiler *C, const u8 *branch_ip, s
     if (offset >= 0) {
         return;
     }
+    /* The no-suspend path skips publication, so normalize before the test. */
+    _gen_tos_flush(C);
 #if JIT_OPT_INLINE_SAFEPOINT
     {
         struct sljit_jump *jump_skip;
@@ -1360,9 +1406,9 @@ static void _gen_local_set_float(struct sljit_compiler *C, s32 index, sljit_s32 
 /*
  * Straight-line, basic-block-local caching of the top two numeric stack
  * values.  Invariants:
- *  - REGISTER_SP is always the full logical stack pointer; cached pushes
- *    advance it, they only skip the store.  All SP-relative peeks of the
- *    uncached part keep working unchanged.
+ *  - Logical SP = REGISTER_SP + sp_pending * sizeof(StackEntry). Pushes
+ *    and pops adjust the delta; stack helpers compensate their addresses.
+ *    Control-flow boundaries apply the delta before paths split or merge.
  *  - The cached slots themselves hold garbage; they are materialized by
  *    _gen_tos_flush() at every label position (branch targets, exception
  *    handlers, fall-through after branches), at every opcode outside the
@@ -1423,11 +1469,12 @@ static void _gen_tos_store_one(struct sljit_compiler *C, const TosValue *v, s32 
     }
 }
 
-static void _gen_tos_flush(struct sljit_compiler *C) {
+/* write cached values into their (compensated) slots; SP stays behind */
+static void _gen_tos_flush_values(struct sljit_compiler *C) {
     JitGenContext *ctx = jit_gen_context;
     s32 above = 0;
     s32 i;
-    if (!ctx || ctx->tos.count == 0) {
+    if (!ctx) {
         return;
     }
     for (i = ctx->tos.count - 1; i >= 0; i--) {
@@ -1435,6 +1482,14 @@ static void _gen_tos_flush(struct sljit_compiler *C) {
         above += ctx->tos.v[i].slots;
     }
     ctx->tos.count = 0;
+}
+
+static void _gen_tos_flush(struct sljit_compiler *C) {
+    /* full materialization: slots written AND the register catches up,
+     * so hand-written SP addressing after a flush (non cache-aware
+     * emitters) always sees the logical stack */
+    _gen_tos_flush_values(C);
+    _gen_sp_apply(C);
 }
 
 /* load an immediate cached value into its register */
@@ -1842,17 +1897,20 @@ static s32 _gen_fused_cmp_if(struct sljit_compiler *C, MethodInfo *method, u8 *i
         _gen_stack_peek_long(C, -2, SLJIT_R0, 0);
         _gen_stack_peek_long(C, -4, SLJIT_R1, 0);
         _gen_stack_size_modify(C, -4);
+        _gen_sp_apply(C);
         jump_if_true = sljit_emit_cmp(C, test_type, SLJIT_R1, 0, SLJIT_R0, 0);
     } else if (cmp_op == op_fcmpl || cmp_op == op_fcmpg) {
         /* FR0 = value1, FR1 = value2 */
         _gen_stack_peek_float(C, -2, SLJIT_FR0, 0);
         _gen_stack_peek_float(C, -1, SLJIT_FR1, 0);
         _gen_stack_size_modify(C, -2);
+        _gen_sp_apply(C);
         jump_if_true = sljit_emit_fcmp(C, test_type | SLJIT_32, SLJIT_FR0, 0, SLJIT_FR1, 0);
     } else {
         _gen_stack_peek_double(C, -4, SLJIT_FR0, 0);
         _gen_stack_peek_double(C, -2, SLJIT_FR1, 0);
         _gen_stack_size_modify(C, -4);
+        _gen_sp_apply(C);
         jump_if_true = sljit_emit_fcmp(C, test_type, SLJIT_FR0, 0, SLJIT_FR1, 0);
     }
 
@@ -2372,6 +2430,9 @@ static s32 _jit_try_emit_accessor_invoke(struct sljit_compiler *C, JClass *clazz
                                SLJIT_IMM, (sljit_sw) accessor.method);
 
     _jit_emit_accessor_fast_path(C, cmr, &accessor);
+    /* Only the fast path performed these stack changes. Commit them here,
+     * before emitting the slow path with its untouched input stack. */
+    _gen_sp_apply(C);
     jump_done = sljit_emit_jump(C, SLJIT_JUMP);
 
     label_slow = sljit_emit_label(C);
@@ -2716,8 +2777,10 @@ static s32 _jit_tos_interested(u8 op) {
            || op == op_bipush || op == op_sipush || op == op_ldc2_w
            || (op >= op_iload && op <= op_dload)
            || (op >= op_iload_0 && op <= op_dload_3)
+           || (op >= op_iaload && op <= op_saload)
            || (op >= op_istore && op <= op_dstore)
            || (op >= op_istore_0 && op <= op_dstore_3)
+           || (op >= op_iastore && op <= op_sastore && op != op_aastore)
            || (op >= op_iadd && op <= op_dsub)
            || (op >= op_imul && op <= op_dmul)
            || op == op_fdiv || op == op_ddiv
@@ -3927,6 +3990,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 _gen_stack_peek_ref(C, -1, SLJIT_R0, 0);
                 _gen_stack_peek_ref(C, -2, SLJIT_R1, 0);
                 _gen_stack_size_modify(C, -2);
+                _gen_sp_apply(C);
                 _gen_cmp_reg2(C, method, ip, code_idx, SLJIT_R0, SLJIT_R1, SLJIT_EQUAL);
                 _gen_ip_modify_imm(C, 3);
                 ip += 3;
@@ -3936,6 +4000,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 _gen_stack_peek_ref(C, -1, SLJIT_R0, 0);
                 _gen_stack_peek_ref(C, -2, SLJIT_R1, 0);
                 _gen_stack_size_modify(C, -2);
+                _gen_sp_apply(C);
                 _gen_cmp_reg2(C, method, ip, code_idx, SLJIT_R0, SLJIT_R1, SLJIT_NOT_EQUAL);
                 _gen_ip_modify_imm(C, 3);
                 ip += 3;
@@ -4001,6 +4066,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 sljit_emit_op2(C, SLJIT_XOR, SLJIT_R0, 0, SLJIT_R0, 0, SLJIT_R0, 0);
                 sljit_emit_op2(C, SLJIT_XOR, SLJIT_R1, 0, SLJIT_R1, 0, SLJIT_R1, 0);
                 _gen_stack_pop_int(C, SLJIT_R0, 0);
+                _gen_sp_apply(C);
                 sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R1, 0, SLJIT_IMM, (sljit_s32) low);
 
                 struct sljit_jump *jump_if_less_low, *jump_if_greater_high;
@@ -4073,6 +4139,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
                 sljit_emit_op2(C, SLJIT_XOR, SLJIT_R2, 0, SLJIT_R2, 0, SLJIT_R2, 0);
                 _gen_stack_pop_int(C, SLJIT_R2, 0);
+                _gen_sp_apply(C);
                 sljit_emit_op1(C, SLJIT_MOV, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) st->table);
                 sljit_emit_op2(C, SLJIT_ADD, SLJIT_R0, 0, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw)
                                                                                           sizeof(struct V2PTable) * n);
@@ -4872,6 +4939,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
                 s32 offset = *((s16 *) (ip + 1));
                 _gen_stack_pop_ref(C, SLJIT_R0, 0);
+                _gen_sp_apply(C);
 
                 struct sljit_jump *jump_if_true, *jump_out, *jump_away;
                 struct sljit_label *label_out, *label_true;
@@ -5048,9 +5116,17 @@ void construct_jit(MethodInfo *method, Runtime *runtime) {
         method->is_jit = 1;
     }
 #if(JIT_CODE_DUMP)
-    if (utf8_equals_c(runtime->method->_this_class->name, "org/mini/json/JsonParser")
-        && utf8_equals_c(runtime->method->name, "<init>")) {
-        if (ca->jit.state == JIT_GEN_SUCCESS)dump_code(ca->jit.func, ca->jit.len);
+    if (ca->jit.state == JIT_GEN_SUCCESS) {
+        c8 path[300];
+        c8 cname[128];
+        snprintf(cname, sizeof(cname), "%s", utf8_cstr(method->_this_class->name));
+        for (c8 *p = cname; *p; p++) if (*p == '/') *p = '_';
+        snprintf(path, sizeof(path), "d:/tmp/jitdump/%s__%s.bin", cname, utf8_cstr(method->name));
+        FILE *fp = fopen(path, "wb");
+        if (fp) {
+            fwrite(ca->jit.func, ca->jit.len, 1, fp);
+            fclose(fp);
+        }
     }
 #endif
     sljit_free_compiler(C);
