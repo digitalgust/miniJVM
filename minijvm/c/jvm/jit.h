@@ -21,15 +21,6 @@ extern "C" {
 #define JIT_COMPILE_EXEC_COUNT 5000
 #define JIT_DEBUG 0
 
-/* JIT opt: v6=INLINE_SAFEPOINT; TOS register cache replaced the old
- * JIT_OPT_FUSION / JIT_OPT_FUSION_CMP / JIT_OPT_TOS_CACHE peepholes */
-#define JIT_OPT_FIELD 1
-#define JIT_OPT_FUSION_EXT 1   /* idiv/irem local fusion (throw needs stack) */
-#define JIT_OPT_INLINE_SAFEPOINT 1
-#define JIT_OPT_LAZY_PC 1       /* write runtime->pc only at safepoints/callouts */
-#define JIT_OPT_HOT_LOCALS 1    /* keep two verified int-only locals in saved regs */
-#define JIT_OPT_INLINE_GETTER_SETTER 1 /* guarded invokevirtual/direct invokespecial accessor inline */
-
 #define SLJIT_CONFIG_AUTO 1
 #define JIT_CODE_DUMP 0
 
