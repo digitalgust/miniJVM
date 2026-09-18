@@ -1590,25 +1590,46 @@ static void _tos_peek_load(struct sljit_compiler *C, u8 datatype, s32 offset, sl
  * SP drops by the value2 footprint (pop 2 push 1).
  */
 static void _gen_tos_binary_operands(struct sljit_compiler *C, u8 dt1, u8 dt2,
-                                     sljit_s32 *out_dst, sljit_s32 *out_src1, sljit_s32 *out_src2) {
+                                     sljit_s32 *out_dst, sljit_s32 *out_src1, sljit_s32 *out_src2,
+                                     sljit_sw *out_src2w) {
     JitGenContext *ctx = jit_gen_context;
     s32 w1 = _tos_slots(dt1);
     s32 w2 = _tos_slots(dt2);
     s32 k = ctx->tos.count;
     sljit_s32 dst, src1, src2;
+    sljit_sw src2w = 0;
 
     if (k >= 2) {
         _gen_tos_materialize(C, 0);
-        _gen_tos_materialize(C, 1);
         dst = src1 = ctx->tos.v[0].reg;
-        src2 = ctx->tos.v[1].reg;
+        if (ctx->tos.v[1].is_imm && !_tos_is_float(dt2)) {
+            src2 = SLJIT_IMM;
+            src2w = ctx->tos.v[1].imm;
+        } else {
+            _gen_tos_materialize(C, 1);
+            src2 = ctx->tos.v[1].reg;
+        }
         ctx->tos.count = 1;
         ctx->tos.v[0].datatype = dt1;
         ctx->tos.v[0].slots = w1;
         ctx->tos.v[0].reg = dst;
     } else if (k == 1) {
-        /* value2 cached as v[0], value1 sits in memory right below it;
-         * the result must land in v[0]'s register */
+        if (ctx->tos.v[0].is_imm && !_tos_is_float(dt2)) {
+            src2 = SLJIT_IMM;
+            src2w = ctx->tos.v[0].imm;
+            dst = src1 = _tos_is_float(dt1) ? SLJIT_FR3 : SLJIT_R3;
+            _tos_peek_load(C, dt1, -(w1 + w2), src1);
+            ctx->tos.v[0].datatype = dt1;
+            ctx->tos.v[0].slots = w1;
+            ctx->tos.v[0].is_imm = 0;
+            ctx->tos.v[0].reg = dst;
+            _gen_stack_size_modify(C, -w2);
+            *out_dst = dst;
+            *out_src1 = src1;
+            *out_src2 = src2;
+            *out_src2w = src2w;
+            return;
+        }
         _gen_tos_materialize(C, 0);
         dst = src2 = ctx->tos.v[0].reg;
         src1 = _tos_pick_reg(&ctx->tos, _tos_is_float(dt1), -1);
@@ -1633,21 +1654,26 @@ static void _gen_tos_binary_operands(struct sljit_compiler *C, u8 dt1, u8 dt2,
     *out_dst = dst;
     *out_src1 = src1;
     *out_src2 = src2;
+    *out_src2w = src2w;
 }
 
 static void _gen_tos_arith_2op(struct sljit_compiler *C, u8 dt1, u8 dt2, sljit_s32 op) {
     sljit_s32 dst, src1, src2;
-    _gen_tos_binary_operands(C, dt1, dt2, &dst, &src1, &src2);
+    sljit_sw src2w;
+    _gen_tos_binary_operands(C, dt1, dt2, &dst, &src1, &src2, &src2w);
     if (op == SLJIT_SHL || op == SLJIT_ASHR || op == SLJIT_LSHR
         || op == SLJIT_SHL32 || op == SLJIT_ASHR32 || op == SLJIT_LSHR32) {
-        /* shift count must be masked to the operand bit length */
-        sljit_emit_op2(C, SLJIT_AND, src2, 0, src2, 0, SLJIT_IMM,
-                       dt1 == DATATYPE_LONG ? 0x3f : 0x1f);
+        if (src2 == SLJIT_IMM) {
+            src2w &= (dt1 == DATATYPE_LONG) ? 0x3f : 0x1f;
+        } else {
+            sljit_emit_op2(C, SLJIT_AND, src2, 0, src2, 0, SLJIT_IMM,
+                           dt1 == DATATYPE_LONG ? 0x3f : 0x1f);
+        }
     }
     if (_tos_is_float(dt1)) {
         sljit_emit_fop2(C, op, dst, 0, src1, 0, src2, 0);
     } else {
-        sljit_emit_op2(C, op, dst, 0, src1, 0, src2, 0);
+        sljit_emit_op2(C, op, dst, 0, src1, 0, src2, src2w);
         if (dt1 == DATATYPE_INT) {
             /* keep the Java 32 bit value sign extended in the register */
             sljit_emit_op1(C, SLJIT_MOV_S32, dst, 0, dst, 0);
@@ -1797,17 +1823,21 @@ static void _gen_tos_if2(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s
         }
         {
             sljit_s32 r1 = ctx->tos.v[0].reg;
-            sljit_s32 r2 = ctx->tos.v[1].reg;
+            sljit_s32 r2;
+            sljit_sw r2w = 0;
             _gen_tos_materialize(C, 0);
-            _gen_tos_materialize(C, 1);
+            if (ctx->tos.v[1].is_imm) {
+                r2 = SLJIT_IMM;
+                r2w = ctx->tos.v[1].imm;
+            } else {
+                _gen_tos_materialize(C, 1);
+                r2 = ctx->tos.v[1].reg;
+            }
             ctx->tos.count = 0;
             _gen_stack_size_modify(C, -2);
-            /* both cache values are consumed; nothing may stay live across
-             * the jump (target and fall-through labels expect empty cache) */
             _gen_tos_flush(C);
 
-            /* direct conditional jump on the operand registers */
-            jump_if_true = sljit_emit_cmp(C, test_type, r1, 0, r2, 0);
+            jump_if_true = sljit_emit_cmp(C, test_type, r1, 0, r2, r2w);
             {
                 jump_out = sljit_emit_jump(C, SLJIT_JUMP);
             }
