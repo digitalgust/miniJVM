@@ -97,10 +97,19 @@ public class GlfmCallBackImpl extends GCallBack {
      * @return the fps
      */
     public float getFps() {
+        //唯一出口兜底:帧率物理上不可能<=0,NaN与任何数比较恒false会使消费端防护失效
+        //此处拦住后,惯性/动画计算的除法永远不会得到Infinity/NaN
+        if (!(fps > 0) || Float.isInfinite(fps)) {
+            return FPS_DEFAULT;
+        }
         return fps;
     }
 
     public void setFps(float fps) {
+        //非法期望帧率一律忽略:fpsExpect为0时1000/fpsExpect=Infinity,会令帧循环sleep近乎永久
+        if (!(fps > 0) || Float.isInfinite(fps)) {
+            return;
+        }
         fpsExpect = fps;
     }
 
@@ -186,7 +195,8 @@ public class GlfmCallBackImpl extends GCallBack {
             now = System.currentTimeMillis();
             if (now - last > 1000) {
                 //System.out.println("fps:" + count);
-                fps = count;
+                //count正常应>=1,兜底防止任何情况把0写进fps
+                fps = count > 0 ? count : FPS_DEFAULT;
                 last = now;
                 count = 0;
             }

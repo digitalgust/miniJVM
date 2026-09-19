@@ -36,10 +36,12 @@ set(GUI_SOURCE_FILES
 	../../c/gui/jni_gl.c
 )
 
-aux_source_directory(../../../minijvm/c/jvm SOURCE_JVM)
-aux_source_directory(../../../minijvm/c/utils SOURCE_UTILS)
-aux_source_directory(../../../minijvm/c/utils/https SOURCE_HTTPS)
-aux_source_directory(../../../minijvm/c/utils/https/mbedtls/library SOURCE_TLS)
+# CONFIGURE_DEPENDS: re-glob when sources are added/removed, so new .c files
+# in these dirs are picked up without manually re-running CMake configure.
+file(GLOB SOURCE_JVM CONFIGURE_DEPENDS ../../../minijvm/c/jvm/*.c)
+file(GLOB SOURCE_UTILS CONFIGURE_DEPENDS ../../../minijvm/c/utils/*.c)
+file(GLOB SOURCE_HTTPS CONFIGURE_DEPENDS ../../../minijvm/c/utils/https/*.c)
+file(GLOB SOURCE_TLS CONFIGURE_DEPENDS ../../../minijvm/c/utils/https/mbedtls/library/*.c)
 set(SOURCE_SLJIT ../../../minijvm/c/utils/sljit/sljitLir.c)
 set(SOURCE_MIMALLOC ../../../minijvm/c/utils/mimalloc/src/static.c)
 SET(MINI_JVM_SOURCE_FILES ${SOURCE_JVM} ${SOURCE_UTILS} ${SOURCE_HTTPS} ${SOURCE_TLS} ${SOURCE_SLJIT} ${SOURCE_MIMALLOC})

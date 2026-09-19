@@ -148,6 +148,14 @@ public class GViewPort extends GContainer {
 
     @Override
     public void reAlign() {
+        //自愈:scrolly/scrollx一旦被污染为NaN/Infinity(历史惯性除零bug或外部写入),
+        //后续所有数值比较都会失效且无法通过滚动恢复,这里在重算范围前复位为0
+        if (Float.isNaN(scrolly) || Float.isInfinite(scrolly)) {
+            scrolly = 0;
+        }
+        if (Float.isNaN(scrollx) || Float.isInfinite(scrollx)) {
+            scrollx = 0;
+        }
         float posY = scrolly * (maxY - minY);
         float posX = scrollx * (maxX - minX);
 
@@ -165,6 +173,11 @@ public class GViewPort extends GContainer {
                 } else {
                     bond = nko.getBoundle();
                 }
+                //跳过坐标异常的子元素,避免NaN把整个范围算坏
+                if (Float.isNaN(bond[LEFT]) || Float.isNaN(bond[TOP])
+                        || Float.isNaN(bond[WIDTH]) || Float.isNaN(bond[HEIGHT])) {
+                    continue;
+                }
                 if (bond[LEFT] < minX) {
                     minX = bond[LEFT];
                 }
@@ -181,6 +194,13 @@ public class GViewPort extends GContainer {
         }
         this.boundle[WIDTH] = maxX - minX;
         this.boundle[HEIGHT] = maxY - minY;
+        //范围兜底:仍可能因Infinity等异常算出非法值,令setScrollX/Y的溢出判断(NaN比较恒false)失效
+        if (Float.isNaN(boundle[WIDTH]) || Float.isInfinite(boundle[WIDTH]) || boundle[WIDTH] < 0) {
+            boundle[WIDTH] = viewBoundle[WIDTH];
+        }
+        if (Float.isNaN(boundle[HEIGHT]) || Float.isInfinite(boundle[HEIGHT]) || boundle[HEIGHT] < 0) {
+            boundle[HEIGHT] = viewBoundle[HEIGHT];
+        }
 
         if (boundle[WIDTH] <= viewBoundle[WIDTH]) {
             boundle[LEFT] = viewBoundle[LEFT];
