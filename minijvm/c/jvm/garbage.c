@@ -398,6 +398,11 @@ void gc_destroy(MiniJVM *jvm) {
     arraylist_destroy(collector->side_capturable);
     arraylist_destroy(collector->objs_array);
     arraylist_destroy(collector->objs_stage);
+    if (collector->mark_stack) {
+        jvm_free(collector->mark_stack);
+        collector->mark_stack = NULL;
+        collector->mark_stack_count = collector->mark_stack_cap = 0;
+    }
     collector->objs_array = NULL;
     collector->objs_stage = NULL;
 
@@ -2233,6 +2238,27 @@ s32 _gc_copy_objs_from_thread(Runtime *pruntime) {
 }
 
 
+/* Push one candidate onto the collector's mark worklist.  Marking is
+ * single-threaded (STW), so no lock is needed; growth failure during the
+ * mark phase cannot be recovered from (an incomplete mark would free live
+ * objects), so it is fatal. */
+static void _gc_mark_push(GcCollector *collector, __refer ref) {
+    if (!ref) {
+        return;
+    }
+    if (collector->mark_stack_count >= collector->mark_stack_cap) {
+        s32 cap = collector->mark_stack_cap ? collector->mark_stack_cap << 1 : 8192;
+        __refer *grown = (__refer *) jvm_realloc(collector->mark_stack,
+                                                 sizeof(__refer) * (size_t) cap);
+        if (!grown) {
+            jvm_fatal_oom("gc-mark-stack", sizeof(__refer) * (size_t) cap);
+        }
+        collector->mark_stack = grown;
+        collector->mark_stack_cap = cap;
+    }
+    collector->mark_stack[collector->mark_stack_count++] = ref;
+}
+
 static inline void _gc_instance_mark(GcCollector *collector, Instance *ins, u8 flag_cnt) {
     s32 i, len;
     JClass *clazz = ins->mb.clazz;
@@ -2248,11 +2274,11 @@ static inline void _gc_instance_mark(GcCollector *collector, Instance *ins, u8 f
             c8 *ptr = getInstanceFieldPtr(ins, fi);
             if (ptr) {
                 __refer ref = getFieldRefer(ptr);
-                if (ref)_gc_mark_object(collector, ref, flag_cnt);
+                if (ref)_gc_mark_push(collector, ref);
             }
-            _gc_mark_object(collector, fi->_this_class, flag_cnt);
+            _gc_mark_push(collector, (__refer) fi->_this_class);
         }
-        _gc_mark_object(collector, clazz, flag_cnt); //keep class and classloader alive
+        _gc_mark_push(collector, (__refer) clazz); //keep class and classloader alive
         clazz = getSuperClass(clazz);
     }
 
@@ -2265,7 +2291,7 @@ static inline void _gc_instance_mark(GcCollector *collector, Instance *ins, u8 f
             hashtable_iterate(pcl->classes, &hi);
             while (hashtable_iter_has_more(&hi)) {
                 HashtableValue v = hashtable_iter_next_value(&hi);
-                _gc_mark_object(collector, v, flag_cnt);
+                _gc_mark_push(collector, (__refer) v);
             }
         }
     }
@@ -2282,7 +2308,7 @@ static inline void _gc_jarray_mark(GcCollector *collector, Instance *arr, u8 fla
             for (i = 0; i < jarray_length(arr); i++) {
                 // Remove all references; otherwise, garbage collection will not occur.
                 s64 val = jarray_get_field(arr, i);
-                if (val)_gc_mark_object(collector, (__refer) (intptr_t) val, flag_cnt);
+                if (val)_gc_mark_push(collector, (__refer) (intptr_t) val);
             }
         }
     }
@@ -2303,56 +2329,62 @@ static inline void _gc_class_mark(GcCollector *collector, JClass *clazz, u8 flag
             c8 *ptr = getStaticFieldPtr(fi);
             if (ptr) {
                 __refer ref = getFieldRefer(ptr);
-                _gc_mark_object(collector, ref, flag_cnt);
+                _gc_mark_push(collector, ref);
             }
         }
     }
     if (clazz->ins_class) {
-        _gc_mark_object(collector, clazz->ins_class, flag_cnt);
+        _gc_mark_push(collector, (__refer) clazz->ins_class);
     }
     if (clazz->jloader) {
-        _gc_mark_object(collector, clazz->jloader, flag_cnt);
+        _gc_mark_push(collector, (__refer) clazz->jloader);
     }
     if (clazz->component_class) {
-        _gc_mark_object(collector, clazz->component_class, flag_cnt);
+        _gc_mark_push(collector, (__refer) clazz->component_class);
     }
 }
 
 
 /**
- * Recursively mark all descendants of the object.
+ * Mark all descendants of the object iteratively: children are pushed
+ * onto the collector's worklist and drained in this call, so the caller
+ * still observes a fully marked graph on return (the contract the old
+ * recursive version had) while the depth no longer depends on the
+ * native stack.
  * @param ref Address of the object
  */
 
 void _gc_mark_object(GcCollector *collector, __refer ref, u8 flag_cnt) {
-    if (ref) {
-        MemoryBlock *mb = (MemoryBlock *) ref;
-        if (flag_cnt != mb->garbage_mark) {
+    _gc_mark_push(collector, ref);
+    while (collector->mark_stack_count > 0) {
+        MemoryBlock *mb = (MemoryBlock *) collector->mark_stack[--collector->mark_stack_count];
+        if (flag_cnt == mb->garbage_mark) {
+            continue;
+        }
 #if _JVM_DEBUG_GARBAGE_DUMP > 0
-            _gc_add_obj_count(collector, mb);
+        _gc_add_obj_count(collector, mb);
 #endif
-            //            if (utf8_equals_c(mb->clazz->name, "com/ebsee/shl/main/GamePanel")) {
-            //                s32 debug = 1;
-            //            }
+        //            if (utf8_equals_c(mb->clazz->name, "com/ebsee/shl/main/GamePanel")) {
+        //                s32 debug = 1;
+        //            }
 
-            mb->garbage_mark = flag_cnt;
-            if (collector->immix_heap) {
-                //Immix: mark the lines covered by this object (no-op for JClass)
-                immix_collection_mark((ImmixHeap *) collector->immix_heap, mb,
-                                      mb->heap_size > 0 ? (size_t) mb->heap_size
-                                                        : sizeof(MemoryBlock));
-            }
-            switch (mb->type) {
-                case MEM_TYPE_INS:
-                    _gc_instance_mark(collector, (Instance *) mb, flag_cnt);
-                    break;
-                case MEM_TYPE_ARR:
-                    _gc_jarray_mark(collector, (Instance *) mb, flag_cnt);
-                    break;
-                case MEM_TYPE_CLASS:
-                    _gc_class_mark(collector, (JClass *) mb, flag_cnt);
-                    break;
-            }
+        mb->garbage_mark = flag_cnt;
+        if (collector->immix_heap) {
+            //Immix: mark the lines covered by this object (no-op for JClass)
+            immix_collection_mark((ImmixHeap *) collector->immix_heap, mb,
+                                  mb->heap_size > 0 ? (size_t) mb->heap_size
+                                                    : sizeof(MemoryBlock));
+        }
+        switch (mb->type) {
+            case MEM_TYPE_INS:
+                _gc_instance_mark(collector, (Instance *) mb, flag_cnt);
+                break;
+            case MEM_TYPE_ARR:
+                _gc_jarray_mark(collector, (Instance *) mb, flag_cnt);
+                break;
+            case MEM_TYPE_CLASS:
+                _gc_class_mark(collector, (JClass *) mb, flag_cnt);
+                break;
         }
     }
 }

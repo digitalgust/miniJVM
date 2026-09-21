@@ -127,6 +127,16 @@ struct _GcCollectorType {
     volatile s32 gc_request;     //async collection request from a mutator
     s64 immix_java_tracked;      //java-heap bytes already in the tracked total (synced per cycle)
     ImmixCollectionReason gc_request_reason;
+
+    // Explicit mark worklist. _gc_mark_object() used to recurse through
+    // instance/array/class children, and a multi-million-deep reference
+    // chain overflowed the GC thread's native stack. Children are pushed
+    // here and drained iteratively in the same _gc_mark_object call, so
+    // the external "fully marked on return" contract is unchanged and the
+    // depth is bounded by realloc growth, not the C stack.
+    __refer *mark_stack;
+    s32 mark_stack_count;
+    s32 mark_stack_cap;
     size_t gc_requested_bytes;
     volatile s64 gc_gen;         //incremented after every completed cycle
     s64 trim_last_ms;            //wall clock of the last immix trim (cooldown)

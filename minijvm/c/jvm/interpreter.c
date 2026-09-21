@@ -133,14 +133,19 @@ static s32 filterClassName(Utf8String *clsName) {
         r->stack->sp = sp;\
         check_suspend_and_pause(r);\
     }\
-    if (offset < 0 && osr_hot_backedge(r, ca, (s32)(offset), sp, &ret)) goto label_osr_exit;\
+    /* OSR probe: the heat test stays inline so cold loops pay only the\n\
+     * counter increment; the call happens past the threshold only */\
+    if (offset < 0 && JIT_ENABLE\
+        && ca->jit.interpreted_count++ > JIT_COMPILE_EXEC_COUNT\
+        && osr_hot_backedge(r, ca, (s32)(offset), sp, &ret)) goto label_osr_exit;\
 }
 
 #if JIT_ENABLE
 /*
- * On-stack replacement probe, run at every interpreted backward branch.
- * Returns 1 when the live frame was transferred into the compiled body
- * (the trampoline call ran the method to completion): *retp then holds the
+ * On-stack replacement attempt, called at a backward branch once the
+ * method's backedge/entry counter passed the compile threshold.  Returns
+ * 1 when the live frame was transferred into the compiled body (the
+ * trampoline call ran the method to completion): *retp then holds the
  * body's final RUNTIME_STATUS and the shared stack carries its result at
  * (sp - return_slots), so the caller must exit through label_osr_exit.
  * Only javac-shaped loops qualify: the backward target must see an empty
@@ -148,23 +153,16 @@ static s32 filterClassName(Utf8String *clsName) {
  * base+max_locals upward.
  */
 static s32 osr_hot_backedge(Runtime *r, CodeAttribute *ca, s32 offset, StackEntry *sp, s32 *retp) {
-    static s32 osr_enabled = -1;
     s32 ret;
 
     if (offset == -1 || !ca) { /* -1 is the jdwp per-instruction probe */
         return 0;
     }
-    if (osr_enabled < 0) {
-        osr_enabled = (getenv("MINI_JVM_NO_OSR") == NULL);
-    }
-    if (!osr_enabled || r->jvm->jdwp_enable) {
+    if (r->jvm->jdwp_enable) {
         return 0;
     }
     if (ca->jit.state == JIT_GEN_ERROR) {
-        return 0;
-    }
-    if (ca->jit.interpreted_count++ <= JIT_COMPILE_EXEC_COUNT) {
-        return 0;
+        return 0; /* gave up compiling: probe forever cheap */
     }
     /* empty operand stack at the loop header: all loop state in locals */
     if (sp != r->localvar + r->localvar_slots) {
@@ -572,6 +570,49 @@ static inline s32 _optimize_inline_setter(JClass *clazz, s32 cfrIdx, Runtime *ru
 }
 
 
+/* Shared result handling for one compiled-code call.  Since the calling
+ * convention unification, a compiled java body and a resolved JNI native
+ * are the same callable shape (Runtime*, JClass*), so this tail is common:
+ *  - EXCEPTION: normalize the reference to base+1.  A native leaves it at
+ *    the call boundary; a compiled body already did this in its own
+ *    exception path and the pop/dispose/push is idempotent for that state.
+ *  - NORMAL: shape the result from (sp - return_slots), exactly like the
+ *    interpreted return opcodes.
+ *  - ERROR / INTERRUPT carry no reference and must not touch the stack. */
+static s32 _finish_compiled_call(MethodInfo *method, Runtime *r, s32 ret) {
+    if (ret == RUNTIME_STATUS_EXCEPTION) {
+        r->ins = pop_ref(r->stack);
+        localvar_dispose(r);
+        push_ref(r->stack, r->ins);
+    } else if (ret == RUNTIME_STATUS_NORMAL) {
+        switch (method->return_slots) {
+            case 0: {
+                // V
+                localvar_dispose(r);
+                break;
+            }
+            case 1: {
+                // F I R
+                peek_entry(r->stack->sp - method->return_slots, &r->entry);
+                localvar_dispose(r);
+                push_entry(r->stack, &r->entry);
+                break;
+            }
+            case 2: {
+                //J D return type , 2slots
+                r->lval1 = pop_long(r->stack);
+                localvar_dispose(r);
+                push_long(r->stack, r->lval1);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+    return ret;
+}
+
 s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #if _JVM_DEBUG_METHOD_PROFILE || _JVM_DEBUG_SLOW_CALL_PROFILE
     s64 start_time = nanoTime();
@@ -650,33 +691,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             }
 
             if (JIT_ENABLE && ca->jit.state == JIT_GEN_SUCCESS) {
-                //jvm_printf("jit call %s.%s()\n", method->_this_class->name->data, method->name->data);
+                // compiled java body: same callable shape as a native
                 ret = ca->jit.func(r, clazz);
-                if (!ret) {
-                    switch (method->return_slots) {
-                        case 0: {
-                            // V
-                            localvar_dispose(r);
-                            break;
-                        }
-                        case 1: {
-                            // F I R
-                            peek_entry(stack->sp - method->return_slots, &r->entry);
-                            localvar_dispose(r);
-                            push_entry(stack, &r->entry);
-                            break;
-                        }
-                        case 2: {
-                            //J D return type , 2slots
-                            r->lval1 = pop_long(stack);
-                            localvar_dispose(r);
-                            push_long(stack, r->lval1);
-                            break;
-                        }
-                        default: {
-                            break;
-                        }
-                    }
+                if (ret != RUNTIME_STATUS_ERROR) {
+                    ret = _finish_compiled_call(method, r, ret);
                 }
             } else {
                 if (JIT_ENABLE && ca->jit.state == JIT_GEN_UNKNOW) {
@@ -4220,33 +4238,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                 label_osr_exit:
                     /* the compiled body ran this frame to completion through
-                     * the OSR trampoline; shape the result exactly like the
-                     * entry JIT call (result at sp - return_slots) */
-                    if (!ret) {
-                        switch (method->return_slots) {
-                            case 0: {
-                                // V
-                                localvar_dispose(r);
-                                break;
-                            }
-                            case 1: {
-                                // F I R
-                                peek_entry(stack->sp - method->return_slots, &r->entry);
-                                localvar_dispose(r);
-                                push_entry(stack, &r->entry);
-                                break;
-                            }
-                            case 2: {
-                                //J D return type , 2slots
-                                r->lval1 = pop_long(stack);
-                                localvar_dispose(r);
-                                push_long(stack, r->lval1);
-                                break;
-                            }
-                            default: {
-                                break;
-                            }
-                        }
+                     * the OSR trampoline; same result contract as an entry
+                     * compiled call */
+                    if (ret != RUNTIME_STATUS_ERROR) {
+                        ret = _finish_compiled_call(method, r, ret);
                     }
                     goto label_exit_while;
 
@@ -4266,7 +4261,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             jvm_printf("method code attribute is null.");
         }
     } else {
-        // native method
+        // native method: a resolved JNI function is the same callable
+        // shape as a compiled java body, so it shares the call tail
         localvar_init(r, method->para_slots, method->para_slots);
         // cache native method calls
         if (!method->native_func) {
@@ -4291,36 +4287,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 if (method->is_sync)_synchronized_unlock_method(method, r);
             }
             if (ret != RUNTIME_STATUS_ERROR) {
-                if (ret) {
-                    r->ins = pop_ref(stack);
-                    localvar_dispose(r);
-                    push_ref(stack, r->ins);
-                } else {
-                    switch (method->return_slots) {
-                        case 0: {
-                            // V
-                            localvar_dispose(r);
-                            break;
-                        }
-                        case 1: {
-                            // F I R
-                            peek_entry(stack->sp - method->return_slots, &r->entry);
-                            localvar_dispose(r);
-                            push_entry(stack, &r->entry);
-                            break;
-                        }
-                        case 2: {
-                            //J D return type , 2slots
-                            r->lval1 = pop_long(stack);
-                            localvar_dispose(r);
-                            push_long(stack, r->lval1);
-                            break;
-                        }
-                        default: {
-                            break;
-                        }
-                    }
-                }
+                ret = _finish_compiled_call(method, r, ret);
             }
         }
     }
