@@ -970,7 +970,11 @@ typedef struct _LocalVarTable {
 
 typedef struct _SwitchTable SwitchTable;
 
-typedef s32 (*jit_func)(MethodInfo *method, Runtime *runtime);
+/* compiled java method entry: deliberately the same shape as
+ * java_native_fun below, so a JIT body and a JNI native are one callable
+ * kind (runtime first, clazz second) and call sites share one sequence.
+ * The method identity is read from runtime->method inside the body. */
+typedef s32 (*jit_func)(Runtime *runtime, JClass *clazz);
 
 struct _CodeAttribute {
     u16 attribute_name_index;
@@ -992,6 +996,11 @@ struct _CodeAttribute {
         s32 len;
         volatile s32 state;
         volatile s32 interpreted_count;
+        /* hot-int-local cache slots chosen at compile time; an OSR entry
+         * must preload the same S2/S3 registers the body expects */
+        s16 hot_local[2];
+        /* bc_pos -> OSR trampoline machine code (see jit_osr_execute) */
+        Pairlist *osr_entry_list;
         SwitchTable *switchtable; //a table that compile switch ,fill in jump address
         struct _ExceptionJumpTable {
             __refer exception_handle_jump_ptr; //a ptr list for exception jump, size= exceptiontable.length

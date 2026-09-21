@@ -71,6 +71,12 @@ void construct_jit(MethodInfo *method, Runtime *runtime);
 
 s32 jit_invoke_from_jit(MethodInfo *method, Runtime *runtime);
 
+/* On-stack replacement: compile the running method if needed and transfer
+ * the live interpreted frame into the compiled body at the loop-header
+ * bytecode position.  Returns the body's final RUNTIME_STATUS, or -1 when
+ * no replacement happened (not compilable / busy / no label). */
+s32 jit_osr_execute(Runtime *runtime, s32 bc_pos);
+
 void jit_set_exception_jump_addr(Runtime *runtime, CodeAttribute *ca, s32 index);
 
 #ifdef __cplusplus

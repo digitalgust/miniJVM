@@ -2828,19 +2828,17 @@ static s32 _jit_emit_direct_invoke(struct sljit_compiler *C, MethodInfo *m,
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_R5), SLJIT_OFFSETOF(RuntimeStack, sp), SLJIT_R4, 0);
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(SLJIT_R3), SLJIT_OFFSETOF(Runtime, son), SLJIT_R2, 0);
 
-    if (!target_dynamic) {
-        /* park the baked target for symmetry with the dynamic path */
-        sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP),
-                       sizeof(sljit_sw) * LOCAL_CALL_TARGET, SLJIT_IMM, (sljit_sw) m);
-    }
+    /* the baked target is never needed past the guards: the call takes
+     * (runtime, clazz) like a native, both read from the child frame */
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP),
                    sizeof(sljit_sw) * LOCAL_CALL_CHILD, SLJIT_R2, 0);
 
-    /* -------- the call itself: JIT -> JIT -------- */
+    /* -------- the call itself: JIT -> JIT, native convention
+     * (Runtime*, JClass*) -------- */
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP),
-                   sizeof(sljit_sw) * LOCAL_CALL_TARGET);
-    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP),
                    sizeof(sljit_sw) * LOCAL_CALL_CHILD);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R0),
+                   SLJIT_OFFSETOF(Runtime, clazz));
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP),
                    sizeof(sljit_sw) * LOCAL_CALL_ENTRY);
     sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P), SLJIT_R2, 0);
@@ -2948,6 +2946,261 @@ static s32 _jit_emit_direct_invoke(struct sljit_compiler *C, MethodInfo *m,
                 sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P),
                                  SLJIT_IMM, SLJIT_FUNC_ADDR(execute_method_impl));
             }
+            _gen_load_sp_ip(C);
+            _gen_invoke_status_dispatch(C);
+        }
+
+        label_fast_done = sljit_emit_label(C);
+
+        sljit_set_label(jump_nonnormal, label_nonnormal);
+        sljit_set_label(jump_exception, label_exception);
+        sljit_set_label(jump_normal, label_normal);
+        sljit_set_label(jump_fast_done, label_fast_done);
+    }
+
+    for (i = 0; i < slow_count; i++) {
+        sljit_set_label(to_slow[i], label_slow);
+    }
+    return 1;
+}
+
+
+/* ---------------------- JIT -> native direct call ----------------------
+ *
+ * Statically bound native targets only (invokestatic / invokespecial).
+ * Skips the execute_method_impl native wrapper exactly like the java
+ * direct call skips the interpreter dispatch: pooled frame, inline call
+ * of the resolved native_func(Runtime*, JClass*), inline status dispatch
+ * and return shaping.  A native frame has no CodeAttribute: locals are
+ * the argument slots only, the shared SP stays at the call boundary and
+ * the native pushes its result / exception reference above it, so the
+ * NORMAL shaping formula is the same as the java path.
+ *
+ * Virtual/interface sites reaching a native target (e.g. array clone)
+ * already fall back: the dynamic lookup requires converted_code, which
+ * natives do not have.
+ */
+static s32 _jit_emit_native_direct_invoke(struct sljit_compiler *C, MethodInfo *m, s32 is_special) {
+    JClass *target_class = m->_this_class;
+    s32 arg_slots = m->para_slots;           /* includes `this` for instance natives */
+    s32 slot_shift = 0;
+    struct sljit_jump *to_slow[6];
+    s32 slow_count = 0, i;
+    struct sljit_jump *jump_fast_done;
+    struct sljit_label *label_slow, *label_fast_done;
+
+    while ((1 << slot_shift) < (s32) sizeof(StackEntry)) {
+        slot_shift++;
+    }
+
+    /* -------- read-only guards -------- */
+
+    /* 1. resolved native_func (failed resolution keeps the site on the
+     *    generic path, which raises NoSuchMethod).  Written once during
+     *    the first interpreted call, long before this caller compiles;
+     *    a torn/stale read can only be NULL -> slow path. */
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM0(),
+                   (sljit_sw) ((c8 *) m + SLJIT_OFFSETOF(MethodInfo, native_func)));
+    to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP),
+                   sizeof(sljit_sw) * LOCAL_CALL_ENTRY, SLJIT_R0, 0);
+
+    /* 2. declaring class initialized (execute_method_impl clinit-loops
+     *    for natives as well) */
+    sljit_emit_op1(C, SLJIT_MOV_S8, SLJIT_R0, 0, SLJIT_MEM0(),
+                   (sljit_sw) ((c8 *) target_class + SLJIT_OFFSETOF(JClass, status)));
+    to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_NOT_EQUAL, SLJIT_R0, 0,
+                                           SLJIT_IMM, CLASS_STATUS_CLINITED);
+
+    /* 3. thread not stopping */
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP),
+                   sizeof(sljit_sw) * LOCAL_THREADINFO);
+    sljit_emit_op1(C, SLJIT_MOV_U8, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R0),
+                   SLJIT_OFFSETOF(JavaThreadInfo, is_stop));
+    to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_NOT_EQUAL, SLJIT_R1, 0, SLJIT_IMM, 0);
+
+    /* 4. runtime pool not empty */
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R0),
+                   SLJIT_OFFSETOF(JavaThreadInfo, top_runtime));
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1),
+                   SLJIT_OFFSETOF(Runtime, runtime_pool_header));
+    to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R2, 0, SLJIT_IMM, 0);
+    /* keep R1 = top_runtime, R2 = child for the commit below */
+
+    /* 5. capacity: a native frame adds no operand region - it only pushes
+     *    its return value / exception reference above the call boundary,
+     *    at most two slots */
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R3, 0, SLJIT_MEM1(SLJIT_SP),
+                   sizeof(sljit_sw) * LOCAL_STACK);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R4, 0, SLJIT_MEM1(SLJIT_R3),
+                   SLJIT_OFFSETOF(RuntimeStack, store));
+    sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R3, 0, SLJIT_MEM1(SLJIT_R3),
+                   SLJIT_OFFSETOF(RuntimeStack, max_size));
+    sljit_emit_op2(C, SLJIT_SHL, SLJIT_R3, 0, SLJIT_R3, 0,
+                   SLJIT_IMM, (sljit_sw) slot_shift);
+    sljit_emit_op2(C, SLJIT_ADD, SLJIT_R4, 0, SLJIT_R4, 0, SLJIT_R3, 0); /* store_end */
+    sljit_emit_op2(C, SLJIT_ADD, SLJIT_R5, 0, REGISTER_SP, 0,
+                   SLJIT_IMM, (sljit_sw) (2 * (s32) sizeof(StackEntry)));
+    to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_SIG_GREATER, SLJIT_R5, 0, SLJIT_R4, 0);
+
+    /* 6. receiver non-null for instance natives */
+    if (is_special) {
+        sljit_emit_op2(C, SLJIT_SUB, SLJIT_R4, 0, REGISTER_SP, 0,
+                       SLJIT_IMM, (sljit_sw) (arg_slots * (s32) sizeof(StackEntry)));
+        sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R4, 0, SLJIT_MEM1(SLJIT_R4),
+                       SLJIT_OFFSETOF(StackEntry, rvalue));
+        to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R4, 0, SLJIT_IMM, 0);
+    }
+
+    /* -------- commit: link a pooled child frame (locals = args only) -------- */
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R3, 0, SLJIT_MEM1(SLJIT_R2),
+                   SLJIT_OFFSETOF(Runtime, next));
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_R1),
+                   SLJIT_OFFSETOF(Runtime, runtime_pool_header), SLJIT_R3, 0);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R3, 0, SLJIT_MEM1(SLJIT_SP),
+                   sizeof(sljit_sw) * LOCAL_RUNTIME);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Runtime, parent), SLJIT_R3, 0);
+    sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Runtime, son), SLJIT_IMM, 0);
+    sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Runtime, method),
+                   SLJIT_IMM, (sljit_sw) m);
+    sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Runtime, clazz),
+                   SLJIT_IMM, (sljit_sw) target_class);
+    sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Runtime, jdwp_bp_skip_pc),
+                   SLJIT_IMM, 0);
+    sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Runtime, jit_exception_jump_ptr),
+                   SLJIT_IMM, 0);
+    sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Runtime, jit_exception_bc_pos),
+                   SLJIT_IMM, 0);
+    /* localvar = base = SP - para_slots; native frames keep the shared SP
+     * at the call boundary (localvar_init(para, para) reserves nothing) */
+    sljit_emit_op2(C, SLJIT_SUB, SLJIT_R4, 0, REGISTER_SP, 0,
+                   SLJIT_IMM, (sljit_sw) (arg_slots * (s32) sizeof(StackEntry)));
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Runtime, localvar), SLJIT_R4, 0);
+    sljit_emit_op1(C, SLJIT_MOV_S16, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Runtime, localvar_slots),
+                   SLJIT_IMM, arg_slots);
+    sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(SLJIT_R3), SLJIT_OFFSETOF(Runtime, son), SLJIT_R2, 0);
+
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP),
+                   sizeof(sljit_sw) * LOCAL_CALL_TARGET, SLJIT_IMM, (sljit_sw) m);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP),
+                   sizeof(sljit_sw) * LOCAL_CALL_CHILD, SLJIT_R2, 0);
+
+    /* -------- the call: native_func(Runtime*, JClass*) -------- */
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP),
+                   sizeof(sljit_sw) * LOCAL_CALL_CHILD);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) target_class);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP),
+                   sizeof(sljit_sw) * LOCAL_CALL_ENTRY);
+    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P), SLJIT_R2, 0);
+    sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_MEM1(SLJIT_SP),
+                   sizeof(sljit_sw) * LOCAL_CALL_STATUS, SLJIT_RETURN_REG, 0);
+
+    /* -------- recycle the child (all statuses) -------- */
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP),
+                   sizeof(sljit_sw) * LOCAL_THREADINFO);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R0),
+                   SLJIT_OFFSETOF(JavaThreadInfo, top_runtime));
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP),
+                   sizeof(sljit_sw) * LOCAL_CALL_CHILD);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R3, 0, SLJIT_MEM1(SLJIT_R1),
+                   SLJIT_OFFSETOF(Runtime, runtime_pool_header));
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Runtime, next), SLJIT_R3, 0);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_R1),
+                   SLJIT_OFFSETOF(Runtime, runtime_pool_header), SLJIT_R2, 0);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R3, 0, SLJIT_MEM1(SLJIT_SP),
+                   sizeof(sljit_sw) * LOCAL_RUNTIME);
+    sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(SLJIT_R3), SLJIT_OFFSETOF(Runtime, son), SLJIT_IMM, 0);
+
+    /* adopt the native's shared SP */
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP),
+                   sizeof(sljit_sw) * LOCAL_STACK);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R0),
+                   SLJIT_OFFSETOF(RuntimeStack, sp));
+    sljit_emit_op1(C, SLJIT_MOV_P, REGISTER_SP, 0, SLJIT_R1, 0);
+
+    /* -------- status dispatch -------- */
+    sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP),
+                   sizeof(sljit_sw) * LOCAL_CALL_STATUS);
+    {
+        struct sljit_jump *jump_nonnormal, *jump_exception, *jump_normal;
+        struct sljit_label *label_nonnormal, *label_exception, *label_normal;
+
+        jump_nonnormal = sljit_emit_cmp(C, SLJIT_NOT_EQUAL, SLJIT_R0, 0,
+                                        SLJIT_IMM, RUNTIME_STATUS_NORMAL);
+        jump_normal = sljit_emit_jump(C, SLJIT_JUMP);
+
+        label_nonnormal = sljit_emit_label(C);
+        jump_exception = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R0, 0,
+                                        SLJIT_IMM, RUNTIME_STATUS_EXCEPTION);
+        /* ERROR / INTERRUPT: propagate, no reshaping */
+        sljit_emit_return(C, SLJIT_MOV, SLJIT_RETURN_REG, 0);
+
+        label_exception = sljit_emit_label(C);
+        { /* EXCEPTION: the native pushed the reference at the call
+           * boundary (one slot below the adopted SP) with push_ref, i.e.
+           * into the rvalue field; replicate the wrapper's
+           * pop/dispose/push so the reference lands at base+1 for the
+           * caller's handler search */
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP),
+                           sizeof(sljit_sw) * LOCAL_CALL_CHILD);
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R1),
+                           SLJIT_OFFSETOF(Runtime, localvar)); /* base */
+            sljit_emit_op2(C, SLJIT_SUB, SLJIT_R2, 0, REGISTER_SP, 0,
+                           SLJIT_IMM, (sljit_sw) sizeof(StackEntry));
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R2),
+                           SLJIT_OFFSETOF(StackEntry, rvalue));
+            /* push_ref fills only the rvalue field and the pop side reads
+             * rvalue too: the reference must land at base+8, not base+0 */
+            sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(SLJIT_R1),
+                           SLJIT_OFFSETOF(StackEntry, rvalue), SLJIT_R2, 0);
+            sljit_emit_op2(C, SLJIT_ADD, REGISTER_SP, 0, SLJIT_R1, 0,
+                           SLJIT_IMM, (sljit_sw) sizeof(StackEntry));
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP),
+                           sizeof(sljit_sw) * LOCAL_STACK);
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_R0),
+                           SLJIT_OFFSETOF(RuntimeStack, sp), REGISTER_SP, 0);
+            _gen_exception_handle(C);
+        }
+
+        label_normal = sljit_emit_label(C);
+        { /* NORMAL: result at (shared SP - return_slots), same formula as
+           * the java direct path */
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP),
+                           sizeof(sljit_sw) * LOCAL_CALL_CHILD);
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R1),
+                           SLJIT_OFFSETOF(Runtime, localvar)); /* base */
+            if (m->return_slots == 1) {
+                sljit_emit_op2(C, SLJIT_SUB, SLJIT_R2, 0, REGISTER_SP, 0,
+                               SLJIT_IMM, (sljit_sw) sizeof(StackEntry));
+                sljit_emit_op1(C, SLJIT_MOV, SLJIT_R3, 0, SLJIT_MEM1(SLJIT_R2), 0);
+                sljit_emit_op1(C, SLJIT_MOV, SLJIT_R4, 0, SLJIT_MEM1(SLJIT_R2),
+                               SLJIT_OFFSETOF(StackEntry, rvalue));
+                sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(SLJIT_R1), 0, SLJIT_R3, 0);
+                sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(SLJIT_R1),
+                               SLJIT_OFFSETOF(StackEntry, rvalue), SLJIT_R4, 0);
+            } else if (m->return_slots == 2) {
+                sljit_emit_op2(C, SLJIT_SUB, SLJIT_R2, 0, REGISTER_SP, 0,
+                               SLJIT_IMM, (sljit_sw) (2 * (s32) sizeof(StackEntry)));
+                sljit_emit_op1(C, SLJIT_MOV, SLJIT_R3, 0, SLJIT_MEM1(SLJIT_R2), 0);
+                sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(SLJIT_R1), 0, SLJIT_R3, 0);
+            }
+            sljit_emit_op2(C, SLJIT_ADD, REGISTER_SP, 0, SLJIT_R1, 0,
+                           SLJIT_IMM, (sljit_sw) (m->return_slots * (s32) sizeof(StackEntry)));
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP),
+                           sizeof(sljit_sw) * LOCAL_STACK);
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_R0),
+                           SLJIT_OFFSETOF(RuntimeStack, sp), REGISTER_SP, 0);
+        }
+
+        jump_fast_done = sljit_emit_jump(C, SLJIT_JUMP);
+
+        label_slow = sljit_emit_label(C);
+        { /* generic fallback: full execute_method_impl native semantics */
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) m);
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP),
+                           sizeof(sljit_sw) * LOCAL_RUNTIME);
+            sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P),
+                             SLJIT_IMM, SLJIT_FUNC_ADDR(execute_method_impl));
             _gen_load_sp_ip(C);
             _gen_invoke_status_dispatch(C);
         }
@@ -3341,7 +3594,13 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
     void *genfunc;
     s32 native_local_slots = LOCAL_COUNT;
 
-    /* Start a context(function entry), have 2 arguments, discuss later.
+    /* Start a context(function entry), have 2 arguments.
+     * Convention is the native one - (Runtime *runtime, JClass *clazz) -
+     * so a compiled java method and a JNI native are the same callable
+     * shape (jit_func == java_native_fun) and every caller site emits one
+     * uniform icall sequence.  The body does not need the clazz argument;
+     * the method identity arrives via runtime->method (set by
+     * execute_method_impl and by the direct-call fast paths).
      * Return stays W: this vendored SLJIT validates every emit_return op
      * against the declared width (SLJIT_ARGUMENT_CHECKS), and the body's
      * existing returns are word MOVs.  The status values are 0..3, so the
@@ -3349,18 +3608,24 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
     sljit_emit_enter(C, 0, SLJIT_ARGS2(W, P, P), JIT_SCRATCH_REGS | SLJIT_ENTER_FLOAT(5), JIT_SAVED_REGS,
             native_local_slots * sizeof(sljit_sw));
 
-    /* SLJIT_SP is the init address of local var */
-    //arr[LOCAL_METHOD]= (S0)MethodInfo *method
-    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_METHOD, SLJIT_S0, 0);
-    //arr[LOCAL_RUNTIME]= (S1)Runtime *runtime
+    /* SLJIT_SP is the init address of local var.  S0 is REGISTER_SP, so
+     * every runtime-relative load must happen before the SP assignment
+     * below; the runtime pointer is mirrored into S1 (whose clazz
+     * argument the body never uses) to survive it. */
+    //S1 = runtime
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_S1, 0, SLJIT_S0, 0);
+    //arr[LOCAL_RUNTIME]= runtime
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME, SLJIT_S1, 0);
+    //arr[LOCAL_METHOD]= runtime->method (only consumer: the safepoint
+    //helper's interrupt-jump pointer lookup)
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_S1), SLJIT_OFFSETOF(Runtime, method));
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_METHOD, SLJIT_R0, 0);
 
-    //S0=runtime->stack->sp
+    //R0=runtime->stack
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_S1), SLJIT_OFFSETOF(Runtime, stack));
-    //arr[LOCAL_STACK]= runtime->stack->sp
+    //arr[LOCAL_STACK]= runtime->stack
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_STACK, SLJIT_R0, 0);
     sljit_emit_op2(C, SLJIT_ADD, SLJIT_R0, 0, SLJIT_R0, 0, SLJIT_IMM, SLJIT_OFFSETOF(RuntimeStack, sp));
-    sljit_emit_op1(C, SLJIT_MOV_P, REGISTER_SP, 0, SLJIT_MEM1(SLJIT_R0), 0);
     //arr[LOCAL_STACK_SP]= runtime->stack->sp
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_STACK_SP, SLJIT_R0, 0);
     //arr[LOCAL_RUNTIME_PC]= runtime->pc
@@ -3371,6 +3636,9 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_THREADINFO, SLJIT_R0, 0);
     //S1=runtime->localvar
     sljit_emit_op1(C, SLJIT_MOV_P, REGISTER_LOCALVAR, 0, SLJIT_MEM1(SLJIT_S1), SLJIT_OFFSETOF(Runtime, localvar));
+    //S0(REGISTER_SP)= runtime->stack->sp  (last runtime-relative load)
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_STACK_SP);
+    sljit_emit_op1(C, SLJIT_MOV_P, REGISTER_SP, 0, SLJIT_MEM1(SLJIT_R0), 0);
 
     if (jit_gen_context && jit_gen_context->hot_local[0] >= 0) {
         sljit_emit_op1(C, SLJIT_MOV_S32, REGISTER_HOT_LOCAL0, 0, SLJIT_MEM1(REGISTER_LOCALVAR),
@@ -4926,11 +5194,18 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
 #if !(_JVM_DEBUG_METHOD_PROFILE || _JVM_DEBUG_SLOW_CALL_PROFILE)
                 /* profile builds must keep every call inside execute_method_impl */
-                if (getenv("MINI_JVM_NO_JIT_DIRECT") == NULL
-                    && _jit_direct_call_target_ok(m)
-                    && _jit_emit_direct_invoke(C, m, NULL, cur_inst == op_invokespecial, 0, -1, 0)) {
-                    ip += 3;
-                    break;
+                if (getenv("MINI_JVM_NO_JIT_DIRECT") == NULL) {
+                    if (m && m->is_native && !m->is_sync
+                        && !(m->access_flags & ACC_SYNCHRONIZED)
+                        && _jit_emit_native_direct_invoke(C, m, cur_inst == op_invokespecial)) {
+                        ip += 3;
+                        break;
+                    }
+                    if (_jit_direct_call_target_ok(m)
+                        && _jit_emit_direct_invoke(C, m, NULL, cur_inst == op_invokespecial, 0, -1, 0)) {
+                        ip += 3;
+                        break;
+                    }
                 }
 #endif
 
@@ -5408,6 +5683,20 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
         }
     }
 
+    /* freeze label addresses into pos_2_label: the pairlist outlives this
+     * function, but sljit_label structs die with the compiler in
+     * construct_jit(); OSR entry generation reads these values later */
+    {
+        s32 k;
+        for (k = 0; k < method->pos_2_label->count; k++) {
+            Pair p = pairlist_get_pair(method->pos_2_label, k);
+            if (p.rightl > 0) {
+                pairlist_putl(method->pos_2_label, p.leftl,
+                              (intptr_t) sljit_get_label_addr((struct sljit_label *) (intptr_t) p.rightl));
+            }
+        }
+    }
+
     ca->jit.len = (s32) sljit_get_generated_code_size(C);
 
     //Execute code
@@ -5468,6 +5757,12 @@ void construct_jit(MethodInfo *method, Runtime *runtime) {
         jit_gen_context = &context;
         ca->jit.state = gen_jit_bytecode_func(C, method, runtime);
         jit_gen_context = previous_context;
+        if (ca->jit.state == JIT_GEN_SUCCESS) {
+            /* OSR trampolines must preload the same hot-int-local
+             * registers the body's prologue loads */
+            ca->jit.hot_local[0] = (s16) context.hot_local[0];
+            ca->jit.hot_local[1] = (s16) context.hot_local[1];
+        }
     }
 
     if (ca->jit.state == JIT_GEN_SUCCESS) {
@@ -5520,6 +5815,18 @@ void jit_destroy(Jit *jit) {
         jit->switchtable = tmp;
     }
 
+    if (jit->osr_entry_list) {
+        s32 i;
+        for (i = 0; i < jit->osr_entry_list->count; i++) {
+            Pair p = pairlist_get_pair(jit->osr_entry_list, i);
+            if (p.right) {
+                sljit_free_code((void *) (intptr_t) p.rightl, NULL);
+            }
+        }
+        pairlist_destroy(jit->osr_entry_list);
+        jit->osr_entry_list = NULL;
+    }
+
     if (jit->ex_jump_table) {
         jvm_free(jit->ex_jump_table);
         jit->ex_jump_table = NULL;
@@ -5540,6 +5847,132 @@ void jit_set_exception_jump_addr(Runtime *runtime, CodeAttribute *ca, s32 index)
     }
 }
 
+/* ---------------------- on-stack replacement ----------------------
+ *
+ * A method whose loop runs millions of iterations inside ONE invocation
+ * never reaches the entry-count JIT threshold.  At a hot backward branch
+ * the interpreter calls jit_osr_execute(runtime, loop-header bc_pos):
+ * the method is compiled if needed, then a per-(method, loop) trampoline
+ * replicates the body prologue (native convention, same frame layout,
+ * hot-int-local preload) and tail-jumps into the compiled body at the
+ * loop-header label.  The body's own return epilogue then unwinds the
+ * trampoline frame, so the compiled run returns straight to the
+ * interpreter call site.  Prerequisite (checked by the caller): the
+ * backward target sees an empty operand stack - true for javac loops,
+ * where all loop-carried state lives in locals.
+ */
+static __refer _jit_gen_osr_trampoline(MethodInfo *method, s32 bc_pos) {
+    CodeAttribute *ca = method->converted_code;
+    /* pos_2_label entries are frozen ADDRESSES after generation (the
+     * sljit_label structs die with the body compiler); <=0 marks a
+     * position that never got a label (dead code) */
+    intptr_t entry_addr = pairlist_getl(method->pos_2_label, bc_pos);
+    sljit_uw target;
+    struct sljit_compiler *C;
+    __refer code;
+
+    if (entry_addr <= 0) {
+        return NULL; /* bc_pos is not an enterable label */
+    }
+    target = (sljit_uw) entry_addr;
+
+    C = sljit_create_compiler(NULL);
+    if (!C) {
+        return NULL;
+    }
+    /* the frame must mirror the method body exactly, or the body's return
+     * epilogue would not balance this prologue */
+    sljit_emit_enter(C, 0, SLJIT_ARGS1(W, P), JIT_SCRATCH_REGS | SLJIT_ENTER_FLOAT(5), JIT_SAVED_REGS,
+                     LOCAL_COUNT * sizeof(sljit_sw));
+
+    /* replicate the body prologue; S0 is REGISTER_SP, so every
+     * runtime-relative load happens before the SP assignment and the
+     * runtime pointer is mirrored into S1 to survive it */
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_S1, 0, SLJIT_S0, 0); /* S1 = runtime */
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME, SLJIT_S1, 0);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_S1), SLJIT_OFFSETOF(Runtime, method));
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_METHOD, SLJIT_R0, 0);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_S1), SLJIT_OFFSETOF(Runtime, stack));
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_STACK, SLJIT_R0, 0);
+    sljit_emit_op2(C, SLJIT_ADD, SLJIT_R0, 0, SLJIT_R0, 0, SLJIT_IMM, SLJIT_OFFSETOF(RuntimeStack, sp));
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_STACK_SP, SLJIT_R0, 0);
+    sljit_emit_op2(C, SLJIT_ADD, SLJIT_R0, 0, SLJIT_S1, 0, SLJIT_IMM, SLJIT_OFFSETOF(Runtime, pc));
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME_PC, SLJIT_R0, 0);
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_S1), SLJIT_OFFSETOF(Runtime, thrd_info));
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_THREADINFO, SLJIT_R0, 0);
+    sljit_emit_op1(C, SLJIT_MOV_P, REGISTER_LOCALVAR, 0, SLJIT_MEM1(SLJIT_S1), SLJIT_OFFSETOF(Runtime, localvar));
+    if (ca->jit.hot_local[0] >= 0) {
+        sljit_emit_op1(C, SLJIT_MOV_S32, REGISTER_HOT_LOCAL0, 0, SLJIT_MEM1(REGISTER_LOCALVAR),
+                       sizeof(LocalVarItem) * ca->jit.hot_local[0] + SLJIT_OFFSETOF(LocalVarItem, ivalue));
+    }
+    if (ca->jit.hot_local[1] >= 0) {
+        sljit_emit_op1(C, SLJIT_MOV_S32, REGISTER_HOT_LOCAL1, 0, SLJIT_MEM1(REGISTER_LOCALVAR),
+                       sizeof(LocalVarItem) * ca->jit.hot_local[1] + SLJIT_OFFSETOF(LocalVarItem, ivalue));
+    }
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_STACK_SP);
+    sljit_emit_op1(C, SLJIT_MOV_P, REGISTER_SP, 0, SLJIT_MEM1(SLJIT_R0), 0); /* S0 = sp, last */
+
+    sljit_emit_ijump(C, SLJIT_JUMP, SLJIT_IMM, (sljit_sw) target);
+
+    code = (__refer) sljit_generate_code(C, 0, NULL);
+    if (sljit_get_compiler_error(C) != SLJIT_ERR_COMPILED) {
+        if (code) {
+            sljit_free_code(code, NULL);
+            code = NULL;
+        }
+    }
+    sljit_free_compiler(C);
+    return code;
+}
+
+s32 jit_osr_execute(Runtime *runtime, s32 bc_pos) {
+    MethodInfo *method = runtime->method;
+    CodeAttribute *ca = method ? method->converted_code : NULL;
+    __refer entry;
+
+    if (!ca) {
+        return -1;
+    }
+    if (ca->jit.state == JIT_GEN_UNKNOW) {
+        spin_lock(&ca->compile_lock);
+        if (ca->jit.state == JIT_GEN_UNKNOW) {
+            construct_jit(method, runtime);
+        }
+        spin_unlock(&ca->compile_lock);
+    }
+    if (ca->jit.state != JIT_GEN_SUCCESS) {
+        return -1;
+    }
+    /* the list is a plain Pairlist: guard lookup+create against its
+     * realloc while another thread OSRs the same loop */
+    spin_lock(&ca->compile_lock);
+    entry = (__refer) pairlist_getl(ca->jit.osr_entry_list, bc_pos);
+    if (!entry) {
+        entry = _jit_gen_osr_trampoline(method, bc_pos);
+        if (entry) {
+            if (!ca->jit.osr_entry_list) {
+                ca->jit.osr_entry_list = pairlist_create(4);
+            }
+            if (!ca->jit.osr_entry_list
+                || pairlist_putl(ca->jit.osr_entry_list, bc_pos, (intptr_t) entry) < 0) {
+                /* cache allocation failed: an unowned entry could never be
+                 * reclaimed by jit_destroy - free it now and keep the
+                 * loop interpreted */
+                sljit_free_code(entry, NULL);
+                entry = NULL;
+            }
+        }
+    }
+    spin_unlock(&ca->compile_lock);
+    if (!entry) {
+        return -1;
+    }
+    if (getenv("MINI_JVM_TRACE_OSR")) {
+        jvm_printf("[OSR] enter %s.%s at %d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), bc_pos);
+    }
+    return ((s32 (*)(Runtime *)) entry)(runtime);
+}
+
 #else
 
 void jit_init(CodeAttribute *ca) {
@@ -5556,6 +5989,10 @@ void construct_jit(MethodInfo *method, Runtime *runtime) {
 
 s32 jit_invoke_from_jit(MethodInfo *method, Runtime *runtime) {
     return execute_method_impl(method, runtime);
+}
+
+s32 jit_osr_execute(Runtime *runtime, s32 bc_pos) {
+    return -1;
 }
 
 #endif

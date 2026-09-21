@@ -133,7 +133,57 @@ static s32 filterClassName(Utf8String *clsName) {
         r->stack->sp = sp;\
         check_suspend_and_pause(r);\
     }\
+    if (offset < 0 && osr_hot_backedge(r, ca, (s32)(offset), sp, &ret)) goto label_osr_exit;\
 }
+
+#if JIT_ENABLE
+/*
+ * On-stack replacement probe, run at every interpreted backward branch.
+ * Returns 1 when the live frame was transferred into the compiled body
+ * (the trampoline call ran the method to completion): *retp then holds the
+ * body's final RUNTIME_STATUS and the shared stack carries its result at
+ * (sp - return_slots), so the caller must exit through label_osr_exit.
+ * Only javac-shaped loops qualify: the backward target must see an empty
+ * operand stack, because the compiled code models the operand region from
+ * base+max_locals upward.
+ */
+static s32 osr_hot_backedge(Runtime *r, CodeAttribute *ca, s32 offset, StackEntry *sp, s32 *retp) {
+    static s32 osr_enabled = -1;
+    s32 ret;
+
+    if (offset == -1 || !ca) { /* -1 is the jdwp per-instruction probe */
+        return 0;
+    }
+    if (osr_enabled < 0) {
+        osr_enabled = (getenv("MINI_JVM_NO_OSR") == NULL);
+    }
+    if (!osr_enabled || r->jvm->jdwp_enable) {
+        return 0;
+    }
+    if (ca->jit.state == JIT_GEN_ERROR) {
+        return 0;
+    }
+    if (ca->jit.interpreted_count++ <= JIT_COMPILE_EXEC_COUNT) {
+        return 0;
+    }
+    /* empty operand stack at the loop header: all loop state in locals */
+    if (sp != r->localvar + r->localvar_slots) {
+        return 0;
+    }
+    /* the trampoline loads SP/locals from the shared state */
+    r->stack->sp = sp;
+    ret = jit_osr_execute(r, (s32) (r->pc - ca->code));
+    if (ret < 0) {
+        return 0;
+    }
+    *retp = ret;
+    return 1;
+}
+#else
+static s32 osr_hot_backedge(Runtime *r, CodeAttribute *ca, s32 offset, StackEntry *sp, s32 *retp) {
+    return 0;
+}
+#endif
 
 s32 invokedynamic_prepare(Runtime *runtime, BootstrapMethod *bootMethod, ConstantInvokeDynamic *cid) {
     // =====================================================================
@@ -601,7 +651,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
             if (JIT_ENABLE && ca->jit.state == JIT_GEN_SUCCESS) {
                 //jvm_printf("jit call %s.%s()\n", method->_this_class->name->data, method->name->data);
-                ret = ca->jit.func(method, r);
+                ret = ca->jit.func(r, clazz);
                 if (!ret) {
                     switch (method->return_slots) {
                         case 0: {
@@ -3511,7 +3561,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifnull: {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
-                                r->pc += *((s16 *) (r->pc + 1));
+                                r->offset = *((s16 *) (r->pc + 1));
+                                r->pc += r->offset;
+                                check_gc_pause(r->offset);
                             } else {
                                 r->pc += 3;
                             }
@@ -3528,7 +3580,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifnonnull: {
                             r->ins = (--sp)->rvalue;
                             if (r->ins) {
-                                r->pc += *((s16 *) (r->pc + 1));
+                                r->offset = *((s16 *) (r->pc + 1));
+                                r->pc += r->offset;
+                                check_gc_pause(r->offset);
                             } else {
                                 r->pc += 3;
                             }
@@ -4163,6 +4217,38 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     profile_put(cur_inst, spent, 1);
 #endif
                     continue;
+
+                label_osr_exit:
+                    /* the compiled body ran this frame to completion through
+                     * the OSR trampoline; shape the result exactly like the
+                     * entry JIT call (result at sp - return_slots) */
+                    if (!ret) {
+                        switch (method->return_slots) {
+                            case 0: {
+                                // V
+                                localvar_dispose(r);
+                                break;
+                            }
+                            case 1: {
+                                // F I R
+                                peek_entry(stack->sp - method->return_slots, &r->entry);
+                                localvar_dispose(r);
+                                push_entry(stack, &r->entry);
+                                break;
+                            }
+                            case 2: {
+                                //J D return type , 2slots
+                                r->lval1 = pop_long(stack);
+                                localvar_dispose(r);
+                                push_long(stack, r->lval1);
+                                break;
+                            }
+                            default: {
+                                break;
+                            }
+                        }
+                    }
+                    goto label_exit_while;
 
                 label_exit_while:
 #if _JVM_DEBUG_BYTECODE_PROFILE
