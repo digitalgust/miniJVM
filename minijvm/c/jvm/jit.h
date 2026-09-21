@@ -33,6 +33,13 @@ enum {
     LOCAL_THREADINFO,
     LOCAL_R0, //for save_ip_sp
     LOCAL_R2, //for check_suspend
+    /* JIT->JIT direct call scratch: survive the machine-code call, unlike
+     * R0..R5 which the callee may clobber.  Never reuse LOCAL_R0/LOCAL_R2:
+     * save_ip_sp and the safepoint helper own them. */
+    LOCAL_CALL_CHILD,   //pooled callee Runtime being linked
+    LOCAL_CALL_TARGET,  //callee MethodInfo*
+    LOCAL_CALL_ENTRY,   //callee direct_entry, acquire-loaded
+    LOCAL_CALL_STATUS,  //callee RUNTIME_STATUS_*
     LOCAL_COUNT,
 };
 

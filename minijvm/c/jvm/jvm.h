@@ -984,6 +984,11 @@ struct _CodeAttribute {
 
     struct _Jit {
         jit_func func;
+        /* released machine-code entry for JIT->JIT direct calls: published
+         * (MEMORY_BARRIER + plain store) only after func/len/metadata are all
+         * initialized; callers read it with acquire ordering.  NULL while
+         * compiling / for targets that must keep the generic entry. */
+        __refer direct_entry;
         s32 len;
         volatile s32 state;
         volatile s32 interpreted_count;

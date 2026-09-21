@@ -56,6 +56,14 @@ s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
         push_ref(stack, ins);
         return 0;
     } else {
+        /* JVM spec: entering a catch handler clears the operand stack and
+         * pushes only the exception reference; locals survive.  The clear
+         * must target the operand region (above the locals slots) - NOT
+         * localvar_dispose, whose push would land on local 0 and clobber
+         * `this`.  This also stops boundary-thrown invokes (NPE with no
+         * callee frame to consume the args) from leaking the argument
+         * slots once per caught iteration. */
+        stack->sp = runtime->localvar + runtime->localvar_slots;
         push_ref(stack, ins);
 #if _JVM_DEBUG_LOG_LEVEL > 3
         jvm_printf("Exception : %s\n", utf8_cstr(ins->mb.clazz->name));
@@ -566,7 +574,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     if (!(method->is_native)) {
         CodeAttribute *ca = method->converted_code;
         if (ca) {
-            if (stack->max_size < (stack->sp - stack->store) + ca->max_stack) {
+            /* full frame need: caller SP + locals reserve + callee max_stack.
+             * localvar_init below raises sp by max(max_locals, para_slots) - para_slots,
+             * so the reserve must be part of the bound or deep frames can overrun. */
+            s32 local_reserve = ca->max_locals > method->para_slots ? ca->max_locals - method->para_slots : 0;
+            if (stack->max_size < (stack->sp - stack->store) + local_reserve + ca->max_stack) {
                 jvm_printf("Stack overflow :\n");
                 print_runtime_stack(r);
                 exit(1);
@@ -4124,7 +4136,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
 
                 label_exception_handle:
-                    if (ret == RUNTIME_STATUS_ERROR) {
+                    if (ret == RUNTIME_STATUS_ERROR || ret == RUNTIME_STATUS_INTERRUPT) {
+                        /* ERROR / INTERRUPT carry no exception reference on
+                         * the stack and no catch block may observe them: exit
+                         * this frame and propagate the status unchanged.  A
+                         * JIT'd callee stopped at a safepoint returns
+                         * INTERRUPT through execute_method_impl. */
                         goto label_exit_while;
                     }
                     // there is exception handle, but not error handle
