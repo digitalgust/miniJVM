@@ -87,6 +87,12 @@
             if(equals(bundleid,"org.mini.minipack"))
                 ret "minipack_ios"
             eif
+            if(equals(bundleid,"org.minijvm.wushuang"))
+                ret "wushuang_android"
+            eif
+            if(equals(bundleid,"com.ysbit.wushuang"))
+                ret "wushuang_ios"
+            eif
         ret getEnv("CLIENTID")
 
         sub getQueryPara()
