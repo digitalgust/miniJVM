@@ -1323,7 +1323,8 @@ Instance *jarray_create_by_class(Runtime *runtime, s32 count, JClass *clazz) {
     arr->mb.clazz = clazz;
     arr->mb.arr_type_index = typeIdx;
     jarray_set_length(arr, count); //reserved stays 0, body is inline
-    if (!gc_backend_is_immix(runtime->jvm)) { //immix: enumerated by block bitmap
+    if (!gc_backend_is_immix(runtime->jvm)) {
+        //immix: enumerated by block bitmap
         gc_obj_reg(runtime, arr);
     }
     //    jvm_printf("%s\n", utf8_cstr(clazz->name));
@@ -1476,7 +1477,8 @@ Instance *instance_create(Runtime *runtime, JClass *clazz) {
     //    if (utf8_equals_c(clazz->name, "java/lang/String")) {
     //        s32 debug = 1;
     //    }
-    if (!gc_backend_is_immix(runtime->jvm)) { //immix: enumerated by block bitmap
+    if (!gc_backend_is_immix(runtime->jvm)) {
+        //immix: enumerated by block bitmap
         gc_obj_reg(runtime, ins);
     } else {
         gc_side_register_instance(runtime, ins); //weak/finalizable/loader side lists
@@ -1584,7 +1586,8 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
     s32 headerSize = src->mb.type == MEM_TYPE_ARR ? JVM_ARRAY_HEADER_SIZE : JVM_INSTANCE_HEADER_SIZE;
     Instance *dst = gc_obj_alloc(runtime, insSize,
                                  src->mb.type == MEM_TYPE_ARR
-                                 ? IMMIX_OBJECT_ARRAY : IMMIX_OBJECT_INSTANCE);
+                                     ? IMMIX_OBJECT_ARRAY
+                                     : IMMIX_OBJECT_INSTANCE);
     if (!dst) return NULL;
     memcpy(dst, src, headerSize); //arrays copy length+reserved with the header
     dst->mb.thread_lock = NULL;
@@ -1635,7 +1638,8 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
             memcpy(jarray_body(dst), jarray_body(src), size);
         }
     }
-    if (!gc_backend_is_immix(runtime->jvm)) { //immix: enumerated by block bitmap
+    if (!gc_backend_is_immix(runtime->jvm)) {
+        //immix: enumerated by block bitmap
         gc_obj_reg(runtime, dst);
     }
     return dst;
@@ -1897,6 +1901,36 @@ Instance *exception_create(s32 exception_type, Runtime *runtime) {
     instance_init(ins, runtime);
     instance_release_from_thread(ins, runtime);
     return ins;
+}
+
+Instance *exception_create_dispatch(s32 exception_type, Runtime *runtime) {
+    JClass *clazz = classes_load_get_with_clinit_c(NULL, STRS_CLASS_EXCEPTION[exception_type], runtime);
+    if (clazz) {
+        Instance *exception = instance_create(runtime, clazz);
+        if (exception && instance_hold_to_thread(exception, runtime) == 0) {
+            MethodInfo *ctor = find_methodInfo_by_name_c(STRS_CLASS_EXCEPTION[exception_type],
+                                                         "<init>", "()V", NULL, runtime);
+            if (ctor) {
+                push_ref(runtime->stack, exception);
+                s32 ret = execute_method_impl(ctor, runtime);
+                instance_release_from_thread(exception, runtime);
+                if (ret == RUNTIME_STATUS_NORMAL) return exception;
+                if (ret == RUNTIME_STATUS_EXCEPTION) {
+                    /* Propagate a constructor's exception, not the unfinished object. */
+                    exception = pop_ref(runtime->stack);
+                    if (exception) return exception;
+                }
+            } else {
+                instance_release_from_thread(exception, runtime);
+            }
+        }
+    }
+    jvm_printf("[ERROR]cannot construct dispatch exception: %s\n",
+               STRS_CLASS_EXCEPTION[exception_type]);
+    /* Allocation/GC-root failure must not turn into a NULL Java exception.
+     * Use the rooted emergency object without allocating recursively. */
+    if (runtime->jvm->out_of_memory_error) return runtime->jvm->out_of_memory_error;
+    jvm_fatal_oom("dispatch-exception", sizeof(Instance));
 }
 
 s32 exception_throw_out_of_memory(Runtime *runtime) {
@@ -2197,12 +2231,13 @@ s32 instance_hold_to_thread(Instance *ins, Runtime *runtime) {
         ncap = t->capacity ? t->capacity * 2 : GC_TEMP_ROOT_INLINE_CAPACITY;
         if (t->entries == t->inline_entries) {
             ne = jvm_malloc((size_t) ncap * sizeof(GcTempRootEntry));
-            if (ne) memcpy(ne, t->inline_entries,
-                           (size_t) t->count * sizeof(GcTempRootEntry));
+            if (ne)
+                memcpy(ne, t->inline_entries,
+                       (size_t) t->count * sizeof(GcTempRootEntry));
         } else {
             ne = t->entries
-                 ? jvm_realloc(t->entries, (size_t) ncap * sizeof(GcTempRootEntry))
-                 : jvm_malloc((size_t) ncap * sizeof(GcTempRootEntry));
+                     ? jvm_realloc(t->entries, (size_t) ncap * sizeof(GcTempRootEntry))
+                     : jvm_malloc((size_t) ncap * sizeof(GcTempRootEntry));
         }
         if (!ne) {
             jvm_fatal_oom("temp-root-grow", (size_t) ncap * sizeof(GcTempRootEntry));

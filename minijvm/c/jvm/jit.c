@@ -35,15 +35,15 @@
  * instead of their stack slots. The logical SP is REGISTER_SP plus
  * sp_pending slots; stack accesses compensate for this deferred delta. */
 typedef struct {
-    u8 datatype;      /* DATATYPE_INT / LONG / FLOAT / DOUBLE */
-    u8 slots;         /* StackEntry slots covered: 1 or 2 */
-    u8 is_imm;        /* int/long compile-time constant, not yet in register */
-    sljit_sw imm;     /* sign extended value while is_imm */
-    sljit_s32 reg;    /* R3/R4 (int,long) or FR3/FR4 (float,double) holding the value */
+    u8 datatype; /* DATATYPE_INT / LONG / FLOAT / DOUBLE */
+    u8 slots; /* StackEntry slots covered: 1 or 2 */
+    u8 is_imm; /* int/long compile-time constant, not yet in register */
+    sljit_sw imm; /* sign extended value while is_imm */
+    sljit_s32 reg; /* R3/R4 (int,long) or FR3/FR4 (float,double) holding the value */
 } TosValue;
 
 typedef struct {
-    s32 count;     /* cached values, 0..2; v[0] deeper, v[1] = stack top */
+    s32 count; /* cached values, 0..2; v[0] deeper, v[1] = stack top */
     TosValue v[2];
 } TosCache;
 
@@ -53,7 +53,7 @@ typedef struct {
     const u8 *current_ip;
     s32 hot_local[2];
     TosCache tos;
-    s32 sp_pending;   /* stack slots REGISTER_SP lags behind the logical
+    s32 sp_pending; /* stack slots REGISTER_SP lags behind the logical
                          depth: pushes/pops only bump this, one folded
                          add is emitted by _gen_sp_apply() before the
                          register is read, published or jumps */
@@ -109,6 +109,7 @@ void _gen_jump_to_suspend_check(struct sljit_compiler *C, const u8 *branch_ip, s
 void _gen_save_sp_ip(struct sljit_compiler *C);
 
 static void _gen_flush_hot_locals(struct sljit_compiler *C);
+
 //------------------------  jit util ----------------------------
 
 static void FAILE(s32 cond, c8 *text) {
@@ -223,7 +224,6 @@ static void _debug_gen_print_stack(struct sljit_compiler *C) {
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), (sljit_sw) &a);
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R1, 0, SLJIT_MEM0(), (sljit_sw) &b);
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R2, 0, SLJIT_MEM0(), (sljit_sw) &c);
-
 }
 
 static void _debug_gen_print_callstack(struct sljit_compiler *C) {
@@ -241,11 +241,9 @@ static void _debug_gen_print_callstack(struct sljit_compiler *C) {
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), (sljit_sw) &a);
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R1, 0, SLJIT_MEM0(), (sljit_sw) &b);
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R2, 0, SLJIT_MEM0(), (sljit_sw) &c);
-
 }
 
 static void dump_code(void *code, sljit_uw len) {
-
     FILE *fp = fopen("/tmp/slj_dump", "wb");
     if (!fp)
         return;
@@ -277,11 +275,17 @@ static void dump_code(void *code, sljit_uw len) {
 //------------------------  tool ----------------------------
 
 static void _gen_tos_flush(struct sljit_compiler *C);
+
 static void _gen_tos_flush_values(struct sljit_compiler *C);
+
 static void _gen_sp_apply(struct sljit_compiler *C);
+
 static sljit_s32 _tos_is_float(u8 datatype);
+
 static s32 _tos_slots(u8 datatype);
+
 static s32 _gen_tos_reserve(struct sljit_compiler *C, u8 datatype);
+
 static void _gen_tos_materialize(struct sljit_compiler *C, s32 idx);
 
 static const u8 *_jit_runtime_pc(const u8 *jit_ip) {
@@ -375,11 +379,6 @@ void _gen_stack_set_ref(struct sljit_compiler *C, s32 offset, sljit_s32 src, slj
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, rvalue), src, srcw);
 }
 
-void _gen_stack_set_ra(struct sljit_compiler *C, s32 offset, sljit_s32 src, sljit_sw srcw) {
-    //sp[offset]->ivalue = value
-    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, rvalue), src, srcw);
-}
-
 void _gen_stack_set_float(struct sljit_compiler *C, s32 offset, sljit_s32 src, sljit_sw srcw) {
     //sp[offset]->fvalue = v
     sljit_emit_fop1(C, SLJIT_MOV_F32, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, fvalue), src, srcw);
@@ -388,11 +387,6 @@ void _gen_stack_set_float(struct sljit_compiler *C, s32 offset, sljit_s32 src, s
 void _gen_stack_set_double(struct sljit_compiler *C, s32 offset, sljit_s32 src, sljit_sw srcw) {
     //sp[offset]->dvalue = v
     sljit_emit_fop1(C, SLJIT_MOV_F64, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, dvalue), src, srcw);
-}
-
-void _gen_stack_set_entry(struct sljit_compiler *C, s32 offset, sljit_s32 val_src, sljit_sw val_srcw, sljit_s32 type_src, sljit_sw type_srcw) {
-    //sp[offset]->ivalue = v
-    sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, lvalue), val_src, val_srcw);
 }
 
 void _gen_stack_peek_int(struct sljit_compiler *C, s32 offset, sljit_s32 dst, sljit_sw dstw) {
@@ -430,17 +424,12 @@ void _gen_stack_peek_entry(struct sljit_compiler *C, s32 offset, sljit_s32 val_d
     //rval_dst=sp[offset]->rvalue
     sljit_emit_op1(C, SLJIT_MOV, r_dst, r_dstw, SLJIT_MEM1(REGISTER_SP), sizeof(StackEntry) * offset + _tos_sp_adj_bytes() + SLJIT_OFFSETOF(StackEntry, rvalue));
 }
+
 //-------------------------  push pop  ---------------------------
 
 void _gen_stack_push_int(struct sljit_compiler *C, sljit_s32 src, sljit_sw srcw) {
     //push_int(stack, v);
     _gen_stack_set_int(C, 0, src, srcw);
-    _gen_stack_size_modify(C, 1);
-}
-
-void _gen_stack_push_float(struct sljit_compiler *C, sljit_s32 src, sljit_sw srcw) {
-    //push_int(stack, v);
-    _gen_stack_set_float(C, 0, src, srcw);
     _gen_stack_size_modify(C, 1);
 }
 
@@ -450,27 +439,9 @@ void _gen_stack_push_long(struct sljit_compiler *C, sljit_s32 src, sljit_sw srcw
     _gen_stack_size_modify(C, 2);
 }
 
-void _gen_stack_push_double(struct sljit_compiler *C, sljit_s32 src, sljit_sw srcw) {
-    //push_long(stack, v);
-    _gen_stack_set_double(C, 0, src, srcw);
-    _gen_stack_size_modify(C, 2);
-}
-
 void _gen_stack_push_ref(struct sljit_compiler *C, sljit_s32 src, sljit_sw srcw) {
     //push_ref(stack, v);
     _gen_stack_set_ref(C, 0, src, srcw);
-    _gen_stack_size_modify(C, 1);
-}
-
-void _gen_stack_push_entry(struct sljit_compiler *C, sljit_s32 val_src, sljit_sw val_srcw, sljit_s32 type_src, sljit_sw type_srcw) {
-    //push_entry(stack, v);
-    _gen_stack_set_entry(C, 0, val_src, val_srcw, type_src, type_srcw);
-    _gen_stack_size_modify(C, 1);
-}
-
-void _gen_stack_push_ra(struct sljit_compiler *C, sljit_s32 src, sljit_sw srcw) {
-    //push_ra(stack, v);
-    _gen_stack_set_ra(C, 0, src, srcw);
     _gen_stack_size_modify(C, 1);
 }
 
@@ -480,34 +451,16 @@ void _gen_stack_pop_int(struct sljit_compiler *C, sljit_s32 dst, sljit_sw dstw) 
     _gen_stack_peek_int(C, 0, dst, dstw);
 }
 
-void _gen_stack_pop_float(struct sljit_compiler *C, sljit_s32 dst, sljit_sw dstw) {
-    //dst = pop_int(stack);
-    _gen_stack_size_modify(C, -1);
-    _gen_stack_peek_float(C, 0, dst, dstw);
-}
-
 void _gen_stack_pop_long(struct sljit_compiler *C, sljit_s32 dst, sljit_sw dstw) {
     //dst = pop_long(stack);
     _gen_stack_size_modify(C, -2);
     _gen_stack_peek_long(C, 0, dst, dstw);
 }
 
-void _gen_stack_pop_double(struct sljit_compiler *C, sljit_s32 dst, sljit_sw dstw) {
-    //dst = pop_long(stack);
-    _gen_stack_size_modify(C, -2);
-    _gen_stack_peek_double(C, 0, dst, dstw);
-}
-
 void _gen_stack_pop_ref(struct sljit_compiler *C, sljit_s32 dst, sljit_sw dstw) {
     //dst = pop_ref(stack);
     _gen_stack_size_modify(C, -1);
     _gen_stack_peek_ref(C, 0, dst, dstw);
-}
-
-void _gen_stack_pop_entry(struct sljit_compiler *C, sljit_s32 val_dst, sljit_sw val_dstw, sljit_s32 type_dst, sljit_sw type_dstw) {
-    //dst = pop_ref(stack);
-    _gen_stack_size_modify(C, -1);
-    _gen_stack_peek_entry(C, 0, val_dst, val_dstw, type_dst, type_dstw);
 }
 
 //------------------------------  local var  ----------------------
@@ -558,13 +511,13 @@ static void _gen_flush_hot_locals(struct sljit_compiler *C) {
     }
     if (jit_gen_context->hot_local[0] >= 0) {
         sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_MEM1(REGISTER_LOCALVAR),
-                sizeof(LocalVarItem) * jit_gen_context->hot_local[0] + SLJIT_OFFSETOF(LocalVarItem, ivalue),
-                REGISTER_HOT_LOCAL0, 0);
+                       sizeof(LocalVarItem) * jit_gen_context->hot_local[0] + SLJIT_OFFSETOF(LocalVarItem, ivalue),
+                       REGISTER_HOT_LOCAL0, 0);
     }
     if (jit_gen_context->hot_local[1] >= 0) {
         sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_MEM1(REGISTER_LOCALVAR),
-                sizeof(LocalVarItem) * jit_gen_context->hot_local[1] + SLJIT_OFFSETOF(LocalVarItem, ivalue),
-                REGISTER_HOT_LOCAL1, 0);
+                       sizeof(LocalVarItem) * jit_gen_context->hot_local[1] + SLJIT_OFFSETOF(LocalVarItem, ivalue),
+                       REGISTER_HOT_LOCAL1, 0);
     }
 }
 
@@ -601,7 +554,6 @@ void _gen_a_load(struct sljit_compiler *C, s32 index) {
 
     _gen_local_get_ref(C, index, SLJIT_R0, 0);
     _gen_stack_push_ref(C, SLJIT_R0, 0);
-
 }
 
 void _gen_a_store(struct sljit_compiler *C, s32 index) {
@@ -676,7 +628,9 @@ void _gen_arr_load(struct sljit_compiler *C, s32 datatype) {
         _gen_stack_push_ref(C, SLJIT_R0, 0);
     } else {
         u8 cache_dt = (datatype == DATATYPE_LONG || datatype == DATATYPE_DOUBLE
-                       || datatype == DATATYPE_FLOAT) ? datatype : DATATYPE_INT;
+                       || datatype == DATATYPE_FLOAT)
+                          ? datatype
+                          : DATATYPE_INT;
         s32 idx2 = _gen_tos_reserve(C, cache_dt);
         sljit_s32 dst = jit_gen_context->tos.v[idx2].reg;
         switch (datatype) {
@@ -696,7 +650,7 @@ void _gen_arr_load(struct sljit_compiler *C, s32 datatype) {
             case DATATYPE_INT:
                 sljit_emit_op1(C, SLJIT_MOV_S32, dst, 0, SLJIT_MEM2(SLJIT_R2, idx_reg), 2);
                 break;
-            default:/* DATATYPE_LONG / DOUBLE */
+            default: /* DATATYPE_LONG / DOUBLE */
                 if (datatype == DATATYPE_DOUBLE) {
                     sljit_emit_fop1(C, SLJIT_MOV_F64, dst, 0, SLJIT_MEM2(SLJIT_R2, idx_reg), 3);
                 } else {
@@ -731,25 +685,25 @@ void _gen_arr_store(struct sljit_compiler *C, s32 datatype) {
         _gen_tos_flush(C);
         _gen_stack_size_modify(C, -3);
 
-        _gen_stack_peek_ref(C, 0, SLJIT_R0, 0);//arr (popped area)
+        _gen_stack_peek_ref(C, 0, SLJIT_R0, 0); //arr (popped area)
         _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0,
                                           SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, 0);
-        _gen_stack_peek_int(C, 1, SLJIT_R1, 0);//index
+        _gen_stack_peek_int(C, 1, SLJIT_R1, 0); //index
         sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R0), (sljit_sw) JVM_ARRAY_LENGTH_OFFSET);
         _gen_exception_check_throw_handle(C, SLJIT_GREATER_EQUAL, SLJIT_R1, 0, SLJIT_R2, 0,
                                           JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, 0);
 
         _gen_save_sp_ip(C);
-        _gen_stack_peek_ref(C, 0, SLJIT_R0, 0);//arr
-        _gen_stack_peek_ref(C, 2, SLJIT_R1, 0);//value
+        _gen_stack_peek_ref(C, 0, SLJIT_R0, 0); //arr
+        _gen_stack_peek_ref(C, 2, SLJIT_R1, 0); //value
         sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P), SLJIT_IMM,
                          SLJIT_FUNC_ADDR(jarray_reference_store_check));
         _gen_load_sp_ip(C);
         _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0,
                                           SLJIT_IMM, 0, JVM_EXCEPTION_ARRAYSTORE, 0);
 
-        _gen_stack_peek_ref(C, 0, SLJIT_R1, 0);//arr
-        _gen_stack_peek_int(C, 1, SLJIT_R0, 0);//index
+        _gen_stack_peek_ref(C, 0, SLJIT_R1, 0); //arr
+        _gen_stack_peek_int(C, 1, SLJIT_R0, 0); //index
         //elements are inline: body = arr + JVM_ARRAY_BODY_OFFSET
         sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) JVM_ARRAY_BODY_OFFSET);
         _gen_stack_peek_ref(C, 2, SLJIT_R1, 0);
@@ -842,7 +796,7 @@ void _gen_arr_store(struct sljit_compiler *C, s32 datatype) {
         case DATATYPE_INT:
             sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_MEM2(SLJIT_R2, idx_reg), 2, val_reg, 0);
             break;
-        default:/* DATATYPE_LONG / DOUBLE */
+        default: /* DATATYPE_LONG / DOUBLE */
             sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM2(SLJIT_R2, idx_reg), 3, val_reg, 0);
             break;
     }
@@ -860,7 +814,7 @@ void _gen_div_0_exception_check(struct sljit_compiler *C, sljit_s32 op) {
     // =====================================================================
     if (op == SLJIT_DIV_UW || op == SLJIT_DIV_SW || op == SLJIT_DIVMOD_UW || op == SLJIT_DIVMOD_SW
         || op == SLJIT_DIV_U32 || op == SLJIT_DIV_S32 || op == SLJIT_DIVMOD_U32 || op == SLJIT_DIVMOD_S32
-            ) {
+    ) {
         _gen_stack_peek_int(C, -1, SLJIT_R0, 0);
         _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0, JVM_EXCEPTION_ARRITHMETIC, -2);
     }
@@ -878,7 +832,7 @@ void _gen_arith_int_2op(struct sljit_compiler *C, sljit_s32 op) {
     //R0=R0+R1
     if (op == SLJIT_DIV_UW || op == SLJIT_DIV_SW || op == SLJIT_DIVMOD_UW || op == SLJIT_DIVMOD_SW
         || op == SLJIT_DIV_U32 || op == SLJIT_DIV_S32 || op == SLJIT_DIVMOD_U32 || op == SLJIT_DIVMOD_S32
-            ) {
+    ) {
         //check if div 0
 
         sljit_emit_op0(C, op);
@@ -890,16 +844,6 @@ void _gen_arith_int_2op(struct sljit_compiler *C, sljit_s32 op) {
     } else {
         _gen_stack_set_int(C, -2, SLJIT_R0, 0);
     }
-    _gen_stack_size_modify(C, -1);
-}
-
-void _gen_arith_float_2op(struct sljit_compiler *C, sljit_s32 op) {
-
-    _gen_stack_peek_float(C, -1, SLJIT_FR1, 0);
-    _gen_stack_peek_float(C, -2, SLJIT_FR0, 0);
-    //R0=R0+R1
-    sljit_emit_fop2(C, op, SLJIT_FR0, 0, SLJIT_FR0, 0, SLJIT_FR1, 0);
-    _gen_stack_set_float(C, -2, SLJIT_FR0, 0);
     _gen_stack_size_modify(C, -1);
 }
 
@@ -918,7 +862,7 @@ void _gen_arith_long_2op(struct sljit_compiler *C, sljit_s32 op) {
     }
     if (op == SLJIT_DIV_UW || op == SLJIT_DIV_SW || op == SLJIT_DIVMOD_UW || op == SLJIT_DIVMOD_SW
         || op == SLJIT_DIV_U32 || op == SLJIT_DIV_S32 || op == SLJIT_DIVMOD_U32 || op == SLJIT_DIVMOD_S32
-            ) {
+    ) {
         sljit_emit_op0(C, op);
     } else {
         //R0=R0+R1
@@ -929,16 +873,6 @@ void _gen_arith_long_2op(struct sljit_compiler *C, sljit_s32 op) {
     } else {
         _gen_stack_set_long(C, -4, SLJIT_R0, 0);
     }
-    _gen_stack_size_modify(C, -2);
-}
-
-void _gen_arith_double_2op(struct sljit_compiler *C, sljit_s32 op) {
-
-    _gen_stack_peek_double(C, -2, SLJIT_FR1, 0);
-    _gen_stack_peek_double(C, -4, SLJIT_FR0, 0);
-    //R0=R0+R1
-    sljit_emit_fop2(C, op, SLJIT_FR0, 0, SLJIT_FR0, 0, SLJIT_FR1, 0);
-    _gen_stack_set_double(C, -4, SLJIT_FR0, 0);
     _gen_stack_size_modify(C, -2);
 }
 
@@ -963,7 +897,8 @@ void _gen_icmp_op1(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s32 cod
         jump_out = sljit_emit_jump(C, SLJIT_JUMP);
     }
     label_true = sljit_emit_label(C);
-    {// if R0 vs. 0 true
+    {
+        // if R0 vs. 0 true
         _gen_jump_to_suspend_check(C, ip, offset);
         jump_away = sljit_emit_jump(C, SLJIT_JUMP);
         pairlist_putl(method->jump_2_pos, (s64) (intptr_t) jump_away, code_idx + offset);
@@ -1055,88 +990,6 @@ void _gen_goto(struct sljit_compiler *C, MethodInfo *method, s32 code_idx, s32 o
     pairlist_putl(method->jump_2_pos, (s64) (intptr_t) jump_away, jumpto);
 }
 
-void _gen_parilist_get(struct sljit_compiler *C, Pairlist *list) {
-    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_IMM, (sljit_sw) list);
-    //r0=list->count
-    sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Pairlist, count));
-    //r1=list->ptr
-    sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Pairlist, ptr));
-    //R0=list->count * sizeof(Pair)   //end ptr
-    sljit_emit_op2(C, SLJIT_MUL, SLJIT_R0, 0, SLJIT_R0, 0, SLJIT_IMM, sizeof(Pair));
-    //max count ptr
-    sljit_emit_op2(C, SLJIT_ADD, SLJIT_R0, 0, SLJIT_R0, 0, SLJIT_R1, 0);
-
-    struct sljit_jump *jump_to_loop, *jump_to_not_equal, *jump_to_end_loop1;
-    struct sljit_label *label_not_equal, *label_end_loop;
-    //for
-    struct sljit_label *lable_loop = sljit_emit_label(C);
-    //if equal
-    struct sljit_jump *jump_to_end_loop = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R1, 0, SLJIT_R0, 0);
-    //body
-    {
-        jump_to_not_equal = sljit_emit_cmp(C, SLJIT_NOT_EQUAL, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(Pair, left), SLJIT_R2, 0);
-        {//found left
-            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(Pair, right));
-            sljit_emit_return(C, SLJIT_MOV_P, SLJIT_R2, 0);
-            jump_to_end_loop1 = sljit_emit_jump(C, SLJIT_JUMP);
-        }
-        label_not_equal = sljit_emit_label(C);
-        //ptr++
-        sljit_emit_op2(C, SLJIT_ADD, SLJIT_R1, 0, SLJIT_R0, 0, SLJIT_IMM, sizeof(Pair));
-        //
-        jump_to_loop = sljit_emit_jump(C, SLJIT_JUMP);
-    }
-    label_end_loop = sljit_emit_label(C);
-    //
-    sljit_set_label(jump_to_not_equal, label_not_equal);
-    sljit_set_label(jump_to_loop, lable_loop);
-    sljit_set_label(jump_to_end_loop, label_end_loop);
-    sljit_set_label(jump_to_end_loop1, label_end_loop);
-}
-//
-//void _gen_invokevirtual(struct sljit_compiler *C, ConstantMethodRef *cmr) {
-//
-//    //Instance *ins = (stack->sp - 1 - cmr->para_slots)->rvalue;//getInstanceInStack(cmr, stack);
-//    _gen_stack_peek_ref(C, -1 - cmr->para_slots, SLJIT_R2, 0);
-//
-//    //if instance == 0 then jump to equ_0
-//    struct sljit_jump *jump_if_ins_not_null = sljit_emit_cmp(C, SLJIT_NOT_EQUAL, SLJIT_R2, 0, SLJIT_IMM, 0);
-//
-//    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_STACK);
-//    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-//    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2V(P,P), SLJIT_IMM, SLJIT_FUNC_ADDR(_null_throw_exception));
-//    struct sljit_jump *jump_to_exception_handle = sljit_emit_jump(C, SLJIT_JUMP);
-//
-//    //R0=stack,R1=runtime
-//    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_STACK);
-//    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-//    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32,P,P), SLJIT_IMM, SLJIT_FUNC_ADDR(exception_handle));
-//    struct sljit_jump *throw_2_parent_jump = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0);
-//    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * 3);
-//    sljit_emit_op1(C, SLJIT_MOV_P, REGISTER_IP, 0, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(Runtime, pc));
-//    struct sljit_jump *jump_to_exception_handle_success = sljit_emit_jump(C, SLJIT_JUMP);
-//
-//    sljit_set_label(throw_2_parent_jump, sljit_emit_label(C));
-//    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_RETURN_REG, 0, SLJIT_R0, 0);
-//    sljit_emit_return(C, SLJIT_MOV, SLJIT_RETURN_REG, 0);
-//
-//    struct sljit_label *label_ins_not_null = sljit_emit_label(C);
-//    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) cmr->virtual_methods);
-//    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(MemoryBlock, clazz));
-//    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(P,P,P), SLJIT_IMM, SLJIT_FUNC_ADDR(pairlist_get));
-//    struct sljit_jump *method_found_jump = sljit_emit_cmp(C, SLJIT_NOT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0);
-//
-//    struct sljit_label *label_method_found = sljit_emit_label(C);
-//
-//    struct sljit_label *label_method_not_found = sljit_emit_label(C);
-//
-//    struct sljit_label *out = sljit_emit_label(C);
-//    sljit_set_label(jump_if_ins_not_null, label_ins_not_null);
-//    sljit_set_label(jump_to_exception_handle_success, out);
-//    sljit_set_label(method_found_jump, out);
-//
-//}
-
 void _gen_exception_new(struct sljit_compiler *C, s32 exception_type) {
     _gen_save_sp_ip(C);
     sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R0, 0, SLJIT_IMM, exception_type);
@@ -1162,7 +1015,8 @@ void _gen_exception_handle(struct sljit_compiler *C) {
         sljit_emit_return(C, SLJIT_MOV, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION);
     }
     label_found_handle = sljit_emit_label(C);
-    {// if R0 vs. 0 true
+    {
+        // if R0 vs. 0 true
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
         _gen_load_sp_ip(C);
         sljit_emit_ijump(C, SLJIT_JUMP, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(Runtime, jit_exception_jump_ptr));
@@ -1226,7 +1080,8 @@ void _gen_exception_check_throw_handle(struct sljit_compiler *C, sljit_s32 cmp, 
         jump_out = sljit_emit_jump(C, SLJIT_JUMP);
     }
     label_true = sljit_emit_label(C);
-    {// if R0 vs. 0 true
+    {
+        // if R0 vs. 0 true
         if (stack_adjust) {
             _gen_stack_size_modify(C, stack_adjust);
         }
@@ -1240,24 +1095,8 @@ void _gen_exception_check_throw_handle(struct sljit_compiler *C, sljit_s32 cmp, 
     //
     sljit_set_label(jump_out, label_out);
     sljit_set_label(jump_true, label_true);
-
 }
 
-void _gen_jdwp(struct sljit_compiler *C) {
-//    JavaThreadInfo *threadInfo = runtime->threadInfo;
-//    if (jdwp_enable) {
-//        //breakpoint
-//        if (method->breakpoint) {
-//            jdwp_check_breakpoint(runtime);
-//        }
-//        //debug step
-//        if (threadInfo->jdwp_step.active) {//单步状态
-//            threadInfo->jdwp_step.bytecode_count++;
-//            jdwp_check_debug_step(runtime);
-//
-//        }
-//    }
-}
 
 void _gen_jump_to_suspend_check(struct sljit_compiler *C, const u8 *branch_ip, s32 offset) {
     if (offset >= 0) {
@@ -1276,7 +1115,8 @@ void _gen_jump_to_suspend_check(struct sljit_compiler *C, const u8 *branch_ip, s
             const u8 *safepoint_ip = NULL;
             if (jit_gen_context && branch_ip) {
                 safepoint_ip = (offset == -1 && branch_ip == jit_gen_context->jit_code)
-                        ? branch_ip : branch_ip + offset;
+                                   ? branch_ip
+                                   : branch_ip + offset;
             }
             _gen_save_sp_pc_at(C, safepoint_ip);
             sljit_emit_ijump(C, SLJIT_FAST_CALL, SLJIT_IMM, SLJIT_FUNC_ADDR(check_suspend));
@@ -1291,7 +1131,7 @@ void _gen_jump_to_suspend_check(struct sljit_compiler *C, const u8 *branch_ip, s
 s32 multiarray(Runtime *runtime, Utf8String *desc, s32 count) {
     RuntimeStack *stack = runtime->stack;
     // 使用固定大小数组并添加边界检查以提高安全性
-    #define MAX_ARRAY_DIMENSIONS 32
+#define MAX_ARRAY_DIMENSIONS 32
     s32 dim[MAX_ARRAY_DIMENSIONS];
 
     // 添加维度数量的边界检查
@@ -1390,12 +1230,12 @@ static s32 _jit_fusion_range_safe(MethodInfo *method, CodeAttribute *ca, s32 cod
 
 static void _gen_local_get_float(struct sljit_compiler *C, s32 index, sljit_s32 dst, sljit_sw dstw) {
     sljit_emit_fop1(C, SLJIT_MOV_F32, dst, dstw, SLJIT_MEM1(REGISTER_LOCALVAR),
-            sizeof(LocalVarItem) * index + SLJIT_OFFSETOF(LocalVarItem, fvalue));
+                    sizeof(LocalVarItem) * index + SLJIT_OFFSETOF(LocalVarItem, fvalue));
 }
 
 static void _gen_local_set_float(struct sljit_compiler *C, s32 index, sljit_s32 src, sljit_sw srcw) {
     sljit_emit_fop1(C, SLJIT_MOV_F32, SLJIT_MEM1(REGISTER_LOCALVAR),
-            sizeof(LocalVarItem) * index + SLJIT_OFFSETOF(LocalVarItem, fvalue), src, srcw);
+                    sizeof(LocalVarItem) * index + SLJIT_OFFSETOF(LocalVarItem, fvalue), src, srcw);
 }
 
 //------------------------  TOS register cache  ----------------------------
@@ -1552,9 +1392,9 @@ static void _gen_tos_load_local(struct sljit_compiler *C, u8 datatype, s32 index
         case DATATYPE_FLOAT:
             _gen_local_get_float(C, index, reg, 0);
             break;
-        default:/* DATATYPE_DOUBLE: 8 byte value shares the lvalue slot */
+        default: /* DATATYPE_DOUBLE: 8 byte value shares the lvalue slot */
             sljit_emit_fop1(C, SLJIT_MOV_F64, reg, 0, SLJIT_MEM1(REGISTER_LOCALVAR),
-                    sizeof(LocalVarItem) * index + SLJIT_OFFSETOF(LocalVarItem, lvalue));
+                            sizeof(LocalVarItem) * index + SLJIT_OFFSETOF(LocalVarItem, lvalue));
             break;
     }
     _gen_stack_size_modify(C, _tos_slots(datatype));
@@ -1746,10 +1586,10 @@ static s32 _gen_tos_try_store_local(struct sljit_compiler *C, u8 datatype, s32 i
             case DATATYPE_FLOAT:
                 _gen_local_set_float(C, index, v->reg, 0);
                 break;
-            default:/* DATATYPE_DOUBLE */
+            default: /* DATATYPE_DOUBLE */
                 sljit_emit_fop1(C, SLJIT_MOV_F64, SLJIT_MEM1(REGISTER_LOCALVAR),
-                        sizeof(LocalVarItem) * index + SLJIT_OFFSETOF(LocalVarItem, lvalue),
-                        v->reg, 0);
+                                sizeof(LocalVarItem) * index + SLJIT_OFFSETOF(LocalVarItem, lvalue),
+                                v->reg, 0);
                 break;
         }
     }
@@ -1787,7 +1627,8 @@ static void _gen_tos_if1(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s
             jump_out = sljit_emit_jump(C, SLJIT_JUMP);
         }
         label_true = sljit_emit_label(C);
-        {// if reg vs. 0 true
+        {
+            // if reg vs. 0 true
             _gen_jump_to_suspend_check(C, ip, offset);
             jump_away = sljit_emit_jump(C, SLJIT_JUMP);
             pairlist_putl(method->jump_2_pos, (s64) (intptr_t) jump_away, code_idx + offset);
@@ -1863,7 +1704,7 @@ static void _gen_tos_if2(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s
  */
 static s32 _gen_fused_cmp_if(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s32 code_idx, const u8 *end, u8 cmp_op) {
     u8 if_op;
-    s32 nan_negative;/* cmpl: NaN counts as -1, cmpg: as +1 */
+    s32 nan_negative; /* cmpl: NaN counts as -1, cmpg: as +1 */
     s32 is_float;
     s32 offset, jumpto;
     s32 test_type;
@@ -1888,22 +1729,34 @@ static s32 _gen_fused_cmp_if(struct sljit_compiler *C, MethodInfo *method, u8 *i
 
     if (!is_float) {
         switch (if_op) {
-            case op_ifeq: test_type = SLJIT_EQUAL; break;
-            case op_ifne: test_type = SLJIT_NOT_EQUAL; break;
-            case op_iflt: test_type = SLJIT_SIG_LESS; break;
-            case op_ifge: test_type = SLJIT_SIG_GREATER_EQUAL; break;
-            case op_ifgt: test_type = SLJIT_SIG_GREATER; break;
-            default:      test_type = SLJIT_SIG_LESS_EQUAL; break;/* op_ifle */
+            case op_ifeq: test_type = SLJIT_EQUAL;
+                break;
+            case op_ifne: test_type = SLJIT_NOT_EQUAL;
+                break;
+            case op_iflt: test_type = SLJIT_SIG_LESS;
+                break;
+            case op_ifge: test_type = SLJIT_SIG_GREATER_EQUAL;
+                break;
+            case op_ifgt: test_type = SLJIT_SIG_GREATER;
+                break;
+            default: test_type = SLJIT_SIG_LESS_EQUAL;
+                break; /* op_ifle */
         }
     } else {
         /* JVM cmp result: v1<v2 -> -1, equal -> 0, v1>v2 -> +1, NaN -> -1/+1 */
         switch (if_op) {
-            case op_ifeq: test_type = SLJIT_ORDERED_EQUAL; break;
-            case op_ifne: test_type = SLJIT_UNORDERED_OR_NOT_EQUAL; break;
-            case op_iflt: test_type = nan_negative ? SLJIT_UNORDERED_OR_LESS : SLJIT_ORDERED_LESS; break;
-            case op_ifge: test_type = nan_negative ? SLJIT_ORDERED_GREATER_EQUAL : SLJIT_UNORDERED_OR_GREATER_EQUAL; break;
-            case op_ifgt: test_type = nan_negative ? SLJIT_ORDERED_GREATER : SLJIT_UNORDERED_OR_GREATER; break;
-            default:      test_type = nan_negative ? SLJIT_UNORDERED_OR_LESS_EQUAL : SLJIT_ORDERED_LESS_EQUAL; break;/* op_ifle */
+            case op_ifeq: test_type = SLJIT_ORDERED_EQUAL;
+                break;
+            case op_ifne: test_type = SLJIT_UNORDERED_OR_NOT_EQUAL;
+                break;
+            case op_iflt: test_type = nan_negative ? SLJIT_UNORDERED_OR_LESS : SLJIT_ORDERED_LESS;
+                break;
+            case op_ifge: test_type = nan_negative ? SLJIT_ORDERED_GREATER_EQUAL : SLJIT_UNORDERED_OR_GREATER_EQUAL;
+                break;
+            case op_ifgt: test_type = nan_negative ? SLJIT_ORDERED_GREATER : SLJIT_UNORDERED_OR_GREATER;
+                break;
+            default: test_type = nan_negative ? SLJIT_UNORDERED_OR_LESS_EQUAL : SLJIT_ORDERED_LESS_EQUAL;
+                break; /* op_ifle */
         }
     }
 
@@ -2239,11 +2092,9 @@ static s32 _jit_try_emit_putfield_return(struct sljit_compiler *C, MethodInfo *m
     return 1;
 }
 
-static s32 invokevirtual(Runtime *runtime, s32 idx) {
-    // if (utf8_equals_c(runtime->method->_this_class->name, "org/mini/json/JsonParser")
-    //     && utf8_equals_c(runtime->method->name, "map2obj")) {
-    //     s32 debug = 1;
-    // }
+static s32 invokevirtual(Runtime *runtime, s32 idx, s32 opcode) {
+    /* The bytecode kind is explicit, including when an interface reference
+     * resolves to an inherited declaration or a public Object method. */
     s32 ret = 0;
     ConstantMethodRef *cmr = class_get_constant_method_ref(runtime->clazz, idx);
     RuntimeStack *stack = runtime->stack;
@@ -2253,43 +2104,15 @@ static s32 invokevirtual(Runtime *runtime, s32 idx) {
         return RUNTIME_STATUS_EXCEPTION;
     } else {
         MethodInfo *m = NULL;
-        if (cmr->methodInfo && cmr->methodInfo->_vtable_index >= 0 && ins->mb.clazz->vtable) {
-            m = ins->mb.clazz->vtable[cmr->methodInfo->_vtable_index];
-        }
-//        else if (cmr->methodInfo && cmr->methodInfo->_itable_index >= 0 && ins->mb.clazz->itable) {
-//            Itable *itable = ins->mb.clazz->itable;
-//            JClass *interfaceClass = cmr->methodInfo->_this_class;
-//            s32 i;
-//            for (i = 0; i < ins->mb.clazz->itable_length; i++) {
-//                if (itable->interfaces[i] == interfaceClass) {
-//                    if (cmr->methodInfo->_itable_index < itable->entries[i].method_count) {
-//                        m = itable->entries[i].methods[cmr->methodInfo->_itable_index];
-//                    }
-//                    break;
-//                }
-//            }
-//        }
 
-        if (!m) {
-            m = (MethodInfo *) pairlist_get(cmr->virtual_methods, ins->mb.clazz);
-        }
-        if (!m) {
-            m = find_instance_methodInfo_by_name(ins, cmr->name, cmr->descriptor, runtime);
-            spin_lock(&runtime->jvm->lock_cloader);
-            {
-                pairlist_put(cmr->virtual_methods, ins->mb.clazz, m);//放入缓存，以便下次直接调用
-            }
-            spin_unlock(&runtime->jvm->lock_cloader);
-        }
-
-        if (!m) {
-            _nosuchmethod_check_exception(utf8_cstr(cmr->name), stack, runtime);
+        s32 derr = select_dispatch_target(runtime, cmr, ins, (u8) opcode, &m);
+        if (derr) {
+            push_ref(stack, exception_create_dispatch(derr, runtime));
             return RUNTIME_STATUS_EXCEPTION;
-        } else {
-            ret = execute_method_impl(m, runtime);
-            if (ret) {
-                return ret;
-            }
+        }
+        ret = execute_method_impl(m, runtime);
+        if (ret) {
+            return ret;
         }
     }
     return RUNTIME_STATUS_NORMAL;
@@ -2448,7 +2271,8 @@ static s32 _jit_try_emit_accessor_invoke(struct sljit_compiler *C, JClass *clazz
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0,
                    SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
     sljit_emit_op1(C, SLJIT_MOV_U16, SLJIT_R1, 0, SLJIT_IMM, idx);
-    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, 32),
+    sljit_emit_op1(C, SLJIT_MOV32, SLJIT_R2, 0, SLJIT_IMM, op_invokevirtual);
+    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(32, P, 32, 32),
                      SLJIT_IMM, SLJIT_FUNC_ADDR(invokevirtual));
     _gen_load_sp_ip(C);
     _gen_invoke_status_dispatch(C);
@@ -2475,16 +2299,14 @@ static s32 _jit_try_emit_accessor_invoke(struct sljit_compiler *C, JClass *clazz
  *   invokespecial) - the MethodInfo* is baked, lmax / need / clazz / pc are
  *   compile-time constants.
  *   target_dynamic == 1: runtime-resolved target (invokevirtual /
- *   invokeinterface) arriving in SLJIT_R2 from the inline vtable/pairlist
+ *   invokeinterface) arriving in SLJIT_R2 from the inline vtable/itable
  *   lookup.  Nothing about the target can be baked: converted_code,
  *   direct_entry, clinit state and the frame geometry are all guarded or
  *   computed at run time.  Slow path is the invokevirtual() C helper.
  */
 
-/* inline-cache scan bound for dynamic dispatch: sites with more distinct
- * receiver classes than this take the C helper path (keeps the emitted
- * scan loop bounded, so it needs no safepoint of its own) */
-#define JIT_INLINE_CACHE_MAX 8
+/* Bound the emitted interface-row walk; larger closures use the C helper. */
+#define JIT_ITABLE_SCAN_MAX 64
 
 static s32 _jit_direct_call_target_ok(MethodInfo *m) {
     if (!m || !m->converted_code || m->is_native
@@ -2500,13 +2322,14 @@ static s32 _jit_direct_call_target_ok(MethodInfo *m) {
  * path instead (the fast path was filtered out at compile time).
  */
 static s32 _jit_emit_direct_invoke(struct sljit_compiler *C, MethodInfo *m,
-                                   ConstantMethodRef *cmr, s32 is_special,
-                                   s32 target_dynamic, s32 vt_idx, u16 slow_idx) {
+                                   ConstantMethodRef *cmr, Runtime *compile_runtime,
+                                   s32 is_special, s32 target_dynamic, s32 opcode, u16 slow_idx) {
     CodeAttribute *ca = m->converted_code;
-    s32 arg_slots = m->para_slots;           /* includes `this` for instance methods */
+    s32 arg_slots = m->para_slots; /* includes `this` for instance methods */
     s32 lmax = 0, need_bytes = 0;
     s32 slot_shift = 0;
-    struct sljit_jump *to_slow[12];
+    /* Includes table checks and the shared direct-call guards. */
+    struct sljit_jump *to_slow[20];
     s32 slow_count = 0, i;
     struct sljit_jump *jump_fast_done;
     struct sljit_label *label_slow, *label_fast_done;
@@ -2522,13 +2345,31 @@ static s32 _jit_emit_direct_invoke(struct sljit_compiler *C, MethodInfo *m,
     }
 
     if (target_dynamic) {
+        s32 derr, kind;
+        /* Resolve before emitting anything: a failed attempt must not leave
+         * half a fast path (including an NPE check) in the caller. */
+        spin_lock(&compile_runtime->jvm->lock_cloader);
+        derr = resolve_dispatch_plan(compile_runtime, cmr, (u8) opcode);
+        spin_unlock(&compile_runtime->jvm->lock_cloader);
+        if (derr) return 0;
+        kind = dispatch_kind_load(cmr);
+        if (opcode == op_invokeinterface
+            && (!(cmr->symbolic_owner->cff.access_flags & ACC_INTERFACE)
+                || kind != DISP_ITABLE)) {
+            /* Object-method interface references require a separate
+             * membership/public check, supplied by the common selector. */
+            return 0;
+        }
         /* ---- inline receiver NPE + target lookup ----
          * Leaves R2 = actual MethodInfo* (every miss jumps to the generic
-         * slow path below).  Order: null check, receiver class, vtable
-         * slot (baked index, length-guarded), then the cmr->virtual_methods
-         * inline cache scan (linear, capped). */
-        struct sljit_jump *jump_have_target = NULL;
-        struct sljit_label *label_have_target;
+         * slow path below).
+         *
+         * invokevirtual (plan resolved at JIT compile time):
+         *   DISP_VTABLE  -> 3 loads + 2 compares, no cache at all
+         *   DISP_ITABLE  -> compile-time link to default method, emit table
+         * invokeinterface: immutable symbolic-interface row + slot */
+        struct sljit_jump *jump_loop, *jump_hit;
+        struct sljit_label *label_loop, *label_hit;
 
         /* receiver = args slot 0: [SP - A*16 + rvalue_off] */
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(REGISTER_SP),
@@ -2536,88 +2377,71 @@ static s32 _jit_emit_direct_invoke(struct sljit_compiler *C, MethodInfo *m,
                                    - (s64) arg_slots * (s64) sizeof(StackEntry)));
         _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0,
                                           JVM_EXCEPTION_NULLPOINTER, 0);
-        /* R1 = receiver class (kept: it is the inline-cache key) */
+        /* R1 = receiver class */
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R0),
                        SLJIT_OFFSETOF(Instance, mb) + SLJIT_OFFSETOF(MemoryBlock, clazz));
 
-        if (vt_idx >= 0) {
-            struct sljit_jump *jump_vt_null, *jump_vt_oob, *jump_vt_empty;
-
+        /* The acquired plan never changes; bake owner/slot into the code. */
+        if (kind == DISP_VTABLE) {
+            /* vtable slot fetch: 3 loads + 2 compares */
             sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1),
                            SLJIT_OFFSETOF(JClass, vtable));
-            jump_vt_null = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R2, 0, SLJIT_IMM, 0);
-            /* length guard: array receivers / malformed sites must not read
-             * past the receiver class's vtable */
+            to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R2, 0, SLJIT_IMM, 0);
             sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R3, 0, SLJIT_MEM1(SLJIT_R1),
                            SLJIT_OFFSETOF(JClass, vtable_length));
-            jump_vt_oob = sljit_emit_cmp(C, SLJIT_SIG_LESS_EQUAL, SLJIT_R3, 0,
-                                         SLJIT_IMM, (sljit_sw) vt_idx);
+            to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_SIG_LESS_EQUAL, SLJIT_R3, 0,
+                                                   SLJIT_IMM, (sljit_sw) cmr->disp_slot);
             sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R2),
-                           sizeof(MethodInfo *) * vt_idx);
-            jump_vt_empty = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R2, 0, SLJIT_IMM, 0);
-            jump_have_target = sljit_emit_jump(C, SLJIT_JUMP);
-            /* misses fall through into the inline-cache scan */
-            {
-                struct sljit_label *label_scan = sljit_emit_label(C);
-                sljit_set_label(jump_vt_null, label_scan);
-                sljit_set_label(jump_vt_oob, label_scan);
-                sljit_set_label(jump_vt_empty, label_scan);
-            }
-        }
-
-        /* inline-cache scan of cmr->virtual_methods (Pairlist: linear array
-         * of {left,right}).  The GC clears a dying class's entries under STW
-         * by setting count = 0 while the stale pairs stay in the array:
-         * count <= 0 must bypass the scan entirely, or address reuse could
-         * match a stale left and hand back a freed MethodInfo.  A hit's
-         * right is re-checked because a concurrent first write may expose
-         * the key before the value.  Capped: a megamorphic site walks in C
-         * instead.  (The array itself may be reallocated by a concurrent
-         * pairlist_put - that race predates this path and equally affects
-         * the lock-free C reader; see the tracking doc.) */
-        {
-            struct sljit_jump *jump_loop, *jump_hit;
-            struct sljit_label *label_loop, *label_hit;
-
-            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R4, 0, SLJIT_MEM0(),
-                           (sljit_sw) ((c8 *) cmr + SLJIT_OFFSETOF(ConstantMethodRef, virtual_methods)));
+                           sizeof(MethodInfo *) * cmr->disp_slot);
+            to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R2, 0, SLJIT_IMM, 0);
+        } else {
+            /* R5 walks interfaces, R2 walks the matching entry in parallel. */
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R4, 0, SLJIT_MEM1(SLJIT_R1),
+                           SLJIT_OFFSETOF(JClass, itable));
             to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R4, 0, SLJIT_IMM, 0);
-            sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R3, 0, SLJIT_MEM1(SLJIT_R4),
-                           SLJIT_OFFSETOF(Pairlist, count));
-            /* the scan loop tests at the bottom: a non-positive count must
-             * be diverted here or the first (stale) pair is compared once */
+            sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R3, 0, SLJIT_MEM1(SLJIT_R1),
+                           SLJIT_OFFSETOF(JClass, itable_length));
             to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_SIG_LESS_EQUAL, SLJIT_R3, 0,
                                                    SLJIT_IMM, 0);
             to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_SIG_GREATER, SLJIT_R3, 0,
-                                                   SLJIT_IMM, (sljit_sw) JIT_INLINE_CACHE_MAX);
+                                                   SLJIT_IMM, JIT_ITABLE_SCAN_MAX);
             sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R5, 0, SLJIT_MEM1(SLJIT_R4),
-                           SLJIT_OFFSETOF(Pairlist, ptr));
+                           SLJIT_OFFSETOF(Itable, interfaces));
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R4),
+                           SLJIT_OFFSETOF(Itable, entries));
             label_loop = sljit_emit_label(C);
-            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R4, 0, SLJIT_MEM1(SLJIT_R5),
-                           SLJIT_OFFSETOF(Pair, left));
-            jump_hit = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R4, 0, SLJIT_R1, 0);
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R4, 0, SLJIT_MEM1(SLJIT_R5), 0);
+            jump_hit = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R4, 0,
+                                      SLJIT_IMM, (sljit_sw) cmr->disp_owner);
             sljit_emit_op2(C, SLJIT_ADD, SLJIT_R5, 0, SLJIT_R5, 0,
-                           SLJIT_IMM, (sljit_sw) sizeof(Pair));
+                           SLJIT_IMM, (sljit_sw) sizeof(JClass *));
+            sljit_emit_op2(C, SLJIT_ADD, SLJIT_R2, 0, SLJIT_R2, 0,
+                           SLJIT_IMM, (sljit_sw) sizeof(ItableEntry));
             sljit_emit_op2(C, SLJIT_SUB, SLJIT_R3, 0, SLJIT_R3, 0, SLJIT_IMM, 1);
             jump_loop = sljit_emit_cmp(C, SLJIT_SIG_GREATER, SLJIT_R3, 0, SLJIT_IMM, 0);
             /* exhausted: fall through to the generic path */
             to_slow[slow_count++] = sljit_emit_jump(C, SLJIT_JUMP);
 
             label_hit = sljit_emit_label(C);
-            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R5),
-                           SLJIT_OFFSETOF(Pair, right));
-            /* an unresolved/stale entry may carry a NULL target; it must
-             * never reach the guards (they dereference it) */
+            sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R3, 0, SLJIT_MEM1(SLJIT_R2),
+                           SLJIT_OFFSETOF(ItableEntry, slot_count));
+            to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_SIG_LESS_EQUAL, SLJIT_R3, 0,
+                                                   SLJIT_IMM, cmr->disp_slot);
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R4, 0, SLJIT_MEM1(SLJIT_R2),
+                           SLJIT_OFFSETOF(ItableEntry, status));
+            sljit_emit_op1(C, SLJIT_MOV_U8, SLJIT_R4, 0, SLJIT_MEM1(SLJIT_R4), cmr->disp_slot);
+            to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_NOT_EQUAL, SLJIT_R4, 0,
+                                                   SLJIT_IMM, ISLOT_OK);
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R2),
+                           SLJIT_OFFSETOF(ItableEntry, methods));
+            sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R2),
+                           sizeof(MethodInfo *) * cmr->disp_slot);
             to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R2, 0, SLJIT_IMM, 0);
 
             sljit_set_label(jump_loop, label_loop);
             sljit_set_label(jump_hit, label_hit);
         }
 
-        label_have_target = sljit_emit_label(C);
-        if (jump_have_target) {
-            sljit_set_label(jump_have_target, label_have_target);
-        }
         /* R2 = actual target; park it, every later stage reloads it from
          * the native slot */
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP),
@@ -2636,6 +2460,10 @@ static s32 _jit_emit_direct_invoke(struct sljit_compiler *C, MethodInfo *m,
                        sizeof(sljit_sw) * LOCAL_CALL_TARGET);
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R0),
                        SLJIT_OFFSETOF(MethodInfo, converted_code));
+        /* Cache immutable target metadata in scratch slots that are not
+         * otherwise live until the child is linked and the call returns. */
+        sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP),
+                       sizeof(sljit_sw) * LOCAL_CALL_CHILD, SLJIT_R1, 0);
         to_slow[slow_count++] = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R1, 0, SLJIT_IMM, 0);
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1),
                        SLJIT_OFFSETOF(CodeAttribute, jit) + SLJIT_OFFSETOF(struct _Jit, direct_entry));
@@ -2693,25 +2521,27 @@ static s32 _jit_emit_direct_invoke(struct sljit_compiler *C, MethodInfo *m,
      *    must stay inside store[0..max_size), including the locals reserve
      *    localvar_init adds between the args and the callee operand stack */
     if (target_dynamic) {
-        struct sljit_jump *jump_no_reserve;
-        struct sljit_label *label_no_reserve;
+        struct sljit_jump *jump_lmax_ready;
+        struct sljit_label *label_lmax_ready;
 
         /* need = (max(max_locals, arg_slots) + max_stack - arg_slots) * 16,
          * all read from the runtime target's CodeAttribute */
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP),
-                       sizeof(sljit_sw) * LOCAL_CALL_TARGET);
-        sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_R0),
-                       SLJIT_OFFSETOF(MethodInfo, converted_code));
+                       sizeof(sljit_sw) * LOCAL_CALL_CHILD);
         sljit_emit_op1(C, SLJIT_MOV_U16, SLJIT_R3, 0, SLJIT_MEM1(SLJIT_R0),
                        SLJIT_OFFSETOF(CodeAttribute, max_stack));
         sljit_emit_op1(C, SLJIT_MOV_U16, SLJIT_R4, 0, SLJIT_MEM1(SLJIT_R0),
                        SLJIT_OFFSETOF(CodeAttribute, max_locals));
+        jump_lmax_ready = sljit_emit_cmp(C, SLJIT_SIG_GREATER_EQUAL, SLJIT_R4, 0,
+                                         SLJIT_IMM, (sljit_sw) arg_slots);
+        sljit_emit_op1(C, SLJIT_MOV, SLJIT_R4, 0, SLJIT_IMM, (sljit_sw) arg_slots);
+        label_lmax_ready = sljit_emit_label(C);
+        sljit_set_label(jump_lmax_ready, label_lmax_ready);
+        sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_MEM1(SLJIT_SP),
+                       sizeof(sljit_sw) * LOCAL_CALL_STATUS, SLJIT_R4, 0);
+        sljit_emit_op2(C, SLJIT_ADD, SLJIT_R4, 0, SLJIT_R4, 0, SLJIT_R3, 0);
         sljit_emit_op2(C, SLJIT_SUB, SLJIT_R4, 0, SLJIT_R4, 0,
                        SLJIT_IMM, (sljit_sw) arg_slots);
-        jump_no_reserve = sljit_emit_cmp(C, SLJIT_SIG_LESS, SLJIT_R4, 0, SLJIT_IMM, 0);
-        sljit_emit_op2(C, SLJIT_ADD, SLJIT_R4, 0, SLJIT_R4, 0, SLJIT_R3, 0);
-        label_no_reserve = sljit_emit_label(C);
-        sljit_set_label(jump_no_reserve, label_no_reserve);
         sljit_emit_op2(C, SLJIT_SHL, SLJIT_R4, 0, SLJIT_R4, 0,
                        SLJIT_IMM, (sljit_sw) slot_shift);
 
@@ -2772,9 +2602,7 @@ static s32 _jit_emit_direct_invoke(struct sljit_compiler *C, MethodInfo *m,
                        SLJIT_OFFSETOF(MethodInfo, _this_class));
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Runtime, clazz), SLJIT_R0, 0);
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP),
-                       sizeof(sljit_sw) * LOCAL_CALL_TARGET);
-        sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_R0),
-                       SLJIT_OFFSETOF(MethodInfo, converted_code));
+                       sizeof(sljit_sw) * LOCAL_CALL_CHILD);
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_R0),
                        SLJIT_OFFSETOF(CodeAttribute, code));
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Runtime, pc), SLJIT_R0, 0);
@@ -2797,21 +2625,8 @@ static s32 _jit_emit_direct_invoke(struct sljit_compiler *C, MethodInfo *m,
                    SLJIT_IMM, (sljit_sw) (arg_slots * (s32) sizeof(StackEntry)));
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(Runtime, localvar), SLJIT_R4, 0);
     if (target_dynamic) {
-        struct sljit_jump *jump_small_locals;
-        struct sljit_label *label_small_locals;
-
-        sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP),
-                       sizeof(sljit_sw) * LOCAL_CALL_TARGET);
-        sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_R0),
-                       SLJIT_OFFSETOF(MethodInfo, converted_code));
-        sljit_emit_op1(C, SLJIT_MOV_U16, SLJIT_R5, 0, SLJIT_MEM1(SLJIT_R0),
-                       SLJIT_OFFSETOF(CodeAttribute, max_locals));
-        /* lmax = max(max_locals, arg_slots): only clamp up */
-        jump_small_locals = sljit_emit_cmp(C, SLJIT_SIG_GREATER_EQUAL, SLJIT_R5, 0,
-                                           SLJIT_IMM, (sljit_sw) arg_slots);
-        sljit_emit_op1(C, SLJIT_MOV, SLJIT_R5, 0, SLJIT_IMM, (sljit_sw) arg_slots);
-        label_small_locals = sljit_emit_label(C);
-        sljit_set_label(jump_small_locals, label_small_locals);
+        sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R5, 0, SLJIT_MEM1(SLJIT_SP),
+                       sizeof(sljit_sw) * LOCAL_CALL_STATUS);
         sljit_emit_op1(C, SLJIT_MOV_S16, SLJIT_MEM1(SLJIT_R2),
                        SLJIT_OFFSETOF(Runtime, localvar_slots), SLJIT_R5, 0);
         sljit_emit_op2(C, SLJIT_SHL, SLJIT_R5, 0, SLJIT_R5, 0,
@@ -2888,17 +2703,19 @@ static s32 _jit_emit_direct_invoke(struct sljit_compiler *C, MethodInfo *m,
         sljit_emit_return(C, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
         label_exception = sljit_emit_label(C);
-        { /* EXCEPTION: reference pushed by the callee is the shared top;
-           * exception_handle pops it against this (caller) frame */
+        {
+            /* EXCEPTION: reference pushed by the callee is the shared top;
+                      * exception_handle pops it against this (caller) frame */
             _gen_exception_handle(C);
         }
 
         label_normal = sljit_emit_label(C);
-        { /* NORMAL: the callee left its result at (shared SP - return_slots)
-           * exactly as execute_method_impl reads it; move it down to base
-           * (the arg slots) and publish the new shared SP.  Source is read
-           * before destination is written: they overlap when
-           * max_locals == para_slots == 0. */
+        {
+            /* NORMAL: the callee left its result at (shared SP - return_slots)
+                      * exactly as execute_method_impl reads it; move it down to base
+                      * (the arg slots) and publish the new shared SP.  Source is read
+                      * before destination is written: they overlap when
+                      * max_locals == para_slots == 0. */
             sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP),
                            sizeof(sljit_sw) * LOCAL_CALL_CHILD);
             sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R1),
@@ -2932,12 +2749,14 @@ static s32 _jit_emit_direct_invoke(struct sljit_compiler *C, MethodInfo *m,
         jump_fast_done = sljit_emit_jump(C, SLJIT_JUMP);
 
         label_slow = sljit_emit_label(C);
-        { /* generic fallback: full helper semantics */
+        {
+            /* generic fallback: full helper semantics */
             if (target_dynamic) {
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP),
                                sizeof(sljit_sw) * LOCAL_RUNTIME);
                 sljit_emit_op1(C, SLJIT_MOV_U16, SLJIT_R1, 0, SLJIT_IMM, slow_idx);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, 32),
+                sljit_emit_op1(C, SLJIT_MOV32, SLJIT_R2, 0, SLJIT_IMM, opcode);
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(32, P, 32, 32),
                                  SLJIT_IMM, SLJIT_FUNC_ADDR(invokevirtual));
             } else {
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) m);
@@ -2982,7 +2801,7 @@ static s32 _jit_emit_direct_invoke(struct sljit_compiler *C, MethodInfo *m,
  */
 static s32 _jit_emit_native_direct_invoke(struct sljit_compiler *C, MethodInfo *m, s32 is_special) {
     JClass *target_class = m->_this_class;
-    s32 arg_slots = m->para_slots;           /* includes `this` for instance natives */
+    s32 arg_slots = m->para_slots; /* includes `this` for instance natives */
     s32 slot_shift = 0;
     struct sljit_jump *to_slow[6];
     s32 slow_count = 0, i;
@@ -3136,11 +2955,12 @@ static s32 _jit_emit_native_direct_invoke(struct sljit_compiler *C, MethodInfo *
         sljit_emit_return(C, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
         label_exception = sljit_emit_label(C);
-        { /* EXCEPTION: the native pushed the reference at the call
-           * boundary (one slot below the adopted SP) with push_ref, i.e.
-           * into the rvalue field; replicate the wrapper's
-           * pop/dispose/push so the reference lands at base+1 for the
-           * caller's handler search */
+        {
+            /* EXCEPTION: the native pushed the reference at the call
+                      * boundary (one slot below the adopted SP) with push_ref, i.e.
+                      * into the rvalue field; replicate the wrapper's
+                      * pop/dispose/push so the reference lands at base+1 for the
+                      * caller's handler search */
             sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP),
                            sizeof(sljit_sw) * LOCAL_CALL_CHILD);
             sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R1),
@@ -3163,8 +2983,9 @@ static s32 _jit_emit_native_direct_invoke(struct sljit_compiler *C, MethodInfo *
         }
 
         label_normal = sljit_emit_label(C);
-        { /* NORMAL: result at (shared SP - return_slots), same formula as
-           * the java direct path */
+        {
+            /* NORMAL: result at (shared SP - return_slots), same formula as
+                      * the java direct path */
             sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP),
                            sizeof(sljit_sw) * LOCAL_CALL_CHILD);
             sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R1),
@@ -3195,7 +3016,8 @@ static s32 _jit_emit_native_direct_invoke(struct sljit_compiler *C, MethodInfo *
         jump_fast_done = sljit_emit_jump(C, SLJIT_JUMP);
 
         label_slow = sljit_emit_label(C);
-        { /* generic fallback: full execute_method_impl native semantics */
+        {
+            /* generic fallback: full execute_method_impl native semantics */
             sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) m);
             sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP),
                            sizeof(sljit_sw) * LOCAL_RUNTIME);
@@ -3244,7 +3066,8 @@ static s32 dcmp(u8 bytecode, double value1, double value2) {
 
 static s32 instanceof(JClass *other, Instance *ins, Runtime *runtime) {
     s32 checkok = 0;
-    if (!ins) {} else if (ins->mb.type & (MEM_TYPE_INS | MEM_TYPE_ARR)) {
+    if (!ins) {
+    } else if (ins->mb.type & (MEM_TYPE_INS | MEM_TYPE_ARR)) {
         if (instance_of(ins, other)) {
             checkok = 1;
         }
@@ -3433,7 +3256,9 @@ static void _jit_select_hot_int_locals(CodeAttribute *ca, s32 selected[2]) {
                 is_int = 1;
             } else {
                 slots = (wide_op == op_lload || wide_op == op_lstore
-                        || wide_op == op_dload || wide_op == op_dstore) ? 2 : 1;
+                         || wide_op == op_dload || wide_op == op_dstore)
+                            ? 2
+                            : 1;
             }
         }
 
@@ -3507,7 +3332,6 @@ void gen_jit_suspend_check_func() {
 
         _gen_load_sp_ip(C);
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_R2);
-
     }
     label_out = sljit_emit_label(C);
     //
@@ -3561,10 +3385,9 @@ static s32 _jit_tos_interested(u8 op) {
 s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime *runtime) {
 #if JIT_DEBUG
     if (
-            0
-            ) {
+        0
+    ) {
         s32 debug = 1;
-
     } else {
         return JIT_GEN_ERROR;
     }
@@ -3582,11 +3405,12 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
         _jit_select_hot_int_locals(ca, jit_gen_context->hot_local);
     }
 
-    {// exception pc need label
+    {
+        // exception pc need label
         ExceptionTable *e = ca->exception_table;
         for (i = 0; i < ca->exception_table_length; i++) {
             s32 pos = (e + i)->handler_pc;
-            pairlist_putl(method->pos_2_label, pos, -1);// save label pos in list
+            pairlist_putl(method->pos_2_label, pos, -1); // save label pos in list
         }
     }
     JClass *clazz = method->_this_class;
@@ -3606,7 +3430,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
      * existing returns are word MOVs.  The status values are 0..3, so the
      * s32 C typedef and the ARGS2(32,..) icalls below read the same eax. */
     sljit_emit_enter(C, 0, SLJIT_ARGS2(W, P, P), JIT_SCRATCH_REGS | SLJIT_ENTER_FLOAT(5), JIT_SAVED_REGS,
-            native_local_slots * sizeof(sljit_sw));
+                     native_local_slots * sizeof(sljit_sw));
 
     /* SLJIT_SP is the init address of local var.  S0 is REGISTER_SP, so
      * every runtime-relative load must happen before the SP assignment
@@ -3642,11 +3466,11 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
     if (jit_gen_context && jit_gen_context->hot_local[0] >= 0) {
         sljit_emit_op1(C, SLJIT_MOV_S32, REGISTER_HOT_LOCAL0, 0, SLJIT_MEM1(REGISTER_LOCALVAR),
-                sizeof(LocalVarItem) * jit_gen_context->hot_local[0] + SLJIT_OFFSETOF(LocalVarItem, ivalue));
+                       sizeof(LocalVarItem) * jit_gen_context->hot_local[0] + SLJIT_OFFSETOF(LocalVarItem, ivalue));
     }
     if (jit_gen_context && jit_gen_context->hot_local[1] >= 0) {
         sljit_emit_op1(C, SLJIT_MOV_S32, REGISTER_HOT_LOCAL1, 0, SLJIT_MEM1(REGISTER_LOCALVAR),
-                sizeof(LocalVarItem) * jit_gen_context->hot_local[1] + SLJIT_OFFSETOF(LocalVarItem, ivalue));
+                       sizeof(LocalVarItem) * jit_gen_context->hot_local[1] + SLJIT_OFFSETOF(LocalVarItem, ivalue));
     }
 
     _gen_jump_to_suspend_check(C, ip, -1);
@@ -3797,7 +3621,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
 
             case op_ldc2_w: {
-                s64 value = class_get_constant_long(clazz, *((u16 *) (ip + 1)));//long or double bits
+                s64 value = class_get_constant_long(clazz, *((u16 *) (ip + 1))); //long or double bits
                 if (class_get_constant_item(clazz, *((u16 *) (ip + 1)))->tag == CONSTANT_DOUBLE) {
                     Long2Double l2d;
                     l2d.l = value;
@@ -4529,10 +4353,10 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 }
                 _gen_stack_peek_long(C, -2, SLJIT_R0, 0);
                 _gen_stack_peek_long(C, -4, SLJIT_R1, 0);
-//
-//                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(S32,W,W), SLJIT_IMM, SLJIT_FUNC_ADDR(lcmp));
-//                _gen_stack_set_int(C, -4, SLJIT_RETURN_REG, 0);
-//                _gen_stack_size_modify(C, -3);
+                //
+                //                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(S32,W,W), SLJIT_IMM, SLJIT_FUNC_ADDR(lcmp));
+                //                _gen_stack_set_int(C, -4, SLJIT_RETURN_REG, 0);
+                //                _gen_stack_size_modify(C, -3);
 
                 sljit_emit_op2(C, SLJIT_XOR, SLJIT_R2, 0, SLJIT_R2, 0, SLJIT_R2, 0);
                 sljit_emit_op2u(C, SLJIT_SUB | SLJIT_SET_SIG_GREATER, SLJIT_R0, 0, SLJIT_R1, 0);
@@ -4684,7 +4508,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
             case op_tableswitch: {
                 s32 pos = 0;
-                pos = (s32) (4 - ((((u64) (intptr_t) ip) - (u64) (intptr_t) (ca->bytecode_for_jit)) % 4));//4 byte对齐
+                pos = (s32) (4 - ((((u64) (intptr_t) ip) - (u64) (intptr_t) (ca->bytecode_for_jit)) % 4)); //4 byte对齐
 
 
                 s32 default_offset = *((s32 *) (ip + pos));
@@ -4751,7 +4575,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
             case op_lookupswitch: {
                 s32 pos = 0;
-                pos = (s32) (4 - ((((u64) (intptr_t) ip) - (u64) (intptr_t) (ca->bytecode_for_jit)) % 4));//4 byte对齐
+                pos = (s32) (4 - ((((u64) (intptr_t) ip) - (u64) (intptr_t) (ca->bytecode_for_jit)) % 4)); //4 byte对齐
 
                 s32 default_offset = *((s32 *) (ip + pos));
                 pos += 4;
@@ -4761,7 +4585,6 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
                 SwitchTable *st = switchtable_create(&ca->jit, n);
                 for (i = 0; i < n; i++) {
-
                     st->table[i].value = *((s32 *) (ip + pos));
                     pos += 4;
                     st->table[i].bc_pos = code_idx + (*((s32 *) (ip + pos)));
@@ -4789,7 +4612,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 _gen_sp_apply(C);
                 sljit_emit_op1(C, SLJIT_MOV, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) st->table);
                 sljit_emit_op2(C, SLJIT_ADD, SLJIT_R0, 0, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw)
-                                                                                          sizeof(struct V2PTable) * n);
+                                                                                  sizeof(struct V2PTable) * n);
 
                 struct sljit_jump *jump_to_loop, *jump_to_not_equal;
                 struct sljit_label *label_not_equal, *label_end_loop;
@@ -4800,7 +4623,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 //body
                 {
                     jump_to_not_equal = sljit_emit_cmp(C, SLJIT_NOT_EQUAL | SLJIT_32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(struct V2PTable, value));
-                    {//found left
+                    {
+                        //found left
                         sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(struct V2PTable, bc_pos));
                         sljit_emit_op2(C, SLJIT_SUB, SLJIT_R2, 0, SLJIT_R2, 0, SLJIT_IMM, code_idx);
                         sljit_emit_ijump(C, SLJIT_JUMP, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(struct V2PTable, jump_ptr));
@@ -5147,15 +4971,15 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 /* profile builds must keep every call inside the C helpers */
                 if (getenv("MINI_JVM_NO_JIT_DIRECT") == NULL) {
                     ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, invoke_idx);
-                    /* inline lookup: receiver NPE, vtable slot for class
-                     * targets, then the virtual_methods inline cache which
-                     * also covers interface (and default) methods.  The
-                     * declared method must carry a body: abstract-declared
-                     * sites (e.g. OutputStream.write) have no parseable
-                     * para/return geometry and stay on the C helper. */
-                    if (cmr && cmr->methodInfo && cmr->methodInfo->converted_code
-                        && _jit_emit_direct_invoke(C, cmr->methodInfo, cmr, 0, 1,
-                                                   cmr->methodInfo->_vtable_index, invoke_idx)) {
+                    /* table dispatch: receiver NPE, then a vtable slot fetch
+                     * or an itable row scan keyed by the compile-time
+                     * resolved dispatch plan.  The declared method's
+                     * descriptor provides para/return geometry; the
+                     * runtime target's own metadata provides the rest, so
+                     * abstract-declared sites work too. */
+                    if (cmr && cmr->methodInfo
+                        && _jit_emit_direct_invoke(C, cmr->methodInfo, cmr, runtime, 0, 1,
+                                                   cur_inst, invoke_idx)) {
                         ip += (cur_inst == op_invokevirtual) ? 3 : 5;
                         break;
                     }
@@ -5166,7 +4990,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 // s32 _gen_invokevirtual(Runtime *runtime, u16 idx)
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                 sljit_emit_op1(C, SLJIT_MOV_U16, SLJIT_R1, 0, SLJIT_IMM, invoke_idx);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, 32), SLJIT_IMM, SLJIT_FUNC_ADDR(invokevirtual));
+                sljit_emit_op1(C, SLJIT_MOV32, SLJIT_R2, 0, SLJIT_IMM, cur_inst);
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(32, P, 32, 32), SLJIT_IMM, SLJIT_FUNC_ADDR(invokevirtual));
                 _gen_load_sp_ip(C);
                 _gen_invoke_status_dispatch(C);
 
@@ -5202,7 +5027,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                         break;
                     }
                     if (_jit_direct_call_target_ok(m)
-                        && _jit_emit_direct_invoke(C, m, NULL, cur_inst == op_invokespecial, 0, -1, 0)) {
+                        && _jit_emit_direct_invoke(C, m, NULL, runtime, cur_inst == op_invokespecial, 0, -1, 0)) {
                         ip += 3;
                         break;
                     }
@@ -5226,7 +5051,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 s32 idx = *((u16 *) (ip + 1));
 
                 ConstantInvokeDynamic *cid = class_get_invoke_dynamic(clazz, idx);
-                BootstrapMethod *bootMethod = &clazz->bootstrapMethodAttr->bootstrap_methods[cid->bootstrap_method_attr_index];//Boot
+                BootstrapMethod *bootMethod = &clazz->bootstrapMethodAttr->bootstrap_methods[cid->bootstrap_method_attr_index]; //Boot
 
                 if (bootMethod->make == NULL) {
                     s32 ret = invokedynamic_prepare(runtime, bootMethod, cid);
@@ -5248,8 +5073,6 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
 
             case op_new: {
-
-
                 s32 idx = *((u16 *) (ip + 1));
 
                 ConstantClassRef *ccf = class_get_constant_classref(clazz, idx);
@@ -5320,7 +5143,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 s32 idx = *((u16 *) (ip + 1));
                 JClass *arr_class = pairlist_get(clazz->arr_class_type, (__refer) (intptr_t) idx);
 
-                if (!arr_class) {//cache to speed
+                if (!arr_class) {
+                    //cache to speed
                     arr_class = array_class_get_by_name(runtime, runtime->clazz->jloader, class_get_utf8_string(clazz, idx));
                     spin_lock(&runtime->jvm->lock_cloader);
                     {
@@ -5358,7 +5182,6 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
 
             case op_athrow: {
-
                 _gen_exception_handle(C);
 
                 ip++;
@@ -5421,7 +5244,6 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
 
             case op_monitorenter: {
-
                 // =====================================================================
                 //                Instance *ins = (Instance *) pop_ref(stack);
                 //                jthread_lock(&ins->mb, runtime);
@@ -5429,8 +5251,30 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
                 _gen_stack_pop_ref(C, SLJIT_R0, 0);
                 _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, 0);
+                /* monitor acquisition may block or fail; publish the
+                 * consumed operand stack and current bytecode before the
+                 * call, as the interpreter does before entering jthread_lock. */
+                _gen_save_sp_ip(C);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                 sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P), SLJIT_IMM, SLJIT_FUNC_ADDR(jthread_lock));
+
+                /* jthread_lock returns zero on success, but can return -1
+                 * (for example monitor allocation failure) or ERROR after
+                 * Thread.stop while waiting. Match interpreter semantics:
+                 * propagate ERROR and never execute the protected region
+                 * without owning its monitor. */
+                struct sljit_jump *jump_lock_ok;
+                struct sljit_label *label_lock_ok;
+                jump_lock_ok = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0,
+                                              SLJIT_IMM, RUNTIME_STATUS_NORMAL);
+                {
+                    sljit_emit_op1(C, SLJIT_MOV, SLJIT_RETURN_REG, 0,
+                                   SLJIT_IMM, RUNTIME_STATUS_ERROR);
+                    sljit_emit_return(C, SLJIT_MOV, SLJIT_RETURN_REG, 0);
+                }
+                label_lock_ok = sljit_emit_label(C);
+                sljit_set_label(jump_lock_ok, label_lock_ok);
+                _gen_load_sp_ip(C);
 
                 ip++;
                 break;
@@ -5507,7 +5351,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                         ip += 3;
                         break;
                     }
-                    case op_iinc    : {
+                    case op_iinc: {
                         s32 idx = *((u16 *) (ip + 1));
                         s32 v = *((s16 *) (ip + 3));
                         //runtime->localvar[*((u16 *) (ip + 1))].ivalue += *((s16 *) (ip + 3));
@@ -5584,7 +5428,6 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
 
             case op_breakpoint: {
-
                 ip += 1;
                 break;
             }
@@ -5619,7 +5462,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
         _debug_gen_print_stack(C);
         sljit_emit_op0(C, SLJIT_NOP);
 #endif
-    }//end while
+    } //end while
 
     //interrupt detected,then return
     struct sljit_label *label_interrupt_handle = sljit_emit_label(C);
@@ -5728,10 +5571,9 @@ static void _jit_publish_direct_entry(MethodInfo *method) {
 
 
 void construct_jit(MethodInfo *method, Runtime *runtime) {
-
-//    printf(" %s reg %d, %d\n", sljit_get_platform_name(), SLJIT_NUMBER_OF_SCRATCH_REGISTERS, SLJIT_NUMBER_OF_SAVED_REGISTERS);
-//    printf("address offset :%llx\n", (s64) (intptr_t) SLJIT_OFFSETOF(Instance, obj_fields));
-//    printf("size of sljit_sw :%d\n", (s32) sizeof(sljit_sw));
+    //    printf(" %s reg %d, %d\n", sljit_get_platform_name(), SLJIT_NUMBER_OF_SCRATCH_REGISTERS, SLJIT_NUMBER_OF_SAVED_REGISTERS);
+    //    printf("address offset :%llx\n", (s64) (intptr_t) SLJIT_OFFSETOF(Instance, obj_fields));
+    //    printf("size of sljit_sw :%d\n", (s32) sizeof(sljit_sw));
     CodeAttribute *ca = method->converted_code;
 
     if (!check_suspend) {
@@ -5805,11 +5647,10 @@ void jit_init(CodeAttribute *ca) {
 }
 
 void jit_destroy(Jit *jit) {
-
     while (jit->switchtable) {
         SwitchTable *tmp = jit->switchtable->next;
         if (jit->switchtable->table) {
-            jvm_free(jit->switchtable->table);  // 先释放table数组
+            jvm_free(jit->switchtable->table); // 先释放table数组
         }
         jvm_free(jit->switchtable);
         jit->switchtable = tmp;

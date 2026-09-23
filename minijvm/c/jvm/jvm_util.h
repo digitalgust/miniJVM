@@ -8,6 +8,8 @@
 #ifdef __cplusplus
 extern "C" {
 
+
+
 #endif
 
 #include "jvm.h"
@@ -59,6 +61,9 @@ void printDumpOfClasses(void);
 
 
 Instance *exception_create(s32 exception_type, Runtime *runtime);
+
+/* Dispatch error paths must never push a NULL exception reference. */
+Instance *exception_create_dispatch(s32 exception_type, Runtime *runtime);
 
 Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 const *errmsg);
 
@@ -275,7 +280,9 @@ s32 jthread_notifyAll(MemoryBlock *mb, Runtime *runtime);
 s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms);
 
 s32 jthread_wakeup(Runtime *runtime);
+
 void jthread_release_all_owned(Runtime *runtime);
+
 void jthread_assert_no_owned_locks(JavaThreadInfo *ti);
 
 s32 jthread_sleep(Runtime *runtime, s64 ms);

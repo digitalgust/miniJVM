@@ -476,6 +476,9 @@ enum {
     JVM_EXCEPTION_ILLEGALMONITORSTATE,
     JVM_EXCEPTION_NEGATIVEARRAYSIZE,
     JVM_EXCEPTION_ARRAYSTORE,
+    JVM_EXCEPTION_ABSTRACTMETHOD,
+    JVM_EXCEPTION_ILLEGALACCESS,
+    JVM_EXCEPTION_INCOMPATIBLECLASSCHANGE,
 };
 
 enum {
@@ -516,6 +519,9 @@ extern const c8 STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD[];
 extern const c8 STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION[];
 extern const c8 STR_CLASS_JAVA_LANG_NEGATIVEARRAYSIZE[];
 extern const c8 STR_CLASS_JAVA_LANG_ARRAYSTORE[];
+extern const c8 STR_CLASS_JAVA_LANG_ABSTRACTMETHODERROR[];
+extern const c8 STR_CLASS_JAVA_LANG_ILLEGALACCESSERROR[];
+extern const c8 STR_CLASS_JAVA_LANG_INCOMPATIBLECLASSCHANGEERROR[];
 
 extern const c8 STR_FIELD_STACKFRAME[];
 extern const c8 STR_FIELD_NAME[];
@@ -727,13 +733,13 @@ void profile_slow_call_unregister_class(MiniJVM *jvm, JClass *clazz);
  * (registration ArrayLists / GcTempRootTable / classic_pending), the body
  * pointer slot is gone — fields and elements are inline storage. */
 typedef struct _MemoryBlock {
-    JClass *clazz;                    //x64:  0..7
+    JClass *clazz; //x64:  0..7
     ThreadLock *volatile thread_lock; //x64:  8..15
-    s32 heap_size;                    //x64: 16..19
-    u8 type;                          //x64: 20
-    u8 garbage_mark;                  //x64: 21
-    u8 gcflag;                        //x64: 22
-    u8 arr_type_index;                //x64: 23
+    s32 heap_size; //x64: 16..19
+    u8 type; //x64: 20
+    u8 garbage_mark; //x64: 21
+    u8 gcflag; //x64: 22
+    u8 arr_type_index; //x64: 23
 } MemoryBlock;
 
 /* GC registration, thread temp roots and finalize pending state live in
@@ -888,6 +894,16 @@ typedef struct _ConstantFieldRef {
     Utf8String *clsName;
 } ConstantFieldRef;
 
+/* dynamic dispatch plan for virtual/interface call sites: resolved once
+ * (cold path, under lock_cloader) and immutable afterwards, so the
+ * steady state is a lock-free read of publish-time tables */
+enum {
+    DISP_UNRESOLVED = 0,
+    DISP_VTABLE, //slot indexes receiver_class->vtable
+    DISP_ITABLE, //slot indexes the row of disp_owner inside receiver_class->itable
+    DISP_LINK_ERROR, //resolution failed: every call takes the throwing slow path
+};
+
 typedef struct _ConstantMethodRef {
     ConstantItem item;
     u16 classIndex;
@@ -899,8 +915,38 @@ typedef struct _ConstantMethodRef {
     Utf8String *name;
     Utf8String *descriptor;
     Utf8String *clsName;
-    Pairlist *virtual_methods;
+    /* Immutable after release-publication of kind. All accesses to kind
+     * use dispatch_kind_load/store, including readers under the link lock. */
+    volatile s32 disp_kind;
+    s32 disp_slot;
+    JClass *disp_owner;
+    JClass *symbolic_owner;
 } ConstantMethodRef, ConstantInterfaceMethodRef;
+
+#if defined(_MSC_VER) || defined(__GNUC__)
+static inline s32 dispatch_kind_load(ConstantMethodRef *cmr) {
+    return ATOMIC_LOAD_ACQUIRE32(&cmr->disp_kind);
+}
+
+static inline void dispatch_kind_store(ConstantMethodRef *cmr, s32 kind) {
+    ATOMIC_STORE_RELEASE32(&cmr->disp_kind, kind);
+}
+#else
+/* One shared mutex, not a separate header-local lock per translation unit. */
+static pthread_mutex_t dispatch_publish_mutex = PTHREAD_MUTEX_INITIALIZER;
+s32 dispatch_kind_load(ConstantMethodRef *cmr) {
+    s32 kind;
+    pthread_mutex_lock(&dispatch_publish_mutex);
+    kind = cmr->disp_kind;
+    pthread_mutex_unlock(&dispatch_publish_mutex);
+    return kind;
+}
+void dispatch_kind_store(ConstantMethodRef *cmr, s32 kind) {
+    pthread_mutex_lock(&dispatch_publish_mutex);
+    cmr->disp_kind = kind;
+    pthread_mutex_unlock(&dispatch_publish_mutex);
+}
+#endif
 
 typedef struct _ConstantMethodHandle {
     ConstantItem item;
@@ -1175,14 +1221,43 @@ struct _MethodInfo {
 #endif
 };
 
+/* ---------------- interface dispatch tables ----------------
+ *
+ * Each interface owns a read-only signature layout (built once at its
+ * preparation, never modified): inherited signatures first (keeping the
+ * superinterface slot numbers stable), then own declarations.  A class
+ * that implements interfaces gets one itable row per interface of its
+ * closure, filled with the method the receiver dispatches to for each
+ * signature (unified selector), or a slot status when there is no
+ * executable target.  Everything is immutable after the class reaches
+ * CLASS_STATUS_PREPARED, so dispatch reads need no locks. */
+
+enum {
+    ISLOT_OK = 0, //methods[slot] is the target
+    ISLOT_ABSTRACT, //no concrete implementation
+    ISLOT_CONFLICT, //multiple maximally-specific defaults
+    ISLOT_ACCESS_ERROR, //selected class method is not public
+};
+
+typedef struct _IfaceSlot {
+    Utf8String *name;
+    Utf8String *descriptor;
+} IfaceSlot;
+
+typedef struct _IfaceLayout {
+    s32 slot_count;
+    IfaceSlot *slots; //[slot_count]
+} IfaceLayout;
+
 typedef struct _ItableEntry {
-    MethodInfo **methods;
-    s32 method_count;
+    MethodInfo **methods; //[iface layout slot_count]
+    u8 *status; //[iface layout slot_count] ISLOT_*
+    s32 slot_count;
 } ItableEntry;
 
 typedef struct _Itable {
-    JClass **interfaces;
-    ItableEntry *entries;
+    JClass **interfaces; //[itable_length] row owner identity
+    ItableEntry *entries; //[itable_length]
 } Itable;
 
 //============================================
@@ -1259,6 +1334,7 @@ struct _ClassType {
     s32 vtable_length;
     struct _Itable *itable;
     s32 itable_length;
+    IfaceLayout *iface_layout; //interfaces only: own slot->signature layout
 };
 
 
@@ -1283,6 +1359,21 @@ s32 _LOAD_CLASS_FROM_BYTES(JClass *_this, ByteBuf *buf);
 void find_supers(JClass *clazz, Runtime *runtime);
 
 s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime);
+
+/* unified dynamic-dispatch entry points (class.c).  resolve_dispatch_plan
+ * is the cold/link path (lock_cloader held by the caller on first
+ * execution); select_dispatch_target acquires that lock only while
+ * unresolved. Its steady state reads immutable tables without locking.
+ * Both return 0 with *target set (select only), or a JVM_EXCEPTION_*
+ * that the caller must raise at the call site. */
+s32 resolve_dispatch_plan(Runtime *caller, ConstantMethodRef *cmr, u8 opcode);
+
+s32 select_dispatch_target(Runtime *caller, ConstantMethodRef *cmr, Instance *receiver,
+                           u8 opcode, MethodInfo **target);
+
+/* Steady-state variant for callers that already acquired disp_kind. */
+s32 select_dispatch_target_resolved(ConstantMethodRef *cmr, Instance *receiver,
+                                    u8 opcode, s32 kind, MethodInfo **target);
 
 void _class_optimize(JClass *clazz);
 
@@ -1325,9 +1416,9 @@ struct _InstanceType {
 /* Array layout: shared 24B MemoryBlock + length + reserved (must stay 0,
  * never holds a Java reference) so the element area is 8-byte aligned. */
 typedef struct _JArrayHeader {
-    MemoryBlock mb;   //x64:  0..23
-    s32 length;       //x64: 24..27
-    u32 reserved;     //x64: 28..31, zeroed on creation
+    MemoryBlock mb; //x64:  0..23
+    s32 length; //x64: 24..27
+    u32 reserved; //x64: 28..31, zeroed on creation
     /* array elements follow inline at JVM_ARRAY_BODY_OFFSET */
 } JArrayHeader;
 
@@ -2248,8 +2339,8 @@ struct _MiniJVM {
     s32 jdwp_enable; // 0:disable java debug , 1:enable java debug and disable jit
     s32 jdwp_suspend_on_start;
     s32 jdwp_port;
-    s64 max_heap_size;       //current adaptive soft limit for Java objects
-    s64 max_vm_memory;       //final safety ceiling (0 derives as 4 * Xmx)
+    s64 max_heap_size; //current adaptive soft limit for Java objects
+    s64 max_vm_memory; //final safety ceiling (0 derives as 4 * Xmx)
     s32 heap_overload_percent;
     s64 garbage_collect_period_ms;
 

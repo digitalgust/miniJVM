@@ -22,6 +22,7 @@ void _gc_copy_objs(MiniJVM *jvm);
 
 
 s32 _gc_big_search(GcCollector *collector);
+
 s32 _gc_pause_the_world(MiniJVM *jvm);
 
 s32 _gc_resume_the_world(MiniJVM *jvm);
@@ -41,6 +42,7 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
                              s64 *out_stw_spent_ms);
 
 static s32 _gc_immix_is_live(void *context, MemoryBlock *object);
+
 static void _gc_splice_stage(GcCollector *collector);
 
 static void _gc_immix_before_reclaim(void *context, MemoryBlock *object);
@@ -84,50 +86,6 @@ static void _gc_append_thread_name(Runtime *runtime, Utf8String *ustr) {
     Instance *jarr_name = jthread_get_name_value(runtime->jvm, runtime->thrd_info->jthread);
     if (jarr_name && jarray_length(jarr_name) > 0) {
         unicode_2_utf8((u16 *) jarray_body(jarr_name), ustr, jarray_length(jarr_name));
-    }
-}
-
-/*
- * Inline caches (cmr->virtual_methods) pair a receiver class with the
- * MethodInfo resolved for it, and that target may live in a class being
- * unloaded this cycle; the raw pointers dangle once the class memory is
- * freed.  When any class dies, drop every entry of every class.  Runs while
- * the world is stopped and before any class is reclaimed; a cleared cache
- * only makes pairlist_get() miss and the interpreter re-resolves on the
- * slow path.
- */
-static void _gc_clear_virtual_method_caches(GcCollector *collector) {
-    ArrayList *objs = collector->objs_array;
-    s32 i, dying_class = 0;
-    for (i = 0; i < objs->length; i++) {
-        MemoryBlock *mb = (MemoryBlock *) objs->data[i];
-        if (mb->type == MEM_TYPE_CLASS && mb->garbage_mark != collector->mark_cnt) {
-            dying_class = 1;
-            break;
-        }
-    }
-    if (!dying_class) {
-        return;
-    }
-    for (i = 0; i < objs->length; i++) {
-        JClass *clazz = (JClass *) objs->data[i];
-        ArrayList *pools[2];
-        s32 p, c;
-        if (clazz->mb.type != MEM_TYPE_CLASS) {
-            continue;
-        }
-        pools[0] = clazz->constantPool.methodRef;
-        pools[1] = clazz->constantPool.interfaceMethodRef;
-        for (p = 0; p < 2; p++) {
-            ArrayList *pool = pools[p];
-            if (!pool) continue;
-            for (c = 0; c < pool->length; c++) {
-                ConstantMethodRef *cmr = (ConstantMethodRef *) arraylist_get_value_unsafe(pool, c);
-                if (cmr && cmr->virtual_methods) {
-                    cmr->virtual_methods->count = 0;
-                }
-            }
-        }
     }
 }
 
@@ -318,7 +276,8 @@ s32 gc_create(MiniJVM *jvm) {
             config.backend = IMMIX_BACKEND_BLOCK;
             ImmixVmOps vm_ops;
             size_t heap_limit = jvm->max_heap_size > 0
-                                ? (size_t) jvm->max_heap_size : 0;
+                                    ? (size_t) jvm->max_heap_size
+                                    : 0;
 
             config.heap_limit = heap_limit;
             if (heap_limit != 0 && heap_limit < config.initial_chunk_size) {
@@ -334,7 +293,7 @@ s32 gc_create(MiniJVM *jvm) {
                 collector->immix_heap = NULL;
             } else {
                 const ImmixConfig *actual = immix_heap_config(
-                        (ImmixHeap *) collector->immix_heap);
+                    (ImmixHeap *) collector->immix_heap);
                 jvm_printf("[INFO] gc backend : immix block heap soft=%lld KB max=%lld KB reserve=%lld KB\n",
                            (s64) (actual->heap_limit / 1024),
                            (s64) (jvm->max_vm_memory / 1024),
@@ -431,7 +390,8 @@ static struct ImmixMutator *_gc_immix_mutator_get(Runtime *runtime) {
 
     if (!ti->immix_mutator) {
         spin_lock(&collector->lock);
-        if (!ti->immix_mutator) { // double check under the collector lock
+        if (!ti->immix_mutator) {
+            // double check under the collector lock
             immix_mutator_attach((ImmixHeap *) collector->immix_heap, ti,
                                  (ImmixMutator **) &ti->immix_mutator);
         }
@@ -521,7 +481,8 @@ static void _gc_request_collection_async(MiniJVM *jvm,
     if (!collector) return;
     if (collector->gc_request) return; //already armed or a cycle is in flight
     spin_lock(&collector->lock);
-    if (collector->gc_request) { //re-check under the lock
+    if (collector->gc_request) {
+        //re-check under the lock
         spin_unlock(&collector->lock);
         return;
     }
@@ -647,7 +608,8 @@ static void _gc_immix_adjust_soft_limit(GcCollector *collector,
     grow_20_percent = limit + (limit + 4) / 5;
     fit_at_80_percent = used + (used + 3) / 4;
     next = grow_20_percent > fit_at_80_percent
-           ? grow_20_percent : fit_at_80_percent;
+               ? grow_20_percent
+               : fit_at_80_percent;
     if (next < ceiling && next <= UINT64_MAX - (round_unit - 1)) {
         next = (next + round_unit - 1) / round_unit * round_unit;
     }
@@ -704,7 +666,8 @@ static void _gc_malloc_adjust_soft_limit(GcCollector *collector) {
         grow_20_percent = limit + (limit + 4) / 5;
         fit_at_80_percent = used + (used + 3) / 4;
         next = grow_20_percent > fit_at_80_percent
-               ? grow_20_percent : fit_at_80_percent;
+                   ? grow_20_percent
+                   : fit_at_80_percent;
         if (next < ceiling && next <= UINT64_MAX - (round_unit - 1)) {
             next = (next + round_unit - 1) / round_unit * round_unit;
         }
@@ -1261,7 +1224,7 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
             early_ops.before_reclaim = _gc_immix_before_reclaim;
             if (immix_sweep_pending_objects(heap, &early_ops) != IMMIX_OK) {
                 jvm_printf("[WARN] immix safety-net drain failed - blocks "
-                           "stay quarantined for the next cycle\n");
+                    "stay quarantined for the next cycle\n");
             }
         }
 
@@ -1338,7 +1301,7 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
             for (i = 0; i < len; i++) {
                 MemoryBlock *mb = arraylist_get_value(collector->side_weakrefs, i);
                 Instance *target = getFieldRefer(getInstanceFieldPtr(
-                        (Instance *) mb, collector->jvm->shortcut.reference_target));
+                    (Instance *) mb, collector->jvm->shortcut.reference_target));
                 if (target) {
                 }
                 if (target && target->mb.garbage_mark != collector->mark_cnt) {
@@ -1346,7 +1309,7 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
                         jvm_fatal_oom("gc-pending-weak", 0);
                     }
                     setFieldRefer(getInstanceFieldPtr(
-                            (Instance *) mb, collector->jvm->shortcut.reference_target), NULL);
+                                      (Instance *) mb, collector->jvm->shortcut.reference_target), NULL);
                     pending.enqueued++;
                 }
             }
@@ -1401,8 +1364,9 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
                             mb->garbage_mark = collector->mark_cnt;
                             if (collector->immix_heap) {
                                 immix_collection_mark((ImmixHeap *) collector->immix_heap, mb,
-                                                       mb->heap_size > 0 ? (size_t) mb->heap_size
-                                                                         : sizeof(MemoryBlock));
+                                                      mb->heap_size > 0
+                                                          ? (size_t) mb->heap_size
+                                                          : sizeof(MemoryBlock));
                             }
                         }
                     }
@@ -1457,8 +1421,6 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
 #endif
             ArrayList *list = collector->objs_array;
             s32 ci, cw = 0;
-            /* must precede the first class free below */
-            _gc_clear_virtual_method_caches(collector);
             for (ci = 0; ci < list->length; ci++) {
                 MemoryBlock *curmb = (MemoryBlock *) list->data[ci];
                 s32 size = curmb->heap_size;
@@ -1494,8 +1456,9 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
          * extension decision must see what actually triggered this cycle
          * (including requests that arrived during the mark/sweep window). */
         spin_lock(&collector->lock);
-        report_reason = collector->gc_request ? collector->gc_request_reason
-                                              : reason;
+        report_reason = collector->gc_request
+                            ? collector->gc_request_reason
+                            : reason;
         report_requested_bytes = collector->gc_requested_bytes;
         spin_unlock(&collector->lock);
 
@@ -1521,7 +1484,7 @@ static s64 _gc_immix_collect(GcCollector *collector, s64 *out_mem_total, s64 *ou
      * acquirable once the drain has classified them. */
     if (immix_sweep_pending_objects(heap, &sweep_ops) != IMMIX_OK) {
         jvm_printf("[WARN] immix lazy sweep drain failed - dead starts may "
-                   "remain set; quarantined blocks retained\n");
+            "remain set; quarantined blocks retained\n");
     }
 
     /* Post-drain snapshot: pending blocks contributed line-granular estimates
@@ -1744,9 +1707,6 @@ s64 _garbage_collect(GcCollector *collector) {
             }
             threads_dump = _gc_build_thread_dump(collector);
 
-            /* must run before the world resumes and before any class free below */
-            _gc_clear_virtual_method_caches(collector);
-
             /* Keep-alive pushes below are checked and fatal on failure; the
              * queue keeps its capacity across cycles (clear never shrinks),
              * so no pre-counting walk of the object list is needed. */
@@ -1911,7 +1871,8 @@ s64 _garbage_collect(GcCollector *collector) {
 #endif
 #endif
     //push msg to java
-    if (get_jvm_state(jvm) != JVM_STATUS_STOPED) { // the _gc_push_history_to_java() will new instance , so the gc can't stop forever
+    if (get_jvm_state(jvm) != JVM_STATUS_STOPED) {
+        // the _gc_push_history_to_java() will new instance , so the gc can't stop forever
         _gc_push_history_to_java(collector, obj_total, mem_total, time_stopWorld, time_gc, threads_dump);
     }
     if (threads_dump) {
@@ -2119,7 +2080,8 @@ void _gc_copy_objs(MiniJVM *jvm) {
         if (runtime->thrd_info->thread_status != THREAD_STATUS_ZOMBIE &&
             _gc_count_thread_roots(runtime, &root_count) != 0) {
             size_t requested = root_count > SIZE_MAX / sizeof(ArrayListValue)
-                               ? SIZE_MAX : root_count * sizeof(ArrayListValue);
+                                   ? SIZE_MAX
+                                   : root_count * sizeof(ArrayListValue);
             jvm_fatal_oom("gc-root-snapshot-count", requested);
         }
     }
@@ -2127,7 +2089,8 @@ void _gc_copy_objs(MiniJVM *jvm) {
         jdwp_runtime = jdwp_get_runtime(jvm->jdwpserver);
         if (jdwp_runtime && _gc_count_thread_roots(jdwp_runtime, &root_count) != 0) {
             size_t requested = root_count > SIZE_MAX / sizeof(ArrayListValue)
-                               ? SIZE_MAX : root_count * sizeof(ArrayListValue);
+                                   ? SIZE_MAX
+                                   : root_count * sizeof(ArrayListValue);
             jvm_fatal_oom("gc-root-snapshot-count", requested);
         }
     }
@@ -2135,7 +2098,8 @@ void _gc_copy_objs(MiniJVM *jvm) {
         !arraylist_ensure_capacity_unsafe(jvm->collector->runtime_refer_copy,
                                           (s32) root_count)) {
         size_t requested = root_count > SIZE_MAX / sizeof(ArrayListValue)
-                           ? SIZE_MAX : root_count * sizeof(ArrayListValue);
+                               ? SIZE_MAX
+                               : root_count * sizeof(ArrayListValue);
         jvm_fatal_oom("gc-root-snapshot", requested);
     }
     arraylist_clear(jvm->collector->runtime_refer_copy);
@@ -2372,8 +2336,9 @@ void _gc_mark_object(GcCollector *collector, __refer ref, u8 flag_cnt) {
         if (collector->immix_heap) {
             //Immix: mark the lines covered by this object (no-op for JClass)
             immix_collection_mark((ImmixHeap *) collector->immix_heap, mb,
-                                  mb->heap_size > 0 ? (size_t) mb->heap_size
-                                                    : sizeof(MemoryBlock));
+                                  mb->heap_size > 0
+                                      ? (size_t) mb->heap_size
+                                      : sizeof(MemoryBlock));
         }
         switch (mb->type) {
             case MEM_TYPE_INS:
@@ -2506,8 +2471,7 @@ void gc_move_objs_thread_2_gc(Runtime *runtime) {
                 for (di = 0; di < from->length; di++) {
                     Utf8String *sus = utf8_create();
                     _gc_get_obj_name(runtime->jvm->collector, from->data[di], sus);
-                    jvm_printf("M: %s[%llx]
-", utf8_cstr(sus), (s64) (intptr_t) from->data[di]);
+                    jvm_printf("M: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) from->data[di]);
                     utf8_destroy(sus);
                 }
 #endif

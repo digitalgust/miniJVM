@@ -7,9 +7,7 @@
 #include "jvm_util.h"
 #include "garbage.h"
 
-
 //===============================    Create and load  ==================================
-
 
 
 JClass *class_create(Runtime *runtime) {
@@ -48,13 +46,18 @@ s32 class_destroy(JClass *clazz) {
     arraylist_destroy(clazz->insFieldPtrIndex);
     arraylist_destroy(clazz->staticFieldPtrIndex);
     arraylist_destroy(clazz->supers);
-    if(clazz->vtable) jvm_free(clazz->vtable);
-    if(clazz->itable) {
-        if(clazz->itable->interfaces) jvm_free(clazz->itable->interfaces);
-        if(clazz->itable->entries) {
+    if (clazz->iface_layout) {
+        jvm_free(clazz->iface_layout->slots);
+        jvm_free(clazz->iface_layout);
+    }
+    if (clazz->vtable) jvm_free(clazz->vtable);
+    if (clazz->itable) {
+        if (clazz->itable->interfaces) jvm_free(clazz->itable->interfaces);
+        if (clazz->itable->entries) {
             s32 i;
-            for(i=0; i < clazz->itable_length; i++) {
-                if(clazz->itable->entries[i].methods) jvm_free(clazz->itable->entries[i].methods);
+            for (i = 0; i < clazz->itable_length; i++) {
+                if (clazz->itable->entries[i].methods) jvm_free(clazz->itable->entries[i].methods);
+                jvm_free(clazz->itable->entries[i].status);
             }
             jvm_free(clazz->itable->entries);
         }
@@ -88,9 +91,9 @@ void class_clear_refer(PeerClassLoader *cloader, JClass *clazz) {
         FieldPool *fp = &clazz->fieldPool;
         for (i = 0; i < fp->field_used; i++) {
             FieldInfo *fi = &fp->field[i];
-//        if (utf8_equals_c(fi->name, "zones")) {
-//            s32 debug = 1;
-//        }
+            //        if (utf8_equals_c(fi->name, "zones")) {
+            //            s32 debug = 1;
+            //        }
             if ((fi->access_flags & ACC_STATIC) != 0 && fi->isrefer) {
                 c8 *ptr = getStaticFieldPtr(fi);
                 if (ptr) {
@@ -98,7 +101,6 @@ void class_clear_refer(PeerClassLoader *cloader, JClass *clazz) {
                 }
             }
         }
-
     }
     ArrayList *utf8list = clazz->constantPool.utf8CP;
     for (i = 0, len = utf8list->length; i < len; i++) {
@@ -108,12 +110,70 @@ void class_clear_refer(PeerClassLoader *cloader, JClass *clazz) {
     gc_obj_release(cloader->jvm->collector, clazz->ins_class);
     clazz->ins_class = NULL;
 }
+
 //===============================    Initialization related  ==================================
+
+/* ---------------- unified dispatch table construction ----------------
+ *
+ * vtable: parent slots are copied (stable indices), an override replaces
+ * EVERY slot it legally overrides (not only the first name match), and
+ * unmatched dispatchable methods append.  A method that does not legally
+ * override an inherited slot (cross-package package-private, private or
+ * static participants) leaves that slot untouched, so slot semantics
+ * keep the declaring lineage's meaning.
+ *
+ * itable: every interface owns a read-only signature layout (inherited
+ * first, own declarations last); every class gets one row per interface
+ * of its closure, each slot filled by the unified selector below or an
+ * ISLOT_* status.  Both tables are immutable once the class is
+ * CLASS_STATUS_PREPARED. */
+
+static s32 _same_runtime_package(JClass *a, JClass *b) {
+    s32 la, lb, i;
+    if (a == b) return 1;
+    if (!a || !b || a->jloader != b->jloader) return 0;
+    /* same package = names share the prefix up to the last '/' */
+    la = utf8_last_indexof_c(a->name, "/");
+    lb = utf8_last_indexof_c(b->name, "/");
+    if (la != lb) return 0;
+    if (la < 0) return 1; //both in the default package
+    for (i = 0; i < la; i++) {
+        if (a->name->data[i] != b->name->data[i]) return 0;
+    }
+    return 1;
+}
+
+/* does `sub` (declared in a subclass) legally override `sup` (occupying
+ * an inherited slot)?  Signature match plus JVMS 5.4.5 legality:
+ * static/private participants never override, and an inherited
+ * package-private method is only overridable within the same runtime
+ * package. */
+static s32 _method_overrides(MethodInfo *sub, MethodInfo *sup) {
+    u16 sub_flags, sup_flags;
+    if (sub == sup) return 0;
+    if (!utf8_equals(sub->name, sup->name) || !utf8_equals(sub->descriptor, sup->descriptor)) {
+        return 0;
+    }
+    sub_flags = sub->access_flags;
+    sup_flags = sup->access_flags;
+    if ((sub_flags & ACC_STATIC) || (sub_flags & ACC_PRIVATE)) return 0;
+    if ((sup_flags & ACC_STATIC) || (sup_flags & ACC_PRIVATE)) return 0;
+    if (sup_flags & ACC_PUBLIC) return 1;
+    if (sup_flags & ACC_PROTECTED) return 1; //protected is overridable everywhere for our purposes
+    /* package-private: same runtime package only */
+    return _same_runtime_package(sub->_this_class, sup->_this_class);
+}
+
+static s32 _is_dispatchable(MethodInfo *mi) {
+    if ((mi->access_flags & ACC_STATIC) || (mi->access_flags & ACC_PRIVATE)) return 0;
+    if (utf8_equals_c(mi->name, "<init>") || utf8_equals_c(mi->name, "<clinit>")) return 0;
+    return 1;
+}
 
 void class_build_vtable(JClass *clazz) {
     if (clazz->vtable) return;
     if (clazz->cff.access_flags & ACC_INTERFACE) {
-        return;
+        return; //interfaces have no vtable
     }
 
     JClass *superclass = clazz->superclass;
@@ -129,7 +189,8 @@ void class_build_vtable(JClass *clazz) {
     // Estimate max size: super vtable + own methods
     s32 max_len = super_vtable_len + clazz->methodPool.method_used;
     MethodInfo **new_vtable = jvm_calloc(sizeof(MethodInfo *) * max_len);
-    
+    if (max_len && !new_vtable) jvm_fatal_oom("vtable", sizeof(MethodInfo *) * max_len);
+
     // Copy super vtable
     if (superclass && superclass->vtable) {
         memcpy(new_vtable, superclass->vtable, sizeof(MethodInfo *) * super_vtable_len);
@@ -140,28 +201,40 @@ void class_build_vtable(JClass *clazz) {
     s32 i;
     for (i = 0; i < clazz->methodPool.method_used; i++) {
         MethodInfo *mi = &clazz->methodPool.method[i];
-        if (mi->is_static || (mi->access_flags & ACC_PRIVATE) || utf8_equals_c(mi->name, "<init>") || utf8_equals_c(mi->name, "<clinit>")) {
+        if (!_is_dispatchable(mi)) {
             continue;
         }
 
-        s32 override_index = -1;
-        
+        /* replace EVERY slot this method legally overrides; the access
+         * check inside _method_overrides keeps cross-package
+         * package-private same-signature methods in separate slots */
         s32 j;
-        for (j = 0; j < super_vtable_len; j++) {
-            MethodInfo *super_mi = new_vtable[j];
-            if (utf8_equals(mi->name, super_mi->name) && utf8_equals(mi->descriptor, super_mi->descriptor)) {
-                override_index = j;
-                break;
+        s32 replaced = 0;
+        for (j = 0; j < current_len; j++) {
+            if (new_vtable[j] && _method_overrides(mi, new_vtable[j])) {
+                new_vtable[j] = mi;
+                replaced = 1; //keep scanning: an override may replace multiple slots
             }
         }
-
-        if (override_index != -1) {
-            new_vtable[override_index] = mi;
-            mi->_vtable_index = override_index;
-        } else {
+        if (!replaced) {
             new_vtable[current_len] = mi;
-            mi->_vtable_index = current_len;
             current_len++;
+        }
+    }
+
+    /* canonical slot number of each method = the first slot it occupies
+     * (call plans and existing readers use it); occupying several slots
+     * is fine - the number only has to be stable */
+    for (i = 0; i < clazz->methodPool.method_used; i++) {
+        clazz->methodPool.method[i]._vtable_index = -1;
+    }
+    {
+        s32 j;
+        for (j = 0; j < current_len; j++) {
+            MethodInfo *mi = new_vtable[j];
+            if (mi && mi->_this_class == clazz && mi->_vtable_index < 0) {
+                mi->_vtable_index = j;
+            }
         }
     }
 
@@ -169,12 +242,211 @@ void class_build_vtable(JClass *clazz) {
     clazz->vtable_length = current_len;
 }
 
-static s32 is_itable_method(MethodInfo *mi) {
-    if (mi->is_static) return 0;
-    if (mi->access_flags & ACC_PRIVATE) return 0;
-    if (utf8_equals_c(mi->name, "<init>")) return 0;
-    if (utf8_equals_c(mi->name, "<clinit>")) return 0;
-    return 1;
+/* does interface `a` extend interface `b` (reflexive)? */
+static s32 _iface_extends(JClass *a, JClass *b, Runtime *runtime) {
+    s32 i;
+    if (a == b) return 1;
+    if (!a) return 0;
+    for (i = 0; i < a->interfacePool.clasz_used; i++) {
+        ConstantClassRef *ccr = (a->interfacePool.clasz + i);
+        Utf8String *icl_name = class_get_constant_utf8(a, ccr->stringIndex)->utfstr;
+        JClass *icl = classes_load_get_without_resolve(a->jloader, icl_name, runtime);
+        if (_iface_extends(icl, b, runtime)) return 1;
+    }
+    return 0;
+}
+
+/* slot layout of one interface: superinterface signatures first (their
+ * slot numbers stay stable), own declarations appended, dedup by
+ * name+descriptor.  Also assigns each own method's _itable_index (the
+ * slot of its signature in ITS declaring interface's layout). */
+static void _dispatch_list_push(ArrayList *list, void *value) {
+    if (!arraylist_push_back(list, value)) {
+        jvm_fatal_oom("dispatch-list", sizeof(void *));
+    }
+}
+
+static void _iface_layout_build(JClass *clazz, Runtime *runtime) {
+    ArrayList *ordered = arraylist_create(8); //JClass*, superinterfaces before self
+    s32 i, j;
+    if (!ordered) jvm_fatal_oom("interface-order", sizeof(ArrayList));
+
+    if (clazz->iface_layout) {
+        arraylist_destroy(ordered);
+        return;
+    }
+
+    /* collect the superinterface closure depth-first so parents precede
+     * children: parent signatures get lower slot numbers */
+    {
+        ArrayList *work = arraylist_create(8);
+        if (!work) jvm_fatal_oom("interface-work", sizeof(ArrayList));
+        _dispatch_list_push(work, clazz);
+        while (work->length) {
+            JClass *cur = (JClass *) arraylist_get_value_unsafe(work, work->length - 1);
+            arraylist_remove_at(work, work->length - 1);
+            if (arraylist_index_of(ordered, DEFAULT_ARRAYLIST_EQUALS_FUNC, cur) >= 0) {
+                continue;
+            }
+            //insert before any interface that extends cur: simplest is prepend order via reverse walk
+            _dispatch_list_push(ordered, cur);
+            for (j = 0; j < cur->interfacePool.clasz_used; j++) {
+                ConstantClassRef *ccr = (cur->interfacePool.clasz + j);
+                Utf8String *icl_name = class_get_constant_utf8(cur, ccr->stringIndex)->utfstr;
+                JClass *icl = classes_load_get_without_resolve(cur->jloader, icl_name, runtime);
+                if (icl) _dispatch_list_push(work, icl);
+            }
+        }
+        arraylist_destroy(work);
+    }
+    /* parents must come first: reverse (work collected child-first) */
+    for (i = 0; i < ordered->length / 2; i++) {
+        void *t = ordered->data[i];
+        ordered->data[i] = ordered->data[ordered->length - 1 - i];
+        ordered->data[ordered->length - 1 - i] = t;
+    }
+
+    {
+        IfaceLayout *layout = jvm_calloc(sizeof(IfaceLayout));
+        IfaceSlot *slots = NULL;
+        s32 count = 0, cap = 0;
+        if (!layout) jvm_fatal_oom("interface-layout", sizeof(IfaceLayout));
+        for (i = 0; i < ordered->length; i++) {
+            JClass *ifc = (JClass *) arraylist_get_value_unsafe(ordered, i);
+            cap += ifc->methodPool.method_used;
+        }
+        if (cap) {
+            slots = jvm_calloc(sizeof(IfaceSlot) * cap);
+            if (!slots) jvm_fatal_oom("interface-slots", sizeof(IfaceSlot) * cap);
+        }
+
+        for (i = 0; i < ordered->length; i++) {
+            JClass *ifc = (JClass *) arraylist_get_value_unsafe(ordered, i);
+            s32 k;
+            for (k = 0; k < ifc->methodPool.method_used; k++) {
+                MethodInfo *mi = &ifc->methodPool.method[k];
+                if ((mi->access_flags & ACC_STATIC) || (mi->access_flags & ACC_PRIVATE)) {
+                    continue;
+                }
+                s32 found = -1;
+                s32 s;
+                for (s = 0; s < count; s++) {
+                    if (utf8_equals(slots[s].name, mi->name)
+                        && utf8_equals(slots[s].descriptor, mi->descriptor)) {
+                        found = s;
+                        break;
+                    }
+                }
+                if (found < 0) {
+                    slots[count].name = mi->name;
+                    slots[count].descriptor = mi->descriptor;
+                    found = count;
+                    count++;
+                }
+                if (ifc == clazz) {
+                    mi->_itable_index = found; //slot of this signature in MY layout
+                }
+            }
+        }
+        if (count < cap) {
+            IfaceSlot *compact = count ? jvm_malloc(sizeof(IfaceSlot) * count) : NULL;
+            if (count && !compact) jvm_fatal_oom("interface-slots", sizeof(IfaceSlot) * count);
+            if (count) memcpy(compact, slots, sizeof(IfaceSlot) * count);
+            jvm_free(slots);
+            slots = compact;
+        }
+        layout->slot_count = count;
+        layout->slots = slots;
+        clazz->iface_layout = layout;
+    }
+    arraylist_destroy(ordered);
+}
+
+/*
+ * Unified method selection (JVMS 5.4.6, the subset miniJVM enforces):
+ * 1) most-derived class declaration of (name, descriptor) wins - an
+ *    abstract class declaration beats any default; class participants
+ *    must be instance methods. Access is checked after selection.
+ * 2) otherwise the maximally-specific default from the interface
+ *    closure: exactly one distinct method wins, several incomparable
+ *    ones are ISLOT_CONFLICT, none leaves ISLOT_ABSTRACT.
+ * Status ISLOT_OK is only returned with a concrete *target.
+ */
+static MethodInfo *_select_dispatch_method(JClass *receiver, Utf8String *name,
+                                           Utf8String *descriptor, s32 require_public,
+                                           s32 *status, Runtime *runtime) {
+    JClass *c;
+    *status = ISLOT_OK;
+
+    /* 1) class hierarchy, most specific first */
+    for (c = receiver; c; c = getSuperClass(c)) {
+        s32 i;
+        MethodPool *fp = &c->methodPool;
+        for (i = 0; i < fp->method_used; i++) {
+            MethodInfo *mi = &fp->method[i];
+            if ((mi->access_flags & ACC_STATIC) || (mi->access_flags & ACC_PRIVATE)) {
+                continue; //not inherited participants of interface dispatch
+            }
+            if (utf8_equals(mi->name, name) && utf8_equals(mi->descriptor, descriptor)) {
+                if (require_public && !(mi->access_flags & ACC_PUBLIC)) {
+                    *status = ISLOT_ACCESS_ERROR;
+                    return mi;
+                }
+                if (!(mi->access_flags & ACC_ABSTRACT) && (mi->converted_code || mi->is_native)) {
+                    return mi;
+                }
+                /* abstract class declaration: selection stops here -
+                 * defaults must not bypass a re-abstraction */
+                *status = ISLOT_ABSTRACT;
+                return NULL;
+            }
+        }
+    }
+
+    /* 2) maximally-specific interface defaults over the closure */
+    {
+        MethodInfo *best = NULL;
+        s32 concrete_count = 0;
+        s32 i, j;
+        ArrayList *supers = receiver->supers;
+        ArrayList *candidates = arraylist_create(0);
+        if (!candidates) jvm_fatal_oom("dispatch-candidates", sizeof(ArrayList));
+        /* Keep abstract declarations: they also shadow parent defaults. */
+        for (i = 0; supers && i < supers->length; i++) {
+            JClass *ifc = (JClass *) arraylist_get_value_unsafe(supers, i);
+            s32 k;
+            if (!(ifc->cff.access_flags & ACC_INTERFACE)) continue;
+            for (k = 0; k < ifc->methodPool.method_used; k++) {
+                MethodInfo *mi = &ifc->methodPool.method[k];
+                if ((mi->access_flags & ACC_STATIC) || (mi->access_flags & ACC_PRIVATE)) continue;
+                if (!utf8_equals(mi->name, name) || !utf8_equals(mi->descriptor, descriptor)) continue;
+                if (arraylist_index_of(candidates, DEFAULT_ARRAYLIST_EQUALS_FUNC, mi) < 0) {
+                    _dispatch_list_push(candidates, mi);
+                }
+            }
+        }
+        for (i = 0; i < candidates->length; i++) {
+            MethodInfo *mi = candidates->data[i];
+            s32 shadowed = 0;
+            for (j = 0; j < candidates->length; j++) {
+                MethodInfo *other = candidates->data[j];
+                if (other->_this_class != mi->_this_class
+                    && _iface_extends(other->_this_class, mi->_this_class, runtime)) {
+                    shadowed = 1;
+                    break;
+                }
+            }
+            if (!shadowed && !(mi->access_flags & ACC_ABSTRACT)
+                && (mi->converted_code || mi->is_native)) {
+                best = mi;
+                concrete_count++;
+            }
+        }
+        arraylist_destroy(candidates);
+        if (concrete_count == 1) return best;
+        *status = concrete_count ? ISLOT_CONFLICT : ISLOT_ABSTRACT;
+        return NULL;
+    }
 }
 
 void class_build_itable(JClass *clazz, Runtime *runtime) {
@@ -183,50 +455,211 @@ void class_build_itable(JClass *clazz, Runtime *runtime) {
 
     ArrayList *interfaces = arraylist_create(0);
     s32 i;
+    if (!interfaces) jvm_fatal_oom("itable-interfaces", sizeof(ArrayList));
     for (i = 0; i < clazz->supers->length; i++) {
-        JClass *sup = arraylist_get_value(clazz->supers, i);
+        JClass *sup = arraylist_get_value_unsafe(clazz->supers, i);
         if (!sup) continue;
         if (!(sup->cff.access_flags & ACC_INTERFACE)) continue;
         if (arraylist_index_of(interfaces, DEFAULT_ARRAYLIST_EQUALS_FUNC, sup) < 0) {
-            arraylist_push_back(interfaces, sup);
+            _dispatch_list_push(interfaces, sup);
         }
     }
 
     s32 itable_len = interfaces->length;
     if (itable_len > 0) {
         Itable *itable = jvm_calloc(sizeof(Itable));
+        if (!itable) jvm_fatal_oom("itable", sizeof(Itable));
         itable->interfaces = jvm_calloc(sizeof(JClass *) * itable_len);
         itable->entries = jvm_calloc(sizeof(ItableEntry) * itable_len);
-        
+        if (!itable->interfaces || !itable->entries) {
+            jvm_fatal_oom("itable-rows", (sizeof(JClass *) + sizeof(ItableEntry)) * itable_len);
+        }
+
         s32 k;
         for (k = 0; k < itable_len; k++) {
-            JClass *ic = arraylist_get_value(interfaces, k);
+            JClass *ic = arraylist_get_value_unsafe(interfaces, k);
+            /* the interface's layout must exist: prepare it on demand
+             * (class_prepar is idempotent through the status guard) */
+            if (!ic->iface_layout) {
+                class_prepar(ic->jloader, ic, runtime);
+            }
+            if (!ic->iface_layout) {
+                continue; //unresolvable: row stays zero, dispatch reports not-implemented
+            }
             itable->interfaces[k] = ic;
-            
-            s32 method_count = 0;
-            for (i = 0; i < ic->methodPool.method_used; i++) {
-                MethodInfo *im = &ic->methodPool.method[i];
-                if (!is_itable_method(im)) {
-                    im->_itable_index = -1;
-                    continue;
+            itable->entries[k].slot_count = ic->iface_layout->slot_count;
+            if (ic->iface_layout->slot_count) {
+                itable->entries[k].methods = jvm_calloc(sizeof(MethodInfo *) * ic->iface_layout->slot_count);
+                itable->entries[k].status = jvm_calloc(ic->iface_layout->slot_count);
+                if (!itable->entries[k].methods || !itable->entries[k].status) {
+                    jvm_fatal_oom("itable-slots", (sizeof(MethodInfo *) + 1) * ic->iface_layout->slot_count);
                 }
-                im->_itable_index = method_count;
-                method_count++;
             }
 
-            itable->entries[k].method_count = method_count;
-            itable->entries[k].methods = method_count ? jvm_calloc(sizeof(MethodInfo *) * method_count) : NULL;
-
-            for (i = 0; i < ic->methodPool.method_used; i++) {
-                MethodInfo *im = &ic->methodPool.method[i];
-                if (im->_itable_index < 0) continue;
-                itable->entries[k].methods[im->_itable_index] = find_methodInfo_by_name(clazz->name, im->name, im->descriptor, clazz->jloader, runtime);
+            s32 s;
+            for (s = 0; s < ic->iface_layout->slot_count; s++) {
+                s32 status = ISLOT_ABSTRACT;
+                MethodInfo *m = _select_dispatch_method(clazz, ic->iface_layout->slots[s].name,
+                                                        ic->iface_layout->slots[s].descriptor, 1, &status, runtime);
+                itable->entries[k].methods[s] = m;
+                itable->entries[k].status[s] = (u8) status;
             }
         }
         clazz->itable = itable;
         clazz->itable_length = itable_len;
     }
     arraylist_destroy(interfaces);
+}
+
+/* ---------------- dispatch plan resolution and target selection ------------- */
+
+s32 resolve_dispatch_plan(Runtime *caller, ConstantMethodRef *cmr, u8 opcode) {
+    MethodInfo *m;
+    JClass *owner, *symbolic;
+    s32 slot;
+
+    /* One constant-pool entry can serve different call opcodes. The plan
+     * describes the reference; opcode-specific checks belong to selection. */
+    (void) opcode;
+    if (dispatch_kind_load(cmr) != DISP_UNRESOLVED) {
+        return 0;
+    }
+    m = cmr->methodInfo;
+    if (!m || !m->_this_class) {
+        return JVM_EXCEPTION_NOSUCHMETHOD;
+    }
+    symbolic = classes_load_get_without_resolve(caller->clazz->jloader, cmr->clsName, caller);
+    if (!symbolic) return JVM_EXCEPTION_INCOMPATIBLECLASSCHANGE;
+    owner = m->_this_class;
+    if (m->access_flags & ACC_STATIC) return JVM_EXCEPTION_INCOMPATIBLECLASSCHANGE;
+    if (m->access_flags & ACC_PRIVATE) return JVM_EXCEPTION_ILLEGALACCESS;
+
+    if (!(owner->cff.access_flags & ACC_INTERFACE)) {
+        /* class-declared symbolic target (includes Object's methods):
+         * dispatch through the receiver vtable, slot from the owner */
+        if (owner->status < CLASS_STATUS_PREPARED) {
+            class_prepar(owner->jloader, owner, caller);
+        }
+        slot = m->_vtable_index;
+        if (slot < 0 || !owner->vtable) {
+            /* private/static/static-initializer target in a virtual site */
+            return JVM_EXCEPTION_ILLEGALACCESS;
+        }
+        cmr->disp_slot = slot;
+        cmr->disp_owner = owner;
+        cmr->symbolic_owner = symbolic;
+        dispatch_kind_store(cmr, DISP_VTABLE);
+        return 0;
+    }
+
+    /* interface-declared symbolic target (invokeinterface, or a class
+     * reference that resolved to an inherited default): dispatch through
+     * the receiver's itable row of the SYMBOLIC interface's layout */
+    if (symbolic->cff.access_flags & ACC_INTERFACE) owner = symbolic;
+    if (!owner->iface_layout) {
+        class_prepar(owner->jloader, owner, caller);
+    }
+    if (!owner->iface_layout) {
+        return JVM_EXCEPTION_INCOMPATIBLECLASSCHANGE;
+    }
+    slot = owner == m->_this_class ? m->_itable_index : -1;
+    if (slot < 0) {
+        /* inherited signature: locate it in the owner's layout; slot
+         * numbers of inherited signatures are stable across hierarchy */
+        s32 s;
+        for (s = 0; s < owner->iface_layout->slot_count; s++) {
+            if (utf8_equals(owner->iface_layout->slots[s].name, m->name)
+                && utf8_equals(owner->iface_layout->slots[s].descriptor, m->descriptor)) {
+                slot = s;
+                break;
+            }
+        }
+    }
+    if (slot < 0) {
+        return JVM_EXCEPTION_NOSUCHMETHOD;
+    }
+    cmr->disp_slot = slot;
+    cmr->disp_owner = owner;
+    cmr->symbolic_owner = symbolic;
+    dispatch_kind_store(cmr, DISP_ITABLE);
+    return 0;
+}
+
+s32 select_dispatch_target_resolved(ConstantMethodRef *cmr, Instance *receiver,
+                                    u8 opcode, s32 kind, MethodInfo **target) {
+    JClass *rc = receiver->mb.clazz;
+
+    *target = NULL;
+    /* An inherited method does not erase the constant-pool interface.
+     * ITABLE plans use that interface's row, so the row lookup checks it.
+     * Object methods use VTABLE and need the separate membership check. */
+    if (opcode == op_invokeinterface) {
+        if (!(cmr->symbolic_owner->cff.access_flags & ACC_INTERFACE)
+            || (kind != DISP_ITABLE && !assignable_from(cmr->symbolic_owner, rc))) {
+            return JVM_EXCEPTION_INCOMPATIBLECLASSCHANGE;
+        }
+    }
+
+    if (kind == DISP_VTABLE) {
+        MethodInfo *m;
+        if (!rc->vtable || cmr->disp_slot < 0 || cmr->disp_slot >= rc->vtable_length) {
+            /* receiver hierarchy does not carry the owner's slot */
+            return JVM_EXCEPTION_INCOMPATIBLECLASSCHANGE;
+        }
+        m = rc->vtable[cmr->disp_slot];
+        if (m && opcode == op_invokeinterface && !(m->access_flags & ACC_PUBLIC)) {
+            return JVM_EXCEPTION_ILLEGALACCESS;
+        }
+        if (!m || (!m->converted_code && !m->is_native)) {
+            return JVM_EXCEPTION_ABSTRACTMETHOD;
+        }
+        *target = m;
+        return 0;
+    }
+
+    if (kind == DISP_ITABLE) {
+        Itable *it = rc->itable;
+        s32 i;
+        for (i = 0; it && i < rc->itable_length; i++) {
+            if (it->interfaces[i] == cmr->disp_owner) {
+                ItableEntry *row = &it->entries[i];
+                if (cmr->disp_slot >= 0 && cmr->disp_slot < row->slot_count
+                    && row->status[cmr->disp_slot] == ISLOT_ACCESS_ERROR) {
+                    return JVM_EXCEPTION_ILLEGALACCESS;
+                }
+                if (cmr->disp_slot < row->slot_count
+                    && row->status[cmr->disp_slot] == ISLOT_OK
+                    && row->methods[cmr->disp_slot]) {
+                    *target = row->methods[cmr->disp_slot];
+                    return 0;
+                }
+                return (row->slot_count && cmr->disp_slot < row->slot_count
+                        && row->status[cmr->disp_slot] == ISLOT_CONFLICT)
+                           ? JVM_EXCEPTION_INCOMPATIBLECLASSCHANGE
+                           : JVM_EXCEPTION_ABSTRACTMETHOD;
+            }
+        }
+        return JVM_EXCEPTION_INCOMPATIBLECLASSCHANGE; //receiver implements no such interface row
+    }
+
+    return JVM_EXCEPTION_NOSUCHMETHOD; //DISP_LINK_ERROR
+}
+
+s32 select_dispatch_target(Runtime *caller, ConstantMethodRef *cmr, Instance *receiver,
+                           u8 opcode, MethodInfo **target) {
+    s32 kind = dispatch_kind_load(cmr);
+    if (kind == DISP_UNRESOLVED) {
+        s32 err;
+        spin_lock(&caller->jvm->lock_cloader);
+        err = resolve_dispatch_plan(caller, cmr, opcode);
+        spin_unlock(&caller->jvm->lock_cloader);
+        if (err) {
+            *target = NULL;
+            return err;
+        }
+        kind = dispatch_kind_load(cmr);
+    }
+    return select_dispatch_target_resolved(cmr, receiver, opcode, kind, target);
 }
 
 /**
@@ -261,18 +694,18 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
         mi->_itable_index = -1;
     }
 
-//    if (utf8_equals_c(clazz->name, "espresso/parser/JavaParser")) {
-//        int debug = 1;
-//    }
+    //    if (utf8_equals_c(clazz->name, "espresso/parser/JavaParser")) {
+    //        int debug = 1;
+    //    }
 
     FieldInfo *f = clazz->fieldPool.field;
     //Calculate the length of different types of variables
     s32 static_len = 0;
     s32 instance_len = 0;
     s32 field_count = clazz->fieldPool.field_used;
-    s32 *mem_align_order = jvm_calloc(field_count * sizeof(s32));//fieldwidth order 8,4,2,1
+    s32 *mem_align_order = jvm_calloc(field_count * sizeof(s32)); //fieldwidth order 8,4,2,1
     s32 order_idx = 0;
-    s32 datawidth = 8;//
+    s32 datawidth = 8; //
     //memory align begin
     //Arrange the 8-byte member first, followed by the 4-byte member, then the 2-byte member, and finally the 1-byte member
     while (datawidth > 0) {
@@ -288,10 +721,12 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
     for (i = 0; i < field_count; i++) {
         FieldInfo *fi = &f[mem_align_order[i]];
         s32 width = DATA_TYPE_BYTES[fi->datatype_idx];
-        if (fi->access_flags & ACC_STATIC) {//Static variables
+        if (fi->access_flags & ACC_STATIC) {
+            //Static variables
             fi->offset = static_len;
             static_len += width;
-        } else {//Instance variables
+        } else {
+            //Instance variables
             fi->offset = instance_len;
             instance_len += width;
         }
@@ -421,7 +856,7 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
         jvm_runtime_cache->launcher_getSystemClassLoader = find_methodInfo_by_name_c(STR_CLASS_SUN_MISC_LAUNCHER, "getSystemClassLoader", "()Ljava/lang/ClassLoader;", NULL, runtime);
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_REF_REFERENCE)) {
         jvm_runtime_cache->reference_target = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_REF_REFERENCE, "target", STR_INS_JAVA_LANG_OBJECT, NULL, runtime);
-        jvm_runtime_cache->reference_target->is_ref_target = 1;//mark as weakreference.target field
+        jvm_runtime_cache->reference_target->is_ref_target = 1; //mark as weakreference.target field
         jvm_runtime_cache->reference_vmEnqueneReference = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_REF_REFERENCE, "vmEnqueneReference", "(Ljava/lang/ref/Reference;)V", NULL, runtime);
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE)) {
         jvm_runtime_cache->weakreference = clazz;
@@ -441,10 +876,15 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
         clazz->is_weakref = 1;
     }
 
-//    jvm_printf("prepared: %s\n", utf8_cstr(clazz->name));
+    //    jvm_printf("prepared: %s\n", utf8_cstr(clazz->name));
 
     class_build_vtable(clazz);
-    class_build_itable(clazz, runtime);
+    if (clazz->cff.access_flags & ACC_INTERFACE) {
+        /* interface: own signature layout instead of dispatch tables */
+        _iface_layout_build(clazz, runtime);
+    } else {
+        class_build_itable(clazz, runtime);
+    }
 
     clazz->status = CLASS_STATUS_PREPARED;
     return ret;
@@ -483,14 +923,11 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
             // }
 
             cmr->methodInfo = find_methodInfo_by_methodref(clazz, cmr->item.index, runtime);
-            cmr->virtual_methods = pairlist_create(0);
-            //jvm_printf("%s.%s %llx\n", utf8_cstr(clazz->name), utf8_cstr(cmr->name), (s64) (intptr_t) cmr->virtual_methods);
         }
 
         for (i = 0; i < clazz->constantPool.interfaceMethodRef->length; i++) {
             ConstantMethodRef *cmr = (ConstantMethodRef *) arraylist_get_value(clazz->constantPool.interfaceMethodRef, i);
             cmr->methodInfo = find_methodInfo_by_methodref(clazz, cmr->item.index, runtime);
-            cmr->virtual_methods = pairlist_create(0);
         }
 
         for (i = 0; i < clazz->constantPool.fieldRef->length; i++) {
@@ -529,9 +966,9 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
         }
 
         for (i = 0; i < clazz->fieldPool.field_used; i++) {
-
             FieldInfo *fi = &clazz->fieldPool.field[i];
-            if (fi->const_value_item && (fi->access_flags & ACC_STATIC)) { //except no static field of class: final int a=3;
+            if (fi->const_value_item && (fi->access_flags & ACC_STATIC)) {
+                //except no static field of class: final int a=3;
                 c8 *ptr = getStaticFieldPtr(fi);
                 // check variable type to determain long/s32/f64/f32
                 s32 datatype = fi->datatype_idx;
@@ -564,12 +1001,12 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
                         break;
                     }
                     default: {
-                        if (utf8_equals_c(fi->descriptor, STR_INS_JAVA_LANG_STRING)) {//垃圾回收标识
+                        if (utf8_equals_c(fi->descriptor, STR_INS_JAVA_LANG_STRING)) {
+                            //垃圾回收标识
                             setFieldRefer(ptr, class_get_constant_utf8(fi->_this_class, ((ConstantStringRef *) fi->const_value_item)->stringIndex)->jstr);
                         } else {
                         }
                     }
-
                 }
             }
         }
@@ -585,7 +1022,6 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
             //jvm_printf("%s,%s\n", utf8_cstr(p->methodRef[i].name), utf8_cstr(p->methodRef[i].descriptor));
             MethodInfo *mi = &(p->method[i]);
             if (utf8_equals_c(mi->name, STR_METHOD_CLINIT)) {
-
                 s32 ret = execute_method_impl(mi, runtime);
                 if (ret == RUNTIME_STATUS_EXCEPTION) {
                     print_exception(runtime);
@@ -708,9 +1144,9 @@ FieldInfo *find_fieldInfo_by_name_c(c8 const *pclsName, c8 const *pfieldName, c8
 FieldInfo *find_fieldInfo_by_name(Utf8String *clsName, Utf8String *fieldName, Utf8String *fieldType, Instance *jloader, Runtime *runtime) {
     FieldInfo *fi = NULL;
     JClass *other = classes_load_get_without_resolve(jloader, clsName, runtime);
-//    if (utf8_equals_c(clsName, "espresso/parser/JavaParser")&&utf8_equals_c(fieldName, "methodNode_d")) {
-//        int debug = 1;
-//    }
+    //    if (utf8_equals_c(clsName, "espresso/parser/JavaParser")&&utf8_equals_c(fieldName, "methodNode_d")) {
+    //        int debug = 1;
+    //    }
     if (!other) {
         jvm_printf("field not exist :%s.%s%s\n", utf8_cstr(clsName), utf8_cstr(fieldName), utf8_cstr(fieldType));
         return NULL;
@@ -723,7 +1159,7 @@ FieldInfo *find_fieldInfo_by_name(Utf8String *clsName, Utf8String *fieldName, Ut
             FieldInfo *tmp = &fp->field[i];
             if (utf8_equals(fieldName, tmp->name) == 1
                 && utf8_equals(fieldType, tmp->descriptor) == 1
-                    ) {
+            ) {
                 fi = tmp;
                 break;
             }
@@ -733,9 +1169,9 @@ FieldInfo *find_fieldInfo_by_name(Utf8String *clsName, Utf8String *fieldName, Ut
             for (i = 0; i < other->interfacePool.clasz_used; i++) {
                 ConstantClassRef *ccr = (other->interfacePool.clasz + i);
                 Utf8String *icl_name = class_get_constant_utf8(other, ccr->stringIndex)->utfstr;
-//                if (utf8_equals_c(icl_name, "java/util/List")&&utf8_equals_c(methodName, "size")) {
-//                    int debug = 1;
-//                }
+                //                if (utf8_equals_c(icl_name, "java/util/List")&&utf8_equals_c(methodName, "size")) {
+                //                    int debug = 1;
+                //                }
                 FieldInfo *ifi = find_fieldInfo_by_name(icl_name, fieldName, fieldType, jloader, runtime);
                 if (ifi != NULL) {
                     fi = ifi;
@@ -828,6 +1264,17 @@ MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName,
     }
 
     if (start->cff.access_flags & ACC_INTERFACE) {
+        /* JVMS 5.4.3.4: own declaration, then public instance Object
+         * methods, then superinterfaces. Object is not a superinterface. */
+        mi = find_declared_method(start, methodName, methodType);
+        if (mi) return mi;
+        Utf8String *object_name = utf8_create_c(STR_CLASS_JAVA_LANG_OBJECT);
+        JClass *object = classes_load_get_without_resolve(NULL, object_name, runtime);
+        utf8_destroy(object_name);
+        if (object) {
+            mi = find_declared_method(object, methodName, methodType);
+            if (mi && (mi->access_flags & ACC_PUBLIC) && !(mi->access_flags & ACC_STATIC)) return mi;
+        }
         return find_method_in_interface_tree(start, methodName, methodType, runtime, 0);
     }
 
@@ -874,7 +1321,7 @@ static void find_supers_impl(JClass *clazz, Runtime *runtime, ArrayList *list) {
             ConstantClassRef *ccr = (other->interfacePool.clasz + i);
             Utf8String *icl_name = class_get_constant_utf8(other, ccr->stringIndex)->utfstr;
             JClass *icl = classes_load_get_without_resolve(other->jloader, icl_name, runtime);
-            find_supers_impl(icl, runtime, list);//find interface's interfaces
+            find_supers_impl(icl, runtime, list); //find interface's interfaces
         }
         //find superclass
         other = getSuperClass(other);

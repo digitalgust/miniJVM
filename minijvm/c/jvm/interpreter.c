@@ -155,7 +155,8 @@ static s32 filterClassName(Utf8String *clsName) {
 static s32 osr_hot_backedge(Runtime *r, CodeAttribute *ca, s32 offset, StackEntry *sp, s32 *retp) {
     s32 ret;
 
-    if (offset == -1 || !ca) { /* -1 is the jdwp per-instruction probe */
+    if (offset == -1 || !ca) {
+        /* -1 is the jdwp per-instruction probe */
         return 0;
     }
     if (r->jvm->jdwp_enable) {
@@ -713,7 +714,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 sp = r->stack->sp;
 
                 do {
-                    if (jdwp_client_count(r->jvm->jdwpserver)) {
+                    if (r->jvm->jdwp_enable && jdwp_client_count(r->jvm->jdwpserver)) {
                         stack->sp = sp;
 
                         if (!r->thrd_info->no_pause) {
@@ -3094,46 +3095,53 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 goto label_null_throw;
                             } else {
                                 MethodInfo *m = NULL;
-                                if (r->cmr->methodInfo) {
-                                    if (r->cmr->methodInfo->_vtable_index >= 0 && r->ins->mb.clazz->vtable) {
-                                        m = r->ins->mb.clazz->vtable[r->cmr->methodInfo->_vtable_index];
+                                /* inline vtable dispatch: no inline cache, the
+                                 * vtable slot fetch is 3 loads + 2 compares.
+                                 * DISP_ITABLE (class ref resolved to a default
+                                 * method) falls through to select_dispatch_target */
+                                {
+                                    s32 kind = dispatch_kind_load(r->cmr);
+                                    if (kind == DISP_UNRESOLVED) {
+                                        /* first execution: resolve (may load) */
+                                        spin_lock(&r->jvm->lock_cloader);
+                                        {
+                                            s32 derr = resolve_dispatch_plan(r, r->cmr, op_invokevirtual);
+                                            if (derr) {
+                                                spin_unlock(&r->jvm->lock_cloader);
+                                                stack->sp = sp;
+                                                push_ref(stack, exception_create_dispatch(derr, r));
+                                                goto label_exception_handle;
+                                            }
+                                        }
+                                        spin_unlock(&r->jvm->lock_cloader);
+                                        kind = dispatch_kind_load(r->cmr);
                                     }
-                                    // else if (r->cmr->methodInfo->_itable_index >= 0 && r->ins->mb.clazz->itable) {
-                                    //     Itable *itable = r->ins->mb.clazz->itable;
-                                    //     JClass *interfaceClass = r->cmr->methodInfo->_this_class;
-                                    //     s32 i;
-                                    //     for (i = 0; i < r->ins->mb.clazz->itable_length; i++) {
-                                    //         if (itable->interfaces[i] == interfaceClass) {
-                                    //             if (r->cmr->methodInfo->_itable_index < itable->entries[i].method_count) {
-                                    //                 m = itable->entries[i].methods[r->cmr->methodInfo->_itable_index];
-                                    //             }
-                                    //             break;
-                                    //         }
-                                    //     }
-                                    // }
-                                }
-
-                                if (m) {
-                                    r->m = m;
-                                } else {
-                                    r->m = (MethodInfo *) pairlist_get(r->cmr->virtual_methods, r->ins->mb.clazz);
-                                }
-
-                                if (!r->m) {
-                                    stack->sp = sp;
-                                    r->m = find_instance_methodInfo_by_name(r->ins, r->cmr->name, r->cmr->descriptor, r);
-                                    sp = stack->sp;
-                                    spin_lock(&r->jvm->lock_cloader);
-                                    {
-                                        pairlist_put(r->cmr->virtual_methods, r->ins->mb.clazz, r->m); //放入缓存，以便下次直接调用
+                                    if (kind == DISP_VTABLE) {
+                                        JClass *rc = r->ins->mb.clazz;
+                                        if (!rc->vtable || r->cmr->disp_slot >= rc->vtable_length) {
+                                            stack->sp = sp;
+                                            push_ref(stack, exception_create_dispatch(JVM_EXCEPTION_INCOMPATIBLECLASSCHANGE, r));
+                                            goto label_exception_handle;
+                                        }
+                                        m = rc->vtable[r->cmr->disp_slot];
+                                        if (!m || (!m->converted_code && !m->is_native)) {
+                                            stack->sp = sp;
+                                            push_ref(stack, exception_create_dispatch(JVM_EXCEPTION_ABSTRACTMETHOD, r));
+                                            goto label_exception_handle;
+                                        }
+                                    } else {
+                                        /* ITABLE or LINK_ERROR: delegate */
+                                        s32 derr = select_dispatch_target_resolved(
+                                            r->cmr, r->ins, op_invokevirtual, kind, &m);
+                                        if (derr) {
+                                            stack->sp = sp;
+                                            push_ref(stack, exception_create_dispatch(derr, r));
+                                            goto label_exception_handle;
+                                        }
                                     }
-                                    spin_unlock(&r->jvm->lock_cloader);
                                 }
-
-                                if (!r->m) {
-                                    r->err_msg = utf8_cstr(r->cmr->name);
-                                    goto label_nosuchmethod_throw;
-                                } else {
+                                r->m = m;
+                                {
                                     s8 match = 0;
                                     if (r->m->is_getter) {
                                         //optimize getter eg:  int getSize(){return size;}
@@ -3174,8 +3182,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             break;
                         }
-
-
                         case op_invokespecial: {
                             r->cmr = class_get_constant_method_ref(clazz, *((u16 *) (r->pc + 1)));
                             r->m = r->cmr->methodInfo;
@@ -3213,23 +3219,20 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->m = (MethodInfo *) pairlist_get(r->cmr->virtual_methods, r->ins->mb.clazz);
-                                if (!r->m) {
+                                MethodInfo *m = NULL;
+                                s32 kind = dispatch_kind_load(r->cmr);
+                                s32 derr = kind == DISP_UNRESOLVED
+                                               ? select_dispatch_target(r, r->cmr, r->ins,
+                                                                        op_invokeinterface, &m)
+                                               : select_dispatch_target_resolved(
+                                                   r->cmr, r->ins, op_invokeinterface, kind, &m);
+                                if (derr) {
                                     stack->sp = sp;
-                                    r->m = find_instance_methodInfo_by_name(r->ins, r->cmr->name, r->cmr->descriptor, r);
-                                    sp = stack->sp;
-                                    spin_lock(&r->jvm->lock_cloader);
-                                    {
-                                        pairlist_put(r->cmr->virtual_methods, r->ins->mb.clazz, r->m); // store in cache for direct use in the next call
-                                    }
-                                    spin_unlock(&r->jvm->lock_cloader);
+                                    push_ref(stack, exception_create_dispatch(derr, r));
+                                    goto label_exception_handle;
                                 }
-                                if (!r->m) {
-                                    r->err_msg = utf8_cstr(r->cmr->name);
-                                    goto label_nosuchmethod_throw;
-                                } else {
-                                    *r->pc = op_invokeinterface_fast;
-                                }
+                                r->m = m;
+                                *r->pc = op_invokeinterface_fast;
                             }
                             break;
                         }
@@ -4014,44 +4017,44 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 goto label_null_throw;
                             } else {
                                 MethodInfo *m = NULL;
-                                if (r->cmr->methodInfo) {
-                                    if (r->cmr->methodInfo->_vtable_index >= 0 && r->ins->mb.clazz->vtable) {
-                                        m = r->ins->mb.clazz->vtable[r->cmr->methodInfo->_vtable_index];
+                                /* inline vtable dispatch (same as cold path,
+                                 * plan is expected published by now) */
+                                {
+                                    s32 kind = dispatch_kind_load(r->cmr);
+                                    if (kind == DISP_VTABLE) {
+                                        JClass *rc = r->ins->mb.clazz;
+                                        if (!rc->vtable || r->cmr->disp_slot >= rc->vtable_length) {
+                                            stack->sp = sp;
+                                            push_ref(stack, exception_create_dispatch(JVM_EXCEPTION_INCOMPATIBLECLASSCHANGE, r));
+                                            goto label_exception_handle;
+                                        }
+                                        m = rc->vtable[r->cmr->disp_slot];
+                                        if (!m || (!m->converted_code && !m->is_native)) {
+                                            stack->sp = sp;
+                                            push_ref(stack, exception_create_dispatch(JVM_EXCEPTION_ABSTRACTMETHOD, r));
+                                            goto label_exception_handle;
+                                        }
+                                    } else {
+                                        /* ITABLE / UNRESOLVED / LINK_ERROR */
+                                        s32 derr = select_dispatch_target_resolved(r->cmr, r->ins, op_invokevirtual, kind, &m);
+                                        if (derr) {
+                                            stack->sp = sp;
+                                            push_ref(stack, exception_create_dispatch(derr, r));
+                                            goto label_exception_handle;
+                                        }
                                     }
-//                                    else if (r->cmr->methodInfo->_itable_index >= 0 && r->ins->mb.clazz->itable) {
-//                                        //LinkedHashSet forEach() call here, the forEach method is in java.util.Iterator ,default method
-//                                        Itable *itable = r->ins->mb.clazz->itable;
-//                                        JClass *interfaceClass = r->cmr->methodInfo->_this_class;
-//                                        s32 i;
-//                                        for (i = 0; i < r->ins->mb.clazz->itable_length; i++) {
-//                                            if (itable->interfaces[i] == interfaceClass) {
-//                                                if (r->cmr->methodInfo->_itable_index < itable->entries[i].method_count) {
-//                                                    m = itable->entries[i].methods[r->cmr->methodInfo->_itable_index];
-//                                                }
-//                                                break;
-//                                            }
-//                                        }
-//                                    }
-                                }
-                                if (m) {
-                                    r->m = m;
-                                } else {
-                                    r->m = (MethodInfo *) pairlist_get(r->cmr->virtual_methods, r->ins->mb.clazz);
                                 }
 #if _JVM_DEBUG_BYTECODE_PROFILE
                                 spent = nanoTime() - start_at;
 #endif
-                                if (!r->m) {
-                                    *r->pc = op_invokevirtual;
-                                } else {
-                                    stack->sp = sp;
-                                    ret = execute_method_impl(r->m, r);
-                                    sp = stack->sp;
-                                    if (ret) {
-                                        goto label_exception_handle;
-                                    }
-                                    r->pc += 3;
+                                r->m = m;
+                                stack->sp = sp;
+                                ret = execute_method_impl(r->m, r);
+                                sp = stack->sp;
+                                if (ret) {
+                                    goto label_exception_handle;
                                 }
+                                r->pc += 3;
                             }
 
                             break;
@@ -4100,21 +4103,27 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->m = (MethodInfo *) pairlist_get(r->cmr->virtual_methods, r->ins->mb.clazz);
+                                MethodInfo *m = NULL;
+                                s32 kind = dispatch_kind_load(r->cmr);
+                                s32 derr = kind == DISP_UNRESOLVED
+                                               ? select_dispatch_target(r, r->cmr, r->ins, op_invokeinterface, &m)
+                                               : select_dispatch_target_resolved(r->cmr, r->ins, op_invokeinterface, kind, &m);
+                                if (derr) {
+                                    stack->sp = sp;
+                                    push_ref(stack, exception_create_dispatch(derr, r));
+                                    goto label_exception_handle;
+                                }
 #if _JVM_DEBUG_BYTECODE_PROFILE
                                 spent = nanoTime() - start_at;
 #endif
-                                if (!r->m) {
-                                    *r->pc = op_invokeinterface;
-                                } else {
-                                    stack->sp = sp;
-                                    ret = execute_method_impl(r->m, r);
-                                    sp = stack->sp;
-                                    if (ret) {
-                                        goto label_exception_handle;
-                                    }
-                                    r->pc += 5;
+                                r->m = m;
+                                stack->sp = sp;
+                                ret = execute_method_impl(r->m, r);
+                                sp = stack->sp;
+                                if (ret) {
+                                    goto label_exception_handle;
                                 }
+                                r->pc += 5;
                             }
                             break;
                         }
@@ -4326,8 +4335,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     ATOMIC_ADD64(&method->profile_count, 1);
     // update max time
     s64 max = method->profile_max_time;
-    while(spent > max) {
-        if(ATOMIC_CAS64(&method->profile_max_time, max, spent)) break;
+    while (spent > max) {
+        if (ATOMIC_CAS64(&method->profile_max_time, max, spent)) break;
         max = method->profile_max_time;
     }
     //profile_method_print(pruntime->jvm);

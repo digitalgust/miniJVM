@@ -8,6 +8,7 @@
 
 #ifdef __cplusplus
 extern "C" {
+
 #endif
 
 #include "d_type.h"
@@ -18,6 +19,7 @@ typedef struct _Pair {
         __refer left;
         intptr_t leftl;
     };
+
     union {
         __refer right;
         intptr_t rightl;
@@ -97,10 +99,10 @@ static inline s32 pairlist_put(Pairlist *list, __refer left, __refer right) {
         }
         /* Copy existing data to new memory */
         memmove(newPtr, list->ptr, list->count * sizeof(Pair));
-        
+
         /* Free old memory */
         jvm_free(list->ptr);
-        
+
         list->ptr = newPtr;
         list->_alloced = newSize;
     }

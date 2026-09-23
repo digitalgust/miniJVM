@@ -7,6 +7,7 @@
 #ifdef __cplusplus
 extern "C" {
 
+
 #endif
 //======================= Spinlock =============================
 // This spinlock implementation provides basic lock and unlock functionalities
@@ -41,6 +42,7 @@ typedef struct _SpinLock spinlock_t;
 #if defined(_MSC_VER)
 // Windows/MSVC
 #include <windows.h>
+#include <intrin.h>
 #define ATOMIC_CAS(ptr, oldv, newv) (InterlockedCompareExchange((volatile LONG *)(ptr), (newv), (oldv)) == (oldv))
 #define ATOMIC_INC(ptr) InterlockedIncrement((volatile LONG *)(ptr))
 #define ATOMIC_DEC(ptr) InterlockedDecrement((volatile LONG *)(ptr))
@@ -49,6 +51,18 @@ typedef struct _SpinLock spinlock_t;
 #define ATOMIC_ADD64(ptr, val) InterlockedAdd64((volatile LONG64 *)(ptr), (val))
 #define ATOMIC_CAS64(ptr, oldv, newv) (InterlockedCompareExchange64((volatile LONG64 *)(ptr), (newv), (oldv)) == (oldv))
 #define MEMORY_BARRIER() MemoryBarrier()
+#if defined(_M_IX86) || defined(_M_X64)
+/* Aligned x86/x64 loads and stores have acquire/release hardware ordering. */
+#define ATOMIC_LOAD_ACQUIRE32(ptr) ((s32) __iso_volatile_load32((volatile const int *)(ptr)))
+#define ATOMIC_STORE_RELEASE32(ptr, value) __iso_volatile_store32((volatile int *)(ptr), (value))
+#elif (defined(_M_ARM) || defined(_M_ARM64)) && !defined(__clang__)
+#define ATOMIC_LOAD_ACQUIRE32(ptr) ((s32) __ldar32((volatile const unsigned int *)(ptr)))
+#define ATOMIC_STORE_RELEASE32(ptr, value) __stlr32((volatile unsigned int *)(ptr), (unsigned int)(value))
+#else
+/* Interlocked operations provide acquire/release ordering on remaining MSVC targets. */
+#define ATOMIC_LOAD_ACQUIRE32(ptr) ((s32) InterlockedCompareExchange((volatile LONG *)(ptr), 0, 0))
+#define ATOMIC_STORE_RELEASE32(ptr, value) InterlockedExchange((volatile LONG *)(ptr), (LONG)(value))
+#endif
 #elif defined(__GNUC__)
 // GCC/Clang
 #define ATOMIC_CAS(ptr, old, newv) __sync_bool_compare_and_swap(ptr, old, newv)
@@ -59,6 +73,8 @@ typedef struct _SpinLock spinlock_t;
 #define ATOMIC_ADD64(ptr, val) __sync_add_and_fetch(ptr, val)
 #define ATOMIC_CAS64(ptr, oldv, newv) __sync_bool_compare_and_swap(ptr, oldv, newv)
 #define MEMORY_BARRIER() __sync_synchronize()
+#define ATOMIC_LOAD_ACQUIRE32(ptr) __atomic_load_n((ptr), __ATOMIC_ACQUIRE)
+#define ATOMIC_STORE_RELEASE32(ptr, value) __atomic_store_n((ptr), (value), __ATOMIC_RELEASE)
 #else
 // Generic implementation using mutex for unsupported platforms
 #include <pthread.h>
@@ -135,6 +151,20 @@ static inline s32 atomic_sub(volatile s32 *ptr, s32 val) {
     return result;
 }
 
+static inline s32 atomic_load_acquire32(volatile const s32 *ptr) {
+    s32 result;
+    pthread_mutex_lock(&atomic_mutex);
+    result = *ptr;
+    pthread_mutex_unlock(&atomic_mutex);
+    return result;
+}
+
+static inline void atomic_store_release32(volatile s32 *ptr, s32 value) {
+    pthread_mutex_lock(&atomic_mutex);
+    *ptr = value;
+    pthread_mutex_unlock(&atomic_mutex);
+}
+
 #define ATOMIC_CAS(ptr, old, new) atomic_cas(ptr, old, new)
 #define ATOMIC_INC(ptr) atomic_inc(ptr)
 #define ATOMIC_DEC(ptr) atomic_dec(ptr)
@@ -142,6 +172,8 @@ static inline s32 atomic_sub(volatile s32 *ptr, s32 val) {
 #define ATOMIC_SUB(ptr, val) atomic_sub(ptr, val)
 #define ATOMIC_ADD64(ptr, val) atomic_add64(ptr, val)
 #define ATOMIC_CAS64(ptr, oldv, newv) atomic_cas64(ptr, oldv, newv)
+#define ATOMIC_LOAD_ACQUIRE32(ptr) atomic_load_acquire32((volatile const s32 *)(ptr))
+#define ATOMIC_STORE_RELEASE32(ptr, value) atomic_store_release32((volatile s32 *)(ptr), (s32)(value))
 #define MEMORY_BARRIER()               \
     pthread_mutex_lock(&atomic_mutex); \
     pthread_mutex_unlock(&atomic_mutex)

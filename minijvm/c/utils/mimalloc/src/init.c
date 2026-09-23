@@ -502,30 +502,37 @@ mi_decl_nodiscard bool mi_is_redirected(void) mi_attr_noexcept {
 }
 
 // Called once by the process loader from `src/prim/prim.c` before `main` is called.
+// On MinGW (msvcrt) the CRT constructor in prim.c AND the TLS callback in
+// windows/prim.c can both reach here (MI_PRIM_HAS_PROCESS_ATTACH is not
+// defined for that toolchain); mi_process_init is once-guarded but
+// _mi_options_post_init is not, and its second entry trips the
+// "mi_out_default == NULL" assertion in options.c.  Guard the whole body.
 void _mi_auto_process_init(void) {
-  os_preloading = false;
+  mi_atomic_do_once {
+    os_preloading = false;
 
-  mi_process_init();
-  mi_process_setup_auto_thread_done();
+    mi_process_init();
+    mi_process_setup_auto_thread_done();
 
-  _mi_options_post_init();  // now we can print to stderr
-  if (_mi_is_redirected()) _mi_verbose_message("malloc is redirected.\n");
+    _mi_options_post_init();  // now we can print to stderr
+    if (_mi_is_redirected()) _mi_verbose_message("malloc is redirected.\n");
 
-  // show message from the redirector (if present)
-  const char* msg = NULL;
-  _mi_allocator_init(&msg);
-  if (msg != NULL && (mi_option_is_enabled(mi_option_verbose) || mi_option_is_enabled(mi_option_show_errors))) {
-    _mi_fputs(NULL,NULL,NULL,msg);
-  }
+    // show message from the redirector (if present)
+    const char* msg = NULL;
+    _mi_allocator_init(&msg);
+    if (msg != NULL && (mi_option_is_enabled(mi_option_verbose) || mi_option_is_enabled(mi_option_show_errors))) {
+      _mi_fputs(NULL,NULL,NULL,msg);
+    }
 
-  // reseed random
-  mi_theap_t* theap = _mi_theap_default();
-  if (theap != NULL) {
-    _mi_random_reinit_if_weak(&theap->random);
-    mi_subproc_t* subproc = _mi_theap_subproc(theap);
-    if (subproc->theap_meta != NULL) {
-      mi_lock(&subproc->theap_meta_lock) {
-        _mi_random_reinit_if_weak(&subproc->theap_meta->random);
+    // reseed random
+    mi_theap_t* theap = _mi_theap_default();
+    if (theap != NULL) {
+      _mi_random_reinit_if_weak(&theap->random);
+      mi_subproc_t* subproc = _mi_theap_subproc(theap);
+      if (subproc->theap_meta != NULL) {
+        mi_lock(&subproc->theap_meta_lock) {
+          _mi_random_reinit_if_weak(&subproc->theap_meta->random);
+        }
       }
     }
   }
