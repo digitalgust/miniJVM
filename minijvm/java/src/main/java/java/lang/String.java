@@ -801,20 +801,7 @@ public final class String implements Comparable<String>, CharSequence {
      *
      * @return a hash code value for this object.
      */
-    public int hashCode() {
-        int h = hash;
-        if (h == 0 && value.length > 0) {
-            int off = offset;
-            char val[] = value;
-            int len = count;
-
-            for (int i = 0; i < len; i++) {
-                h = 31 * h + val[off++];
-            }
-            hash = h;
-        }
-        return h;
-    }
+    public native int hashCode();
 
     /**
      * Returns the index within this string of the first occurrence of the

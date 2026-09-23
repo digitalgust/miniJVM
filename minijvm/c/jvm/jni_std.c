@@ -875,6 +875,36 @@ s32 java_lang_String_charAt0(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+s32 java_lang_String_hashCode(Runtime *runtime, JClass *clazz) {
+    RuntimeStack *stack = runtime->stack;
+    Instance *jstr = (Instance *) localvar_getRefer(runtime->localvar, 0);
+    ShortCut *shortcut = &runtime->jvm->shortcut;
+    c8 *hash_ptr = getInstanceFieldPtr(jstr, shortcut->string_hash);
+    s32 hash = getFieldInt(hash_ptr);
+
+    if (hash == 0) {
+        Instance *value = getFieldRefer(getInstanceFieldPtr(jstr, shortcut->string_value));
+        if (jarray_length(value) > 0) {
+            s32 offset = getFieldInt(getInstanceFieldPtr(jstr, shortcut->string_offset));
+            s32 count = getFieldInt(getInstanceFieldPtr(jstr, shortcut->string_count));
+            u16 *chars = (u16 *) jarray_body(value);
+            u32 hash_bits = 0;
+            s32 i;
+
+            for (i = 0; i < count; i++) {
+                hash_bits = hash_bits * 31u + chars[offset + i];
+            }
+            /* Java int arithmetic wraps modulo 2^32; unsigned C arithmetic
+             * gives the same bits without signed-overflow undefined behavior. */
+            memcpy(&hash, &hash_bits, sizeof(hash));
+            setFieldInt(hash_ptr, hash);
+        }
+    }
+
+    push_int(stack, hash);
+    return 0;
+}
+
 s32 java_lang_String_equals(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *jstr1 = (Instance *) localvar_getRefer(runtime->localvar, 0);
@@ -1547,6 +1577,7 @@ static java_native_method METHODS_STD_TABLE[] = {
     {"java/lang/Runtime", "kill", "(J)V", java_lang_Runtime_kill},
     {"java/lang/Runtime", "maxMemory", "()J", java_lang_Runtime_maxMemory},
     {"java/lang/String", "charAt0", "(I)C", java_lang_String_charAt0},
+    {"java/lang/String", "hashCode", "()I", java_lang_String_hashCode},
     {"java/lang/String", "replace0", "(Ljava/lang/String;Ljava/lang/String;)[C", java_lang_String_replace0},
     {"java/lang/String", "equals", "(Ljava/lang/Object;)Z", java_lang_String_equals},
     {"java/lang/String", "indexOf", "(I)I", java_lang_String_indexOf},
