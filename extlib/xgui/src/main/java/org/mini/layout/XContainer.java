@@ -275,6 +275,15 @@ public abstract class XContainer
 
 
     public void reSize(int parentW, int parentH) {
+        reSize(parentW, parentH, true);
+    }
+
+    /**
+     * Re-layout this container, optionally leaving child alignment to the
+     * enclosing layout pass. XTd uses this while the tree is still being
+     * pre-aligned; the enclosing build/reSize will align the whole tree once.
+     */
+    protected void reSize(int parentW, int parentH, boolean alignChildren) {
         int tx = x;
         int ty = y;
         resetBoundle();
@@ -283,7 +292,9 @@ public abstract class XContainer
         preAlignHorizontal();
         preAlignVertical();
 
-        align();
+        if (alignChildren) {
+            align();
+        }
         x = tx;
         y = ty;
         getGui().setLocation(x, y);

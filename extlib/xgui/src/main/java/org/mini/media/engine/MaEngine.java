@@ -45,6 +45,17 @@ public class MaEngine extends MaNativeObject {
         }
     }
 
+    /**
+     * Copy of the registry, for owners that track liveness themselves and want
+     * to release sounds they no longer reference. The copy keeps callers
+     * outside the registry lock; close() re-enters it via removeSound().
+     */
+    public List<MaSound> snapshotSounds() {
+        synchronized (sounds) {
+            return new ArrayList<>(sounds);
+        }
+    }
+
     public int getChannels() {
         return channels;
     }

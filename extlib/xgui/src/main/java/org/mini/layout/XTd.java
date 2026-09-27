@@ -24,7 +24,9 @@ public class XTd extends XPanel {
 
                 int tx = x;
                 int ty = y;
-                reSize(parent.getTrialViewW(), parentTrialViewH);
+                // The outer build/reSize performs the final recursive align.
+                // Aligning here too would add the center offset twice.
+                reSize(parent.getTrialViewW(), parentTrialViewH, false);
                 x = tx;
                 y = ty;
                 getGui().setLocation(x, y);

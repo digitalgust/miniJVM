@@ -803,6 +803,21 @@ public final class String implements Comparable<String>, CharSequence {
      */
     public native int hashCode();
 
+//    public int hashCode() {
+//        int h = hash;
+//        if (h == 0 && value.length > 0) {
+//            int off = offset;
+//            char val[] = value;
+//            int len = count;
+//
+//            for (int i = 0; i < len; i++) {
+//                h = 31 * h + val[off++];
+//            }
+//            hash = h;
+//        }
+//        return h;
+//    }
+
     /**
      * Returns the index within this string of the first occurrence of the
      * specified character. If a character with value <code>ch</code> occurs in
@@ -968,8 +983,10 @@ public final class String implements Comparable<String>, CharSequence {
         return indexOf(value, offset, count, str, fromIndex);
     }
 
-    /** Package-private search used by mutable character sequences without
-     * first materializing a temporary String. */
+    /**
+     * Package-private search used by mutable character sequences without
+     * first materializing a temporary String.
+     */
     static int indexOf(char[] source, int sourceOffset, int sourceCount,
                        String target, int fromIndex) {
         char[] targetValue = target.value;
