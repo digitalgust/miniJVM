@@ -781,6 +781,8 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
         jvm_runtime_cache->string_offset = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STRING, STR_FIELD_VALUE, "[C", NULL, runtime);
         jvm_runtime_cache->string_value = fi;
+        fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STRING, STR_FIELD_HASH, "I", NULL, runtime);
+        jvm_runtime_cache->string_hash = fi;
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_STRINGBUILDER)) {
         FieldInfo *fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STRINGBUILDER, STR_FIELD_COUNT, "I", NULL, runtime);

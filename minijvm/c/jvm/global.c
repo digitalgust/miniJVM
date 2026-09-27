@@ -84,6 +84,7 @@ const c8 STR_FIELD_NAME[] = "name";
 const c8 STR_FIELD_VALUE[] = "value";
 const c8 STR_FIELD_COUNT[] = "count";
 const c8 STR_FIELD_OFFSET[] = "offset";
+const c8 STR_FIELD_HASH[] = "hash";
 const c8 STR_FIELD_CLASSHANDLE[] = "classHandle";
 const c8 STR_FIELD_CLASSLOADER[] = "classLoader";
 const c8 STR_METHOD_CLINIT[] = "<clinit>";

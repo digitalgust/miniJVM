@@ -528,6 +528,7 @@ extern const c8 STR_FIELD_NAME[];
 extern const c8 STR_FIELD_VALUE[];
 extern const c8 STR_FIELD_COUNT[];
 extern const c8 STR_FIELD_OFFSET[];
+extern const c8 STR_FIELD_HASH[];
 extern const c8 STR_FIELD_CLASSHANDLE[];
 extern const c8 STR_FIELD_CLASSLOADER[];
 extern const c8 STR_METHOD_CLINIT[];
@@ -2183,6 +2184,7 @@ typedef struct _ShortCut {
     FieldInfo *string_offset;
     FieldInfo *string_count;
     FieldInfo *string_value;
+    FieldInfo *string_hash;
     //java.lang.StringBuilder
     FieldInfo *stringbuilder_value;
     FieldInfo *stringbuilder_count;
