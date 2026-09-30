@@ -29,6 +29,18 @@ public class GViewPort extends GContainer {
         super(form);
     }
 
+    @Override
+    public boolean paint(long vg) {
+        if (getBgImg() == null && bgColor != null) {
+            if (cornerRadius > 0f) {
+                GToolkit.drawRoundedRect(vg, getX(), getY(), getW(), getH(), cornerRadius, bgColor);
+            } else {
+                GToolkit.drawRect(vg, getX(), getY(), getW(), getH(), bgColor);
+            }
+        }
+        return super.paint(vg);
+    }
+
 
     @Override
     public void setLocation(float x, float y) {

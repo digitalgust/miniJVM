@@ -37,18 +37,27 @@ public class XTr
 
 
         int size = children.size();
+        if (size == 0) {
+            if (raw_width == XDef.NODEF && raw_widthPercent == XDef.NODEF) {
+                viewW = width = 0;
+            }
+            return;
+        }
         if (size == 1) {
             XObject xo = children.get(0);
-            if (xo.raw_widthPercent == XDef.NODEF && xo.raw_width == XDef.NODEF) {
+            if (!((XContainer) xo).isBlank() && xo.raw_widthPercent == XDef.NODEF && xo.raw_width == XDef.NODEF) {
                 xo.raw_widthPercent = 100;
             }
         }
 
+        //w="float"的td与其他未定义宽的td一样, 占用本行剩余宽度(均分)
         int totalPixer = 0;
         int nodefCount = 0;
         for (int i = 0; i < size; i++) {
             XTd td = (XTd) children.get(i);
-            if (td.raw_widthPercent != XDef.NODEF) {
+            if (td.isBlank() && td.width == XDef.NODEF && td.raw_widthPercent == XDef.NODEF) {
+                td.viewW = td.width = 0;
+            } else if (td.raw_widthPercent != XDef.NODEF) {
                 totalPixer += td.raw_widthPercent * viewW / 100;
             } else if (td.width != XDef.NODEF) {
                 totalPixer += td.width;

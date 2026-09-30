@@ -54,6 +54,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("setCmd".toLowerCase(), this::setCmd);//
             methodNames.put("getCmd".toLowerCase(), this::getCmd);//
             methodNames.put("close".toLowerCase(), this::close);//  close frame
+            methodNames.put("closeother".toLowerCase(), this::closeOther);// close other same-name frames, keep self
             methodNames.put("getCurSlot".toLowerCase(), this::getCurSlot);//
             methodNames.put("showSlot".toLowerCase(), this::showSlot);//
             methodNames.put("getImg".toLowerCase(), this::getImg);//
@@ -474,6 +475,36 @@ public class GuiScriptLib extends Lib {
         GToolkit.closeFrame(formHolder.getForm(), compont);
         return null;
     }
+
+
+    /**
+     * closeOther("FRAME")：关闭桌面上除自己外的所有同名 frame（防叠帧兜底；
+     * 与 GameScriptLib 内同名实现功能一致，双份共存互不影响——此处供 xgui
+     * 构件升级后直接可用）。参数可省略，默认取自己所在帧名。
+     */
+    public DataType closeOther(ArrayList<DataType> para) {
+        Obj xmlobj = (Obj) inp.getGlobalVar(GObject.INTERPRETER_HOLDER_VAR_NAME);
+        GObject gobj = (GObject) xmlobj.getVal();
+        String name = gobj != null ? gobj.getName() : null;
+        if (para != null && !para.isEmpty()) {
+            name = Interpreter.popBackStr(para);
+        }
+        if (name == null || name.isEmpty() || gobj == null) {
+            return null;
+        }
+
+        java.util.List<GObject> tops = new java.util.ArrayList<>(formHolder.getForm().getElements());
+        for (GObject go : tops) {
+            if (go == gobj) {
+                continue;
+            }
+            if (name.equals(go.getName())) {
+                GToolkit.closeFrame(go);
+            }
+        }
+        return null;
+    }
+
 
     public DataType getCurSlot(ArrayList<DataType> para) {
         Int val = Interpreter.getCachedInt(0);

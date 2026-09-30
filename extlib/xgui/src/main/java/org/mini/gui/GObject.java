@@ -125,6 +125,8 @@ abstract public class GObject implements GAttachable {
     private String onStateChangeScript;
     protected String onCloseScript;
     protected String onInitScript;
+    public static final String INTERPRETER_HOLDER_VAR_NAME = "g_xml_obj";
+
 
     private GImage bgImg;
 
@@ -186,7 +188,7 @@ abstract public class GObject implements GAttachable {
         return cornerRadius;
     }
 
-    protected void setCornerRadius(float cornerRadius) {
+    public void setCornerRadius(float cornerRadius) {
         this.cornerRadius = cornerRadius;
     }
 

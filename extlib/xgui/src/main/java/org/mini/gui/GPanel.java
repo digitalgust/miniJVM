@@ -24,7 +24,11 @@ public class GPanel extends GContainer {
     @Override
     public boolean paint(long vg) {
         if (getBgImg() == null && bgColor != null) {
-            GToolkit.drawRect(vg, getX(), getY(), getW(), getH(), bgColor);
+            if (cornerRadius > 0f) {
+                GToolkit.drawRoundedRect(vg, getX(), getY(), getW(), getH(), cornerRadius, bgColor);
+            } else {
+                GToolkit.drawRect(vg, getX(), getY(), getW(), getH(), bgColor);
+            }
         }
         boolean ret = super.paint(vg);
         return ret;

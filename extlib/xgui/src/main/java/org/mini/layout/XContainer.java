@@ -72,6 +72,14 @@ public abstract class XContainer
         return false;
     }
 
+
+    /**
+     * 无子组件时视为空白容器, 布局时按 0x0 处理
+     */
+    boolean isBlank() {
+        return children.isEmpty();
+    }
+
     protected void preAlignVertical() {
 
 
@@ -175,8 +183,12 @@ public abstract class XContainer
             //tr same row height
             if (isSameHeightRow()) {
                 for (XObject xo : crow) {
+                    if (xo instanceof XContainer && ((XContainer) xo).isBlank()
+                            && xo.raw_height == XDef.NODEF && xo.raw_heightPercent == XDef.NODEF) {
+                        continue; //空白td不参与同行等高
+                    }
                     xo.viewH = xo.height = maxH;
-                    xo.getGui().setSize(xo.width, xo.height);
+                    if (xo.getGui() != null) xo.getGui().setSize(xo.width, xo.height);
                 }
             }
 
@@ -297,7 +309,7 @@ public abstract class XContainer
         }
         x = tx;
         y = ty;
-        getGui().setLocation(x, y);
+        if (getGui() != null) getGui().setLocation(x, y);
     }
 
 

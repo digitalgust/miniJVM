@@ -51,6 +51,7 @@ public abstract class XObject implements GLayout {
     protected float[] color;
     protected String bgPic = null;
     protected float bgPicAlpha = GObject.DEFAULT_BG_ALPHA;
+    protected int corner = -1; //背景圆角半径, -1表示未定义, 未定义时保留各GUI组件自己的默认圆角(如按钮4)
 
     protected String href = null;
     // 脚本引擎
@@ -204,6 +205,8 @@ public abstract class XObject implements GLayout {
             bgPic = attValue;
         } else if (attName.equals("bgpicalpha")) {
             bgPicAlpha = Float.parseFloat(attValue);
+        } else if (attName.equals("corner")) {
+            corner = Integer.parseInt(attValue);
         } else if (attName.equals("href")) {
             href = attValue;
         } else if (attName.equals("onclose")) {
@@ -261,6 +264,7 @@ public abstract class XObject implements GLayout {
                 gui.setBgImg(img);
             }
             gui.setBgImgAlpha(bgPicAlpha);
+            if (corner >= 0) gui.setCornerRadius(corner);
 
             if (gui instanceof GContainer) {
 
