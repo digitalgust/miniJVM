@@ -36,7 +36,7 @@ public class XListItem extends XContainer {
     protected <T extends GObject> T createGuiImpl() {
         GImage img = null;
         if (pic != null) {
-            img = getAssist().loadImage(pic);
+            img = applyPicPara(getAssist().loadImage(pic));
         }
         return (T) new GListItem(getAssist().getForm(), img, text);
     }

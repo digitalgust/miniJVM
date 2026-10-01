@@ -668,7 +668,9 @@ public class GToolkit {
             iy = 0;
         }
 
-        imgPaint = nvgImagePattern(vg, px + ix + 1, py + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), alpha);
+        float scalex = (iw - 2) / (float) imgW[0];
+        float scaley = (ih - 2) / (float) imgH[0];
+        imgPaint = nvgImagePattern(vg, px + ix + 1 - img.getSx() * scalex, py + iy + 1 - img.getSy() * scaley, img.getTexWidth() * scalex, img.getTexHeight() * scaley, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), alpha);
         nvgBeginPath(vg);
         nvgRoundedRect(vg, px, py, pw, ph, radius);
         nvgFillPaint(vg, imgPaint);
@@ -704,7 +706,9 @@ public class GToolkit {
         imgH[0] = img.getHeight();
 
 
-        imgPaint = nvgImagePattern(vg, px + 1, py + 1, pw - 2, ph - 2, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), alpha);
+        float scalex = (pw - 2) / (float) imgW[0];
+        float scaley = (ph - 2) / (float) imgH[0];
+        imgPaint = nvgImagePattern(vg, px + 1 - img.getSx() * scalex, py + 1 - img.getSy() * scaley, img.getTexWidth() * scalex, img.getTexHeight() * scaley, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), alpha);
         nvgBeginPath(vg);
         nvgRoundedRect(vg, px, py, pw, ph, radius);
         nvgFillPaint(vg, imgPaint);
@@ -1689,6 +1693,28 @@ public class GToolkit {
         if (eitem != null && eitem instanceof GImageItem) {
             ((GImageItem) eitem).setImg(img);
         }
+    }
+
+    /**
+     * 运行时切换组件图片的 picpara 子图索引：img 组件改其图片，其余组件改背景图。
+     * 图片不是 GSubImage（即未用 picpara）时无效果。原地改子矩形，不建对象不上传纹理，可每帧调用。
+     */
+    public static void setCompPicIndex(GContainer parent, String compName, int index) {
+        if (compName == null || parent == null) return;
+        GObject eitem = parent.findByName(compName);
+        if (eitem == null) return;
+        GImage img = eitem instanceof GImageItem ? ((GImageItem) eitem).getImg() : eitem.getBgImg();
+        if (img instanceof GSubImage) {
+            ((GSubImage) img).setIndex(index);
+        }
+    }
+
+    public static int getCompPicIndex(GContainer parent, String compName) {
+        if (compName == null || parent == null) return -1;
+        GObject eitem = parent.findByName(compName);
+        if (eitem == null) return -1;
+        GImage img = eitem instanceof GImageItem ? ((GImageItem) eitem).getImg() : eitem.getBgImg();
+        return img instanceof GSubImage ? ((GSubImage) img).getIndex() : -1;
     }
 
     public static <T extends GObject> T getComponent(GContainer parent, String compName) {

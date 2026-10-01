@@ -171,6 +171,28 @@ public abstract class GImage implements GAttachable {
 
     public abstract int getHeight();
 
+    /**
+     * 子图在纹理中的偏移（GSubImage 用），整图返回 0
+     */
+    public int getSx() {
+        return 0;
+    }
+
+    public int getSy() {
+        return 0;
+    }
+
+    /**
+     * 底层纹理完整尺寸（GSubImage 返回父图尺寸），整图与 getWidth/getHeight 相同
+     */
+    public int getTexWidth() {
+        return getWidth();
+    }
+
+    public int getTexHeight() {
+        return getHeight();
+    }
+
 
     /**
      * MUST call by gl thread

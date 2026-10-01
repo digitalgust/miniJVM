@@ -20,7 +20,9 @@ public class GImageItem extends GObject {
     protected float alpha = 1.f;
     protected float alphaFly = alpha * .5f;
     protected boolean drawBorder = true;
-
+    protected long blinkPeriod = 0;       //呼吸边框周期ms, 0=关闭
+    protected float[] blinkColor = null;  //呼吸边框颜色, null=用getColor()
+    protected final float[] blinkStroke = new float[4]; //渲染时复用, 避免每帧分配
 
     public GImageItem(GForm form) {
         this(form, null);
@@ -30,6 +32,46 @@ public class GImageItem extends GObject {
         super(form);
         this.img = img;
         setCornerRadius(5.f);
+    }
+
+    /**
+     * 开启呼吸边框: 周期periodMs内边框alpha在0~原值间平滑起伏, 用于选中提示
+     */
+    public void setBlink(long periodMs) {
+        this.blinkPeriod = periodMs;
+    }
+
+    public void setBlink(long periodMs, float[] color) {
+        this.blinkPeriod = periodMs;
+        this.blinkColor = color;
+    }
+
+    /**
+     * 描边用颜色: 闪烁关闭时返回普通color, 开启时按当前时间调制alpha
+     */
+    protected float[] getBlinkStroke() {
+        float[] c = getColor();
+        if (blinkPeriod <= 0) {
+            return c;
+        }
+        if (blinkColor != null) {
+            c = blinkColor;
+        }
+        float ph = (System.currentTimeMillis() % blinkPeriod) / (float) blinkPeriod;
+        float a = 0.5f - 0.5f * (float) Math.cos(ph * 2f * (float) Math.PI);
+        blinkStroke[0] = c[0];
+        blinkStroke[1] = c[1];
+        blinkStroke[2] = c[2];
+        blinkStroke[3] = c[3] * a;
+        return blinkStroke;
+    }
+
+    private void strokeBorder(long vg, float x, float y, float w, float h) {
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 2.f);
+        nvgStrokeWidth(vg, 1.0f);
+        nvgStrokeColor(vg, getBlinkStroke());
+        nvgStroke(vg);
     }
 
     @Override
@@ -51,11 +93,16 @@ public class GImageItem extends GObject {
         float w = getW();
         float h = getH();
         if (img == null) {
+            //无前景图时不画任何东西, 但闪烁中(选中态)仍画呼吸边框表示选中
+            if (drawBorder && blinkPeriod > 0) {
+                strokeBorder(vg, x, y, w, h);
+            }
             return true;
         }
         float ix, iy, iw, ih;
 
-        nvgImageSize(vg, img.getNvgTextureId(vg), imgw, imgh);
+        imgw[0] = img.getWidth();
+        imgh[0] = img.getHeight();
         if (imgw[0] < imgh[0]) {
             iw = w;
             ih = iw * (float) imgh[0] / (float) imgw[0];
@@ -76,13 +123,17 @@ public class GImageItem extends GObject {
         if (img != null) {
             if (drawBorder) {
                 byte[] imgPaint;
-                imgPaint = nvgImagePattern(vg, x + ix + 2, y + iy + 2, iw - 4, ih - 4, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), a);
+                float scalex = (iw - 4) / (float) imgw[0];
+                float scaley = (ih - 4) / (float) imgh[0];
+                imgPaint = nvgImagePattern(vg, x + ix + 2 - img.getSx() * scalex, y + iy + 2 - img.getSy() * scaley, img.getTexWidth() * scalex, img.getTexHeight() * scaley, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), a);
                 nvgBeginPath(vg);
                 nvgRoundedRect(vg, x, y, w, h, getCornerRadius());
                 nvgFillPaint(vg, imgPaint);
                 nvgFill(vg);
             } else {
-                byte[] imgPaint = nvgImagePattern(vg, x + ix + 1, y + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), a);
+                float scalex = (iw - 2) / (float) imgw[0];
+                float scaley = (ih - 2) / (float) imgh[0];
+                byte[] imgPaint = nvgImagePattern(vg, x + ix + 1 - img.getSx() * scalex, y + iy + 1 - img.getSy() * scaley, img.getTexWidth() * scalex, img.getTexHeight() * scaley, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), a);
                 nvgBeginPath(vg);
                 nvgRoundedRect(vg, x, y, w, h, 0);
                 nvgFillPaint(vg, imgPaint);
@@ -102,11 +153,7 @@ public class GImageItem extends GObject {
             nvgFillPaint(vg, shadowPaint);
             nvgFill(vg);
 
-            nvgBeginPath(vg);
-            nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, r - 2.f);
-            nvgStrokeWidth(vg, 1.0f);
-            nvgStrokeColor(vg, getColor());
-            nvgStroke(vg);
+            strokeBorder(vg, x, y, w, h);
         }
         //画字
         if (getText() != null) {

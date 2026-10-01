@@ -17,6 +17,7 @@ public class XMenu extends XObject {
         String cmd;
         String text;
         String pic;
+        String picpara;
         String onClick;
         float[] color;
         String preicon;
@@ -69,6 +70,7 @@ public class XMenu extends XObject {
 
                     item.name = parser.getAttributeValue(null, "name");
                     item.pic = parser.getAttributeValue(null, "pic");
+                    item.picpara = parser.getAttributeValue(null, "picpara");
                     item.color = parseHexColor(parser.getAttributeValue(null, "color"));
                     item.attachment = parser.getAttributeValue(null, "attachment");
                     item.onClick = parser.getAttributeValue(null, "onclick");
@@ -140,7 +142,7 @@ public class XMenu extends XObject {
                 MenuItem item = (MenuItem) items.elementAt(i);
                 GImage img = null;
                 if (item.pic != null) {
-                    img = getAssist().loadImage(item.pic);
+                    img = applyPicPara(getAssist().loadImage(item.pic), item.picpara);
                 }
                 GMenuItem gli = menu.addItem(item.text, img);
                 gli.setActionListener(getRoot().getEventHandler());

@@ -3,6 +3,7 @@ package org.mini.layout;
 import org.mini.gui.GImage;
 import org.mini.gui.GImageItem;
 import org.mini.gui.GObject;
+import org.mini.gui.GSubImage;
 import org.mini.layout.loader.XmlExtAssist;
 import org.xmlpull.v1.KXmlParser;
 
@@ -27,11 +28,6 @@ public class XImageItem extends XObject {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("pic") || attName.equals("src")) {
             pic = attValue;
-            GImage img = getAssist().loadImage(pic);
-            if (img != null) {
-                img_w = img.getWidth();
-                img_h = img.getHeight();
-            }
         } else if (attName.equals("border")) {
             border = "0".equals(attValue) ? false : true;
         } else if (attName.equals("onclick")) {
@@ -44,6 +40,13 @@ public class XImageItem extends XObject {
     @Override
     public void parse(KXmlParser parser, XmlExtAssist assist) throws Exception {
         super.parse(parser, assist);
+        if (pic != null) { //等pic和picpara都解析完再取子图尺寸
+            GImage img = applyPicPara(getAssist().loadImage(pic));
+            if (img != null) {
+                img_w = img.getWidth();
+                img_h = img.getHeight();
+            }
+        }
         String tmps;
         tmps = parser.nextText(); //得到文本
         setText(tmps);
@@ -59,7 +62,10 @@ public class XImageItem extends XObject {
     }
 
     protected <T extends GObject> T createGuiImpl() {
-        GImage img = getAssist().loadImage(pic);
+        GImage img = null;
+        if (pic != null) {
+            img = applyPicPara(getAssist().loadImage(pic));
+        }
         return (T) new GImageItem(getAssist().getForm(), img);
     }
 
@@ -90,8 +96,17 @@ public class XImageItem extends XObject {
     public void setPic(String s) {
         pic = s;
         if (imgItem != null) {
-            GImage img = getAssist().loadImage(s);
+            GImage img = applyPicPara(getAssist().loadImage(s));
             imgItem.setImg(img);
+        }
+    }
+
+    /**
+     * 运行时切换 picpara 子图索引（不改对象、不上传纹理，可每帧调用），未用 picpara 时无效果
+     */
+    public void setPicIndex(int index) {
+        if (imgItem != null && imgItem.getImg() instanceof GSubImage) {
+            ((GSubImage) imgItem.getImg()).setIndex(index);
         }
     }
 }
