@@ -55,7 +55,7 @@ public class XTr
         int nodefCount = 0;
         for (int i = 0; i < size; i++) {
             XTd td = (XTd) children.get(i);
-            if (td.isBlank() && td.width == XDef.NODEF && td.raw_widthPercent == XDef.NODEF) {
+            if (td.isBlank() && !td.isHfloat() && td.width == XDef.NODEF && td.raw_widthPercent == XDef.NODEF) {
                 td.viewW = td.width = 0;
             } else if (td.raw_widthPercent != XDef.NODEF) {
                 totalPixer += td.raw_widthPercent * viewW / 100;

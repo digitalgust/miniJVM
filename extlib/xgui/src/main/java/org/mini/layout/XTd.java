@@ -17,7 +17,8 @@ public class XTd extends XPanel {
 
     protected void preAlignHorizontal() {
         super.preAlignHorizontal();
-        if (isBlank() && raw_width == XDef.NODEF && raw_widthPercent == XDef.NODEF) {
+        //w="float"的空td由tr分配剩余宽度, 不按空白清零(否则会被再次清0)
+        if (isBlank() && !isHfloat() && raw_width == XDef.NODEF && raw_widthPercent == XDef.NODEF) {
             viewW = width = 0;
         }
     }
