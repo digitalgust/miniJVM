@@ -3,14 +3,10 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7A1000012F00000000000001 /* AFServiceSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A1000012F00000000000002 /* AFServiceSDK.framework */; };
-		7A2000012F00000000000001 /* WechatOpenSDK-NoPay.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A2000012F00000000000002 /* WechatOpenSDK-NoPay.xcframework */; };
-		7A2000032F00000000000001 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A2000032F00000000000002 /* WebKit.framework */; };
-		7A2000042F00000000000001 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A2000042F00000000000002 /* libc++.tbd */; };
 		4517C54F254C60E100F03459 /* jni_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 4517C54C254C60E100F03459 /* jni_io.c */; };
 		4517C550254C60E100F03459 /* jni_reflect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4517C54D254C60E100F03459 /* jni_reflect.c */; };
 		4517C551254C60E100F03459 /* jni_std.c in Sources */ = {isa = PBXBuildFile; fileRef = 4517C54E254C60E100F03459 /* jni_std.c */; };
@@ -32,6 +28,7 @@
 		451F272C23A24C3A00F99984 /* media.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F63209D4330003B9317 /* media.c */; };
 		451F272D23A24C3A00F99984 /* nanovg.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F62209D4330003B9317 /* nanovg.c */; };
 		451F272F23A24C7B00F99984 /* jni_minial.m in Sources */ = {isa = PBXBuildFile; fileRef = 4535FA2721944F7300B888BA /* jni_minial.m */; };
+		452DE1B9305598F00061BA59 /* immix.c in Sources */ = {isa = PBXBuildFile; fileRef = 452DE1B8305598F00061BA59 /* immix.c */; };
 		4581C5CC226DA7BE00E88538 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 45D78F2B209D3E62003B9317 /* Assets.xcassets */; };
 		4589A5FD2C8DFB920079DDFC /* IAPManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 4589A5FC2C8DFB920079DDFC /* IAPManager.m */; };
 		45C967C52F61AD7B00C920DF /* xtea.c in Sources */ = {isa = PBXBuildFile; fileRef = 45C967482F61AD7B00C920DF /* xtea.c */; };
@@ -122,21 +119,22 @@
 		592538072BF5D27A00E5D1DC /* glfm_emscripten.c in Sources */ = {isa = PBXBuildFile; fileRef = 592538032BF5D27A00E5D1DC /* glfm_emscripten.c */; };
 		592538082BF5D27A00E5D1DC /* glfm_android.c in Sources */ = {isa = PBXBuildFile; fileRef = 592538042BF5D27A00E5D1DC /* glfm_android.c */; };
 		592538092BF5D27A00E5D1DC /* glfm_apple.m in Sources */ = {isa = PBXBuildFile; fileRef = 592538062BF5D27A00E5D1DC /* glfm_apple.m */; };
+		7A1000012F00000000000001 /* Frameworks/AFServiceSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A1000012F00000000000002 /* Frameworks/AFServiceSDK.framework */; };
+		7A2000012F00000000000001 /* Frameworks/WechatOpenSDK-NoPay.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A2000012F00000000000002 /* Frameworks/WechatOpenSDK-NoPay.xcframework */; };
+		7A2000032F00000000000001 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A2000032F00000000000002 /* WebKit.framework */; };
+		7A2000042F00000000000001 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A2000042F00000000000002 /* libc++.tbd */; };
 		8451B9812BEFBA23001B3BA6 /* os_win.c in Sources */ = {isa = PBXBuildFile; fileRef = 8451B97F2BEFBA23001B3BA6 /* os_win.c */; };
 		8451B9822BEFBA23001B3BA6 /* os_posix.c in Sources */ = {isa = PBXBuildFile; fileRef = 8451B9802BEFBA23001B3BA6 /* os_posix.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		7A1000012F00000000000002 /* AFServiceSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Frameworks/AFServiceSDK.framework; sourceTree = "<group>"; };
-		7A2000012F00000000000002 /* WechatOpenSDK-NoPay.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = "Frameworks/WechatOpenSDK-NoPay.xcframework"; sourceTree = "<group>"; };
-		7A2000032F00000000000002 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
-		7A2000042F00000000000002 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.text-based-dylib-definition; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		4517C54C254C60E100F03459 /* jni_io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_io.c; sourceTree = "<group>"; };
 		4517C54D254C60E100F03459 /* jni_reflect.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_reflect.c; sourceTree = "<group>"; };
 		4517C54E254C60E100F03459 /* jni_std.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_std.c; sourceTree = "<group>"; };
 		451F269F23A248D300F99984 /* jit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jit.c; sourceTree = "<group>"; };
 		451F26A023A248D300F99984 /* jit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jit.h; sourceTree = "<group>"; };
 		452AD04323F9645D0069A699 /* nanovg_jni_assist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanovg_jni_assist.h; sourceTree = "<group>"; };
+		452DE1B8305598F00061BA59 /* immix.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = immix.c; path = /Users/gust/Documents/GitHub/miniJVM/minijvm/c/jvm/immix.c; sourceTree = "<absolute>"; };
 		4535FA2721944F7300B888BA /* jni_minial.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = jni_minial.m; sourceTree = "<group>"; };
 		457AFCAE23C84C53002F5E34 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		457AFCB023C84F89002F5E34 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
@@ -358,6 +356,10 @@
 		592538042BF5D27A00E5D1DC /* glfm_android.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glfm_android.c; sourceTree = "<group>"; };
 		592538052BF5D27A00E5D1DC /* glfm_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glfm_internal.h; sourceTree = "<group>"; };
 		592538062BF5D27A00E5D1DC /* glfm_apple.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = glfm_apple.m; sourceTree = "<group>"; };
+		7A1000012F00000000000002 /* Frameworks/AFServiceSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Frameworks/AFServiceSDK.framework; sourceTree = "<group>"; };
+		7A2000012F00000000000002 /* Frameworks/WechatOpenSDK-NoPay.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = "Frameworks/WechatOpenSDK-NoPay.xcframework"; sourceTree = "<group>"; };
+		7A2000032F00000000000002 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		7A2000042F00000000000002 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		8451B97F2BEFBA23001B3BA6 /* os_win.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = os_win.c; sourceTree = "<group>"; };
 		8451B9802BEFBA23001B3BA6 /* os_posix.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = os_posix.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -367,8 +369,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A1000012F00000000000001 /* AFServiceSDK.framework in Frameworks */,
-				7A2000012F00000000000001 /* WechatOpenSDK-NoPay.xcframework in Frameworks */,
+				7A1000012F00000000000001 /* Frameworks/AFServiceSDK.framework in Frameworks */,
+				7A2000012F00000000000001 /* Frameworks/WechatOpenSDK-NoPay.xcframework in Frameworks */,
 				7A2000032F00000000000001 /* WebKit.framework in Frameworks */,
 				7A2000042F00000000000001 /* libc++.tbd in Frameworks */,
 			);
@@ -427,8 +429,8 @@
 		45ADDF6B21625C5A00F469AC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				7A1000012F00000000000002 /* AFServiceSDK.framework */,
-				7A2000012F00000000000002 /* WechatOpenSDK-NoPay.xcframework */,
+				7A1000012F00000000000002 /* Frameworks/AFServiceSDK.framework */,
+				7A2000012F00000000000002 /* Frameworks/WechatOpenSDK-NoPay.xcframework */,
 				7A2000032F00000000000002 /* WebKit.framework */,
 				7A2000042F00000000000002 /* libc++.tbd */,
 				457AFCB223C84FF2002F5E34 /* AVFoundation.framework */,
@@ -623,6 +625,7 @@
 		45C967BF2F61AD7B00C920DF /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				452DE1B8305598F00061BA59 /* immix.c */,
 				45C968542F61B15600C920DF /* mimalloc.h */,
 				45C968532F61B13F00C920DF /* sljitLir.h */,
 				45C9684F2F61B0E000C920DF /* static.c */,
@@ -921,6 +924,7 @@
 				45C967E42F61AD7B00C920DF /* aes.c in Sources */,
 				45C967E82F61AD7B00C920DF /* ssl_ciphersuites.c in Sources */,
 				45C967EA2F61AD7B00C920DF /* platform.c in Sources */,
+				452DE1B9305598F00061BA59 /* immix.c in Sources */,
 				45C967EB2F61AD7B00C920DF /* gcm.c in Sources */,
 				45C967EC2F61AD7B00C920DF /* oid.c in Sources */,
 				45C967ED2F61AD7B00C920DF /* md5.c in Sources */,

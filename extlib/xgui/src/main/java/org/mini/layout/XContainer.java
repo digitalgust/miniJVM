@@ -72,6 +72,14 @@ public abstract class XContainer
         return false;
     }
 
+
+    /**
+     * 无子组件时视为空白容器, 布局时按 0x0 处理
+     */
+    boolean isBlank() {
+        return children.isEmpty();
+    }
+
     protected void preAlignVertical() {
 
 
@@ -175,8 +183,12 @@ public abstract class XContainer
             //tr same row height
             if (isSameHeightRow()) {
                 for (XObject xo : crow) {
+                    if (xo instanceof XContainer && ((XContainer) xo).isBlank()
+                            && xo.raw_height == XDef.NODEF && xo.raw_heightPercent == XDef.NODEF) {
+                        continue; //空白td不参与同行等高
+                    }
                     xo.viewH = xo.height = maxH;
-                    xo.getGui().setSize(xo.width, xo.height);
+                    if (xo.getGui() != null) xo.getGui().setSize(xo.width, xo.height);
                 }
             }
 
@@ -275,6 +287,15 @@ public abstract class XContainer
 
 
     public void reSize(int parentW, int parentH) {
+        reSize(parentW, parentH, true);
+    }
+
+    /**
+     * Re-layout this container, optionally leaving child alignment to the
+     * enclosing layout pass. XTd uses this while the tree is still being
+     * pre-aligned; the enclosing build/reSize will align the whole tree once.
+     */
+    protected void reSize(int parentW, int parentH, boolean alignChildren) {
         int tx = x;
         int ty = y;
         resetBoundle();
@@ -283,10 +304,12 @@ public abstract class XContainer
         preAlignHorizontal();
         preAlignVertical();
 
-        align();
+        if (alignChildren) {
+            align();
+        }
         x = tx;
         y = ty;
-        getGui().setLocation(x, y);
+        if (getGui() != null) getGui().setLocation(x, y);
     }
 
 

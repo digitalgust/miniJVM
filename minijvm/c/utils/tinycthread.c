@@ -399,24 +399,12 @@ static int _cnd_timedwait_win32(cnd_t *cond, mtx_t *mtx, DWORD timeout)
   /* Wait for either event to become signaled due to cnd_signal() or
      cnd_broadcast() being called */
   result = WaitForMultipleObjects(2, cond->mEvents, FALSE, timeout);
-  if (result == WAIT_TIMEOUT)
-  {
-    /* The mutex is locked again before the function returns, even if an error occurred */
-    mtx_lock(mtx);
-    return thrd_timedout;
-  }
-  else if (result == WAIT_FAILED)
-  {
-    /* The mutex is locked again before the function returns, even if an error occurred */
-    mtx_lock(mtx);
-    return thrd_error;
-  }
-
   /* Check if we are the last waiter */
   EnterCriticalSection(&cond->mWaitersCountLock);
   -- cond->mWaitersCount;
-  lastWaiter = (result == (WAIT_OBJECT_0 + _CONDITION_EVENT_ALL)) &&
-               (cond->mWaitersCount == 0);
+  /* Timeouts and failures must unregister too. Otherwise a later broadcast
+     stays signaled forever and every subsequent wait returns immediately. */
+  lastWaiter = (cond->mWaitersCount == 0);
   LeaveCriticalSection(&cond->mWaitersCountLock);
 
   /* If we are the last waiter to be notified to stop waiting, reset the event */
@@ -433,7 +421,8 @@ static int _cnd_timedwait_win32(cnd_t *cond, mtx_t *mtx, DWORD timeout)
   /* Re-acquire the mutex */
   mtx_lock(mtx);
 
-  return thrd_success;
+  return result == WAIT_TIMEOUT ? thrd_timedout :
+         result == WAIT_FAILED ? thrd_error : thrd_success;
 }
 #endif
 

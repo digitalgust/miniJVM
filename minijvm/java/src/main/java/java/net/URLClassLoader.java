@@ -25,7 +25,8 @@ public class URLClassLoader extends ClassLoader {
 
     public URLClassLoader(URL[] urls, ClassLoader parent) {
         super(parent);
-        this.urls = urls;
+        this.urls = new URL[urls.length];
+        System.arraycopy(urls, 0, this.urls, 0, urls.length);
 
         paths = new String[urls.length];
         for (int i = 0; i < urls.length; i++) {
@@ -34,6 +35,12 @@ public class URLClassLoader extends ClassLoader {
             }
             this.paths[i] = urls[i].getFile();
         }
+    }
+
+    public URL[] getURLs() {
+        URL[] copy = new URL[urls.length];
+        System.arraycopy(urls, 0, copy, 0, urls.length);
+        return copy;
     }
 
     @Override

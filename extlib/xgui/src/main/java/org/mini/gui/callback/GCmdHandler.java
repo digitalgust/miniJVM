@@ -5,6 +5,8 @@
  */
 package org.mini.gui.callback;
 
+import org.mini.apploader.AppLoader;
+
 import org.mini.glfm.Glfm;
 import org.mini.gui.GObject;
 import org.mini.gui.GPanel;
@@ -211,11 +213,22 @@ public class GCmdHandler extends GPanel implements GCallbackUI {
         if (work != null) {
             //fix some work load res ,no classloader will cause error
             //this classloader is used to gerResourceStream load resource
+            ClassLoader prev = Thread.currentThread().getContextClassLoader();
             ClassLoader cl = cmd.getWorkClassLoader();
-            if (cl != null) {
+            if (cl != null && AppLoader.isLiveAppClassLoader(cl)) {
+                //a queued GCmd may outlive its app: installing a closed app's
+                //loader would (a) run dead code with stale context and (b) pin
+                //that loader via any thread created inside this work
                 Thread.currentThread().setContextClassLoader(cl);
             }
-            work.run();
+            try {
+                work.run();
+            } finally {
+                //restore, otherwise the LAST app GCmd leaves the GUI thread
+                //pinning that app's classloader forever (a live thread's
+                //context classloader is a GC root)
+                Thread.currentThread().setContextClassLoader(prev);
+            }
         }
     }
 }

@@ -5,6 +5,27 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class HeapDumpTest {
+    static class HprofBaseValue {
+    }
+
+    static class HprofDerivedValue {
+    }
+
+    static class HprofBase {
+        HprofBaseValue baseRef = new HprofBaseValue();
+        int baseInt = 0x12345678;
+    }
+
+    static class HprofDerived extends HprofBase {
+        HprofDerivedValue derivedRef = new HprofDerivedValue();
+        long derivedLong = 0x1122334455667788L;
+    }
+
+    /* Kept alive through the dump.  HPROF INSTANCE_DUMP must encode the
+     * derived fields before the inherited fields, independent of miniJVM's
+     * physical field packing order. */
+    static HprofDerived fieldOrderSentinel = new HprofDerived();
+
     static class Node {
         Object next;
         byte[] data;
@@ -17,6 +38,8 @@ public class HeapDumpTest {
 
     public static void main(String[] args) {
         System.out.println("HeapDumpTest start");
+        HprofDerived sentinel = fieldOrderSentinel;
+        System.out.println("HPROF field-order sentinel=" + sentinel.derivedLong + "/" + sentinel.baseInt);
         Object head = null;
         for (int i = 0; i < 200; i++) {
             head = new Node(head);

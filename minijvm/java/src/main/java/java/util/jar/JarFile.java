@@ -14,6 +14,7 @@ import org.mini.zip.Zip;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.Vector;
 import java.util.zip.ZipEntry;
@@ -36,6 +37,17 @@ public class JarFile extends ZipFile {
 
     public JarEntry getJarEntry(String name) {
         return (JarEntry)getEntry(name);
+    }
+
+    public Manifest getManifest() throws IOException {
+        JarEntry entry = getJarEntry("META-INF/MANIFEST.MF");
+        if (entry == null) return null;
+        InputStream stream = getInputStream(entry);
+        try {
+            return new Manifest(stream);
+        } finally {
+            stream.close();
+        }
     }
 
     public Enumeration<JarEntry> entries() {

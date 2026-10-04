@@ -13,10 +13,25 @@ void thread_boundle(Runtime *runtime) {
     JClass *thread_clazz = classes_load_get_with_clinit_c(NULL, STR_CLASS_JAVA_LANG_THREAD, runtime);
     //create jthread for main thread
     Instance *t = instance_create(runtime, thread_clazz);
-    instance_hold_to_thread(t, runtime);
+    if (!t || instance_hold_to_thread(t, runtime) != 0) {
+        exception_throw_out_of_memory(runtime);
+        return;
+    }
     runtime->thrd_info->jthread = t; //Thread.init currentThread() need this
     //runtime->clazz = thread_clazz;
     instance_init(t, runtime);
+    //name the bootstrap thread 'main' so debuggers can address it (jdb: thread main)
+    {
+        Instance *nameArr = jarray_create_by_type_index(runtime, 4, DATATYPE_JCHAR);
+        if (nameArr) {
+            ((u16 *) jarray_body(nameArr))[0] = 'm';
+            ((u16 *) jarray_body(nameArr))[1] = 'a';
+            ((u16 *) jarray_body(nameArr))[2] = 'i';
+            ((u16 *) jarray_body(nameArr))[3] = 'n';
+            c8 *namePtr = getInstanceFieldPtr(t, runtime->jvm->shortcut.thread_name);
+            setFieldRefer(namePtr, nameArr);
+        }
+    }
     //destroy old runtime
     Runtime *r = jthread_get_stackframe_value(runtime->jvm, t);
     if (r) {
@@ -894,6 +909,7 @@ MiniJVM *jvm_create() {
     }
     jvm->env = &jnienv;
     jvm->max_heap_size = MAX_HEAP_SIZE_DEFAULT;
+    jvm->max_vm_memory = 0;
     jvm->heap_overload_percent = GARBAGE_OVERLOAD_DEFAULT;
     jvm->garbage_collect_period_ms = GARBAGE_PERIOD_MS_DEFAULT;
 #if _JVM_DEBUG_SLOW_CALL_PROFILE
@@ -914,6 +930,11 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
 
     os_setup_crash_handler();
 
+    //one-line layout fingerprint: identifies a mis-linked binary at a glance
+    jvm_printf("[INFO] object layout: ptr=%db MemoryBlock=%d Instance=%d JArrayHeader=%d field_off=%d arr_len_off=%d arr_body_off=%d\n",
+               (s32) (sizeof(void *) * 8), (s32) sizeof(MemoryBlock), (s32) sizeof(Instance),
+               (s32) sizeof(JArrayHeader), JVM_OBJECT_BODY_OFFSET, JVM_ARRAY_LENGTH_OFFSET, JVM_ARRAY_BODY_OFFSET);
+
     signal(SIGABRT, _on_jvm_sig);
     signal(SIGFPE, _on_jvm_sig);
     signal(SIGSEGV, _on_jvm_sig);
@@ -922,8 +943,19 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     signal(SIGPIPE, _on_jvm_sig_print); //not exit when network sigpipe
 #endif
 
+    if (jvm->max_vm_memory <= 0) {
+        if (jvm->max_heap_size > INT64_MAX / 4) {
+            jvm->max_vm_memory = INT64_MAX;
+        } else {
+            jvm->max_vm_memory = jvm->max_heap_size * 4;
+        }
+    }
+    if (jvm->max_vm_memory < jvm->max_heap_size) {
+        jvm->max_vm_memory = jvm->max_heap_size;
+    }
 #if __JVM_PRI_ALLOC__
     pri_alloc_set_max_size(jvm->max_heap_size);
+    pri_alloc_set_max_ceiling(jvm->max_vm_memory);
 #endif
 
     set_jvm_state(jvm, JVM_STATUS_INITING);
@@ -1011,12 +1043,24 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     instance_create(runtime, c2);
     utf8_clear(clsName);
 
-
     if (!jvm->collector->runtime->thrd_info->jthread) {
         Instance *inst = instance_create(runtime, classes_get_c(jvm, NULL, STR_CLASS_JAVA_LANG_THREAD));
         jvm->collector->runtime->thrd_info->jthread = inst;
         hashset_put(jvm->collector->objs_holder, inst);
     }
+
+    /* Keep one OOME instance alive. Its constructor normally captures a stack
+     * trace and allocates more objects, so the emergency instance is created
+     * without running that constructor. */
+    utf8_append_c(clsName, STRS_CLASS_EXCEPTION[JVM_ERROR_OUTOFMEMORY]);
+    JClass *oom_class = classes_load_get_with_clinit(NULL, clsName, runtime);
+    jvm->out_of_memory_error = oom_class ? instance_create(runtime, oom_class) : NULL;
+    if (!jvm->out_of_memory_error) {
+        jvm_printf("[ERROR] unable to preallocate OutOfMemoryError\n");
+        return -1;
+    }
+    gc_obj_hold(jvm->collector, jvm->out_of_memory_error);
+    utf8_clear(clsName);
 
     utf8_destroy(clsName);
     gc_move_objs_thread_2_gc(runtime);
@@ -1118,7 +1162,16 @@ s32 call_main(MiniJVM *jvm, c8 *p_mainclass, ArrayList *java_para) {
     s32 count = java_para ? java_para->length : 0;
     Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
     Instance *arr = jarray_create_by_type_name(runtime, count, ustr, NULL);
-    instance_hold_to_thread(arr, runtime);
+    if (!arr) {
+        utf8_destroy(ustr);
+        runtime_destroy(runtime);
+        return 1;
+    }
+    if (instance_hold_to_thread(arr, runtime) != 0) {
+        utf8_destroy(ustr);
+        runtime_destroy(runtime);
+        return 1;
+    }
     utf8_destroy(ustr);
     s32 i;
     for (i = 0; i < count; i++) {

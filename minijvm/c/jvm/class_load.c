@@ -321,14 +321,6 @@ s32 _class_constant_pool_destroy(JClass *clazz) {
                     }
                     break;
                 }
-                case CONSTANT_METHOD_REF: {
-                    ConstantMethodRef *ptr = (ConstantMethodRef *) cptr;
-                    if (ptr->virtual_methods) {
-                        pairlist_destroy(ptr->virtual_methods);
-                        ptr->virtual_methods = NULL;
-                    }
-                    break;
-                }
             }
         }
         jvm_free(cptr);
@@ -2017,6 +2009,7 @@ JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime) {
     JClass *tmpclazz = NULL, *tmp_for_del = NULL;
     if (bytebuf != NULL) {
         tmp_for_del = class_create(runtime);
+        if (!tmp_for_del) return NULL;
         tmp_for_del->jloader = loader;
         MiniJVM *jvm = runtime->jvm;
 

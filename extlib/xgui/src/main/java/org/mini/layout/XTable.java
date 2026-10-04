@@ -19,13 +19,23 @@ public class XTable
     }
 
 
+    protected void preAlignHorizontal() {
+        super.preAlignHorizontal();
+        if (isBlank() && raw_width == XDef.NODEF && raw_widthPercent == XDef.NODEF) {
+            viewW = width = 0;
+        }
+    }
+
     protected void preAlignVertical() {
         int size = children.size();
         if (size == 1) {
             XObject xo = children.get(0);
-            if (xo.raw_heightPercent == XDef.NODEF && xo.raw_height == XDef.NODEF) {
+            if (!((XContainer) xo).isBlank() && xo.raw_heightPercent == XDef.NODEF && xo.raw_height == XDef.NODEF) {
                 xo.raw_heightPercent = 100;
             }
+        }
+        if (isBlank() && raw_height == XDef.NODEF && raw_heightPercent == XDef.NODEF) {
+            viewH = height = 0;
         }
         super.preAlignVertical();
 
@@ -46,7 +56,7 @@ public class XTable
             for (int i = 0; i < size; i++) {
                 XObject xo = children.get(i);
                 xo.y += yOffset;
-                xo.getGui().setLocation(xo.x, xo.y);
+                if (xo.getGui() != null) xo.getGui().setLocation(xo.x, xo.y);
                 if (xo.vfloat) {
                     yOffset += floatAvgH - xo.height;
 //                    xo.viewH = xo.height = floatAvgH;
@@ -55,10 +65,12 @@ public class XTable
 //                    xo.getGui().setSize(xo.width, xo.height);
                     int tx = xo.x;
                     int ty = xo.y;
-                    ((XTr) xo).reSize(this.viewW, this.viewH);
+                    //不在这里align: 外层build/reSize的align会递归整棵树,
+                    //此处再align会使align=right/center的子组件偏移叠加两次
+                    ((XTr) xo).reSize(this.viewW, this.viewH, false);
                     xo.x = tx;
                     xo.y = ty;
-                    xo.getGui().setLocation(xo.x, xo.y);
+                    if (xo.getGui() != null) xo.getGui().setLocation(xo.x, xo.y);
                 }
             }
         }

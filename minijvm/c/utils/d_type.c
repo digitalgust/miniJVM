@@ -5,6 +5,13 @@
 
 #include <stdarg.h>
 
+#if defined(_WIN32)
+#include <io.h>
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
 
 #if __JVM_OS_ANDROID__
 
@@ -17,6 +24,34 @@ FILE *logfile = NULL;
 static s64 last_flush = 0;
 
 extern s64 currentTimeMillis();
+
+void jvm_fatal_oom(const c8 *phase, size_t requested) {
+    c8 message[512];
+    int length;
+#if __JVM_PRI_ALLOC__
+    unsigned long long used = (unsigned long long) pri_alloc_get_live_bytes();
+    unsigned long long limit = (unsigned long long) pri_alloc_get_limit();
+    unsigned long long ceiling = (unsigned long long) pri_alloc_get_max_ceiling();
+#else
+    unsigned long long used = 0, limit = 0, ceiling = 0;
+#endif
+    if (!phase) phase = "unknown";
+    length = snprintf(message, sizeof(message),
+                      "[FATAL] miniJVM critical VM memory failure\n"
+                      "phase=%s requested=%llu used=%llu xmx=%llu xmxmax=%llu\n"
+                      "GC/VM state cannot remain correct; process terminated.\n",
+                      phase, (unsigned long long) requested,
+                      used, limit, ceiling);
+    if (length < 0) length = 0;
+    if ((size_t) length >= sizeof(message)) length = (int) sizeof(message) - 1;
+#if defined(_WIN32)
+    if (length > 0) _write(2, message, (unsigned int) length);
+    ExitProcess(125);
+#else
+    if (length > 0) (void) write(2, message, (size_t) length);
+    _exit(125);
+#endif
+}
 
 
 void open_log() {
@@ -96,6 +131,139 @@ s32 jvm_printf(const c8 *format, ...) {
 
 jvm_allocator_t g_jvm_allocator = {0};
 
+static s64 pri_alloc_atomic_load64(volatile s64 *value) {
+    return ATOMIC_ADD64(value, 0);
+}
+
+static void pri_alloc_atomic_store64(volatile s64 *value, s64 desired) {
+    s64 current;
+    do {
+        current = pri_alloc_atomic_load64(value);
+    } while (current != desired && !ATOMIC_CAS64(value, current, desired));
+}
+
+static s32 pri_alloc_atomic_load32(volatile s32 *value) {
+    return ATOMIC_ADD(value, 0);
+}
+
+static void pri_alloc_atomic_store32(volatile s32 *value, s32 desired) {
+    s32 current;
+    do {
+        current = pri_alloc_atomic_load32(value);
+    } while (current != desired && !ATOMIC_CAS(value, current, desired));
+}
+
+static void pri_alloc_update_peak(s64 current) {
+    s64 peak = pri_alloc_atomic_load64(&g_jvm_allocator.peak_allocated);
+    while (current > peak) {
+        if (ATOMIC_CAS64(&g_jvm_allocator.peak_allocated, peak, current)) return;
+        peak = pri_alloc_atomic_load64(&g_jvm_allocator.peak_allocated);
+    }
+}
+
+static void pri_alloc_latch_gc_if_needed(s64 current) {
+    s64 limit = pri_alloc_atomic_load64(&g_jvm_allocator.pool_size);
+    s64 trigger;
+    if (limit <= 0) return;
+    trigger = limit - limit / 5; /* 80% occupancy arms the GC request */
+    if (current >= trigger) {
+        pri_alloc_atomic_store32(&g_jvm_allocator.need_gc, 1);
+    }
+}
+
+u64 pri_alloc_get_live_bytes(void) {
+    s64 value = pri_alloc_atomic_load64(&g_jvm_allocator.allocated);
+    return value > 0 ? (u64) value : 0;
+}
+
+u64 pri_alloc_get_peak_bytes(void) {
+    s64 value = pri_alloc_atomic_load64(&g_jvm_allocator.peak_allocated);
+    return value > 0 ? (u64) value : 0;
+}
+
+u64 pri_alloc_get_limit(void) {
+    s64 value = pri_alloc_atomic_load64(&g_jvm_allocator.pool_size);
+    return value > 0 ? (u64) value : 0;
+}
+
+u64 pri_alloc_get_max_ceiling(void) {
+    s64 value = pri_alloc_atomic_load64(&g_jvm_allocator.max_pool_size);
+    return value > 0 ? (u64) value : 0;
+}
+
+s32 pri_alloc_should_gc(void) {
+    return pri_alloc_atomic_load32(&g_jvm_allocator.need_gc) != 0;
+}
+
+s32 pri_alloc_would_exceed(size_t incoming_bytes) {
+    u64 live = pri_alloc_get_live_bytes();
+    u64 limit = pri_alloc_get_limit();
+    u64 trigger;
+    if (limit == 0) return 0;
+    trigger = limit - limit / 5u; /* soft trigger at 80% of Xmx */
+    return live >= trigger || (u64) incoming_bytes >= trigger - live;
+}
+
+s32 pri_alloc_over_hard_ceiling(size_t incoming_bytes) {
+    u64 live = pri_alloc_get_live_bytes();
+    u64 ceiling = pri_alloc_get_max_ceiling();
+    if (ceiling == 0) return 0;
+    if (live >= ceiling) return 1;
+    return incoming_bytes >= ceiling - live;
+}
+
+void pri_alloc_recalculate_gc_request(void) {
+    u64 live = pri_alloc_get_live_bytes();
+    u64 limit = pri_alloc_get_limit();
+    u64 trigger = limit ? limit - limit / 5u : UINT64_MAX;
+    pri_alloc_atomic_store32(&g_jvm_allocator.need_gc,
+                             limit != 0 && live >= trigger ? 1 : 0);
+}
+
+void pri_alloc_clear_gc_request(void) {
+    pri_alloc_atomic_store32(&g_jvm_allocator.need_gc, 0);
+}
+
+void pri_alloc_account_allocation(size_t size) {
+    s64 current;
+    if (size == 0 || size > (size_t) INT64_MAX) return;
+    current = ATOMIC_ADD64(&g_jvm_allocator.allocated, (s64) size);
+    if (current < 0) {
+        ATOMIC_ADD64(&g_jvm_allocator.accounting_errors, 1);
+        pri_alloc_atomic_store64(&g_jvm_allocator.allocated, INT64_MAX);
+        current = INT64_MAX;
+    }
+    pri_alloc_update_peak(current);
+    pri_alloc_latch_gc_if_needed(current);
+}
+
+void pri_alloc_account_free(size_t size) {
+    s64 old_value;
+    s64 new_value;
+    if (size == 0 || size > (size_t) INT64_MAX) return;
+    for (;;) {
+        old_value = pri_alloc_atomic_load64(&g_jvm_allocator.allocated);
+        if (old_value < 0 || (u64) old_value < (u64) size) {
+            new_value = 0;
+        } else {
+            new_value = old_value - (s64) size;
+        }
+        if (ATOMIC_CAS64(&g_jvm_allocator.allocated, old_value, new_value)) break;
+    }
+    if (old_value < 0 || (u64) old_value < (u64) size) {
+        ATOMIC_ADD64(&g_jvm_allocator.accounting_errors, 1);
+    }
+    /* need_gc stays latched until a completed GC clears it. */
+}
+
+void pri_alloc_account_resize(size_t old_size, size_t new_size) {
+    if (new_size >= old_size) {
+        pri_alloc_account_allocation(new_size - old_size);
+    } else {
+        pri_alloc_account_free(old_size - new_size);
+    }
+}
+
 
 static void mi_output_to_jvm(const char *msg, void *arg) {
     (void) arg;
@@ -115,31 +283,44 @@ void pri_alloc_print_debug_info() {
     jvm_printf("mimalloc version:%d\n", mi_version());
     jvm_printf("mimalloc process: rss=%zu peak_rss=%zu commit=%zu peak_commit=%zu page_faults=%zu\n",
                current_rss, peak_rss, current_commit, peak_commit, page_faults);
-    jvm_printf("jvm tracked: allocated=%zu heap_limit=%zu need_gc=%d\n",
-               g_jvm_allocator.allocated,
-               (g_jvm_allocator.pool_size),
-               g_jvm_allocator.need_gc);
+    jvm_printf("jvm tracked: allocated=%llu peak=%llu soft_limit=%llu max_limit=%llu need_gc=%d errors=%llu\n",
+               (unsigned long long) pri_alloc_get_live_bytes(),
+               (unsigned long long) pri_alloc_get_peak_bytes(),
+               (unsigned long long) pri_alloc_get_limit(),
+               (unsigned long long) pri_alloc_get_max_ceiling(),
+               pri_alloc_should_gc(),
+               (unsigned long long) pri_alloc_atomic_load64(&g_jvm_allocator.accounting_errors));
 
-    mi_stats_print(NULL);
+    //mi_stats_print(NULL);
     fflush(stderr);
     fflush(stdout);
 }
 
 s32 pri_alloc_init() {
     mi_process_init();
-    g_jvm_allocator.allocated = 0;
-    g_jvm_allocator.need_gc = 0;
+    memset(&g_jvm_allocator, 0, sizeof(g_jvm_allocator));
     return 0;
 }
 
 s32 pri_alloc_set_max_size(size_t size) {
-    g_jvm_allocator.pool_size = size;
+    if (size > (size_t) INT64_MAX) return -1;
+    pri_alloc_atomic_store64(&g_jvm_allocator.pool_size, (s64) size);
+    pri_alloc_recalculate_gc_request();
+    return 0;
+}
+
+s32 pri_alloc_set_max_ceiling(size_t size) {
+    if (size > (size_t) INT64_MAX) return -1;
+    pri_alloc_atomic_store64(&g_jvm_allocator.max_pool_size, (s64) size);
     return 0;
 }
 
 s32 pri_alloc_destroy() {
+    s64 errors = pri_alloc_atomic_load64(&g_jvm_allocator.accounting_errors);
+    if (errors != 0) {
+        jvm_printf("[WARN] allocator accounting recovered from %lld error(s)\n", errors);
+    }
     mi_process_done();
-    spin_destroy(&g_jvm_allocator.m_lock);
     memset(&g_jvm_allocator, 0, sizeof(g_jvm_allocator));
     return 0;
 }

@@ -253,8 +253,16 @@ public final class String implements Comparable<String>, CharSequence {
      */
     public String(byte bytes[], int off, int len, String enc)
             throws UnsupportedEncodingException {
+        // Validate before entering the native fast path.  Besides matching the
+        // other String constructors, this guarantees that a failed range check
+        // can never leave this String with a null value array.
+        if (off < 0 || len < 0 || off > bytes.length - len) {
+            throw new StringIndexOutOfBoundsException();
+        }
         if ("utf-8".equalsIgnoreCase(enc)) {//speedup
-            value = new char[DEFAULT_CAP];
+            // The native decoder installs one exactly-sized char[] directly.
+            // Preallocating DEFAULT_CAP here creates an immediately-dead array
+            // for non-trivial input and forces an extra managed allocation.
             RefNative.stringFromUtf8Bytes(this, bytes, off, len);
         } else {
             char[] value = (Helper.byteToCharArray(bytes, off, len, enc));
@@ -459,12 +467,48 @@ public final class String implements Comparable<String>, CharSequence {
     public native boolean equals(Object anObject);
 
     public boolean contentEquals(StringBuffer sb) {
-        return contentEquals((CharSequence) sb);
+        synchronized (sb) {
+            return contentEqualsStringBuilder(sb);
+        }
     }
 
     public boolean contentEquals(CharSequence cs) {
-        String anotherString = cs.toString();
-        return (count == cs.length()) && regionMatches(false, offset, anotherString, anotherString.offset, count);
+        if (cs instanceof String) {
+            return equals(cs);
+        }
+        if (cs instanceof StringBuffer) {
+            synchronized (cs) {
+                return contentEqualsStringBuilder((StringBuilder) cs);
+            }
+        }
+        if (cs instanceof StringBuilder) {
+            return contentEqualsStringBuilder((StringBuilder) cs);
+        }
+
+        int n = cs.length();
+        if (count != n) {
+            return false;
+        }
+        for (int i = 0; i < n; i++) {
+            if (value[offset + i] != cs.charAt(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean contentEqualsStringBuilder(StringBuilder builder) {
+        int n = builder.length();
+        if (count != n) {
+            return false;
+        }
+        char[] other = builder.getValue();
+        for (int i = 0; i < n; i++) {
+            if (value[offset + i] != other[i]) {
+                return false;
+            }
+        }
+        return true;
     }
     /**
      * **********
@@ -757,20 +801,22 @@ public final class String implements Comparable<String>, CharSequence {
      *
      * @return a hash code value for this object.
      */
-    public int hashCode() {
-        int h = hash;
-        if (h == 0 && value.length > 0) {
-            int off = offset;
-            char val[] = value;
-            int len = count;
+    public native int hashCode();
 
-            for (int i = 0; i < len; i++) {
-                h = 31 * h + val[off++];
-            }
-            hash = h;
-        }
-        return h;
-    }
+//    public int hashCode() {
+//        int h = hash;
+//        if (h == 0 && value.length > 0) {
+//            int off = offset;
+//            char val[] = value;
+//            int len = count;
+//
+//            for (int i = 0; i < len; i++) {
+//                h = 31 * h + val[off++];
+//            }
+//            hash = h;
+//        }
+//        return h;
+//    }
 
     /**
      * Returns the index within this string of the first occurrence of the
@@ -934,33 +980,37 @@ public final class String implements Comparable<String>, CharSequence {
      *                                        <code>null</code>
      */
     public int indexOf(String str, int fromIndex) {
-        char v1[] = value;
-        char v2[] = str.value;
-        int max = offset + (count - str.count);
-        if (fromIndex >= count) {
-            if (count == 0 && fromIndex == 0 && str.count == 0) {
-                /* There is an empty string at index 0 in an empty string. */
-                return 0;
-            }
-            /* Note: fromIndex might be near -1>>>1 */
-            return -1;
+        return indexOf(value, offset, count, str, fromIndex);
+    }
+
+    /**
+     * Package-private search used by mutable character sequences without
+     * first materializing a temporary String.
+     */
+    static int indexOf(char[] source, int sourceOffset, int sourceCount,
+                       String target, int fromIndex) {
+        char[] targetValue = target.value;
+        int targetCount = target.count;
+        if (fromIndex >= sourceCount) {
+            return targetCount == 0 ? sourceCount : -1;
         }
         if (fromIndex < 0) {
             fromIndex = 0;
         }
-        if (str.count == 0) {
+        if (targetCount == 0) {
             return fromIndex;
         }
 
-        int strOffset = str.offset;
-        char first = v2[strOffset];
-        int i = offset + fromIndex;
+        int targetOffset = target.offset;
+        char first = targetValue[targetOffset];
+        int max = sourceOffset + (sourceCount - targetCount);
+        int i = sourceOffset + fromIndex;
 
         startSearchForFirstChar:
         while (true) {
 
             /* Look for first character. */
-            while (i <= max && v1[i] != first) {
+            while (i <= max && source[i] != first) {
                 i++;
             }
             if (i > max) {
@@ -969,16 +1019,16 @@ public final class String implements Comparable<String>, CharSequence {
 
             /* Found first character, now look at the rest of v2 */
             int j = i + 1;
-            int end = j + str.count - 1;
-            int k = strOffset + 1;
+            int end = j + targetCount - 1;
+            int k = targetOffset + 1;
             while (j < end) {
-                if (v1[j++] != v2[k++]) {
+                if (source[j++] != targetValue[k++]) {
                     i++;
                     /* Look for str's first char again. */
                     continue startSearchForFirstChar;
                 }
             }
-            return i - offset;
+            return i - sourceOffset;
             /* Found whole string. */
         }
     }

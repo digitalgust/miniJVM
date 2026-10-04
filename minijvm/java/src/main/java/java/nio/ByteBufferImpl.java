@@ -4,6 +4,16 @@ package java.nio;
 import org.mini.reflect.ReflectArray;
 import org.mini.vm.RefNative;
 
+/**
+ * Accessor strategy (benched on miniJVM, see ai/bench):
+ * - single byte get/put go straight to array[] : one baload/bastore beats a
+ *   RefNative call because the JIT cannot inline native methods
+ * - int/long/float/double keep RefNative : one native load/store beats
+ *   4..8 array loads plus shifts
+ * - bounds/readonly checks are inlined into each accessor : a separate
+ *   checkGet/checkPut virtual call costs ~13ns per access
+ * - bulk paths still use checkGet/checkPut + heap_copy(memcpy)
+ */
 class ByteBufferImpl extends ByteBuffer {
     protected byte[] array;
 
@@ -47,10 +57,6 @@ class ByteBufferImpl extends ByteBuffer {
         return new ByteBufferImpl(array, position, remaining(), false);
     }
 
-    protected void doPut(int position, byte val) {
-        RefNative.heap_put_byte(address, baseOffset + position, val);
-    }
-
     public ByteBuffer put(ByteBuffer src) {
         checkPut(position, src.remaining(), false);
         ByteBufferImpl b = (ByteBufferImpl) src;
@@ -84,10 +90,6 @@ class ByteBufferImpl extends ByteBuffer {
         return this;
     }
 
-    protected byte doGet(int position) {
-        return RefNative.heap_get_byte(address, baseOffset + position);
-    }
-
     public String toString() {
         return "(ByteBufferImpl with address: " + address
                 + " position: " + position
@@ -104,15 +106,25 @@ class ByteBufferImpl extends ByteBuffer {
     }
 
 
-    public ByteBuffer put(int pos, byte val) {
-        checkPut(pos, 1, true);
-        doPut(pos, val);
+    public ByteBuffer put(int position, byte val) {
+        if (readonly) {
+            throw new ReadOnlyBufferException();
+        }
+        if (position < 0 || position + 1 > limit) {
+            throw new IndexOutOfBoundsException();
+        }
+        array[baseOffset + position] = val;
         return this;
     }
 
     public ByteBuffer put(byte val) {
-        checkPut(position, 1, false);
-        doPut(position, val);
+        if (readonly) {
+            throw new ReadOnlyBufferException();
+        }
+        if (position + 1 > limit) {
+            throw new BufferOverflowException();
+        }
+        array[baseOffset + position] = val;
         ++position;
         return this;
     }
@@ -131,34 +143,46 @@ class ByteBufferImpl extends ByteBuffer {
     }
 
     public ByteBuffer putLong(int position, long val) {
-        checkPut(position, 8, true);
-
+        if (readonly) {
+            throw new ReadOnlyBufferException();
+        }
+        if (position < 0 || position + 8 > limit) {
+            throw new IndexOutOfBoundsException();
+        }
         RefNative.heap_put_long(address, baseOffset + position, val);
-
         return this;
     }
 
     public ByteBuffer putInt(int position, int val) {
-        checkPut(position, 4, true);
-
+        if (readonly) {
+            throw new ReadOnlyBufferException();
+        }
+        if (position < 0 || position + 4 > limit) {
+            throw new IndexOutOfBoundsException();
+        }
         RefNative.heap_put_int(address, baseOffset + position, val);
-
         return this;
     }
 
     public ByteBuffer putShort(int position, short val) {
-        checkPut(position, 2, true);
-
+        if (readonly) {
+            throw new ReadOnlyBufferException();
+        }
+        if (position < 0 || position + 2 > limit) {
+            throw new IndexOutOfBoundsException();
+        }
         RefNative.heap_put_short(address, baseOffset + position, val);
-
         return this;
     }
 
     public ByteBuffer putChar(int position, char val) {
-        checkPut(position, 2, true);
-
+        if (readonly) {
+            throw new ReadOnlyBufferException();
+        }
+        if (position < 0 || position + 2 > limit) {
+            throw new IndexOutOfBoundsException();
+        }
         RefNative.heap_put_short(address, baseOffset + position, (short) val);
-
         return this;
     }
 
@@ -171,45 +195,65 @@ class ByteBufferImpl extends ByteBuffer {
     }
 
     public ByteBuffer putLong(long val) {
-        checkPut(position, 8, false);
-
+        if (readonly) {
+            throw new ReadOnlyBufferException();
+        }
+        if (position + 8 > limit) {
+            throw new BufferOverflowException();
+        }
         RefNative.heap_put_long(address, baseOffset + position, val);
         position += 8;
         return this;
     }
 
     public ByteBuffer putInt(int val) {
-        checkPut(position, 4, false);
-
+        if (readonly) {
+            throw new ReadOnlyBufferException();
+        }
+        if (position + 4 > limit) {
+            throw new BufferOverflowException();
+        }
         RefNative.heap_put_int(address, baseOffset + position, val);
         position += 4;
         return this;
     }
 
     public ByteBuffer putShort(short val) {
-        checkPut(position, 2, false);
-
+        if (readonly) {
+            throw new ReadOnlyBufferException();
+        }
+        if (position + 2 > limit) {
+            throw new BufferOverflowException();
+        }
         RefNative.heap_put_short(address, baseOffset + position, val);
         position += 2;
         return this;
     }
 
     public ByteBuffer putChar(char val) {
-        checkPut(position, 2, false);
-
+        if (readonly) {
+            throw new ReadOnlyBufferException();
+        }
+        if (position + 2 > limit) {
+            throw new BufferOverflowException();
+        }
         RefNative.heap_put_short(address, baseOffset + position, (short) val);
         position += 2;
         return this;
     }
 
     public byte get() {
-        checkGet(position, 1, false);
-        return doGet(position++);
+        if (position + 1 > limit) {
+            throw new BufferUnderflowException();
+        }
+        return array[baseOffset + position++];
     }
 
     public byte get(int position) {
-        checkGet(position, 1, true);
-        return doGet(position);
+        if (position < 0 || position + 1 > limit) {
+            throw new IndexOutOfBoundsException();
+        }
+        return array[baseOffset + position];
     }
 
     public ByteBuffer get(byte[] dst) {
@@ -217,85 +261,96 @@ class ByteBufferImpl extends ByteBuffer {
     }
 
     public double getDouble(int position) {
-        checkGet(position, 8, true);
-
+        if (position < 0 || position + 8 > limit) {
+            throw new IndexOutOfBoundsException();
+        }
         return RefNative.heap_get_double(address, baseOffset + position);
-
     }
 
     public float getFloat(int position) {
-        checkGet(position, 4, true);
-
+        if (position < 0 || position + 4 > limit) {
+            throw new IndexOutOfBoundsException();
+        }
         return RefNative.heap_get_float(address, baseOffset + position);
     }
 
     public long getLong(int position) {
-        checkGet(position, 8, true);
-
+        if (position < 0 || position + 8 > limit) {
+            throw new IndexOutOfBoundsException();
+        }
         return RefNative.heap_get_long(address, baseOffset + position);
     }
 
     public int getInt(int position) {
-        checkGet(position, 4, true);
-
+        if (position < 0 || position + 4 > limit) {
+            throw new IndexOutOfBoundsException();
+        }
         return RefNative.heap_get_int(address, baseOffset + position);
     }
 
     public short getShort(int position) {
-        checkGet(position, 2, true);
-
+        if (position < 0 || position + 2 > limit) {
+            throw new IndexOutOfBoundsException();
+        }
         return RefNative.heap_get_short(address, baseOffset + position);
     }
 
     public char getChar(int position) {
-        checkGet(position, 2, true);
-
+        if (position < 0 || position + 2 > limit) {
+            throw new IndexOutOfBoundsException();
+        }
         return (char) RefNative.heap_get_short(address, baseOffset + position);
     }
 
     public double getDouble() {
-        checkGet(position, 8, false);
-
+        if (position + 8 > limit) {
+            throw new BufferUnderflowException();
+        }
         double r = RefNative.heap_get_double(address, baseOffset + position);
         position += 8;
         return r;
     }
 
     public float getFloat() {
-        checkGet(position, 4, false);
-
+        if (position + 4 > limit) {
+            throw new BufferUnderflowException();
+        }
         float r = RefNative.heap_get_float(address, baseOffset + position);
         position += 4;
         return r;
     }
 
     public long getLong() {
-        checkGet(position, 8, false);
-
+        if (position + 8 > limit) {
+            throw new BufferUnderflowException();
+        }
         long r = RefNative.heap_get_long(address, baseOffset + position);
         position += 8;
         return r;
     }
 
     public int getInt() {
-        checkGet(position, 4, false);
-
+        if (position + 4 > limit) {
+            throw new BufferUnderflowException();
+        }
         int r = RefNative.heap_get_int(address, baseOffset + position);
         position += 4;
         return r;
     }
 
     public short getShort() {
-        checkGet(position, 2, false);
-
+        if (position + 2 > limit) {
+            throw new BufferUnderflowException();
+        }
         short r = RefNative.heap_get_short(address, baseOffset + position);
         position += 2;
         return r;
     }
 
     public char getChar() {
-        checkGet(position, 2, false);
-
+        if (position + 2 > limit) {
+            throw new BufferUnderflowException();
+        }
         char r = (char) RefNative.heap_get_short(address, baseOffset + position);
         position += 2;
         return r;

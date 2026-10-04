@@ -2,7 +2,6 @@ package org.mini.apploader;
 
 import org.mini.http.MiniHttpServer;
 import org.mini.util.SysLog;
-import org.mini.gui.callback.GCallBack;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,9 +60,9 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 org.mini.vm.RefNative.clearSlowCallCache();
                 invalidateSlowSnapshotCache(req);
             } else if ("dump".equals(action)) {
-                String saveRoot = GCallBack.getInstance().getAppSaveRoot();
-                String dumpPath = new File(saveRoot, "dump.hprof").getAbsolutePath();
-                org.mini.vm.RefNative.dumpHeap(dumpPath, 0);
+                File dumpFile = dumpFile();
+                dumpFile.getParentFile().mkdirs(); //native dumpHeap uses fopen, it cannot create dirs
+                org.mini.vm.RefNative.dumpHeap(dumpFile.getAbsolutePath(), 0);
             }
             int selectedSlowIdx = -1;
             if ("viewslow".equals(action)) {
@@ -759,9 +758,18 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
                 + "</html>";
     }
 
+    /*
+     * Heap dumps are VM diagnostics, not application data: they must land in
+     * the tmp dir regardless of which app is current. GuiSecurityManager
+     * unconditionally allows the tmp dir, and the download path no longer
+     * drifts when the active app changes between dump and download.
+     */
+    private static File dumpFile() {
+        return new File(AppLoader.getTmpDirPath(), "dump.hprof");
+    }
+
     private boolean handleDumpDownload(MiniHttpServer.HttpResponse res) throws IOException {
-        String saveRoot = GCallBack.getInstance().getAppSaveRoot();
-        File dumpFile = new File(saveRoot, "dump.hprof");
+        File dumpFile = dumpFile();
         if (!dumpFile.exists() || !dumpFile.isFile()) {
             res.setResponseHeader("Content-Type", "text/plain; charset=UTF-8");
             res.getOutputStream().write(("dump file not found: " + dumpFile.getAbsolutePath()).getBytes("UTF-8"));
@@ -782,6 +790,7 @@ public class ProfileServlet extends MiniHttpServer.UserServlet {
         } finally {
             fis.close();
         }
+        dumpFile.delete(); //tmp is wiped at startup anyway; do not keep heap snapshots around
         return true;
     }
 

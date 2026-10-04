@@ -52,6 +52,10 @@ public final class URL {
     return handler.toExternalForm(this);
   }
 
+  public String toExternalForm() {
+    return handler.toExternalForm(this);
+  }
+
   public String getProtocol() {
     return protocol;
   }
@@ -90,6 +94,10 @@ public final class URL {
 
   public Object getContent() throws IOException {
     return openStream();
+  }
+
+  public URI toURI() throws URISyntaxException {
+    return new URI(toString());
   }
 
   private static String resolve(URL context, String spec)

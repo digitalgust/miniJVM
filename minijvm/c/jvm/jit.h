@@ -21,18 +21,6 @@ extern "C" {
 #define JIT_COMPILE_EXEC_COUNT 5000
 #define JIT_DEBUG 0
 
-/* JIT opt: v5=INLINE_STATIC v6=INLINE_SAFEPOINT */
-#define JIT_OPT_FUSION 1
-#define JIT_OPT_FIELD 1
-#define JIT_OPT_FUSION_EXT 1   /* idiv/irem local fusion */
-#define JIT_OPT_FUSION_CMP 1   /* iload+iload+if_icmplt loop-head fusion */
-#define JIT_OPT_INLINE_SAFEPOINT 1
-#define JIT_OPT_LAZY_PC 1       /* write runtime->pc only at safepoints/callouts */
-#define JIT_OPT_TOS_CACHE 1     /* keep short expression windows in registers */
-#define JIT_OPT_HOT_LOCALS 1    /* keep two verified int-only locals in saved regs */
-#define JIT_OPT_INLINE_GETTER_SETTER 1 /* guarded invokevirtual/direct invokespecial accessor inline */
-#define JIT_OPT_INLINE_STATIC 1 /* branch-free short static int expression inline */
-
 #define SLJIT_CONFIG_AUTO 1
 #define JIT_CODE_DUMP 0
 
@@ -45,13 +33,14 @@ enum {
     LOCAL_THREADINFO,
     LOCAL_R0, //for save_ip_sp
     LOCAL_R2, //for check_suspend
-    LOCAL_INLINE_STATIC_BASE,
-#if JIT_OPT_INLINE_STATIC
-    LOCAL_INLINE_STATIC_END = LOCAL_INLINE_STATIC_BASE + 30,
-    LOCAL_COUNT = LOCAL_INLINE_STATIC_END,
-#else
-    LOCAL_COUNT = LOCAL_INLINE_STATIC_BASE,
-#endif
+    /* JIT->JIT direct call scratch: survive the machine-code call, unlike
+     * R0..R5 which the callee may clobber.  Never reuse LOCAL_R0/LOCAL_R2:
+     * save_ip_sp and the safepoint helper own them. */
+    LOCAL_CALL_CHILD,   //temporary CodeAttribute*, then pooled callee Runtime
+    LOCAL_CALL_TARGET,  //callee MethodInfo*
+    LOCAL_CALL_ENTRY,   //callee direct_entry, acquire-loaded
+    LOCAL_CALL_STATUS,  //temporary local count, then callee RUNTIME_STATUS_*
+    LOCAL_COUNT,
 };
 
 enum {
@@ -81,6 +70,12 @@ void jit_destroy(Jit *jit);
 void construct_jit(MethodInfo *method, Runtime *runtime);
 
 s32 jit_invoke_from_jit(MethodInfo *method, Runtime *runtime);
+
+/* On-stack replacement: compile the running method if needed and transfer
+ * the live interpreted frame into the compiled body at the loop-header
+ * bytecode position.  Returns the body's final RUNTIME_STATUS, or -1 when
+ * no replacement happened (not compilable / busy / no label). */
+s32 jit_osr_execute(Runtime *runtime, s32 bc_pos);
 
 void jit_set_exception_jump_addr(Runtime *runtime, CodeAttribute *ca, s32 index);
 

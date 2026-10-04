@@ -150,7 +150,7 @@ int org_mini_gl_GL_glTexParameterfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glTexParameterfv((GLenum)ptarget, (GLenum)ppname, (const GLfloat*)(ptr_pparams));
@@ -184,7 +184,7 @@ int org_mini_gl_GL_glTexParameteriv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glTexParameteriv((GLenum)ptarget, (GLenum)ppname, (const GLint*)(ptr_pparams));
@@ -209,7 +209,7 @@ int org_mini_gl_GL_glTexImage1D(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppixels = NULL;
     if(ppixels){
         offset_ppixels *= env->data_type_bytes[ppixels->mb.arr_type_index];
-        ptr_ppixels = ppixels->arr_body + offset_ppixels;
+        ptr_ppixels = jarray_body(ppixels) + offset_ppixels;
     } else if(offset_ppixels) { ptr_ppixels = (__refer)(intptr_t)offset_ppixels;}
 
     glTexImage1D((GLenum)ptarget, (GLint)plevel, (GLint)pinternalformat, (GLsizei)pwidth, (GLint)pborder, (GLenum)pformat, (GLenum)ptype, (const void*)(ptr_ppixels));
@@ -235,7 +235,7 @@ int org_mini_gl_GL_glTexImage2D(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppixels = NULL;
     if(ppixels){
         offset_ppixels *= env->data_type_bytes[ppixels->mb.arr_type_index];
-        ptr_ppixels = ppixels->arr_body + offset_ppixels;
+        ptr_ppixels = jarray_body(ppixels) + offset_ppixels;
     } else if(offset_ppixels) { ptr_ppixels = (__refer)(intptr_t)offset_ppixels;}
 
     glTexImage2D((GLenum)ptarget, (GLint)plevel, (GLint)pinternalformat, (GLsizei)pwidth, (GLsizei)pheight, (GLint)pborder, (GLenum)pformat, (GLenum)ptype, (const void*)(ptr_ppixels));
@@ -510,7 +510,7 @@ int org_mini_gl_GL_glReadPixels(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppixels = NULL;
     if(ppixels){
         offset_ppixels *= env->data_type_bytes[ppixels->mb.arr_type_index];
-        ptr_ppixels = ppixels->arr_body + offset_ppixels;
+        ptr_ppixels = jarray_body(ppixels) + offset_ppixels;
     } else if(offset_ppixels) { ptr_ppixels = (__refer)(intptr_t)offset_ppixels;}
 
     glReadPixels((GLint)px, (GLint)py, (GLsizei)pwidth, (GLsizei)pheight, (GLenum)pformat, (GLenum)ptype, (void*)(ptr_ppixels));
@@ -529,7 +529,7 @@ int org_mini_gl_GL_glGetBooleanv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glGetBooleanv((GLenum)ppname, (GLboolean*)(ptr_pdata));
@@ -548,7 +548,7 @@ int org_mini_gl_GL_glGetDoublev(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glGetDoublev((GLenum)ppname, (GLdouble*)(ptr_pdata));
@@ -578,7 +578,7 @@ int org_mini_gl_GL_glGetFloatv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glGetFloatv((GLenum)ppname, (GLfloat*)(ptr_pdata));
@@ -597,7 +597,7 @@ int org_mini_gl_GL_glGetIntegerv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glGetIntegerv((GLenum)ppname, (GLint*)(ptr_pdata));
@@ -618,7 +618,7 @@ int org_mini_gl_GL_glGetString(Runtime *runtime, JClass *clazz) {
         s32 bytes = strlen(_ptr_re_val);
         s32 j_t_bytes = sizeof(c8);
         Instance *_arr = env->jarray_create_by_type_index(runtime, bytes / j_t_bytes, DATATYPE_BYTE);
-        memcpy(_arr->arr_body, _ptr_re_val,bytes);
+        memcpy(jarray_body(_arr), _ptr_re_val,bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
         env->push_ref(runtime->stack, NULL);
@@ -640,7 +640,7 @@ int org_mini_gl_GL_glGetTexImage(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppixels = NULL;
     if(ppixels){
         offset_ppixels *= env->data_type_bytes[ppixels->mb.arr_type_index];
-        ptr_ppixels = ppixels->arr_body + offset_ppixels;
+        ptr_ppixels = jarray_body(ppixels) + offset_ppixels;
     } else if(offset_ppixels) { ptr_ppixels = (__refer)(intptr_t)offset_ppixels;}
 
     glGetTexImage((GLenum)ptarget, (GLint)plevel, (GLenum)pformat, (GLenum)ptype, (void*)(ptr_ppixels));
@@ -660,7 +660,7 @@ int org_mini_gl_GL_glGetTexParameterfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetTexParameterfv((GLenum)ptarget, (GLenum)ppname, (GLfloat*)(ptr_pparams));
@@ -680,7 +680,7 @@ int org_mini_gl_GL_glGetTexParameteriv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetTexParameteriv((GLenum)ptarget, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -701,7 +701,7 @@ int org_mini_gl_GL_glGetTexLevelParameterfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetTexLevelParameterfv((GLenum)ptarget, (GLint)plevel, (GLenum)ppname, (GLfloat*)(ptr_pparams));
@@ -722,7 +722,7 @@ int org_mini_gl_GL_glGetTexLevelParameteriv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetTexLevelParameteriv((GLenum)ptarget, (GLint)plevel, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -818,7 +818,7 @@ int org_mini_gl_GL_glCallLists(Runtime *runtime, JClass *clazz) {
     __refer ptr_plists = NULL;
     if(plists){
         offset_plists *= env->data_type_bytes[plists->mb.arr_type_index];
-        ptr_plists = plists->arr_body + offset_plists;
+        ptr_plists = jarray_body(plists) + offset_plists;
     } else if(offset_plists) { ptr_plists = (__refer)(intptr_t)offset_plists;}
 
     glCallLists((GLsizei)pn, (GLenum)ptype, (const void*)(ptr_plists));
@@ -887,7 +887,7 @@ int org_mini_gl_GL_glBitmap(Runtime *runtime, JClass *clazz) {
     Int2Float pxmove;pxmove.i = env->localvar_getInt(runtime->localvar, pos++);
     Int2Float pymove;pymove.i = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pbitmap = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pbitmap = pbitmap->arr_body ;
+    __refer ptr_pbitmap = jarray_body(pbitmap) ;
 
     glBitmap((GLsizei)pwidth, (GLsizei)pheight, (GLfloat)pxorig.f, (GLfloat)pyorig.f, (GLfloat)pxmove.f, (GLfloat)pymove.f, (const GLubyte*)(ptr_pbitmap));
     
@@ -914,7 +914,7 @@ int org_mini_gl_GL_glColor3bv(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     
     Instance *pv = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pv = pv->arr_body ;
+    __refer ptr_pv = jarray_body(pv) ;
 
     glColor3bv((const GLbyte*)(ptr_pv));
     
@@ -945,7 +945,7 @@ int org_mini_gl_GL_glColor3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glColor3dv((const GLdouble*)(ptr_pv));
@@ -977,7 +977,7 @@ int org_mini_gl_GL_glColor3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glColor3fv((const GLfloat*)(ptr_pv));
@@ -1009,7 +1009,7 @@ int org_mini_gl_GL_glColor3iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glColor3iv((const GLint*)(ptr_pv));
@@ -1041,7 +1041,7 @@ int org_mini_gl_GL_glColor3sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glColor3sv((const GLshort*)(ptr_pv));
@@ -1069,7 +1069,7 @@ int org_mini_gl_GL_glColor3ubv(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     
     Instance *pv = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pv = pv->arr_body ;
+    __refer ptr_pv = jarray_body(pv) ;
 
     glColor3ubv((const GLubyte*)(ptr_pv));
     
@@ -1100,7 +1100,7 @@ int org_mini_gl_GL_glColor3uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glColor3uiv((const GLuint*)(ptr_pv));
@@ -1132,7 +1132,7 @@ int org_mini_gl_GL_glColor3usv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glColor3usv((const GLushort*)(ptr_pv));
@@ -1161,7 +1161,7 @@ int org_mini_gl_GL_glColor4bv(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     
     Instance *pv = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pv = pv->arr_body ;
+    __refer ptr_pv = jarray_body(pv) ;
 
     glColor4bv((const GLbyte*)(ptr_pv));
     
@@ -1193,7 +1193,7 @@ int org_mini_gl_GL_glColor4dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glColor4dv((const GLdouble*)(ptr_pv));
@@ -1226,7 +1226,7 @@ int org_mini_gl_GL_glColor4fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glColor4fv((const GLfloat*)(ptr_pv));
@@ -1259,7 +1259,7 @@ int org_mini_gl_GL_glColor4iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glColor4iv((const GLint*)(ptr_pv));
@@ -1292,7 +1292,7 @@ int org_mini_gl_GL_glColor4sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glColor4sv((const GLshort*)(ptr_pv));
@@ -1321,7 +1321,7 @@ int org_mini_gl_GL_glColor4ubv(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     
     Instance *pv = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pv = pv->arr_body ;
+    __refer ptr_pv = jarray_body(pv) ;
 
     glColor4ubv((const GLubyte*)(ptr_pv));
     
@@ -1353,7 +1353,7 @@ int org_mini_gl_GL_glColor4uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glColor4uiv((const GLuint*)(ptr_pv));
@@ -1386,7 +1386,7 @@ int org_mini_gl_GL_glColor4usv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glColor4usv((const GLushort*)(ptr_pv));
@@ -1416,7 +1416,7 @@ int org_mini_gl_GL_glEdgeFlagv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pflag = NULL;
     if(pflag){
         offset_pflag *= env->data_type_bytes[pflag->mb.arr_type_index];
-        ptr_pflag = pflag->arr_body + offset_pflag;
+        ptr_pflag = jarray_body(pflag) + offset_pflag;
     } else if(offset_pflag) { ptr_pflag = (__refer)(intptr_t)offset_pflag;}
 
     glEdgeFlagv((const GLboolean*)(ptr_pflag));
@@ -1457,7 +1457,7 @@ int org_mini_gl_GL_glIndexdv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pc = NULL;
     if(pc){
         offset_pc *= env->data_type_bytes[pc->mb.arr_type_index];
-        ptr_pc = pc->arr_body + offset_pc;
+        ptr_pc = jarray_body(pc) + offset_pc;
     } else if(offset_pc) { ptr_pc = (__refer)(intptr_t)offset_pc;}
 
     glIndexdv((const GLdouble*)(ptr_pc));
@@ -1487,7 +1487,7 @@ int org_mini_gl_GL_glIndexfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pc = NULL;
     if(pc){
         offset_pc *= env->data_type_bytes[pc->mb.arr_type_index];
-        ptr_pc = pc->arr_body + offset_pc;
+        ptr_pc = jarray_body(pc) + offset_pc;
     } else if(offset_pc) { ptr_pc = (__refer)(intptr_t)offset_pc;}
 
     glIndexfv((const GLfloat*)(ptr_pc));
@@ -1517,7 +1517,7 @@ int org_mini_gl_GL_glIndexiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pc = NULL;
     if(pc){
         offset_pc *= env->data_type_bytes[pc->mb.arr_type_index];
-        ptr_pc = pc->arr_body + offset_pc;
+        ptr_pc = jarray_body(pc) + offset_pc;
     } else if(offset_pc) { ptr_pc = (__refer)(intptr_t)offset_pc;}
 
     glIndexiv((const GLint*)(ptr_pc));
@@ -1547,7 +1547,7 @@ int org_mini_gl_GL_glIndexsv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pc = NULL;
     if(pc){
         offset_pc *= env->data_type_bytes[pc->mb.arr_type_index];
-        ptr_pc = pc->arr_body + offset_pc;
+        ptr_pc = jarray_body(pc) + offset_pc;
     } else if(offset_pc) { ptr_pc = (__refer)(intptr_t)offset_pc;}
 
     glIndexsv((const GLshort*)(ptr_pc));
@@ -1575,7 +1575,7 @@ int org_mini_gl_GL_glNormal3bv(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     
     Instance *pv = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pv = pv->arr_body ;
+    __refer ptr_pv = jarray_body(pv) ;
 
     glNormal3bv((const GLbyte*)(ptr_pv));
     
@@ -1606,7 +1606,7 @@ int org_mini_gl_GL_glNormal3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glNormal3dv((const GLdouble*)(ptr_pv));
@@ -1638,7 +1638,7 @@ int org_mini_gl_GL_glNormal3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glNormal3fv((const GLfloat*)(ptr_pv));
@@ -1670,7 +1670,7 @@ int org_mini_gl_GL_glNormal3iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glNormal3iv((const GLint*)(ptr_pv));
@@ -1702,7 +1702,7 @@ int org_mini_gl_GL_glNormal3sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glNormal3sv((const GLshort*)(ptr_pv));
@@ -1733,7 +1733,7 @@ int org_mini_gl_GL_glRasterPos2dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glRasterPos2dv((const GLdouble*)(ptr_pv));
@@ -1764,7 +1764,7 @@ int org_mini_gl_GL_glRasterPos2fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glRasterPos2fv((const GLfloat*)(ptr_pv));
@@ -1795,7 +1795,7 @@ int org_mini_gl_GL_glRasterPos2iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glRasterPos2iv((const GLint*)(ptr_pv));
@@ -1826,7 +1826,7 @@ int org_mini_gl_GL_glRasterPos2sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glRasterPos2sv((const GLshort*)(ptr_pv));
@@ -1858,7 +1858,7 @@ int org_mini_gl_GL_glRasterPos3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glRasterPos3dv((const GLdouble*)(ptr_pv));
@@ -1890,7 +1890,7 @@ int org_mini_gl_GL_glRasterPos3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glRasterPos3fv((const GLfloat*)(ptr_pv));
@@ -1922,7 +1922,7 @@ int org_mini_gl_GL_glRasterPos3iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glRasterPos3iv((const GLint*)(ptr_pv));
@@ -1954,7 +1954,7 @@ int org_mini_gl_GL_glRasterPos3sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glRasterPos3sv((const GLshort*)(ptr_pv));
@@ -1987,7 +1987,7 @@ int org_mini_gl_GL_glRasterPos4dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glRasterPos4dv((const GLdouble*)(ptr_pv));
@@ -2020,7 +2020,7 @@ int org_mini_gl_GL_glRasterPos4fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glRasterPos4fv((const GLfloat*)(ptr_pv));
@@ -2053,7 +2053,7 @@ int org_mini_gl_GL_glRasterPos4iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glRasterPos4iv((const GLint*)(ptr_pv));
@@ -2086,7 +2086,7 @@ int org_mini_gl_GL_glRasterPos4sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glRasterPos4sv((const GLshort*)(ptr_pv));
@@ -2119,14 +2119,14 @@ int org_mini_gl_GL_glRectdv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv1 = NULL;
     if(pv1){
         offset_pv1 *= env->data_type_bytes[pv1->mb.arr_type_index];
-        ptr_pv1 = pv1->arr_body + offset_pv1;
+        ptr_pv1 = jarray_body(pv1) + offset_pv1;
     } else if(offset_pv1) { ptr_pv1 = (__refer)(intptr_t)offset_pv1;}
     Instance *pv2 = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_pv2 = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_pv2 = NULL;
     if(pv2){
         offset_pv2 *= env->data_type_bytes[pv2->mb.arr_type_index];
-        ptr_pv2 = pv2->arr_body + offset_pv2;
+        ptr_pv2 = jarray_body(pv2) + offset_pv2;
     } else if(offset_pv2) { ptr_pv2 = (__refer)(intptr_t)offset_pv2;}
 
     glRectdv((const GLdouble*)(ptr_pv1), (const GLdouble*)(ptr_pv2));
@@ -2159,14 +2159,14 @@ int org_mini_gl_GL_glRectfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv1 = NULL;
     if(pv1){
         offset_pv1 *= env->data_type_bytes[pv1->mb.arr_type_index];
-        ptr_pv1 = pv1->arr_body + offset_pv1;
+        ptr_pv1 = jarray_body(pv1) + offset_pv1;
     } else if(offset_pv1) { ptr_pv1 = (__refer)(intptr_t)offset_pv1;}
     Instance *pv2 = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_pv2 = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_pv2 = NULL;
     if(pv2){
         offset_pv2 *= env->data_type_bytes[pv2->mb.arr_type_index];
-        ptr_pv2 = pv2->arr_body + offset_pv2;
+        ptr_pv2 = jarray_body(pv2) + offset_pv2;
     } else if(offset_pv2) { ptr_pv2 = (__refer)(intptr_t)offset_pv2;}
 
     glRectfv((const GLfloat*)(ptr_pv1), (const GLfloat*)(ptr_pv2));
@@ -2199,14 +2199,14 @@ int org_mini_gl_GL_glRectiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv1 = NULL;
     if(pv1){
         offset_pv1 *= env->data_type_bytes[pv1->mb.arr_type_index];
-        ptr_pv1 = pv1->arr_body + offset_pv1;
+        ptr_pv1 = jarray_body(pv1) + offset_pv1;
     } else if(offset_pv1) { ptr_pv1 = (__refer)(intptr_t)offset_pv1;}
     Instance *pv2 = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_pv2 = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_pv2 = NULL;
     if(pv2){
         offset_pv2 *= env->data_type_bytes[pv2->mb.arr_type_index];
-        ptr_pv2 = pv2->arr_body + offset_pv2;
+        ptr_pv2 = jarray_body(pv2) + offset_pv2;
     } else if(offset_pv2) { ptr_pv2 = (__refer)(intptr_t)offset_pv2;}
 
     glRectiv((const GLint*)(ptr_pv1), (const GLint*)(ptr_pv2));
@@ -2239,14 +2239,14 @@ int org_mini_gl_GL_glRectsv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv1 = NULL;
     if(pv1){
         offset_pv1 *= env->data_type_bytes[pv1->mb.arr_type_index];
-        ptr_pv1 = pv1->arr_body + offset_pv1;
+        ptr_pv1 = jarray_body(pv1) + offset_pv1;
     } else if(offset_pv1) { ptr_pv1 = (__refer)(intptr_t)offset_pv1;}
     Instance *pv2 = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_pv2 = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_pv2 = NULL;
     if(pv2){
         offset_pv2 *= env->data_type_bytes[pv2->mb.arr_type_index];
-        ptr_pv2 = pv2->arr_body + offset_pv2;
+        ptr_pv2 = jarray_body(pv2) + offset_pv2;
     } else if(offset_pv2) { ptr_pv2 = (__refer)(intptr_t)offset_pv2;}
 
     glRectsv((const GLshort*)(ptr_pv1), (const GLshort*)(ptr_pv2));
@@ -2276,7 +2276,7 @@ int org_mini_gl_GL_glTexCoord1dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord1dv((const GLdouble*)(ptr_pv));
@@ -2306,7 +2306,7 @@ int org_mini_gl_GL_glTexCoord1fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord1fv((const GLfloat*)(ptr_pv));
@@ -2336,7 +2336,7 @@ int org_mini_gl_GL_glTexCoord1iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord1iv((const GLint*)(ptr_pv));
@@ -2366,7 +2366,7 @@ int org_mini_gl_GL_glTexCoord1sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord1sv((const GLshort*)(ptr_pv));
@@ -2397,7 +2397,7 @@ int org_mini_gl_GL_glTexCoord2dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord2dv((const GLdouble*)(ptr_pv));
@@ -2428,7 +2428,7 @@ int org_mini_gl_GL_glTexCoord2fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord2fv((const GLfloat*)(ptr_pv));
@@ -2459,7 +2459,7 @@ int org_mini_gl_GL_glTexCoord2iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord2iv((const GLint*)(ptr_pv));
@@ -2490,7 +2490,7 @@ int org_mini_gl_GL_glTexCoord2sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord2sv((const GLshort*)(ptr_pv));
@@ -2522,7 +2522,7 @@ int org_mini_gl_GL_glTexCoord3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord3dv((const GLdouble*)(ptr_pv));
@@ -2554,7 +2554,7 @@ int org_mini_gl_GL_glTexCoord3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord3fv((const GLfloat*)(ptr_pv));
@@ -2586,7 +2586,7 @@ int org_mini_gl_GL_glTexCoord3iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord3iv((const GLint*)(ptr_pv));
@@ -2618,7 +2618,7 @@ int org_mini_gl_GL_glTexCoord3sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord3sv((const GLshort*)(ptr_pv));
@@ -2651,7 +2651,7 @@ int org_mini_gl_GL_glTexCoord4dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord4dv((const GLdouble*)(ptr_pv));
@@ -2684,7 +2684,7 @@ int org_mini_gl_GL_glTexCoord4fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord4fv((const GLfloat*)(ptr_pv));
@@ -2717,7 +2717,7 @@ int org_mini_gl_GL_glTexCoord4iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord4iv((const GLint*)(ptr_pv));
@@ -2750,7 +2750,7 @@ int org_mini_gl_GL_glTexCoord4sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glTexCoord4sv((const GLshort*)(ptr_pv));
@@ -2781,7 +2781,7 @@ int org_mini_gl_GL_glVertex2dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertex2dv((const GLdouble*)(ptr_pv));
@@ -2812,7 +2812,7 @@ int org_mini_gl_GL_glVertex2fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertex2fv((const GLfloat*)(ptr_pv));
@@ -2843,7 +2843,7 @@ int org_mini_gl_GL_glVertex2iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertex2iv((const GLint*)(ptr_pv));
@@ -2874,7 +2874,7 @@ int org_mini_gl_GL_glVertex2sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertex2sv((const GLshort*)(ptr_pv));
@@ -2906,7 +2906,7 @@ int org_mini_gl_GL_glVertex3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertex3dv((const GLdouble*)(ptr_pv));
@@ -2938,7 +2938,7 @@ int org_mini_gl_GL_glVertex3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertex3fv((const GLfloat*)(ptr_pv));
@@ -2970,7 +2970,7 @@ int org_mini_gl_GL_glVertex3iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertex3iv((const GLint*)(ptr_pv));
@@ -3002,7 +3002,7 @@ int org_mini_gl_GL_glVertex3sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertex3sv((const GLshort*)(ptr_pv));
@@ -3035,7 +3035,7 @@ int org_mini_gl_GL_glVertex4dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertex4dv((const GLdouble*)(ptr_pv));
@@ -3068,7 +3068,7 @@ int org_mini_gl_GL_glVertex4fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertex4fv((const GLfloat*)(ptr_pv));
@@ -3101,7 +3101,7 @@ int org_mini_gl_GL_glVertex4iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertex4iv((const GLint*)(ptr_pv));
@@ -3134,7 +3134,7 @@ int org_mini_gl_GL_glVertex4sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertex4sv((const GLshort*)(ptr_pv));
@@ -3153,7 +3153,7 @@ int org_mini_gl_GL_glClipPlane(Runtime *runtime, JClass *clazz) {
     __refer ptr_pequation = NULL;
     if(pequation){
         offset_pequation *= env->data_type_bytes[pequation->mb.arr_type_index];
-        ptr_pequation = pequation->arr_body + offset_pequation;
+        ptr_pequation = jarray_body(pequation) + offset_pequation;
     } else if(offset_pequation) { ptr_pequation = (__refer)(intptr_t)offset_pequation;}
 
     glClipPlane((GLenum)pplane, (const GLdouble*)(ptr_pequation));
@@ -3198,7 +3198,7 @@ int org_mini_gl_GL_glFogfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glFogfv((GLenum)ppname, (const GLfloat*)(ptr_pparams));
@@ -3230,7 +3230,7 @@ int org_mini_gl_GL_glFogiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glFogiv((GLenum)ppname, (const GLint*)(ptr_pparams));
@@ -3264,7 +3264,7 @@ int org_mini_gl_GL_glLightfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glLightfv((GLenum)plight, (GLenum)ppname, (const GLfloat*)(ptr_pparams));
@@ -3298,7 +3298,7 @@ int org_mini_gl_GL_glLightiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glLightiv((GLenum)plight, (GLenum)ppname, (const GLint*)(ptr_pparams));
@@ -3330,7 +3330,7 @@ int org_mini_gl_GL_glLightModelfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glLightModelfv((GLenum)ppname, (const GLfloat*)(ptr_pparams));
@@ -3362,7 +3362,7 @@ int org_mini_gl_GL_glLightModeliv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glLightModeliv((GLenum)ppname, (const GLint*)(ptr_pparams));
@@ -3409,7 +3409,7 @@ int org_mini_gl_GL_glMaterialfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glMaterialfv((GLenum)pface, (GLenum)ppname, (const GLfloat*)(ptr_pparams));
@@ -3443,7 +3443,7 @@ int org_mini_gl_GL_glMaterialiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glMaterialiv((GLenum)pface, (GLenum)ppname, (const GLint*)(ptr_pparams));
@@ -3457,7 +3457,7 @@ int org_mini_gl_GL_glPolygonStipple(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     
     Instance *pmask = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pmask = pmask->arr_body ;
+    __refer ptr_pmask = jarray_body(pmask) ;
 
     glPolygonStipple((const GLubyte*)(ptr_pmask));
     
@@ -3502,7 +3502,7 @@ int org_mini_gl_GL_glTexEnvfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glTexEnvfv((GLenum)ptarget, (GLenum)ppname, (const GLfloat*)(ptr_pparams));
@@ -3536,7 +3536,7 @@ int org_mini_gl_GL_glTexEnviv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glTexEnviv((GLenum)ptarget, (GLenum)ppname, (const GLint*)(ptr_pparams));
@@ -3570,7 +3570,7 @@ int org_mini_gl_GL_glTexGendv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glTexGendv((GLenum)pcoord, (GLenum)ppname, (const GLdouble*)(ptr_pparams));
@@ -3604,7 +3604,7 @@ int org_mini_gl_GL_glTexGenfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glTexGenfv((GLenum)pcoord, (GLenum)ppname, (const GLfloat*)(ptr_pparams));
@@ -3638,7 +3638,7 @@ int org_mini_gl_GL_glTexGeniv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glTexGeniv((GLenum)pcoord, (GLenum)ppname, (const GLint*)(ptr_pparams));
@@ -3658,7 +3658,7 @@ int org_mini_gl_GL_glFeedbackBuffer(Runtime *runtime, JClass *clazz) {
     __refer ptr_pbuffer = NULL;
     if(pbuffer){
         offset_pbuffer *= env->data_type_bytes[pbuffer->mb.arr_type_index];
-        ptr_pbuffer = pbuffer->arr_body + offset_pbuffer;
+        ptr_pbuffer = jarray_body(pbuffer) + offset_pbuffer;
     } else if(offset_pbuffer) { ptr_pbuffer = (__refer)(intptr_t)offset_pbuffer;}
 
     glFeedbackBuffer((GLsizei)psize, (GLenum)ptype, (GLfloat*)(ptr_pbuffer));
@@ -3677,7 +3677,7 @@ int org_mini_gl_GL_glSelectBuffer(Runtime *runtime, JClass *clazz) {
     __refer ptr_pbuffer = NULL;
     if(pbuffer){
         offset_pbuffer *= env->data_type_bytes[pbuffer->mb.arr_type_index];
-        ptr_pbuffer = pbuffer->arr_body + offset_pbuffer;
+        ptr_pbuffer = jarray_body(pbuffer) + offset_pbuffer;
     } else if(offset_pbuffer) { ptr_pbuffer = (__refer)(intptr_t)offset_pbuffer;}
 
     glSelectBuffer((GLsizei)psize, (GLuint*)(ptr_pbuffer));
@@ -3845,7 +3845,7 @@ int org_mini_gl_GL_glMap1d(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppoints = NULL;
     if(ppoints){
         offset_ppoints *= env->data_type_bytes[ppoints->mb.arr_type_index];
-        ptr_ppoints = ppoints->arr_body + offset_ppoints;
+        ptr_ppoints = jarray_body(ppoints) + offset_ppoints;
     } else if(offset_ppoints) { ptr_ppoints = (__refer)(intptr_t)offset_ppoints;}
 
     glMap1d((GLenum)ptarget, (GLdouble)pu1.d, (GLdouble)pu2.d, (GLint)pstride, (GLint)porder, (const GLdouble*)(ptr_ppoints));
@@ -3868,7 +3868,7 @@ int org_mini_gl_GL_glMap1f(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppoints = NULL;
     if(ppoints){
         offset_ppoints *= env->data_type_bytes[ppoints->mb.arr_type_index];
-        ptr_ppoints = ppoints->arr_body + offset_ppoints;
+        ptr_ppoints = jarray_body(ppoints) + offset_ppoints;
     } else if(offset_ppoints) { ptr_ppoints = (__refer)(intptr_t)offset_ppoints;}
 
     glMap1f((GLenum)ptarget, (GLfloat)pu1.f, (GLfloat)pu2.f, (GLint)pstride, (GLint)porder, (const GLfloat*)(ptr_ppoints));
@@ -3895,7 +3895,7 @@ int org_mini_gl_GL_glMap2d(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppoints = NULL;
     if(ppoints){
         offset_ppoints *= env->data_type_bytes[ppoints->mb.arr_type_index];
-        ptr_ppoints = ppoints->arr_body + offset_ppoints;
+        ptr_ppoints = jarray_body(ppoints) + offset_ppoints;
     } else if(offset_ppoints) { ptr_ppoints = (__refer)(intptr_t)offset_ppoints;}
 
     glMap2d((GLenum)ptarget, (GLdouble)pu1.d, (GLdouble)pu2.d, (GLint)pustride, (GLint)puorder, (GLdouble)pv1.d, (GLdouble)pv2.d, (GLint)pvstride, (GLint)pvorder, (const GLdouble*)(ptr_ppoints));
@@ -3922,7 +3922,7 @@ int org_mini_gl_GL_glMap2f(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppoints = NULL;
     if(ppoints){
         offset_ppoints *= env->data_type_bytes[ppoints->mb.arr_type_index];
-        ptr_ppoints = ppoints->arr_body + offset_ppoints;
+        ptr_ppoints = jarray_body(ppoints) + offset_ppoints;
     } else if(offset_ppoints) { ptr_ppoints = (__refer)(intptr_t)offset_ppoints;}
 
     glMap2f((GLenum)ptarget, (GLfloat)pu1.f, (GLfloat)pu2.f, (GLint)pustride, (GLint)puorder, (GLfloat)pv1.f, (GLfloat)pv2.f, (GLint)pvstride, (GLint)pvorder, (const GLfloat*)(ptr_ppoints));
@@ -4014,7 +4014,7 @@ int org_mini_gl_GL_glEvalCoord1dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pu = NULL;
     if(pu){
         offset_pu *= env->data_type_bytes[pu->mb.arr_type_index];
-        ptr_pu = pu->arr_body + offset_pu;
+        ptr_pu = jarray_body(pu) + offset_pu;
     } else if(offset_pu) { ptr_pu = (__refer)(intptr_t)offset_pu;}
 
     glEvalCoord1dv((const GLdouble*)(ptr_pu));
@@ -4044,7 +4044,7 @@ int org_mini_gl_GL_glEvalCoord1fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pu = NULL;
     if(pu){
         offset_pu *= env->data_type_bytes[pu->mb.arr_type_index];
-        ptr_pu = pu->arr_body + offset_pu;
+        ptr_pu = jarray_body(pu) + offset_pu;
     } else if(offset_pu) { ptr_pu = (__refer)(intptr_t)offset_pu;}
 
     glEvalCoord1fv((const GLfloat*)(ptr_pu));
@@ -4075,7 +4075,7 @@ int org_mini_gl_GL_glEvalCoord2dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pu = NULL;
     if(pu){
         offset_pu *= env->data_type_bytes[pu->mb.arr_type_index];
-        ptr_pu = pu->arr_body + offset_pu;
+        ptr_pu = jarray_body(pu) + offset_pu;
     } else if(offset_pu) { ptr_pu = (__refer)(intptr_t)offset_pu;}
 
     glEvalCoord2dv((const GLdouble*)(ptr_pu));
@@ -4106,7 +4106,7 @@ int org_mini_gl_GL_glEvalCoord2fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pu = NULL;
     if(pu){
         offset_pu *= env->data_type_bytes[pu->mb.arr_type_index];
-        ptr_pu = pu->arr_body + offset_pu;
+        ptr_pu = jarray_body(pu) + offset_pu;
     } else if(offset_pu) { ptr_pu = (__refer)(intptr_t)offset_pu;}
 
     glEvalCoord2fv((const GLfloat*)(ptr_pu));
@@ -4233,7 +4233,7 @@ int org_mini_gl_GL_glPixelMapfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalues = NULL;
     if(pvalues){
         offset_pvalues *= env->data_type_bytes[pvalues->mb.arr_type_index];
-        ptr_pvalues = pvalues->arr_body + offset_pvalues;
+        ptr_pvalues = jarray_body(pvalues) + offset_pvalues;
     } else if(offset_pvalues) { ptr_pvalues = (__refer)(intptr_t)offset_pvalues;}
 
     glPixelMapfv((GLenum)pmap, (GLsizei)pmapsize, (const GLfloat*)(ptr_pvalues));
@@ -4253,7 +4253,7 @@ int org_mini_gl_GL_glPixelMapuiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalues = NULL;
     if(pvalues){
         offset_pvalues *= env->data_type_bytes[pvalues->mb.arr_type_index];
-        ptr_pvalues = pvalues->arr_body + offset_pvalues;
+        ptr_pvalues = jarray_body(pvalues) + offset_pvalues;
     } else if(offset_pvalues) { ptr_pvalues = (__refer)(intptr_t)offset_pvalues;}
 
     glPixelMapuiv((GLenum)pmap, (GLsizei)pmapsize, (const GLuint*)(ptr_pvalues));
@@ -4273,7 +4273,7 @@ int org_mini_gl_GL_glPixelMapusv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalues = NULL;
     if(pvalues){
         offset_pvalues *= env->data_type_bytes[pvalues->mb.arr_type_index];
-        ptr_pvalues = pvalues->arr_body + offset_pvalues;
+        ptr_pvalues = jarray_body(pvalues) + offset_pvalues;
     } else if(offset_pvalues) { ptr_pvalues = (__refer)(intptr_t)offset_pvalues;}
 
     glPixelMapusv((GLenum)pmap, (GLsizei)pmapsize, (const GLushort*)(ptr_pvalues));
@@ -4311,7 +4311,7 @@ int org_mini_gl_GL_glDrawPixels(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppixels = NULL;
     if(ppixels){
         offset_ppixels *= env->data_type_bytes[ppixels->mb.arr_type_index];
-        ptr_ppixels = ppixels->arr_body + offset_ppixels;
+        ptr_ppixels = jarray_body(ppixels) + offset_ppixels;
     } else if(offset_ppixels) { ptr_ppixels = (__refer)(intptr_t)offset_ppixels;}
 
     glDrawPixels((GLsizei)pwidth, (GLsizei)pheight, (GLenum)pformat, (GLenum)ptype, (const void*)(ptr_ppixels));
@@ -4330,7 +4330,7 @@ int org_mini_gl_GL_glGetClipPlane(Runtime *runtime, JClass *clazz) {
     __refer ptr_pequation = NULL;
     if(pequation){
         offset_pequation *= env->data_type_bytes[pequation->mb.arr_type_index];
-        ptr_pequation = pequation->arr_body + offset_pequation;
+        ptr_pequation = jarray_body(pequation) + offset_pequation;
     } else if(offset_pequation) { ptr_pequation = (__refer)(intptr_t)offset_pequation;}
 
     glGetClipPlane((GLenum)pplane, (GLdouble*)(ptr_pequation));
@@ -4350,7 +4350,7 @@ int org_mini_gl_GL_glGetLightfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetLightfv((GLenum)plight, (GLenum)ppname, (GLfloat*)(ptr_pparams));
@@ -4370,7 +4370,7 @@ int org_mini_gl_GL_glGetLightiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetLightiv((GLenum)plight, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -4390,7 +4390,7 @@ int org_mini_gl_GL_glGetMapdv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glGetMapdv((GLenum)ptarget, (GLenum)pquery, (GLdouble*)(ptr_pv));
@@ -4410,7 +4410,7 @@ int org_mini_gl_GL_glGetMapfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glGetMapfv((GLenum)ptarget, (GLenum)pquery, (GLfloat*)(ptr_pv));
@@ -4430,7 +4430,7 @@ int org_mini_gl_GL_glGetMapiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glGetMapiv((GLenum)ptarget, (GLenum)pquery, (GLint*)(ptr_pv));
@@ -4450,7 +4450,7 @@ int org_mini_gl_GL_glGetMaterialfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetMaterialfv((GLenum)pface, (GLenum)ppname, (GLfloat*)(ptr_pparams));
@@ -4470,7 +4470,7 @@ int org_mini_gl_GL_glGetMaterialiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetMaterialiv((GLenum)pface, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -4489,7 +4489,7 @@ int org_mini_gl_GL_glGetPixelMapfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalues = NULL;
     if(pvalues){
         offset_pvalues *= env->data_type_bytes[pvalues->mb.arr_type_index];
-        ptr_pvalues = pvalues->arr_body + offset_pvalues;
+        ptr_pvalues = jarray_body(pvalues) + offset_pvalues;
     } else if(offset_pvalues) { ptr_pvalues = (__refer)(intptr_t)offset_pvalues;}
 
     glGetPixelMapfv((GLenum)pmap, (GLfloat*)(ptr_pvalues));
@@ -4508,7 +4508,7 @@ int org_mini_gl_GL_glGetPixelMapuiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalues = NULL;
     if(pvalues){
         offset_pvalues *= env->data_type_bytes[pvalues->mb.arr_type_index];
-        ptr_pvalues = pvalues->arr_body + offset_pvalues;
+        ptr_pvalues = jarray_body(pvalues) + offset_pvalues;
     } else if(offset_pvalues) { ptr_pvalues = (__refer)(intptr_t)offset_pvalues;}
 
     glGetPixelMapuiv((GLenum)pmap, (GLuint*)(ptr_pvalues));
@@ -4527,7 +4527,7 @@ int org_mini_gl_GL_glGetPixelMapusv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalues = NULL;
     if(pvalues){
         offset_pvalues *= env->data_type_bytes[pvalues->mb.arr_type_index];
-        ptr_pvalues = pvalues->arr_body + offset_pvalues;
+        ptr_pvalues = jarray_body(pvalues) + offset_pvalues;
     } else if(offset_pvalues) { ptr_pvalues = (__refer)(intptr_t)offset_pvalues;}
 
     glGetPixelMapusv((GLenum)pmap, (GLushort*)(ptr_pvalues));
@@ -4541,7 +4541,7 @@ int org_mini_gl_GL_glGetPolygonStipple(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     
     Instance *pmask = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pmask = pmask->arr_body ;
+    __refer ptr_pmask = jarray_body(pmask) ;
 
     glGetPolygonStipple((GLubyte*)(ptr_pmask));
     
@@ -4560,7 +4560,7 @@ int org_mini_gl_GL_glGetTexEnvfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetTexEnvfv((GLenum)ptarget, (GLenum)ppname, (GLfloat*)(ptr_pparams));
@@ -4580,7 +4580,7 @@ int org_mini_gl_GL_glGetTexEnviv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetTexEnviv((GLenum)ptarget, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -4600,7 +4600,7 @@ int org_mini_gl_GL_glGetTexGendv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetTexGendv((GLenum)pcoord, (GLenum)ppname, (GLdouble*)(ptr_pparams));
@@ -4620,7 +4620,7 @@ int org_mini_gl_GL_glGetTexGenfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetTexGenfv((GLenum)pcoord, (GLenum)ppname, (GLfloat*)(ptr_pparams));
@@ -4640,7 +4640,7 @@ int org_mini_gl_GL_glGetTexGeniv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetTexGeniv((GLenum)pcoord, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -4698,7 +4698,7 @@ int org_mini_gl_GL_glLoadMatrixf(Runtime *runtime, JClass *clazz) {
     __refer ptr_pm = NULL;
     if(pm){
         offset_pm *= env->data_type_bytes[pm->mb.arr_type_index];
-        ptr_pm = pm->arr_body + offset_pm;
+        ptr_pm = jarray_body(pm) + offset_pm;
     } else if(offset_pm) { ptr_pm = (__refer)(intptr_t)offset_pm;}
 
     glLoadMatrixf((const GLfloat*)(ptr_pm));
@@ -4716,7 +4716,7 @@ int org_mini_gl_GL_glLoadMatrixd(Runtime *runtime, JClass *clazz) {
     __refer ptr_pm = NULL;
     if(pm){
         offset_pm *= env->data_type_bytes[pm->mb.arr_type_index];
-        ptr_pm = pm->arr_body + offset_pm;
+        ptr_pm = jarray_body(pm) + offset_pm;
     } else if(offset_pm) { ptr_pm = (__refer)(intptr_t)offset_pm;}
 
     glLoadMatrixd((const GLdouble*)(ptr_pm));
@@ -4746,7 +4746,7 @@ int org_mini_gl_GL_glMultMatrixf(Runtime *runtime, JClass *clazz) {
     __refer ptr_pm = NULL;
     if(pm){
         offset_pm *= env->data_type_bytes[pm->mb.arr_type_index];
-        ptr_pm = pm->arr_body + offset_pm;
+        ptr_pm = jarray_body(pm) + offset_pm;
     } else if(offset_pm) { ptr_pm = (__refer)(intptr_t)offset_pm;}
 
     glMultMatrixf((const GLfloat*)(ptr_pm));
@@ -4764,7 +4764,7 @@ int org_mini_gl_GL_glMultMatrixd(Runtime *runtime, JClass *clazz) {
     __refer ptr_pm = NULL;
     if(pm){
         offset_pm *= env->data_type_bytes[pm->mb.arr_type_index];
-        ptr_pm = pm->arr_body + offset_pm;
+        ptr_pm = jarray_body(pm) + offset_pm;
     } else if(offset_pm) { ptr_pm = (__refer)(intptr_t)offset_pm;}
 
     glMultMatrixd((const GLdouble*)(ptr_pm));
@@ -4924,7 +4924,7 @@ int org_mini_gl_GL_glDrawElements(Runtime *runtime, JClass *clazz) {
     __refer ptr_pindices = NULL;
     if(pindices){
         offset_pindices *= env->data_type_bytes[pindices->mb.arr_type_index];
-        ptr_pindices = pindices->arr_body + offset_pindices;
+        ptr_pindices = jarray_body(pindices) + offset_pindices;
     } else if(offset_pindices) { ptr_pindices = (__refer)(intptr_t)offset_pindices;}
 
     glDrawElements((GLenum)pmode, (GLsizei)pcount, (GLenum)ptype, (const void*)(ptr_pindices));
@@ -5051,7 +5051,7 @@ int org_mini_gl_GL_glTexSubImage1D(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppixels = NULL;
     if(ppixels){
         offset_ppixels *= env->data_type_bytes[ppixels->mb.arr_type_index];
-        ptr_ppixels = ppixels->arr_body + offset_ppixels;
+        ptr_ppixels = jarray_body(ppixels) + offset_ppixels;
     } else if(offset_ppixels) { ptr_ppixels = (__refer)(intptr_t)offset_ppixels;}
 
     glTexSubImage1D((GLenum)ptarget, (GLint)plevel, (GLint)pxoffset, (GLsizei)pwidth, (GLenum)pformat, (GLenum)ptype, (const void*)(ptr_ppixels));
@@ -5077,7 +5077,7 @@ int org_mini_gl_GL_glTexSubImage2D(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppixels = NULL;
     if(ppixels){
         offset_ppixels *= env->data_type_bytes[ppixels->mb.arr_type_index];
-        ptr_ppixels = ppixels->arr_body + offset_ppixels;
+        ptr_ppixels = jarray_body(ppixels) + offset_ppixels;
     } else if(offset_ppixels) { ptr_ppixels = (__refer)(intptr_t)offset_ppixels;}
 
     glTexSubImage2D((GLenum)ptarget, (GLint)plevel, (GLint)pxoffset, (GLint)pyoffset, (GLsizei)pwidth, (GLsizei)pheight, (GLenum)pformat, (GLenum)ptype, (const void*)(ptr_ppixels));
@@ -5109,7 +5109,7 @@ int org_mini_gl_GL_glDeleteTextures(Runtime *runtime, JClass *clazz) {
     __refer ptr_ptextures = NULL;
     if(ptextures){
         offset_ptextures *= env->data_type_bytes[ptextures->mb.arr_type_index];
-        ptr_ptextures = ptextures->arr_body + offset_ptextures;
+        ptr_ptextures = jarray_body(ptextures) + offset_ptextures;
     } else if(offset_ptextures) { ptr_ptextures = (__refer)(intptr_t)offset_ptextures;}
 
     glDeleteTextures((GLsizei)pn, (const GLuint*)(ptr_ptextures));
@@ -5128,7 +5128,7 @@ int org_mini_gl_GL_glGenTextures(Runtime *runtime, JClass *clazz) {
     __refer ptr_ptextures = NULL;
     if(ptextures){
         offset_ptextures *= env->data_type_bytes[ptextures->mb.arr_type_index];
-        ptr_ptextures = ptextures->arr_body + offset_ptextures;
+        ptr_ptextures = jarray_body(ptextures) + offset_ptextures;
     } else if(offset_ptextures) { ptr_ptextures = (__refer)(intptr_t)offset_ptextures;}
 
     glGenTextures((GLsizei)pn, (GLuint*)(ptr_ptextures));
@@ -5173,7 +5173,7 @@ int org_mini_gl_GL_glColorPointer(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppointer = NULL;
     if(ppointer){
         offset_ppointer *= env->data_type_bytes[ppointer->mb.arr_type_index];
-        ptr_ppointer = ppointer->arr_body + offset_ppointer;
+        ptr_ppointer = jarray_body(ppointer) + offset_ppointer;
     } else if(offset_ppointer) { ptr_ppointer = (__refer)(intptr_t)offset_ppointer;}
 
     glColorPointer((GLint)psize, (GLenum)ptype, (GLsizei)pstride, (const void*)(ptr_ppointer));
@@ -5204,7 +5204,7 @@ int org_mini_gl_GL_glEdgeFlagPointer(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppointer = NULL;
     if(ppointer){
         offset_ppointer *= env->data_type_bytes[ppointer->mb.arr_type_index];
-        ptr_ppointer = ppointer->arr_body + offset_ppointer;
+        ptr_ppointer = jarray_body(ppointer) + offset_ppointer;
     } else if(offset_ppointer) { ptr_ppointer = (__refer)(intptr_t)offset_ppointer;}
 
     glEdgeFlagPointer((GLsizei)pstride, (const void*)(ptr_ppointer));
@@ -5236,7 +5236,7 @@ int org_mini_gl_GL_glIndexPointer(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppointer = NULL;
     if(ppointer){
         offset_ppointer *= env->data_type_bytes[ppointer->mb.arr_type_index];
-        ptr_ppointer = ppointer->arr_body + offset_ppointer;
+        ptr_ppointer = jarray_body(ppointer) + offset_ppointer;
     } else if(offset_ppointer) { ptr_ppointer = (__refer)(intptr_t)offset_ppointer;}
 
     glIndexPointer((GLenum)ptype, (GLsizei)pstride, (const void*)(ptr_ppointer));
@@ -5256,7 +5256,7 @@ int org_mini_gl_GL_glInterleavedArrays(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppointer = NULL;
     if(ppointer){
         offset_ppointer *= env->data_type_bytes[ppointer->mb.arr_type_index];
-        ptr_ppointer = ppointer->arr_body + offset_ppointer;
+        ptr_ppointer = jarray_body(ppointer) + offset_ppointer;
     } else if(offset_ppointer) { ptr_ppointer = (__refer)(intptr_t)offset_ppointer;}
 
     glInterleavedArrays((GLenum)pformat, (GLsizei)pstride, (const void*)(ptr_ppointer));
@@ -5276,7 +5276,7 @@ int org_mini_gl_GL_glNormalPointer(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppointer = NULL;
     if(ppointer){
         offset_ppointer *= env->data_type_bytes[ppointer->mb.arr_type_index];
-        ptr_ppointer = ppointer->arr_body + offset_ppointer;
+        ptr_ppointer = jarray_body(ppointer) + offset_ppointer;
     } else if(offset_ppointer) { ptr_ppointer = (__refer)(intptr_t)offset_ppointer;}
 
     glNormalPointer((GLenum)ptype, (GLsizei)pstride, (const void*)(ptr_ppointer));
@@ -5297,7 +5297,7 @@ int org_mini_gl_GL_glTexCoordPointer(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppointer = NULL;
     if(ppointer){
         offset_ppointer *= env->data_type_bytes[ppointer->mb.arr_type_index];
-        ptr_ppointer = ppointer->arr_body + offset_ppointer;
+        ptr_ppointer = jarray_body(ppointer) + offset_ppointer;
     } else if(offset_ppointer) { ptr_ppointer = (__refer)(intptr_t)offset_ppointer;}
 
     glTexCoordPointer((GLint)psize, (GLenum)ptype, (GLsizei)pstride, (const void*)(ptr_ppointer));
@@ -5318,7 +5318,7 @@ int org_mini_gl_GL_glVertexPointer(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppointer = NULL;
     if(ppointer){
         offset_ppointer *= env->data_type_bytes[ppointer->mb.arr_type_index];
-        ptr_ppointer = ppointer->arr_body + offset_ppointer;
+        ptr_ppointer = jarray_body(ppointer) + offset_ppointer;
     } else if(offset_ppointer) { ptr_ppointer = (__refer)(intptr_t)offset_ppointer;}
 
     glVertexPointer((GLint)psize, (GLenum)ptype, (GLsizei)pstride, (const void*)(ptr_ppointer));
@@ -5337,14 +5337,14 @@ int org_mini_gl_GL_glAreTexturesResident(Runtime *runtime, JClass *clazz) {
     __refer ptr_ptextures = NULL;
     if(ptextures){
         offset_ptextures *= env->data_type_bytes[ptextures->mb.arr_type_index];
-        ptr_ptextures = ptextures->arr_body + offset_ptextures;
+        ptr_ptextures = jarray_body(ptextures) + offset_ptextures;
     } else if(offset_ptextures) { ptr_ptextures = (__refer)(intptr_t)offset_ptextures;}
     Instance *presidences = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_presidences = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_presidences = NULL;
     if(presidences){
         offset_presidences *= env->data_type_bytes[presidences->mb.arr_type_index];
-        ptr_presidences = presidences->arr_body + offset_presidences;
+        ptr_presidences = jarray_body(presidences) + offset_presidences;
     } else if(offset_presidences) { ptr_presidences = (__refer)(intptr_t)offset_presidences;}
 
     GLboolean _re_val = glAreTexturesResident((GLsizei)pn, (const GLuint*)(ptr_ptextures), (GLboolean*)(ptr_presidences));
@@ -5363,14 +5363,14 @@ int org_mini_gl_GL_glPrioritizeTextures(Runtime *runtime, JClass *clazz) {
     __refer ptr_ptextures = NULL;
     if(ptextures){
         offset_ptextures *= env->data_type_bytes[ptextures->mb.arr_type_index];
-        ptr_ptextures = ptextures->arr_body + offset_ptextures;
+        ptr_ptextures = jarray_body(ptextures) + offset_ptextures;
     } else if(offset_ptextures) { ptr_ptextures = (__refer)(intptr_t)offset_ptextures;}
     Instance *ppriorities = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_ppriorities = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_ppriorities = NULL;
     if(ppriorities){
         offset_ppriorities *= env->data_type_bytes[ppriorities->mb.arr_type_index];
-        ptr_ppriorities = ppriorities->arr_body + offset_ppriorities;
+        ptr_ppriorities = jarray_body(ppriorities) + offset_ppriorities;
     } else if(offset_ppriorities) { ptr_ppriorities = (__refer)(intptr_t)offset_ppriorities;}
 
     glPrioritizeTextures((GLsizei)pn, (const GLuint*)(ptr_ptextures), (const GLfloat*)(ptr_ppriorities));
@@ -5396,7 +5396,7 @@ int org_mini_gl_GL_glIndexubv(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     
     Instance *pc = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pc = pc->arr_body ;
+    __refer ptr_pc = jarray_body(pc) ;
 
     glIndexubv((const GLubyte*)(ptr_pc));
     
@@ -5441,7 +5441,7 @@ int org_mini_gl_GL_glDrawRangeElements(Runtime *runtime, JClass *clazz) {
     __refer ptr_pindices = NULL;
     if(pindices){
         offset_pindices *= env->data_type_bytes[pindices->mb.arr_type_index];
-        ptr_pindices = pindices->arr_body + offset_pindices;
+        ptr_pindices = jarray_body(pindices) + offset_pindices;
     } else if(offset_pindices) { ptr_pindices = (__refer)(intptr_t)offset_pindices;}
 
     glDrawRangeElements((GLenum)pmode, (GLuint)pstart, (GLuint)pend, (GLsizei)pcount, (GLenum)ptype, (const void*)(ptr_pindices));
@@ -5468,7 +5468,7 @@ int org_mini_gl_GL_glTexImage3D(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppixels = NULL;
     if(ppixels){
         offset_ppixels *= env->data_type_bytes[ppixels->mb.arr_type_index];
-        ptr_ppixels = ppixels->arr_body + offset_ppixels;
+        ptr_ppixels = jarray_body(ppixels) + offset_ppixels;
     } else if(offset_ppixels) { ptr_ppixels = (__refer)(intptr_t)offset_ppixels;}
 
     glTexImage3D((GLenum)ptarget, (GLint)plevel, (GLint)pinternalformat, (GLsizei)pwidth, (GLsizei)pheight, (GLsizei)pdepth, (GLint)pborder, (GLenum)pformat, (GLenum)ptype, (const void*)(ptr_ppixels));
@@ -5496,7 +5496,7 @@ int org_mini_gl_GL_glTexSubImage3D(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppixels = NULL;
     if(ppixels){
         offset_ppixels *= env->data_type_bytes[ppixels->mb.arr_type_index];
-        ptr_ppixels = ppixels->arr_body + offset_ppixels;
+        ptr_ppixels = jarray_body(ppixels) + offset_ppixels;
     } else if(offset_ppixels) { ptr_ppixels = (__refer)(intptr_t)offset_ppixels;}
 
     glTexSubImage3D((GLenum)ptarget, (GLint)plevel, (GLint)pxoffset, (GLint)pyoffset, (GLint)pzoffset, (GLsizei)pwidth, (GLsizei)pheight, (GLsizei)pdepth, (GLenum)pformat, (GLenum)ptype, (const void*)(ptr_ppixels));
@@ -5567,7 +5567,7 @@ int org_mini_gl_GL_glCompressedTexImage3D(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glCompressedTexImage3D((GLenum)ptarget, (GLint)plevel, (GLenum)pinternalformat, (GLsizei)pwidth, (GLsizei)pheight, (GLsizei)pdepth, (GLint)pborder, (GLsizei)pimageSize, (const void*)(ptr_pdata));
@@ -5592,7 +5592,7 @@ int org_mini_gl_GL_glCompressedTexImage2D(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glCompressedTexImage2D((GLenum)ptarget, (GLint)plevel, (GLenum)pinternalformat, (GLsizei)pwidth, (GLsizei)pheight, (GLint)pborder, (GLsizei)pimageSize, (const void*)(ptr_pdata));
@@ -5616,7 +5616,7 @@ int org_mini_gl_GL_glCompressedTexImage1D(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glCompressedTexImage1D((GLenum)ptarget, (GLint)plevel, (GLenum)pinternalformat, (GLsizei)pwidth, (GLint)pborder, (GLsizei)pimageSize, (const void*)(ptr_pdata));
@@ -5644,7 +5644,7 @@ int org_mini_gl_GL_glCompressedTexSubImage3D(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glCompressedTexSubImage3D((GLenum)ptarget, (GLint)plevel, (GLint)pxoffset, (GLint)pyoffset, (GLint)pzoffset, (GLsizei)pwidth, (GLsizei)pheight, (GLsizei)pdepth, (GLenum)pformat, (GLsizei)pimageSize, (const void*)(ptr_pdata));
@@ -5670,7 +5670,7 @@ int org_mini_gl_GL_glCompressedTexSubImage2D(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glCompressedTexSubImage2D((GLenum)ptarget, (GLint)plevel, (GLint)pxoffset, (GLint)pyoffset, (GLsizei)pwidth, (GLsizei)pheight, (GLenum)pformat, (GLsizei)pimageSize, (const void*)(ptr_pdata));
@@ -5694,7 +5694,7 @@ int org_mini_gl_GL_glCompressedTexSubImage1D(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glCompressedTexSubImage1D((GLenum)ptarget, (GLint)plevel, (GLint)pxoffset, (GLsizei)pwidth, (GLenum)pformat, (GLsizei)pimageSize, (const void*)(ptr_pdata));
@@ -5714,7 +5714,7 @@ int org_mini_gl_GL_glGetCompressedTexImage(Runtime *runtime, JClass *clazz) {
     __refer ptr_pimg = NULL;
     if(pimg){
         offset_pimg *= env->data_type_bytes[pimg->mb.arr_type_index];
-        ptr_pimg = pimg->arr_body + offset_pimg;
+        ptr_pimg = jarray_body(pimg) + offset_pimg;
     } else if(offset_pimg) { ptr_pimg = (__refer)(intptr_t)offset_pimg;}
 
     glGetCompressedTexImage((GLenum)ptarget, (GLint)plevel, (void*)(ptr_pimg));
@@ -5758,7 +5758,7 @@ int org_mini_gl_GL_glMultiTexCoord1dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord1dv((GLenum)ptarget, (const GLdouble*)(ptr_pv));
@@ -5790,7 +5790,7 @@ int org_mini_gl_GL_glMultiTexCoord1fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord1fv((GLenum)ptarget, (const GLfloat*)(ptr_pv));
@@ -5822,7 +5822,7 @@ int org_mini_gl_GL_glMultiTexCoord1iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord1iv((GLenum)ptarget, (const GLint*)(ptr_pv));
@@ -5854,7 +5854,7 @@ int org_mini_gl_GL_glMultiTexCoord1sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord1sv((GLenum)ptarget, (const GLshort*)(ptr_pv));
@@ -5887,7 +5887,7 @@ int org_mini_gl_GL_glMultiTexCoord2dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord2dv((GLenum)ptarget, (const GLdouble*)(ptr_pv));
@@ -5920,7 +5920,7 @@ int org_mini_gl_GL_glMultiTexCoord2fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord2fv((GLenum)ptarget, (const GLfloat*)(ptr_pv));
@@ -5953,7 +5953,7 @@ int org_mini_gl_GL_glMultiTexCoord2iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord2iv((GLenum)ptarget, (const GLint*)(ptr_pv));
@@ -5986,7 +5986,7 @@ int org_mini_gl_GL_glMultiTexCoord2sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord2sv((GLenum)ptarget, (const GLshort*)(ptr_pv));
@@ -6020,7 +6020,7 @@ int org_mini_gl_GL_glMultiTexCoord3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord3dv((GLenum)ptarget, (const GLdouble*)(ptr_pv));
@@ -6054,7 +6054,7 @@ int org_mini_gl_GL_glMultiTexCoord3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord3fv((GLenum)ptarget, (const GLfloat*)(ptr_pv));
@@ -6088,7 +6088,7 @@ int org_mini_gl_GL_glMultiTexCoord3iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord3iv((GLenum)ptarget, (const GLint*)(ptr_pv));
@@ -6122,7 +6122,7 @@ int org_mini_gl_GL_glMultiTexCoord3sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord3sv((GLenum)ptarget, (const GLshort*)(ptr_pv));
@@ -6157,7 +6157,7 @@ int org_mini_gl_GL_glMultiTexCoord4dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord4dv((GLenum)ptarget, (const GLdouble*)(ptr_pv));
@@ -6192,7 +6192,7 @@ int org_mini_gl_GL_glMultiTexCoord4fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord4fv((GLenum)ptarget, (const GLfloat*)(ptr_pv));
@@ -6227,7 +6227,7 @@ int org_mini_gl_GL_glMultiTexCoord4iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord4iv((GLenum)ptarget, (const GLint*)(ptr_pv));
@@ -6262,7 +6262,7 @@ int org_mini_gl_GL_glMultiTexCoord4sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glMultiTexCoord4sv((GLenum)ptarget, (const GLshort*)(ptr_pv));
@@ -6280,7 +6280,7 @@ int org_mini_gl_GL_glLoadTransposeMatrixf(Runtime *runtime, JClass *clazz) {
     __refer ptr_pm = NULL;
     if(pm){
         offset_pm *= env->data_type_bytes[pm->mb.arr_type_index];
-        ptr_pm = pm->arr_body + offset_pm;
+        ptr_pm = jarray_body(pm) + offset_pm;
     } else if(offset_pm) { ptr_pm = (__refer)(intptr_t)offset_pm;}
 
     glLoadTransposeMatrixf((const GLfloat*)(ptr_pm));
@@ -6298,7 +6298,7 @@ int org_mini_gl_GL_glLoadTransposeMatrixd(Runtime *runtime, JClass *clazz) {
     __refer ptr_pm = NULL;
     if(pm){
         offset_pm *= env->data_type_bytes[pm->mb.arr_type_index];
-        ptr_pm = pm->arr_body + offset_pm;
+        ptr_pm = jarray_body(pm) + offset_pm;
     } else if(offset_pm) { ptr_pm = (__refer)(intptr_t)offset_pm;}
 
     glLoadTransposeMatrixd((const GLdouble*)(ptr_pm));
@@ -6316,7 +6316,7 @@ int org_mini_gl_GL_glMultTransposeMatrixf(Runtime *runtime, JClass *clazz) {
     __refer ptr_pm = NULL;
     if(pm){
         offset_pm *= env->data_type_bytes[pm->mb.arr_type_index];
-        ptr_pm = pm->arr_body + offset_pm;
+        ptr_pm = jarray_body(pm) + offset_pm;
     } else if(offset_pm) { ptr_pm = (__refer)(intptr_t)offset_pm;}
 
     glMultTransposeMatrixf((const GLfloat*)(ptr_pm));
@@ -6334,7 +6334,7 @@ int org_mini_gl_GL_glMultTransposeMatrixd(Runtime *runtime, JClass *clazz) {
     __refer ptr_pm = NULL;
     if(pm){
         offset_pm *= env->data_type_bytes[pm->mb.arr_type_index];
-        ptr_pm = pm->arr_body + offset_pm;
+        ptr_pm = jarray_body(pm) + offset_pm;
     } else if(offset_pm) { ptr_pm = (__refer)(intptr_t)offset_pm;}
 
     glMultTransposeMatrixd((const GLdouble*)(ptr_pm));
@@ -6368,14 +6368,14 @@ int org_mini_gl_GL_glMultiDrawArrays(Runtime *runtime, JClass *clazz) {
     __refer ptr_pfirst = NULL;
     if(pfirst){
         offset_pfirst *= env->data_type_bytes[pfirst->mb.arr_type_index];
-        ptr_pfirst = pfirst->arr_body + offset_pfirst;
+        ptr_pfirst = jarray_body(pfirst) + offset_pfirst;
     } else if(offset_pfirst) { ptr_pfirst = (__refer)(intptr_t)offset_pfirst;}
     Instance *pcount = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_pcount = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_pcount = NULL;
     if(pcount){
         offset_pcount *= env->data_type_bytes[pcount->mb.arr_type_index];
-        ptr_pcount = pcount->arr_body + offset_pcount;
+        ptr_pcount = jarray_body(pcount) + offset_pcount;
     } else if(offset_pcount) { ptr_pcount = (__refer)(intptr_t)offset_pcount;}
     s32 pdrawcount = env->localvar_getInt(runtime->localvar, pos++);
 
@@ -6395,7 +6395,7 @@ int org_mini_gl_GL_glMultiDrawElements(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcount = NULL;
     if(pcount){
         offset_pcount *= env->data_type_bytes[pcount->mb.arr_type_index];
-        ptr_pcount = pcount->arr_body + offset_pcount;
+        ptr_pcount = jarray_body(pcount) + offset_pcount;
     } else if(offset_pcount) { ptr_pcount = (__refer)(intptr_t)offset_pcount;}
     s32 ptype = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pindices = env->localvar_getRefer(runtime->localvar, pos++);
@@ -6434,7 +6434,7 @@ int org_mini_gl_GL_glPointParameterfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glPointParameterfv((GLenum)ppname, (const GLfloat*)(ptr_pparams));
@@ -6466,7 +6466,7 @@ int org_mini_gl_GL_glPointParameteriv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glPointParameteriv((GLenum)ppname, (const GLint*)(ptr_pparams));
@@ -6496,7 +6496,7 @@ int org_mini_gl_GL_glFogCoordfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcoord = NULL;
     if(pcoord){
         offset_pcoord *= env->data_type_bytes[pcoord->mb.arr_type_index];
-        ptr_pcoord = pcoord->arr_body + offset_pcoord;
+        ptr_pcoord = jarray_body(pcoord) + offset_pcoord;
     } else if(offset_pcoord) { ptr_pcoord = (__refer)(intptr_t)offset_pcoord;}
 
     glFogCoordfv((const GLfloat*)(ptr_pcoord));
@@ -6526,7 +6526,7 @@ int org_mini_gl_GL_glFogCoorddv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcoord = NULL;
     if(pcoord){
         offset_pcoord *= env->data_type_bytes[pcoord->mb.arr_type_index];
-        ptr_pcoord = pcoord->arr_body + offset_pcoord;
+        ptr_pcoord = jarray_body(pcoord) + offset_pcoord;
     } else if(offset_pcoord) { ptr_pcoord = (__refer)(intptr_t)offset_pcoord;}
 
     glFogCoorddv((const GLdouble*)(ptr_pcoord));
@@ -6546,7 +6546,7 @@ int org_mini_gl_GL_glFogCoordPointer(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppointer = NULL;
     if(ppointer){
         offset_ppointer *= env->data_type_bytes[ppointer->mb.arr_type_index];
-        ptr_ppointer = ppointer->arr_body + offset_ppointer;
+        ptr_ppointer = jarray_body(ppointer) + offset_ppointer;
     } else if(offset_ppointer) { ptr_ppointer = (__refer)(intptr_t)offset_ppointer;}
 
     glFogCoordPointer((GLenum)ptype, (GLsizei)pstride, (const void*)(ptr_ppointer));
@@ -6574,7 +6574,7 @@ int org_mini_gl_GL_glSecondaryColor3bv(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     
     Instance *pv = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pv = pv->arr_body ;
+    __refer ptr_pv = jarray_body(pv) ;
 
     glSecondaryColor3bv((const GLbyte*)(ptr_pv));
     
@@ -6605,7 +6605,7 @@ int org_mini_gl_GL_glSecondaryColor3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glSecondaryColor3dv((const GLdouble*)(ptr_pv));
@@ -6637,7 +6637,7 @@ int org_mini_gl_GL_glSecondaryColor3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glSecondaryColor3fv((const GLfloat*)(ptr_pv));
@@ -6669,7 +6669,7 @@ int org_mini_gl_GL_glSecondaryColor3iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glSecondaryColor3iv((const GLint*)(ptr_pv));
@@ -6701,7 +6701,7 @@ int org_mini_gl_GL_glSecondaryColor3sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glSecondaryColor3sv((const GLshort*)(ptr_pv));
@@ -6729,7 +6729,7 @@ int org_mini_gl_GL_glSecondaryColor3ubv(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     
     Instance *pv = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pv = pv->arr_body ;
+    __refer ptr_pv = jarray_body(pv) ;
 
     glSecondaryColor3ubv((const GLubyte*)(ptr_pv));
     
@@ -6760,7 +6760,7 @@ int org_mini_gl_GL_glSecondaryColor3uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glSecondaryColor3uiv((const GLuint*)(ptr_pv));
@@ -6792,7 +6792,7 @@ int org_mini_gl_GL_glSecondaryColor3usv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glSecondaryColor3usv((const GLushort*)(ptr_pv));
@@ -6813,7 +6813,7 @@ int org_mini_gl_GL_glSecondaryColorPointer(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppointer = NULL;
     if(ppointer){
         offset_ppointer *= env->data_type_bytes[ppointer->mb.arr_type_index];
-        ptr_ppointer = ppointer->arr_body + offset_ppointer;
+        ptr_ppointer = jarray_body(ppointer) + offset_ppointer;
     } else if(offset_ppointer) { ptr_ppointer = (__refer)(intptr_t)offset_ppointer;}
 
     glSecondaryColorPointer((GLint)psize, (GLenum)ptype, (GLsizei)pstride, (const void*)(ptr_ppointer));
@@ -6844,7 +6844,7 @@ int org_mini_gl_GL_glWindowPos2dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glWindowPos2dv((const GLdouble*)(ptr_pv));
@@ -6875,7 +6875,7 @@ int org_mini_gl_GL_glWindowPos2fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glWindowPos2fv((const GLfloat*)(ptr_pv));
@@ -6906,7 +6906,7 @@ int org_mini_gl_GL_glWindowPos2iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glWindowPos2iv((const GLint*)(ptr_pv));
@@ -6937,7 +6937,7 @@ int org_mini_gl_GL_glWindowPos2sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glWindowPos2sv((const GLshort*)(ptr_pv));
@@ -6969,7 +6969,7 @@ int org_mini_gl_GL_glWindowPos3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glWindowPos3dv((const GLdouble*)(ptr_pv));
@@ -7001,7 +7001,7 @@ int org_mini_gl_GL_glWindowPos3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glWindowPos3fv((const GLfloat*)(ptr_pv));
@@ -7033,7 +7033,7 @@ int org_mini_gl_GL_glWindowPos3iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glWindowPos3iv((const GLint*)(ptr_pv));
@@ -7065,7 +7065,7 @@ int org_mini_gl_GL_glWindowPos3sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glWindowPos3sv((const GLshort*)(ptr_pv));
@@ -7111,7 +7111,7 @@ int org_mini_gl_GL_glGenQueries(Runtime *runtime, JClass *clazz) {
     __refer ptr_pids = NULL;
     if(pids){
         offset_pids *= env->data_type_bytes[pids->mb.arr_type_index];
-        ptr_pids = pids->arr_body + offset_pids;
+        ptr_pids = jarray_body(pids) + offset_pids;
     } else if(offset_pids) { ptr_pids = (__refer)(intptr_t)offset_pids;}
 
     glGenQueries((GLsizei)pn, (GLuint*)(ptr_pids));
@@ -7130,7 +7130,7 @@ int org_mini_gl_GL_glDeleteQueries(Runtime *runtime, JClass *clazz) {
     __refer ptr_pids = NULL;
     if(pids){
         offset_pids *= env->data_type_bytes[pids->mb.arr_type_index];
-        ptr_pids = pids->arr_body + offset_pids;
+        ptr_pids = jarray_body(pids) + offset_pids;
     } else if(offset_pids) { ptr_pids = (__refer)(intptr_t)offset_pids;}
 
     glDeleteQueries((GLsizei)pn, (const GLuint*)(ptr_pids));
@@ -7187,7 +7187,7 @@ int org_mini_gl_GL_glGetQueryiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetQueryiv((GLenum)ptarget, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -7207,7 +7207,7 @@ int org_mini_gl_GL_glGetQueryObjectiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetQueryObjectiv((GLuint)pid, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -7227,7 +7227,7 @@ int org_mini_gl_GL_glGetQueryObjectuiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetQueryObjectuiv((GLuint)pid, (GLenum)ppname, (GLuint*)(ptr_pparams));
@@ -7259,7 +7259,7 @@ int org_mini_gl_GL_glDeleteBuffers(Runtime *runtime, JClass *clazz) {
     __refer ptr_pbuffers = NULL;
     if(pbuffers){
         offset_pbuffers *= env->data_type_bytes[pbuffers->mb.arr_type_index];
-        ptr_pbuffers = pbuffers->arr_body + offset_pbuffers;
+        ptr_pbuffers = jarray_body(pbuffers) + offset_pbuffers;
     } else if(offset_pbuffers) { ptr_pbuffers = (__refer)(intptr_t)offset_pbuffers;}
 
     glDeleteBuffers((GLsizei)pn, (const GLuint*)(ptr_pbuffers));
@@ -7278,7 +7278,7 @@ int org_mini_gl_GL_glGenBuffers(Runtime *runtime, JClass *clazz) {
     __refer ptr_pbuffers = NULL;
     if(pbuffers){
         offset_pbuffers *= env->data_type_bytes[pbuffers->mb.arr_type_index];
-        ptr_pbuffers = pbuffers->arr_body + offset_pbuffers;
+        ptr_pbuffers = jarray_body(pbuffers) + offset_pbuffers;
     } else if(offset_pbuffers) { ptr_pbuffers = (__refer)(intptr_t)offset_pbuffers;}
 
     glGenBuffers((GLsizei)pn, (GLuint*)(ptr_pbuffers));
@@ -7310,7 +7310,7 @@ int org_mini_gl_GL_glBufferData(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
     s32 pusage = env->localvar_getInt(runtime->localvar, pos++);
 
@@ -7332,7 +7332,7 @@ int org_mini_gl_GL_glBufferSubData(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glBufferSubData((GLenum)ptarget, (GLintptr)poffset, (GLsizeiptr)psize, (const void*)(ptr_pdata));
@@ -7353,7 +7353,7 @@ int org_mini_gl_GL_glGetBufferSubData(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glGetBufferSubData((GLenum)ptarget, (GLintptr)poffset, (GLsizeiptr)psize, (void*)(ptr_pdata));
@@ -7398,7 +7398,7 @@ int org_mini_gl_GL_glGetBufferParameteriv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetBufferParameteriv((GLenum)ptarget, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -7448,7 +7448,7 @@ int org_mini_gl_GL_glDrawBuffers(Runtime *runtime, JClass *clazz) {
     __refer ptr_pbufs = NULL;
     if(pbufs){
         offset_pbufs *= env->data_type_bytes[pbufs->mb.arr_type_index];
-        ptr_pbufs = pbufs->arr_body + offset_pbufs;
+        ptr_pbufs = jarray_body(pbufs) + offset_pbufs;
     } else if(offset_pbufs) { ptr_pbufs = (__refer)(intptr_t)offset_pbufs;}
 
     glDrawBuffers((GLsizei)pn, (const GLenum*)(ptr_pbufs));
@@ -7520,7 +7520,7 @@ int org_mini_gl_GL_glBindAttribLocation(Runtime *runtime, JClass *clazz) {
     s32 pprogram = env->localvar_getInt(runtime->localvar, pos++);
     s32 pindex = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pname = pname->arr_body ;
+    __refer ptr_pname = jarray_body(pname) ;
 
     glBindAttribLocation((GLuint)pprogram, (GLuint)pindex, (const GLchar*)(ptr_pname));
     
@@ -7636,24 +7636,24 @@ int org_mini_gl_GL_glGetActiveAttrib(Runtime *runtime, JClass *clazz) {
     __refer ptr_plength = NULL;
     if(plength){
         offset_plength *= env->data_type_bytes[plength->mb.arr_type_index];
-        ptr_plength = plength->arr_body + offset_plength;
+        ptr_plength = jarray_body(plength) + offset_plength;
     } else if(offset_plength) { ptr_plength = (__refer)(intptr_t)offset_plength;}
     Instance *psize = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_psize = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_psize = NULL;
     if(psize){
         offset_psize *= env->data_type_bytes[psize->mb.arr_type_index];
-        ptr_psize = psize->arr_body + offset_psize;
+        ptr_psize = jarray_body(psize) + offset_psize;
     } else if(offset_psize) { ptr_psize = (__refer)(intptr_t)offset_psize;}
     Instance *ptype = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_ptype = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_ptype = NULL;
     if(ptype){
         offset_ptype *= env->data_type_bytes[ptype->mb.arr_type_index];
-        ptr_ptype = ptype->arr_body + offset_ptype;
+        ptr_ptype = jarray_body(ptype) + offset_ptype;
     } else if(offset_ptype) { ptr_ptype = (__refer)(intptr_t)offset_ptype;}
     Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pname = pname->arr_body ;
+    __refer ptr_pname = jarray_body(pname) ;
 
     glGetActiveAttrib((GLuint)pprogram, (GLuint)pindex, (GLsizei)pbufSize, (GLsizei*)(ptr_plength), (GLint*)(ptr_psize), (GLenum*)(ptr_ptype), (GLchar*)(ptr_pname));
     
@@ -7673,24 +7673,24 @@ int org_mini_gl_GL_glGetActiveUniform(Runtime *runtime, JClass *clazz) {
     __refer ptr_plength = NULL;
     if(plength){
         offset_plength *= env->data_type_bytes[plength->mb.arr_type_index];
-        ptr_plength = plength->arr_body + offset_plength;
+        ptr_plength = jarray_body(plength) + offset_plength;
     } else if(offset_plength) { ptr_plength = (__refer)(intptr_t)offset_plength;}
     Instance *psize = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_psize = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_psize = NULL;
     if(psize){
         offset_psize *= env->data_type_bytes[psize->mb.arr_type_index];
-        ptr_psize = psize->arr_body + offset_psize;
+        ptr_psize = jarray_body(psize) + offset_psize;
     } else if(offset_psize) { ptr_psize = (__refer)(intptr_t)offset_psize;}
     Instance *ptype = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_ptype = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_ptype = NULL;
     if(ptype){
         offset_ptype *= env->data_type_bytes[ptype->mb.arr_type_index];
-        ptr_ptype = ptype->arr_body + offset_ptype;
+        ptr_ptype = jarray_body(ptype) + offset_ptype;
     } else if(offset_ptype) { ptr_ptype = (__refer)(intptr_t)offset_ptype;}
     Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pname = pname->arr_body ;
+    __refer ptr_pname = jarray_body(pname) ;
 
     glGetActiveUniform((GLuint)pprogram, (GLuint)pindex, (GLsizei)pbufSize, (GLsizei*)(ptr_plength), (GLint*)(ptr_psize), (GLenum*)(ptr_ptype), (GLchar*)(ptr_pname));
     
@@ -7709,14 +7709,14 @@ int org_mini_gl_GL_glGetAttachedShaders(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcount = NULL;
     if(pcount){
         offset_pcount *= env->data_type_bytes[pcount->mb.arr_type_index];
-        ptr_pcount = pcount->arr_body + offset_pcount;
+        ptr_pcount = jarray_body(pcount) + offset_pcount;
     } else if(offset_pcount) { ptr_pcount = (__refer)(intptr_t)offset_pcount;}
     Instance *pshaders = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_pshaders = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_pshaders = NULL;
     if(pshaders){
         offset_pshaders *= env->data_type_bytes[pshaders->mb.arr_type_index];
-        ptr_pshaders = pshaders->arr_body + offset_pshaders;
+        ptr_pshaders = jarray_body(pshaders) + offset_pshaders;
     } else if(offset_pshaders) { ptr_pshaders = (__refer)(intptr_t)offset_pshaders;}
 
     glGetAttachedShaders((GLuint)pprogram, (GLsizei)pmaxCount, (GLsizei*)(ptr_pcount), (GLuint*)(ptr_pshaders));
@@ -7731,7 +7731,7 @@ int org_mini_gl_GL_glGetAttribLocation(Runtime *runtime, JClass *clazz) {
     
     s32 pprogram = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pname = pname->arr_body ;
+    __refer ptr_pname = jarray_body(pname) ;
 
     GLint _re_val = glGetAttribLocation((GLuint)pprogram, (const GLchar*)(ptr_pname));
     s32 ret_value = *((s32*)&_re_val);env->push_int(runtime->stack, ret_value);
@@ -7750,7 +7750,7 @@ int org_mini_gl_GL_glGetProgramiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetProgramiv((GLuint)pprogram, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -7770,10 +7770,10 @@ int org_mini_gl_GL_glGetProgramInfoLog(Runtime *runtime, JClass *clazz) {
     __refer ptr_plength = NULL;
     if(plength){
         offset_plength *= env->data_type_bytes[plength->mb.arr_type_index];
-        ptr_plength = plength->arr_body + offset_plength;
+        ptr_plength = jarray_body(plength) + offset_plength;
     } else if(offset_plength) { ptr_plength = (__refer)(intptr_t)offset_plength;}
     Instance *pinfoLog = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pinfoLog = pinfoLog->arr_body ;
+    __refer ptr_pinfoLog = jarray_body(pinfoLog) ;
 
     glGetProgramInfoLog((GLuint)pprogram, (GLsizei)pbufSize, (GLsizei*)(ptr_plength), (GLchar*)(ptr_pinfoLog));
     
@@ -7792,7 +7792,7 @@ int org_mini_gl_GL_glGetShaderiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetShaderiv((GLuint)pshader, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -7812,10 +7812,10 @@ int org_mini_gl_GL_glGetShaderInfoLog(Runtime *runtime, JClass *clazz) {
     __refer ptr_plength = NULL;
     if(plength){
         offset_plength *= env->data_type_bytes[plength->mb.arr_type_index];
-        ptr_plength = plength->arr_body + offset_plength;
+        ptr_plength = jarray_body(plength) + offset_plength;
     } else if(offset_plength) { ptr_plength = (__refer)(intptr_t)offset_plength;}
     Instance *pinfoLog = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pinfoLog = pinfoLog->arr_body ;
+    __refer ptr_pinfoLog = jarray_body(pinfoLog) ;
 
     glGetShaderInfoLog((GLuint)pshader, (GLsizei)pbufSize, (GLsizei*)(ptr_plength), (GLchar*)(ptr_pinfoLog));
     
@@ -7834,10 +7834,10 @@ int org_mini_gl_GL_glGetShaderSource(Runtime *runtime, JClass *clazz) {
     __refer ptr_plength = NULL;
     if(plength){
         offset_plength *= env->data_type_bytes[plength->mb.arr_type_index];
-        ptr_plength = plength->arr_body + offset_plength;
+        ptr_plength = jarray_body(plength) + offset_plength;
     } else if(offset_plength) { ptr_plength = (__refer)(intptr_t)offset_plength;}
     Instance *psource = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_psource = psource->arr_body ;
+    __refer ptr_psource = jarray_body(psource) ;
 
     glGetShaderSource((GLuint)pshader, (GLsizei)pbufSize, (GLsizei*)(ptr_plength), (GLchar*)(ptr_psource));
     
@@ -7851,7 +7851,7 @@ int org_mini_gl_GL_glGetUniformLocation(Runtime *runtime, JClass *clazz) {
     
     s32 pprogram = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pname = pname->arr_body ;
+    __refer ptr_pname = jarray_body(pname) ;
 
     GLint _re_val = glGetUniformLocation((GLuint)pprogram, (const GLchar*)(ptr_pname));
     s32 ret_value = *((s32*)&_re_val);env->push_int(runtime->stack, ret_value);
@@ -7870,7 +7870,7 @@ int org_mini_gl_GL_glGetUniformfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetUniformfv((GLuint)pprogram, (GLint)plocation, (GLfloat*)(ptr_pparams));
@@ -7890,7 +7890,7 @@ int org_mini_gl_GL_glGetUniformiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetUniformiv((GLuint)pprogram, (GLint)plocation, (GLint*)(ptr_pparams));
@@ -7910,7 +7910,7 @@ int org_mini_gl_GL_glGetVertexAttribdv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetVertexAttribdv((GLuint)pindex, (GLenum)ppname, (GLdouble*)(ptr_pparams));
@@ -7930,7 +7930,7 @@ int org_mini_gl_GL_glGetVertexAttribfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetVertexAttribfv((GLuint)pindex, (GLenum)ppname, (GLfloat*)(ptr_pparams));
@@ -7950,7 +7950,7 @@ int org_mini_gl_GL_glGetVertexAttribiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetVertexAttribiv((GLuint)pindex, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -8029,7 +8029,7 @@ int org_mini_gl_GL_glShaderSource(Runtime *runtime, JClass *clazz) {
     __refer ptr_plength = NULL;
     if(plength){
         offset_plength *= env->data_type_bytes[plength->mb.arr_type_index];
-        ptr_plength = plength->arr_body + offset_plength;
+        ptr_plength = jarray_body(plength) + offset_plength;
     } else if(offset_plength) { ptr_plength = (__refer)(intptr_t)offset_plength;}
 
     glShaderSource((GLuint)pshader, (GLsizei)pcount, (const GLchar*const*)(ptr_pstring->arr_body), (const GLint*)(ptr_plength));
@@ -8177,7 +8177,7 @@ int org_mini_gl_GL_glUniform1fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform1fv((GLint)plocation, (GLsizei)pcount, (const GLfloat*)(ptr_pvalue));
@@ -8197,7 +8197,7 @@ int org_mini_gl_GL_glUniform2fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform2fv((GLint)plocation, (GLsizei)pcount, (const GLfloat*)(ptr_pvalue));
@@ -8217,7 +8217,7 @@ int org_mini_gl_GL_glUniform3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform3fv((GLint)plocation, (GLsizei)pcount, (const GLfloat*)(ptr_pvalue));
@@ -8237,7 +8237,7 @@ int org_mini_gl_GL_glUniform4fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform4fv((GLint)plocation, (GLsizei)pcount, (const GLfloat*)(ptr_pvalue));
@@ -8257,7 +8257,7 @@ int org_mini_gl_GL_glUniform1iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform1iv((GLint)plocation, (GLsizei)pcount, (const GLint*)(ptr_pvalue));
@@ -8277,7 +8277,7 @@ int org_mini_gl_GL_glUniform2iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform2iv((GLint)plocation, (GLsizei)pcount, (const GLint*)(ptr_pvalue));
@@ -8297,7 +8297,7 @@ int org_mini_gl_GL_glUniform3iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform3iv((GLint)plocation, (GLsizei)pcount, (const GLint*)(ptr_pvalue));
@@ -8317,7 +8317,7 @@ int org_mini_gl_GL_glUniform4iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform4iv((GLint)plocation, (GLsizei)pcount, (const GLint*)(ptr_pvalue));
@@ -8338,7 +8338,7 @@ int org_mini_gl_GL_glUniformMatrix2fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix2fv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -8359,7 +8359,7 @@ int org_mini_gl_GL_glUniformMatrix3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix3fv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -8380,7 +8380,7 @@ int org_mini_gl_GL_glUniformMatrix4fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix4fv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -8424,7 +8424,7 @@ int org_mini_gl_GL_glVertexAttrib1dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib1dv((GLuint)pindex, (const GLdouble*)(ptr_pv));
@@ -8456,7 +8456,7 @@ int org_mini_gl_GL_glVertexAttrib1fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib1fv((GLuint)pindex, (const GLfloat*)(ptr_pv));
@@ -8488,7 +8488,7 @@ int org_mini_gl_GL_glVertexAttrib1sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib1sv((GLuint)pindex, (const GLshort*)(ptr_pv));
@@ -8521,7 +8521,7 @@ int org_mini_gl_GL_glVertexAttrib2dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib2dv((GLuint)pindex, (const GLdouble*)(ptr_pv));
@@ -8554,7 +8554,7 @@ int org_mini_gl_GL_glVertexAttrib2fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib2fv((GLuint)pindex, (const GLfloat*)(ptr_pv));
@@ -8587,7 +8587,7 @@ int org_mini_gl_GL_glVertexAttrib2sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib2sv((GLuint)pindex, (const GLshort*)(ptr_pv));
@@ -8621,7 +8621,7 @@ int org_mini_gl_GL_glVertexAttrib3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib3dv((GLuint)pindex, (const GLdouble*)(ptr_pv));
@@ -8655,7 +8655,7 @@ int org_mini_gl_GL_glVertexAttrib3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib3fv((GLuint)pindex, (const GLfloat*)(ptr_pv));
@@ -8689,7 +8689,7 @@ int org_mini_gl_GL_glVertexAttrib3sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib3sv((GLuint)pindex, (const GLshort*)(ptr_pv));
@@ -8704,7 +8704,7 @@ int org_mini_gl_GL_glVertexAttrib4Nbv(Runtime *runtime, JClass *clazz) {
     
     s32 pindex = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pv = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pv = pv->arr_body ;
+    __refer ptr_pv = jarray_body(pv) ;
 
     glVertexAttrib4Nbv((GLuint)pindex, (const GLbyte*)(ptr_pv));
     
@@ -8722,7 +8722,7 @@ int org_mini_gl_GL_glVertexAttrib4Niv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib4Niv((GLuint)pindex, (const GLint*)(ptr_pv));
@@ -8741,7 +8741,7 @@ int org_mini_gl_GL_glVertexAttrib4Nsv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib4Nsv((GLuint)pindex, (const GLshort*)(ptr_pv));
@@ -8772,7 +8772,7 @@ int org_mini_gl_GL_glVertexAttrib4Nubv(Runtime *runtime, JClass *clazz) {
     
     s32 pindex = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pv = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pv = pv->arr_body ;
+    __refer ptr_pv = jarray_body(pv) ;
 
     glVertexAttrib4Nubv((GLuint)pindex, (const GLubyte*)(ptr_pv));
     
@@ -8790,7 +8790,7 @@ int org_mini_gl_GL_glVertexAttrib4Nuiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib4Nuiv((GLuint)pindex, (const GLuint*)(ptr_pv));
@@ -8809,7 +8809,7 @@ int org_mini_gl_GL_glVertexAttrib4Nusv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib4Nusv((GLuint)pindex, (const GLushort*)(ptr_pv));
@@ -8824,7 +8824,7 @@ int org_mini_gl_GL_glVertexAttrib4bv(Runtime *runtime, JClass *clazz) {
     
     s32 pindex = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pv = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pv = pv->arr_body ;
+    __refer ptr_pv = jarray_body(pv) ;
 
     glVertexAttrib4bv((GLuint)pindex, (const GLbyte*)(ptr_pv));
     
@@ -8858,7 +8858,7 @@ int org_mini_gl_GL_glVertexAttrib4dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib4dv((GLuint)pindex, (const GLdouble*)(ptr_pv));
@@ -8893,7 +8893,7 @@ int org_mini_gl_GL_glVertexAttrib4fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib4fv((GLuint)pindex, (const GLfloat*)(ptr_pv));
@@ -8912,7 +8912,7 @@ int org_mini_gl_GL_glVertexAttrib4iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib4iv((GLuint)pindex, (const GLint*)(ptr_pv));
@@ -8947,7 +8947,7 @@ int org_mini_gl_GL_glVertexAttrib4sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib4sv((GLuint)pindex, (const GLshort*)(ptr_pv));
@@ -8962,7 +8962,7 @@ int org_mini_gl_GL_glVertexAttrib4ubv(Runtime *runtime, JClass *clazz) {
     
     s32 pindex = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pv = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pv = pv->arr_body ;
+    __refer ptr_pv = jarray_body(pv) ;
 
     glVertexAttrib4ubv((GLuint)pindex, (const GLubyte*)(ptr_pv));
     
@@ -8980,7 +8980,7 @@ int org_mini_gl_GL_glVertexAttrib4uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib4uiv((GLuint)pindex, (const GLuint*)(ptr_pv));
@@ -8999,7 +8999,7 @@ int org_mini_gl_GL_glVertexAttrib4usv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttrib4usv((GLuint)pindex, (const GLushort*)(ptr_pv));
@@ -9022,7 +9022,7 @@ int org_mini_gl_GL_glVertexAttribPointer(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppointer = NULL;
     if(ppointer){
         offset_ppointer *= env->data_type_bytes[ppointer->mb.arr_type_index];
-        ptr_ppointer = ppointer->arr_body + offset_ppointer;
+        ptr_ppointer = jarray_body(ppointer) + offset_ppointer;
     } else if(offset_ppointer) { ptr_ppointer = (__refer)(intptr_t)offset_ppointer;}
 
     glVertexAttribPointer((GLuint)pindex, (GLint)psize, (GLenum)ptype, (GLboolean)pnormalized, (GLsizei)pstride, (const void*)(ptr_ppointer));
@@ -9043,7 +9043,7 @@ int org_mini_gl_GL_glUniformMatrix2x3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix2x3fv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -9064,7 +9064,7 @@ int org_mini_gl_GL_glUniformMatrix3x2fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix3x2fv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -9085,7 +9085,7 @@ int org_mini_gl_GL_glUniformMatrix2x4fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix2x4fv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -9106,7 +9106,7 @@ int org_mini_gl_GL_glUniformMatrix4x2fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix4x2fv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -9127,7 +9127,7 @@ int org_mini_gl_GL_glUniformMatrix3x4fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix3x4fv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -9148,7 +9148,7 @@ int org_mini_gl_GL_glUniformMatrix4x3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix4x3fv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -9184,7 +9184,7 @@ int org_mini_gl_GL_glGetBooleani_v(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glGetBooleani_v((GLenum)ptarget, (GLuint)pindex, (GLboolean*)(ptr_pdata));
@@ -9204,7 +9204,7 @@ int org_mini_gl_GL_glGetIntegeri_v(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glGetIntegeri_v((GLenum)ptarget, (GLuint)pindex, (GLint*)(ptr_pdata));
@@ -9336,24 +9336,24 @@ int org_mini_gl_GL_glGetTransformFeedbackVarying(Runtime *runtime, JClass *clazz
     __refer ptr_plength = NULL;
     if(plength){
         offset_plength *= env->data_type_bytes[plength->mb.arr_type_index];
-        ptr_plength = plength->arr_body + offset_plength;
+        ptr_plength = jarray_body(plength) + offset_plength;
     } else if(offset_plength) { ptr_plength = (__refer)(intptr_t)offset_plength;}
     Instance *psize = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_psize = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_psize = NULL;
     if(psize){
         offset_psize *= env->data_type_bytes[psize->mb.arr_type_index];
-        ptr_psize = psize->arr_body + offset_psize;
+        ptr_psize = jarray_body(psize) + offset_psize;
     } else if(offset_psize) { ptr_psize = (__refer)(intptr_t)offset_psize;}
     Instance *ptype = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_ptype = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_ptype = NULL;
     if(ptype){
         offset_ptype *= env->data_type_bytes[ptype->mb.arr_type_index];
-        ptr_ptype = ptype->arr_body + offset_ptype;
+        ptr_ptype = jarray_body(ptype) + offset_ptype;
     } else if(offset_ptype) { ptr_ptype = (__refer)(intptr_t)offset_ptype;}
     Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pname = pname->arr_body ;
+    __refer ptr_pname = jarray_body(pname) ;
 
     glGetTransformFeedbackVarying((GLuint)pprogram, (GLuint)pindex, (GLsizei)pbufSize, (GLsizei*)(ptr_plength), (GLsizei*)(ptr_psize), (GLenum*)(ptr_ptype), (GLchar*)(ptr_pname));
     
@@ -9411,7 +9411,7 @@ int org_mini_gl_GL_glVertexAttribIPointer(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppointer = NULL;
     if(ppointer){
         offset_ppointer *= env->data_type_bytes[ppointer->mb.arr_type_index];
-        ptr_ppointer = ppointer->arr_body + offset_ppointer;
+        ptr_ppointer = jarray_body(ppointer) + offset_ppointer;
     } else if(offset_ppointer) { ptr_ppointer = (__refer)(intptr_t)offset_ppointer;}
 
     glVertexAttribIPointer((GLuint)pindex, (GLint)psize, (GLenum)ptype, (GLsizei)pstride, (const void*)(ptr_ppointer));
@@ -9431,7 +9431,7 @@ int org_mini_gl_GL_glGetVertexAttribIiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetVertexAttribIiv((GLuint)pindex, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -9451,7 +9451,7 @@ int org_mini_gl_GL_glGetVertexAttribIuiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetVertexAttribIuiv((GLuint)pindex, (GLenum)ppname, (GLuint*)(ptr_pparams));
@@ -9586,7 +9586,7 @@ int org_mini_gl_GL_glVertexAttribI1iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttribI1iv((GLuint)pindex, (const GLint*)(ptr_pv));
@@ -9605,7 +9605,7 @@ int org_mini_gl_GL_glVertexAttribI2iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttribI2iv((GLuint)pindex, (const GLint*)(ptr_pv));
@@ -9624,7 +9624,7 @@ int org_mini_gl_GL_glVertexAttribI3iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttribI3iv((GLuint)pindex, (const GLint*)(ptr_pv));
@@ -9643,7 +9643,7 @@ int org_mini_gl_GL_glVertexAttribI4iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttribI4iv((GLuint)pindex, (const GLint*)(ptr_pv));
@@ -9662,7 +9662,7 @@ int org_mini_gl_GL_glVertexAttribI1uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttribI1uiv((GLuint)pindex, (const GLuint*)(ptr_pv));
@@ -9681,7 +9681,7 @@ int org_mini_gl_GL_glVertexAttribI2uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttribI2uiv((GLuint)pindex, (const GLuint*)(ptr_pv));
@@ -9700,7 +9700,7 @@ int org_mini_gl_GL_glVertexAttribI3uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttribI3uiv((GLuint)pindex, (const GLuint*)(ptr_pv));
@@ -9719,7 +9719,7 @@ int org_mini_gl_GL_glVertexAttribI4uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttribI4uiv((GLuint)pindex, (const GLuint*)(ptr_pv));
@@ -9734,7 +9734,7 @@ int org_mini_gl_GL_glVertexAttribI4bv(Runtime *runtime, JClass *clazz) {
     
     s32 pindex = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pv = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pv = pv->arr_body ;
+    __refer ptr_pv = jarray_body(pv) ;
 
     glVertexAttribI4bv((GLuint)pindex, (const GLbyte*)(ptr_pv));
     
@@ -9752,7 +9752,7 @@ int org_mini_gl_GL_glVertexAttribI4sv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttribI4sv((GLuint)pindex, (const GLshort*)(ptr_pv));
@@ -9767,7 +9767,7 @@ int org_mini_gl_GL_glVertexAttribI4ubv(Runtime *runtime, JClass *clazz) {
     
     s32 pindex = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pv = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pv = pv->arr_body ;
+    __refer ptr_pv = jarray_body(pv) ;
 
     glVertexAttribI4ubv((GLuint)pindex, (const GLubyte*)(ptr_pv));
     
@@ -9785,7 +9785,7 @@ int org_mini_gl_GL_glVertexAttribI4usv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttribI4usv((GLuint)pindex, (const GLushort*)(ptr_pv));
@@ -9805,7 +9805,7 @@ int org_mini_gl_GL_glGetUniformuiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetUniformuiv((GLuint)pprogram, (GLint)plocation, (GLuint*)(ptr_pparams));
@@ -9821,7 +9821,7 @@ int org_mini_gl_GL_glBindFragDataLocation(Runtime *runtime, JClass *clazz) {
     s32 pprogram = env->localvar_getInt(runtime->localvar, pos++);
     s32 pcolor = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pname = pname->arr_body ;
+    __refer ptr_pname = jarray_body(pname) ;
 
     glBindFragDataLocation((GLuint)pprogram, (GLuint)pcolor, (const GLchar*)(ptr_pname));
     
@@ -9835,7 +9835,7 @@ int org_mini_gl_GL_glGetFragDataLocation(Runtime *runtime, JClass *clazz) {
     
     s32 pprogram = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pname = pname->arr_body ;
+    __refer ptr_pname = jarray_body(pname) ;
 
     GLint _re_val = glGetFragDataLocation((GLuint)pprogram, (const GLchar*)(ptr_pname));
     s32 ret_value = *((s32*)&_re_val);env->push_int(runtime->stack, ret_value);
@@ -9912,7 +9912,7 @@ int org_mini_gl_GL_glUniform1uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform1uiv((GLint)plocation, (GLsizei)pcount, (const GLuint*)(ptr_pvalue));
@@ -9932,7 +9932,7 @@ int org_mini_gl_GL_glUniform2uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform2uiv((GLint)plocation, (GLsizei)pcount, (const GLuint*)(ptr_pvalue));
@@ -9952,7 +9952,7 @@ int org_mini_gl_GL_glUniform3uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform3uiv((GLint)plocation, (GLsizei)pcount, (const GLuint*)(ptr_pvalue));
@@ -9972,7 +9972,7 @@ int org_mini_gl_GL_glUniform4uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform4uiv((GLint)plocation, (GLsizei)pcount, (const GLuint*)(ptr_pvalue));
@@ -9992,7 +9992,7 @@ int org_mini_gl_GL_glTexParameterIiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glTexParameterIiv((GLenum)ptarget, (GLenum)ppname, (const GLint*)(ptr_pparams));
@@ -10012,7 +10012,7 @@ int org_mini_gl_GL_glTexParameterIuiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glTexParameterIuiv((GLenum)ptarget, (GLenum)ppname, (const GLuint*)(ptr_pparams));
@@ -10032,7 +10032,7 @@ int org_mini_gl_GL_glGetTexParameterIiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetTexParameterIiv((GLenum)ptarget, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -10052,7 +10052,7 @@ int org_mini_gl_GL_glGetTexParameterIuiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetTexParameterIuiv((GLenum)ptarget, (GLenum)ppname, (GLuint*)(ptr_pparams));
@@ -10072,7 +10072,7 @@ int org_mini_gl_GL_glClearBufferiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glClearBufferiv((GLenum)pbuffer, (GLint)pdrawbuffer, (const GLint*)(ptr_pvalue));
@@ -10092,7 +10092,7 @@ int org_mini_gl_GL_glClearBufferuiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glClearBufferuiv((GLenum)pbuffer, (GLint)pdrawbuffer, (const GLuint*)(ptr_pvalue));
@@ -10112,7 +10112,7 @@ int org_mini_gl_GL_glClearBufferfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glClearBufferfv((GLenum)pbuffer, (GLint)pdrawbuffer, (const GLfloat*)(ptr_pvalue));
@@ -10149,7 +10149,7 @@ int org_mini_gl_GL_glGetStringi(Runtime *runtime, JClass *clazz) {
         s32 bytes = strlen(_ptr_re_val);
         s32 j_t_bytes = sizeof(c8);
         Instance *_arr = env->jarray_create_by_type_index(runtime, bytes / j_t_bytes, DATATYPE_BYTE);
-        memcpy(_arr->arr_body, _ptr_re_val,bytes);
+        memcpy(jarray_body(_arr), _ptr_re_val,bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
         env->push_ref(runtime->stack, NULL);
@@ -10193,7 +10193,7 @@ int org_mini_gl_GL_glDeleteRenderbuffers(Runtime *runtime, JClass *clazz) {
     __refer ptr_prenderbuffers = NULL;
     if(prenderbuffers){
         offset_prenderbuffers *= env->data_type_bytes[prenderbuffers->mb.arr_type_index];
-        ptr_prenderbuffers = prenderbuffers->arr_body + offset_prenderbuffers;
+        ptr_prenderbuffers = jarray_body(prenderbuffers) + offset_prenderbuffers;
     } else if(offset_prenderbuffers) { ptr_prenderbuffers = (__refer)(intptr_t)offset_prenderbuffers;}
 
     glDeleteRenderbuffers((GLsizei)pn, (const GLuint*)(ptr_prenderbuffers));
@@ -10212,7 +10212,7 @@ int org_mini_gl_GL_glGenRenderbuffers(Runtime *runtime, JClass *clazz) {
     __refer ptr_prenderbuffers = NULL;
     if(prenderbuffers){
         offset_prenderbuffers *= env->data_type_bytes[prenderbuffers->mb.arr_type_index];
-        ptr_prenderbuffers = prenderbuffers->arr_body + offset_prenderbuffers;
+        ptr_prenderbuffers = jarray_body(prenderbuffers) + offset_prenderbuffers;
     } else if(offset_prenderbuffers) { ptr_prenderbuffers = (__refer)(intptr_t)offset_prenderbuffers;}
 
     glGenRenderbuffers((GLsizei)pn, (GLuint*)(ptr_prenderbuffers));
@@ -10247,7 +10247,7 @@ int org_mini_gl_GL_glGetRenderbufferParameteriv(Runtime *runtime, JClass *clazz)
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetRenderbufferParameteriv((GLenum)ptarget, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -10291,7 +10291,7 @@ int org_mini_gl_GL_glDeleteFramebuffers(Runtime *runtime, JClass *clazz) {
     __refer ptr_pframebuffers = NULL;
     if(pframebuffers){
         offset_pframebuffers *= env->data_type_bytes[pframebuffers->mb.arr_type_index];
-        ptr_pframebuffers = pframebuffers->arr_body + offset_pframebuffers;
+        ptr_pframebuffers = jarray_body(pframebuffers) + offset_pframebuffers;
     } else if(offset_pframebuffers) { ptr_pframebuffers = (__refer)(intptr_t)offset_pframebuffers;}
 
     glDeleteFramebuffers((GLsizei)pn, (const GLuint*)(ptr_pframebuffers));
@@ -10310,7 +10310,7 @@ int org_mini_gl_GL_glGenFramebuffers(Runtime *runtime, JClass *clazz) {
     __refer ptr_pframebuffers = NULL;
     if(pframebuffers){
         offset_pframebuffers *= env->data_type_bytes[pframebuffers->mb.arr_type_index];
-        ptr_pframebuffers = pframebuffers->arr_body + offset_pframebuffers;
+        ptr_pframebuffers = jarray_body(pframebuffers) + offset_pframebuffers;
     } else if(offset_pframebuffers) { ptr_pframebuffers = (__refer)(intptr_t)offset_pframebuffers;}
 
     glGenFramebuffers((GLsizei)pn, (GLuint*)(ptr_pframebuffers));
@@ -10407,7 +10407,7 @@ int org_mini_gl_GL_glGetFramebufferAttachmentParameteriv(Runtime *runtime, JClas
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetFramebufferAttachmentParameteriv((GLenum)ptarget, (GLenum)pattachment, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -10532,7 +10532,7 @@ int org_mini_gl_GL_glDeleteVertexArrays(Runtime *runtime, JClass *clazz) {
     __refer ptr_parrays = NULL;
     if(parrays){
         offset_parrays *= env->data_type_bytes[parrays->mb.arr_type_index];
-        ptr_parrays = parrays->arr_body + offset_parrays;
+        ptr_parrays = jarray_body(parrays) + offset_parrays;
     } else if(offset_parrays) { ptr_parrays = (__refer)(intptr_t)offset_parrays;}
 
     glDeleteVertexArrays((GLsizei)pn, (const GLuint*)(ptr_parrays));
@@ -10551,7 +10551,7 @@ int org_mini_gl_GL_glGenVertexArrays(Runtime *runtime, JClass *clazz) {
     __refer ptr_parrays = NULL;
     if(parrays){
         offset_parrays *= env->data_type_bytes[parrays->mb.arr_type_index];
-        ptr_parrays = parrays->arr_body + offset_parrays;
+        ptr_parrays = jarray_body(parrays) + offset_parrays;
     } else if(offset_parrays) { ptr_parrays = (__refer)(intptr_t)offset_parrays;}
 
     glGenVertexArrays((GLsizei)pn, (GLuint*)(ptr_parrays));
@@ -10599,7 +10599,7 @@ int org_mini_gl_GL_glDrawElementsInstanced(Runtime *runtime, JClass *clazz) {
     __refer ptr_pindices = NULL;
     if(pindices){
         offset_pindices *= env->data_type_bytes[pindices->mb.arr_type_index];
-        ptr_pindices = pindices->arr_body + offset_pindices;
+        ptr_pindices = jarray_body(pindices) + offset_pindices;
     } else if(offset_pindices) { ptr_pindices = (__refer)(intptr_t)offset_pindices;}
     s32 pinstancecount = env->localvar_getInt(runtime->localvar, pos++);
 
@@ -10667,7 +10667,7 @@ int org_mini_gl_GL_glGetUniformIndices(Runtime *runtime, JClass *clazz) {
     __refer ptr_puniformIndices = NULL;
     if(puniformIndices){
         offset_puniformIndices *= env->data_type_bytes[puniformIndices->mb.arr_type_index];
-        ptr_puniformIndices = puniformIndices->arr_body + offset_puniformIndices;
+        ptr_puniformIndices = jarray_body(puniformIndices) + offset_puniformIndices;
     } else if(offset_puniformIndices) { ptr_puniformIndices = (__refer)(intptr_t)offset_puniformIndices;}
 
     glGetUniformIndices((GLuint)pprogram, (GLsizei)puniformCount, (const GLchar*const*)(ptr_puniformNames->arr_body), (GLuint*)(ptr_puniformIndices));
@@ -10687,7 +10687,7 @@ int org_mini_gl_GL_glGetActiveUniformsiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_puniformIndices = NULL;
     if(puniformIndices){
         offset_puniformIndices *= env->data_type_bytes[puniformIndices->mb.arr_type_index];
-        ptr_puniformIndices = puniformIndices->arr_body + offset_puniformIndices;
+        ptr_puniformIndices = jarray_body(puniformIndices) + offset_puniformIndices;
     } else if(offset_puniformIndices) { ptr_puniformIndices = (__refer)(intptr_t)offset_puniformIndices;}
     s32 ppname = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pparams = env->localvar_getRefer(runtime->localvar, pos++);
@@ -10695,7 +10695,7 @@ int org_mini_gl_GL_glGetActiveUniformsiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetActiveUniformsiv((GLuint)pprogram, (GLsizei)puniformCount, (const GLuint*)(ptr_puniformIndices), (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -10716,10 +10716,10 @@ int org_mini_gl_GL_glGetActiveUniformName(Runtime *runtime, JClass *clazz) {
     __refer ptr_plength = NULL;
     if(plength){
         offset_plength *= env->data_type_bytes[plength->mb.arr_type_index];
-        ptr_plength = plength->arr_body + offset_plength;
+        ptr_plength = jarray_body(plength) + offset_plength;
     } else if(offset_plength) { ptr_plength = (__refer)(intptr_t)offset_plength;}
     Instance *puniformName = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_puniformName = puniformName->arr_body ;
+    __refer ptr_puniformName = jarray_body(puniformName) ;
 
     glGetActiveUniformName((GLuint)pprogram, (GLuint)puniformIndex, (GLsizei)pbufSize, (GLsizei*)(ptr_plength), (GLchar*)(ptr_puniformName));
     
@@ -10733,7 +10733,7 @@ int org_mini_gl_GL_glGetUniformBlockIndex(Runtime *runtime, JClass *clazz) {
     
     s32 pprogram = env->localvar_getInt(runtime->localvar, pos++);
     Instance *puniformBlockName = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_puniformBlockName = puniformBlockName->arr_body ;
+    __refer ptr_puniformBlockName = jarray_body(puniformBlockName) ;
 
     GLuint _re_val = glGetUniformBlockIndex((GLuint)pprogram, (const GLchar*)(ptr_puniformBlockName));
     s32 ret_value = *((s32*)&_re_val);env->push_int(runtime->stack, ret_value);
@@ -10753,7 +10753,7 @@ int org_mini_gl_GL_glGetActiveUniformBlockiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetActiveUniformBlockiv((GLuint)pprogram, (GLuint)puniformBlockIndex, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -10774,10 +10774,10 @@ int org_mini_gl_GL_glGetActiveUniformBlockName(Runtime *runtime, JClass *clazz) 
     __refer ptr_plength = NULL;
     if(plength){
         offset_plength *= env->data_type_bytes[plength->mb.arr_type_index];
-        ptr_plength = plength->arr_body + offset_plength;
+        ptr_plength = jarray_body(plength) + offset_plength;
     } else if(offset_plength) { ptr_plength = (__refer)(intptr_t)offset_plength;}
     Instance *puniformBlockName = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_puniformBlockName = puniformBlockName->arr_body ;
+    __refer ptr_puniformBlockName = jarray_body(puniformBlockName) ;
 
     glGetActiveUniformBlockName((GLuint)pprogram, (GLuint)puniformBlockIndex, (GLsizei)pbufSize, (GLsizei*)(ptr_plength), (GLchar*)(ptr_puniformBlockName));
     
@@ -10811,7 +10811,7 @@ int org_mini_gl_GL_glDrawElementsBaseVertex(Runtime *runtime, JClass *clazz) {
     __refer ptr_pindices = NULL;
     if(pindices){
         offset_pindices *= env->data_type_bytes[pindices->mb.arr_type_index];
-        ptr_pindices = pindices->arr_body + offset_pindices;
+        ptr_pindices = jarray_body(pindices) + offset_pindices;
     } else if(offset_pindices) { ptr_pindices = (__refer)(intptr_t)offset_pindices;}
     s32 pbasevertex = env->localvar_getInt(runtime->localvar, pos++);
 
@@ -10835,7 +10835,7 @@ int org_mini_gl_GL_glDrawRangeElementsBaseVertex(Runtime *runtime, JClass *clazz
     __refer ptr_pindices = NULL;
     if(pindices){
         offset_pindices *= env->data_type_bytes[pindices->mb.arr_type_index];
-        ptr_pindices = pindices->arr_body + offset_pindices;
+        ptr_pindices = jarray_body(pindices) + offset_pindices;
     } else if(offset_pindices) { ptr_pindices = (__refer)(intptr_t)offset_pindices;}
     s32 pbasevertex = env->localvar_getInt(runtime->localvar, pos++);
 
@@ -10857,7 +10857,7 @@ int org_mini_gl_GL_glDrawElementsInstancedBaseVertex(Runtime *runtime, JClass *c
     __refer ptr_pindices = NULL;
     if(pindices){
         offset_pindices *= env->data_type_bytes[pindices->mb.arr_type_index];
-        ptr_pindices = pindices->arr_body + offset_pindices;
+        ptr_pindices = jarray_body(pindices) + offset_pindices;
     } else if(offset_pindices) { ptr_pindices = (__refer)(intptr_t)offset_pindices;}
     s32 pinstancecount = env->localvar_getInt(runtime->localvar, pos++);
     s32 pbasevertex = env->localvar_getInt(runtime->localvar, pos++);
@@ -10878,7 +10878,7 @@ int org_mini_gl_GL_glMultiDrawElementsBaseVertex(Runtime *runtime, JClass *clazz
     __refer ptr_pcount = NULL;
     if(pcount){
         offset_pcount *= env->data_type_bytes[pcount->mb.arr_type_index];
-        ptr_pcount = pcount->arr_body + offset_pcount;
+        ptr_pcount = jarray_body(pcount) + offset_pcount;
     } else if(offset_pcount) { ptr_pcount = (__refer)(intptr_t)offset_pcount;}
     s32 ptype = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pindices = env->localvar_getRefer(runtime->localvar, pos++);
@@ -10892,7 +10892,7 @@ int org_mini_gl_GL_glMultiDrawElementsBaseVertex(Runtime *runtime, JClass *clazz
     __refer ptr_pbasevertex = NULL;
     if(pbasevertex){
         offset_pbasevertex *= env->data_type_bytes[pbasevertex->mb.arr_type_index];
-        ptr_pbasevertex = pbasevertex->arr_body + offset_pbasevertex;
+        ptr_pbasevertex = jarray_body(pbasevertex) + offset_pbasevertex;
     } else if(offset_pbasevertex) { ptr_pbasevertex = (__refer)(intptr_t)offset_pbasevertex;}
 
     glMultiDrawElementsBaseVertex((GLenum)pmode, (const GLsizei*)(ptr_pcount), (GLenum)ptype, (const void*const*)(ptr_pindices->arr_body), (GLsizei)pdrawcount, (const GLint*)(ptr_pbasevertex));
@@ -10988,7 +10988,7 @@ int org_mini_gl_GL_glGetInteger64v(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glGetInteger64v((GLenum)ppname, (GLint64*)(ptr_pdata));
@@ -11009,14 +11009,14 @@ int org_mini_gl_GL_glGetSynciv(Runtime *runtime, JClass *clazz) {
     __refer ptr_plength = NULL;
     if(plength){
         offset_plength *= env->data_type_bytes[plength->mb.arr_type_index];
-        ptr_plength = plength->arr_body + offset_plength;
+        ptr_plength = jarray_body(plength) + offset_plength;
     } else if(offset_plength) { ptr_plength = (__refer)(intptr_t)offset_plength;}
     Instance *pvalues = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_pvalues = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_pvalues = NULL;
     if(pvalues){
         offset_pvalues *= env->data_type_bytes[pvalues->mb.arr_type_index];
-        ptr_pvalues = pvalues->arr_body + offset_pvalues;
+        ptr_pvalues = jarray_body(pvalues) + offset_pvalues;
     } else if(offset_pvalues) { ptr_pvalues = (__refer)(intptr_t)offset_pvalues;}
 
     glGetSynciv((GLsync)psync, (GLenum)ppname, (GLsizei)pcount, (GLsizei*)(ptr_plength), (GLint*)(ptr_pvalues));
@@ -11036,7 +11036,7 @@ int org_mini_gl_GL_glGetInteger64i_v(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glGetInteger64i_v((GLenum)ptarget, (GLuint)pindex, (GLint64*)(ptr_pdata));
@@ -11056,7 +11056,7 @@ int org_mini_gl_GL_glGetBufferParameteri64v(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetBufferParameteri64v((GLenum)ptarget, (GLenum)ppname, (GLint64*)(ptr_pparams));
@@ -11126,7 +11126,7 @@ int org_mini_gl_GL_glGetMultisamplefv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pval = NULL;
     if(pval){
         offset_pval *= env->data_type_bytes[pval->mb.arr_type_index];
-        ptr_pval = pval->arr_body + offset_pval;
+        ptr_pval = jarray_body(pval) + offset_pval;
     } else if(offset_pval) { ptr_pval = (__refer)(intptr_t)offset_pval;}
 
     glGetMultisamplefv((GLenum)ppname, (GLuint)pindex, (GLfloat*)(ptr_pval));
@@ -11156,7 +11156,7 @@ int org_mini_gl_GL_glBindFragDataLocationIndexed(Runtime *runtime, JClass *clazz
     s32 pcolorNumber = env->localvar_getInt(runtime->localvar, pos++);
     s32 pindex = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pname = pname->arr_body ;
+    __refer ptr_pname = jarray_body(pname) ;
 
     glBindFragDataLocationIndexed((GLuint)pprogram, (GLuint)pcolorNumber, (GLuint)pindex, (const GLchar*)(ptr_pname));
     
@@ -11170,7 +11170,7 @@ int org_mini_gl_GL_glGetFragDataIndex(Runtime *runtime, JClass *clazz) {
     
     s32 pprogram = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pname = pname->arr_body ;
+    __refer ptr_pname = jarray_body(pname) ;
 
     GLint _re_val = glGetFragDataIndex((GLuint)pprogram, (const GLchar*)(ptr_pname));
     s32 ret_value = *((s32*)&_re_val);env->push_int(runtime->stack, ret_value);
@@ -11188,7 +11188,7 @@ int org_mini_gl_GL_glGenSamplers(Runtime *runtime, JClass *clazz) {
     __refer ptr_psamplers = NULL;
     if(psamplers){
         offset_psamplers *= env->data_type_bytes[psamplers->mb.arr_type_index];
-        ptr_psamplers = psamplers->arr_body + offset_psamplers;
+        ptr_psamplers = jarray_body(psamplers) + offset_psamplers;
     } else if(offset_psamplers) { ptr_psamplers = (__refer)(intptr_t)offset_psamplers;}
 
     glGenSamplers((GLsizei)pcount, (GLuint*)(ptr_psamplers));
@@ -11207,7 +11207,7 @@ int org_mini_gl_GL_glDeleteSamplers(Runtime *runtime, JClass *clazz) {
     __refer ptr_psamplers = NULL;
     if(psamplers){
         offset_psamplers *= env->data_type_bytes[psamplers->mb.arr_type_index];
-        ptr_psamplers = psamplers->arr_body + offset_psamplers;
+        ptr_psamplers = jarray_body(psamplers) + offset_psamplers;
     } else if(offset_psamplers) { ptr_psamplers = (__refer)(intptr_t)offset_psamplers;}
 
     glDeleteSamplers((GLsizei)pcount, (const GLuint*)(ptr_psamplers));
@@ -11266,7 +11266,7 @@ int org_mini_gl_GL_glSamplerParameteriv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparam = NULL;
     if(pparam){
         offset_pparam *= env->data_type_bytes[pparam->mb.arr_type_index];
-        ptr_pparam = pparam->arr_body + offset_pparam;
+        ptr_pparam = jarray_body(pparam) + offset_pparam;
     } else if(offset_pparam) { ptr_pparam = (__refer)(intptr_t)offset_pparam;}
 
     glSamplerParameteriv((GLuint)psampler, (GLenum)ppname, (const GLint*)(ptr_pparam));
@@ -11300,7 +11300,7 @@ int org_mini_gl_GL_glSamplerParameterfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparam = NULL;
     if(pparam){
         offset_pparam *= env->data_type_bytes[pparam->mb.arr_type_index];
-        ptr_pparam = pparam->arr_body + offset_pparam;
+        ptr_pparam = jarray_body(pparam) + offset_pparam;
     } else if(offset_pparam) { ptr_pparam = (__refer)(intptr_t)offset_pparam;}
 
     glSamplerParameterfv((GLuint)psampler, (GLenum)ppname, (const GLfloat*)(ptr_pparam));
@@ -11320,7 +11320,7 @@ int org_mini_gl_GL_glSamplerParameterIiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparam = NULL;
     if(pparam){
         offset_pparam *= env->data_type_bytes[pparam->mb.arr_type_index];
-        ptr_pparam = pparam->arr_body + offset_pparam;
+        ptr_pparam = jarray_body(pparam) + offset_pparam;
     } else if(offset_pparam) { ptr_pparam = (__refer)(intptr_t)offset_pparam;}
 
     glSamplerParameterIiv((GLuint)psampler, (GLenum)ppname, (const GLint*)(ptr_pparam));
@@ -11340,7 +11340,7 @@ int org_mini_gl_GL_glSamplerParameterIuiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparam = NULL;
     if(pparam){
         offset_pparam *= env->data_type_bytes[pparam->mb.arr_type_index];
-        ptr_pparam = pparam->arr_body + offset_pparam;
+        ptr_pparam = jarray_body(pparam) + offset_pparam;
     } else if(offset_pparam) { ptr_pparam = (__refer)(intptr_t)offset_pparam;}
 
     glSamplerParameterIuiv((GLuint)psampler, (GLenum)ppname, (const GLuint*)(ptr_pparam));
@@ -11360,7 +11360,7 @@ int org_mini_gl_GL_glGetSamplerParameteriv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetSamplerParameteriv((GLuint)psampler, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -11380,7 +11380,7 @@ int org_mini_gl_GL_glGetSamplerParameterIiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetSamplerParameterIiv((GLuint)psampler, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -11400,7 +11400,7 @@ int org_mini_gl_GL_glGetSamplerParameterfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetSamplerParameterfv((GLuint)psampler, (GLenum)ppname, (GLfloat*)(ptr_pparams));
@@ -11420,7 +11420,7 @@ int org_mini_gl_GL_glGetSamplerParameterIuiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetSamplerParameterIuiv((GLuint)psampler, (GLenum)ppname, (GLuint*)(ptr_pparams));
@@ -11453,7 +11453,7 @@ int org_mini_gl_GL_glGetQueryObjecti64v(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetQueryObjecti64v((GLuint)pid, (GLenum)ppname, (GLint64*)(ptr_pparams));
@@ -11473,7 +11473,7 @@ int org_mini_gl_GL_glGetQueryObjectui64v(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetQueryObjectui64v((GLuint)pid, (GLenum)ppname, (GLuint64*)(ptr_pparams));
@@ -11522,7 +11522,7 @@ int org_mini_gl_GL_glVertexAttribP1uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glVertexAttribP1uiv((GLuint)pindex, (GLenum)ptype, (GLboolean)pnormalized, (const GLuint*)(ptr_pvalue));
@@ -11558,7 +11558,7 @@ int org_mini_gl_GL_glVertexAttribP2uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glVertexAttribP2uiv((GLuint)pindex, (GLenum)ptype, (GLboolean)pnormalized, (const GLuint*)(ptr_pvalue));
@@ -11594,7 +11594,7 @@ int org_mini_gl_GL_glVertexAttribP3uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glVertexAttribP3uiv((GLuint)pindex, (GLenum)ptype, (GLboolean)pnormalized, (const GLuint*)(ptr_pvalue));
@@ -11630,7 +11630,7 @@ int org_mini_gl_GL_glVertexAttribP4uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glVertexAttribP4uiv((GLuint)pindex, (GLenum)ptype, (GLboolean)pnormalized, (const GLuint*)(ptr_pvalue));
@@ -11662,7 +11662,7 @@ int org_mini_gl_GL_glVertexP2uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glVertexP2uiv((GLenum)ptype, (const GLuint*)(ptr_pvalue));
@@ -11694,7 +11694,7 @@ int org_mini_gl_GL_glVertexP3uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glVertexP3uiv((GLenum)ptype, (const GLuint*)(ptr_pvalue));
@@ -11726,7 +11726,7 @@ int org_mini_gl_GL_glVertexP4uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glVertexP4uiv((GLenum)ptype, (const GLuint*)(ptr_pvalue));
@@ -11758,7 +11758,7 @@ int org_mini_gl_GL_glTexCoordP1uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcoords = NULL;
     if(pcoords){
         offset_pcoords *= env->data_type_bytes[pcoords->mb.arr_type_index];
-        ptr_pcoords = pcoords->arr_body + offset_pcoords;
+        ptr_pcoords = jarray_body(pcoords) + offset_pcoords;
     } else if(offset_pcoords) { ptr_pcoords = (__refer)(intptr_t)offset_pcoords;}
 
     glTexCoordP1uiv((GLenum)ptype, (const GLuint*)(ptr_pcoords));
@@ -11790,7 +11790,7 @@ int org_mini_gl_GL_glTexCoordP2uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcoords = NULL;
     if(pcoords){
         offset_pcoords *= env->data_type_bytes[pcoords->mb.arr_type_index];
-        ptr_pcoords = pcoords->arr_body + offset_pcoords;
+        ptr_pcoords = jarray_body(pcoords) + offset_pcoords;
     } else if(offset_pcoords) { ptr_pcoords = (__refer)(intptr_t)offset_pcoords;}
 
     glTexCoordP2uiv((GLenum)ptype, (const GLuint*)(ptr_pcoords));
@@ -11822,7 +11822,7 @@ int org_mini_gl_GL_glTexCoordP3uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcoords = NULL;
     if(pcoords){
         offset_pcoords *= env->data_type_bytes[pcoords->mb.arr_type_index];
-        ptr_pcoords = pcoords->arr_body + offset_pcoords;
+        ptr_pcoords = jarray_body(pcoords) + offset_pcoords;
     } else if(offset_pcoords) { ptr_pcoords = (__refer)(intptr_t)offset_pcoords;}
 
     glTexCoordP3uiv((GLenum)ptype, (const GLuint*)(ptr_pcoords));
@@ -11854,7 +11854,7 @@ int org_mini_gl_GL_glTexCoordP4uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcoords = NULL;
     if(pcoords){
         offset_pcoords *= env->data_type_bytes[pcoords->mb.arr_type_index];
-        ptr_pcoords = pcoords->arr_body + offset_pcoords;
+        ptr_pcoords = jarray_body(pcoords) + offset_pcoords;
     } else if(offset_pcoords) { ptr_pcoords = (__refer)(intptr_t)offset_pcoords;}
 
     glTexCoordP4uiv((GLenum)ptype, (const GLuint*)(ptr_pcoords));
@@ -11888,7 +11888,7 @@ int org_mini_gl_GL_glMultiTexCoordP1uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcoords = NULL;
     if(pcoords){
         offset_pcoords *= env->data_type_bytes[pcoords->mb.arr_type_index];
-        ptr_pcoords = pcoords->arr_body + offset_pcoords;
+        ptr_pcoords = jarray_body(pcoords) + offset_pcoords;
     } else if(offset_pcoords) { ptr_pcoords = (__refer)(intptr_t)offset_pcoords;}
 
     glMultiTexCoordP1uiv((GLenum)ptexture, (GLenum)ptype, (const GLuint*)(ptr_pcoords));
@@ -11922,7 +11922,7 @@ int org_mini_gl_GL_glMultiTexCoordP2uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcoords = NULL;
     if(pcoords){
         offset_pcoords *= env->data_type_bytes[pcoords->mb.arr_type_index];
-        ptr_pcoords = pcoords->arr_body + offset_pcoords;
+        ptr_pcoords = jarray_body(pcoords) + offset_pcoords;
     } else if(offset_pcoords) { ptr_pcoords = (__refer)(intptr_t)offset_pcoords;}
 
     glMultiTexCoordP2uiv((GLenum)ptexture, (GLenum)ptype, (const GLuint*)(ptr_pcoords));
@@ -11956,7 +11956,7 @@ int org_mini_gl_GL_glMultiTexCoordP3uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcoords = NULL;
     if(pcoords){
         offset_pcoords *= env->data_type_bytes[pcoords->mb.arr_type_index];
-        ptr_pcoords = pcoords->arr_body + offset_pcoords;
+        ptr_pcoords = jarray_body(pcoords) + offset_pcoords;
     } else if(offset_pcoords) { ptr_pcoords = (__refer)(intptr_t)offset_pcoords;}
 
     glMultiTexCoordP3uiv((GLenum)ptexture, (GLenum)ptype, (const GLuint*)(ptr_pcoords));
@@ -11990,7 +11990,7 @@ int org_mini_gl_GL_glMultiTexCoordP4uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcoords = NULL;
     if(pcoords){
         offset_pcoords *= env->data_type_bytes[pcoords->mb.arr_type_index];
-        ptr_pcoords = pcoords->arr_body + offset_pcoords;
+        ptr_pcoords = jarray_body(pcoords) + offset_pcoords;
     } else if(offset_pcoords) { ptr_pcoords = (__refer)(intptr_t)offset_pcoords;}
 
     glMultiTexCoordP4uiv((GLenum)ptexture, (GLenum)ptype, (const GLuint*)(ptr_pcoords));
@@ -12022,7 +12022,7 @@ int org_mini_gl_GL_glNormalP3uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcoords = NULL;
     if(pcoords){
         offset_pcoords *= env->data_type_bytes[pcoords->mb.arr_type_index];
-        ptr_pcoords = pcoords->arr_body + offset_pcoords;
+        ptr_pcoords = jarray_body(pcoords) + offset_pcoords;
     } else if(offset_pcoords) { ptr_pcoords = (__refer)(intptr_t)offset_pcoords;}
 
     glNormalP3uiv((GLenum)ptype, (const GLuint*)(ptr_pcoords));
@@ -12054,7 +12054,7 @@ int org_mini_gl_GL_glColorP3uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcolor = NULL;
     if(pcolor){
         offset_pcolor *= env->data_type_bytes[pcolor->mb.arr_type_index];
-        ptr_pcolor = pcolor->arr_body + offset_pcolor;
+        ptr_pcolor = jarray_body(pcolor) + offset_pcolor;
     } else if(offset_pcolor) { ptr_pcolor = (__refer)(intptr_t)offset_pcolor;}
 
     glColorP3uiv((GLenum)ptype, (const GLuint*)(ptr_pcolor));
@@ -12086,7 +12086,7 @@ int org_mini_gl_GL_glColorP4uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcolor = NULL;
     if(pcolor){
         offset_pcolor *= env->data_type_bytes[pcolor->mb.arr_type_index];
-        ptr_pcolor = pcolor->arr_body + offset_pcolor;
+        ptr_pcolor = jarray_body(pcolor) + offset_pcolor;
     } else if(offset_pcolor) { ptr_pcolor = (__refer)(intptr_t)offset_pcolor;}
 
     glColorP4uiv((GLenum)ptype, (const GLuint*)(ptr_pcolor));
@@ -12118,7 +12118,7 @@ int org_mini_gl_GL_glSecondaryColorP3uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pcolor = NULL;
     if(pcolor){
         offset_pcolor *= env->data_type_bytes[pcolor->mb.arr_type_index];
-        ptr_pcolor = pcolor->arr_body + offset_pcolor;
+        ptr_pcolor = jarray_body(pcolor) + offset_pcolor;
     } else if(offset_pcolor) { ptr_pcolor = (__refer)(intptr_t)offset_pcolor;}
 
     glSecondaryColorP3uiv((GLenum)ptype, (const GLuint*)(ptr_pcolor));
@@ -12206,7 +12206,7 @@ int org_mini_gl_GL_glDrawArraysIndirect(Runtime *runtime, JClass *clazz) {
     __refer ptr_pindirect = NULL;
     if(pindirect){
         offset_pindirect *= env->data_type_bytes[pindirect->mb.arr_type_index];
-        ptr_pindirect = pindirect->arr_body + offset_pindirect;
+        ptr_pindirect = jarray_body(pindirect) + offset_pindirect;
     } else if(offset_pindirect) { ptr_pindirect = (__refer)(intptr_t)offset_pindirect;}
 
     glDrawArraysIndirect((GLenum)pmode, (const void*)(ptr_pindirect));
@@ -12226,7 +12226,7 @@ int org_mini_gl_GL_glDrawElementsIndirect(Runtime *runtime, JClass *clazz) {
     __refer ptr_pindirect = NULL;
     if(pindirect){
         offset_pindirect *= env->data_type_bytes[pindirect->mb.arr_type_index];
-        ptr_pindirect = pindirect->arr_body + offset_pindirect;
+        ptr_pindirect = jarray_body(pindirect) + offset_pindirect;
     } else if(offset_pindirect) { ptr_pindirect = (__refer)(intptr_t)offset_pindirect;}
 
     glDrawElementsIndirect((GLenum)pmode, (GLenum)ptype, (const void*)(ptr_pindirect));
@@ -12304,7 +12304,7 @@ int org_mini_gl_GL_glUniform1dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform1dv((GLint)plocation, (GLsizei)pcount, (const GLdouble*)(ptr_pvalue));
@@ -12324,7 +12324,7 @@ int org_mini_gl_GL_glUniform2dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform2dv((GLint)plocation, (GLsizei)pcount, (const GLdouble*)(ptr_pvalue));
@@ -12344,7 +12344,7 @@ int org_mini_gl_GL_glUniform3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform3dv((GLint)plocation, (GLsizei)pcount, (const GLdouble*)(ptr_pvalue));
@@ -12364,7 +12364,7 @@ int org_mini_gl_GL_glUniform4dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniform4dv((GLint)plocation, (GLsizei)pcount, (const GLdouble*)(ptr_pvalue));
@@ -12385,7 +12385,7 @@ int org_mini_gl_GL_glUniformMatrix2dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix2dv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -12406,7 +12406,7 @@ int org_mini_gl_GL_glUniformMatrix3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix3dv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -12427,7 +12427,7 @@ int org_mini_gl_GL_glUniformMatrix4dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix4dv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -12448,7 +12448,7 @@ int org_mini_gl_GL_glUniformMatrix2x3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix2x3dv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -12469,7 +12469,7 @@ int org_mini_gl_GL_glUniformMatrix2x4dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix2x4dv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -12490,7 +12490,7 @@ int org_mini_gl_GL_glUniformMatrix3x2dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix3x2dv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -12511,7 +12511,7 @@ int org_mini_gl_GL_glUniformMatrix3x4dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix3x4dv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -12532,7 +12532,7 @@ int org_mini_gl_GL_glUniformMatrix4x2dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix4x2dv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -12553,7 +12553,7 @@ int org_mini_gl_GL_glUniformMatrix4x3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glUniformMatrix4x3dv((GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -12573,7 +12573,7 @@ int org_mini_gl_GL_glGetUniformdv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetUniformdv((GLuint)pprogram, (GLint)plocation, (GLdouble*)(ptr_pparams));
@@ -12589,7 +12589,7 @@ int org_mini_gl_GL_glGetSubroutineUniformLocation(Runtime *runtime, JClass *claz
     s32 pprogram = env->localvar_getInt(runtime->localvar, pos++);
     s32 pshadertype = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pname = pname->arr_body ;
+    __refer ptr_pname = jarray_body(pname) ;
 
     GLint _re_val = glGetSubroutineUniformLocation((GLuint)pprogram, (GLenum)pshadertype, (const GLchar*)(ptr_pname));
     s32 ret_value = *((s32*)&_re_val);env->push_int(runtime->stack, ret_value);
@@ -12604,7 +12604,7 @@ int org_mini_gl_GL_glGetSubroutineIndex(Runtime *runtime, JClass *clazz) {
     s32 pprogram = env->localvar_getInt(runtime->localvar, pos++);
     s32 pshadertype = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pname = pname->arr_body ;
+    __refer ptr_pname = jarray_body(pname) ;
 
     GLuint _re_val = glGetSubroutineIndex((GLuint)pprogram, (GLenum)pshadertype, (const GLchar*)(ptr_pname));
     s32 ret_value = *((s32*)&_re_val);env->push_int(runtime->stack, ret_value);
@@ -12625,7 +12625,7 @@ int org_mini_gl_GL_glGetActiveSubroutineUniformiv(Runtime *runtime, JClass *claz
     __refer ptr_pvalues = NULL;
     if(pvalues){
         offset_pvalues *= env->data_type_bytes[pvalues->mb.arr_type_index];
-        ptr_pvalues = pvalues->arr_body + offset_pvalues;
+        ptr_pvalues = jarray_body(pvalues) + offset_pvalues;
     } else if(offset_pvalues) { ptr_pvalues = (__refer)(intptr_t)offset_pvalues;}
 
     glGetActiveSubroutineUniformiv((GLuint)pprogram, (GLenum)pshadertype, (GLuint)pindex, (GLenum)ppname, (GLint*)(ptr_pvalues));
@@ -12647,10 +12647,10 @@ int org_mini_gl_GL_glGetActiveSubroutineUniformName(Runtime *runtime, JClass *cl
     __refer ptr_plength = NULL;
     if(plength){
         offset_plength *= env->data_type_bytes[plength->mb.arr_type_index];
-        ptr_plength = plength->arr_body + offset_plength;
+        ptr_plength = jarray_body(plength) + offset_plength;
     } else if(offset_plength) { ptr_plength = (__refer)(intptr_t)offset_plength;}
     Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pname = pname->arr_body ;
+    __refer ptr_pname = jarray_body(pname) ;
 
     glGetActiveSubroutineUniformName((GLuint)pprogram, (GLenum)pshadertype, (GLuint)pindex, (GLsizei)pbufSize, (GLsizei*)(ptr_plength), (GLchar*)(ptr_pname));
     
@@ -12671,10 +12671,10 @@ int org_mini_gl_GL_glGetActiveSubroutineName(Runtime *runtime, JClass *clazz) {
     __refer ptr_plength = NULL;
     if(plength){
         offset_plength *= env->data_type_bytes[plength->mb.arr_type_index];
-        ptr_plength = plength->arr_body + offset_plength;
+        ptr_plength = jarray_body(plength) + offset_plength;
     } else if(offset_plength) { ptr_plength = (__refer)(intptr_t)offset_plength;}
     Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pname = pname->arr_body ;
+    __refer ptr_pname = jarray_body(pname) ;
 
     glGetActiveSubroutineName((GLuint)pprogram, (GLenum)pshadertype, (GLuint)pindex, (GLsizei)pbufSize, (GLsizei*)(ptr_plength), (GLchar*)(ptr_pname));
     
@@ -12693,7 +12693,7 @@ int org_mini_gl_GL_glUniformSubroutinesuiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pindices = NULL;
     if(pindices){
         offset_pindices *= env->data_type_bytes[pindices->mb.arr_type_index];
-        ptr_pindices = pindices->arr_body + offset_pindices;
+        ptr_pindices = jarray_body(pindices) + offset_pindices;
     } else if(offset_pindices) { ptr_pindices = (__refer)(intptr_t)offset_pindices;}
 
     glUniformSubroutinesuiv((GLenum)pshadertype, (GLsizei)pcount, (const GLuint*)(ptr_pindices));
@@ -12713,7 +12713,7 @@ int org_mini_gl_GL_glGetUniformSubroutineuiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetUniformSubroutineuiv((GLenum)pshadertype, (GLint)plocation, (GLuint*)(ptr_pparams));
@@ -12734,7 +12734,7 @@ int org_mini_gl_GL_glGetProgramStageiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalues = NULL;
     if(pvalues){
         offset_pvalues *= env->data_type_bytes[pvalues->mb.arr_type_index];
-        ptr_pvalues = pvalues->arr_body + offset_pvalues;
+        ptr_pvalues = jarray_body(pvalues) + offset_pvalues;
     } else if(offset_pvalues) { ptr_pvalues = (__refer)(intptr_t)offset_pvalues;}
 
     glGetProgramStageiv((GLuint)pprogram, (GLenum)pshadertype, (GLenum)ppname, (GLint*)(ptr_pvalues));
@@ -12766,7 +12766,7 @@ int org_mini_gl_GL_glPatchParameterfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalues = NULL;
     if(pvalues){
         offset_pvalues *= env->data_type_bytes[pvalues->mb.arr_type_index];
-        ptr_pvalues = pvalues->arr_body + offset_pvalues;
+        ptr_pvalues = jarray_body(pvalues) + offset_pvalues;
     } else if(offset_pvalues) { ptr_pvalues = (__refer)(intptr_t)offset_pvalues;}
 
     glPatchParameterfv((GLenum)ppname, (const GLfloat*)(ptr_pvalues));
@@ -12798,7 +12798,7 @@ int org_mini_gl_GL_glDeleteTransformFeedbacks(Runtime *runtime, JClass *clazz) {
     __refer ptr_pids = NULL;
     if(pids){
         offset_pids *= env->data_type_bytes[pids->mb.arr_type_index];
-        ptr_pids = pids->arr_body + offset_pids;
+        ptr_pids = jarray_body(pids) + offset_pids;
     } else if(offset_pids) { ptr_pids = (__refer)(intptr_t)offset_pids;}
 
     glDeleteTransformFeedbacks((GLsizei)pn, (const GLuint*)(ptr_pids));
@@ -12817,7 +12817,7 @@ int org_mini_gl_GL_glGenTransformFeedbacks(Runtime *runtime, JClass *clazz) {
     __refer ptr_pids = NULL;
     if(pids){
         offset_pids *= env->data_type_bytes[pids->mb.arr_type_index];
-        ptr_pids = pids->arr_body + offset_pids;
+        ptr_pids = jarray_body(pids) + offset_pids;
     } else if(offset_pids) { ptr_pids = (__refer)(intptr_t)offset_pids;}
 
     glGenTransformFeedbacks((GLsizei)pn, (GLuint*)(ptr_pids));
@@ -12926,7 +12926,7 @@ int org_mini_gl_GL_glGetQueryIndexediv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetQueryIndexediv((GLenum)ptarget, (GLuint)pindex, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -12956,7 +12956,7 @@ int org_mini_gl_GL_glShaderBinary(Runtime *runtime, JClass *clazz) {
     __refer ptr_pshaders = NULL;
     if(pshaders){
         offset_pshaders *= env->data_type_bytes[pshaders->mb.arr_type_index];
-        ptr_pshaders = pshaders->arr_body + offset_pshaders;
+        ptr_pshaders = jarray_body(pshaders) + offset_pshaders;
     } else if(offset_pshaders) { ptr_pshaders = (__refer)(intptr_t)offset_pshaders;}
     s32 pbinaryFormat = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pbinary = env->localvar_getRefer(runtime->localvar, pos++);
@@ -12964,7 +12964,7 @@ int org_mini_gl_GL_glShaderBinary(Runtime *runtime, JClass *clazz) {
     __refer ptr_pbinary = NULL;
     if(pbinary){
         offset_pbinary *= env->data_type_bytes[pbinary->mb.arr_type_index];
-        ptr_pbinary = pbinary->arr_body + offset_pbinary;
+        ptr_pbinary = jarray_body(pbinary) + offset_pbinary;
     } else if(offset_pbinary) { ptr_pbinary = (__refer)(intptr_t)offset_pbinary;}
     s32 plength = env->localvar_getInt(runtime->localvar, pos++);
 
@@ -12985,14 +12985,14 @@ int org_mini_gl_GL_glGetShaderPrecisionFormat(Runtime *runtime, JClass *clazz) {
     __refer ptr_prange = NULL;
     if(prange){
         offset_prange *= env->data_type_bytes[prange->mb.arr_type_index];
-        ptr_prange = prange->arr_body + offset_prange;
+        ptr_prange = jarray_body(prange) + offset_prange;
     } else if(offset_prange) { ptr_prange = (__refer)(intptr_t)offset_prange;}
     Instance *pprecision = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_pprecision = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_pprecision = NULL;
     if(pprecision){
         offset_pprecision *= env->data_type_bytes[pprecision->mb.arr_type_index];
-        ptr_pprecision = pprecision->arr_body + offset_pprecision;
+        ptr_pprecision = jarray_body(pprecision) + offset_pprecision;
     } else if(offset_pprecision) { ptr_pprecision = (__refer)(intptr_t)offset_pprecision;}
 
     glGetShaderPrecisionFormat((GLenum)pshadertype, (GLenum)pprecisiontype, (GLint*)(ptr_prange), (GLint*)(ptr_pprecision));
@@ -13037,21 +13037,21 @@ int org_mini_gl_GL_glGetProgramBinary(Runtime *runtime, JClass *clazz) {
     __refer ptr_plength = NULL;
     if(plength){
         offset_plength *= env->data_type_bytes[plength->mb.arr_type_index];
-        ptr_plength = plength->arr_body + offset_plength;
+        ptr_plength = jarray_body(plength) + offset_plength;
     } else if(offset_plength) { ptr_plength = (__refer)(intptr_t)offset_plength;}
     Instance *pbinaryFormat = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_pbinaryFormat = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_pbinaryFormat = NULL;
     if(pbinaryFormat){
         offset_pbinaryFormat *= env->data_type_bytes[pbinaryFormat->mb.arr_type_index];
-        ptr_pbinaryFormat = pbinaryFormat->arr_body + offset_pbinaryFormat;
+        ptr_pbinaryFormat = jarray_body(pbinaryFormat) + offset_pbinaryFormat;
     } else if(offset_pbinaryFormat) { ptr_pbinaryFormat = (__refer)(intptr_t)offset_pbinaryFormat;}
     Instance *pbinary = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_pbinary = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_pbinary = NULL;
     if(pbinary){
         offset_pbinary *= env->data_type_bytes[pbinary->mb.arr_type_index];
-        ptr_pbinary = pbinary->arr_body + offset_pbinary;
+        ptr_pbinary = jarray_body(pbinary) + offset_pbinary;
     } else if(offset_pbinary) { ptr_pbinary = (__refer)(intptr_t)offset_pbinary;}
 
     glGetProgramBinary((GLuint)pprogram, (GLsizei)pbufSize, (GLsizei*)(ptr_plength), (GLenum*)(ptr_pbinaryFormat), (void*)(ptr_pbinary));
@@ -13071,7 +13071,7 @@ int org_mini_gl_GL_glProgramBinary(Runtime *runtime, JClass *clazz) {
     __refer ptr_pbinary = NULL;
     if(pbinary){
         offset_pbinary *= env->data_type_bytes[pbinary->mb.arr_type_index];
-        ptr_pbinary = pbinary->arr_body + offset_pbinary;
+        ptr_pbinary = jarray_body(pbinary) + offset_pbinary;
     } else if(offset_pbinary) { ptr_pbinary = (__refer)(intptr_t)offset_pbinary;}
     s32 plength = env->localvar_getInt(runtime->localvar, pos++);
 
@@ -13162,7 +13162,7 @@ int org_mini_gl_GL_glDeleteProgramPipelines(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppipelines = NULL;
     if(ppipelines){
         offset_ppipelines *= env->data_type_bytes[ppipelines->mb.arr_type_index];
-        ptr_ppipelines = ppipelines->arr_body + offset_ppipelines;
+        ptr_ppipelines = jarray_body(ppipelines) + offset_ppipelines;
     } else if(offset_ppipelines) { ptr_ppipelines = (__refer)(intptr_t)offset_ppipelines;}
 
     glDeleteProgramPipelines((GLsizei)pn, (const GLuint*)(ptr_ppipelines));
@@ -13181,7 +13181,7 @@ int org_mini_gl_GL_glGenProgramPipelines(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppipelines = NULL;
     if(ppipelines){
         offset_ppipelines *= env->data_type_bytes[ppipelines->mb.arr_type_index];
-        ptr_ppipelines = ppipelines->arr_body + offset_ppipelines;
+        ptr_ppipelines = jarray_body(ppipelines) + offset_ppipelines;
     } else if(offset_ppipelines) { ptr_ppipelines = (__refer)(intptr_t)offset_ppipelines;}
 
     glGenProgramPipelines((GLsizei)pn, (GLuint*)(ptr_ppipelines));
@@ -13213,7 +13213,7 @@ int org_mini_gl_GL_glGetProgramPipelineiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetProgramPipelineiv((GLuint)ppipeline, (GLenum)ppname, (GLint*)(ptr_pparams));
@@ -13248,7 +13248,7 @@ int org_mini_gl_GL_glProgramUniform1iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform1iv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLint*)(ptr_pvalue));
@@ -13283,7 +13283,7 @@ int org_mini_gl_GL_glProgramUniform1fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform1fv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLfloat*)(ptr_pvalue));
@@ -13318,7 +13318,7 @@ int org_mini_gl_GL_glProgramUniform1dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform1dv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLdouble*)(ptr_pvalue));
@@ -13353,7 +13353,7 @@ int org_mini_gl_GL_glProgramUniform1uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform1uiv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLuint*)(ptr_pvalue));
@@ -13389,7 +13389,7 @@ int org_mini_gl_GL_glProgramUniform2iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform2iv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLint*)(ptr_pvalue));
@@ -13425,7 +13425,7 @@ int org_mini_gl_GL_glProgramUniform2fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform2fv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLfloat*)(ptr_pvalue));
@@ -13461,7 +13461,7 @@ int org_mini_gl_GL_glProgramUniform2dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform2dv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLdouble*)(ptr_pvalue));
@@ -13497,7 +13497,7 @@ int org_mini_gl_GL_glProgramUniform2uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform2uiv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLuint*)(ptr_pvalue));
@@ -13534,7 +13534,7 @@ int org_mini_gl_GL_glProgramUniform3iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform3iv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLint*)(ptr_pvalue));
@@ -13571,7 +13571,7 @@ int org_mini_gl_GL_glProgramUniform3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform3fv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLfloat*)(ptr_pvalue));
@@ -13608,7 +13608,7 @@ int org_mini_gl_GL_glProgramUniform3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform3dv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLdouble*)(ptr_pvalue));
@@ -13645,7 +13645,7 @@ int org_mini_gl_GL_glProgramUniform3uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform3uiv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLuint*)(ptr_pvalue));
@@ -13683,7 +13683,7 @@ int org_mini_gl_GL_glProgramUniform4iv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform4iv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLint*)(ptr_pvalue));
@@ -13721,7 +13721,7 @@ int org_mini_gl_GL_glProgramUniform4fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform4fv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLfloat*)(ptr_pvalue));
@@ -13759,7 +13759,7 @@ int org_mini_gl_GL_glProgramUniform4dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform4dv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLdouble*)(ptr_pvalue));
@@ -13797,7 +13797,7 @@ int org_mini_gl_GL_glProgramUniform4uiv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniform4uiv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (const GLuint*)(ptr_pvalue));
@@ -13819,7 +13819,7 @@ int org_mini_gl_GL_glProgramUniformMatrix2fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix2fv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -13841,7 +13841,7 @@ int org_mini_gl_GL_glProgramUniformMatrix3fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix3fv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -13863,7 +13863,7 @@ int org_mini_gl_GL_glProgramUniformMatrix4fv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix4fv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -13885,7 +13885,7 @@ int org_mini_gl_GL_glProgramUniformMatrix2dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix2dv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -13907,7 +13907,7 @@ int org_mini_gl_GL_glProgramUniformMatrix3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix3dv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -13929,7 +13929,7 @@ int org_mini_gl_GL_glProgramUniformMatrix4dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix4dv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -13951,7 +13951,7 @@ int org_mini_gl_GL_glProgramUniformMatrix2x3fv(Runtime *runtime, JClass *clazz) 
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix2x3fv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -13973,7 +13973,7 @@ int org_mini_gl_GL_glProgramUniformMatrix3x2fv(Runtime *runtime, JClass *clazz) 
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix3x2fv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -13995,7 +13995,7 @@ int org_mini_gl_GL_glProgramUniformMatrix2x4fv(Runtime *runtime, JClass *clazz) 
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix2x4fv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -14017,7 +14017,7 @@ int org_mini_gl_GL_glProgramUniformMatrix4x2fv(Runtime *runtime, JClass *clazz) 
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix4x2fv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -14039,7 +14039,7 @@ int org_mini_gl_GL_glProgramUniformMatrix3x4fv(Runtime *runtime, JClass *clazz) 
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix3x4fv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -14061,7 +14061,7 @@ int org_mini_gl_GL_glProgramUniformMatrix4x3fv(Runtime *runtime, JClass *clazz) 
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix4x3fv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLfloat*)(ptr_pvalue));
@@ -14083,7 +14083,7 @@ int org_mini_gl_GL_glProgramUniformMatrix2x3dv(Runtime *runtime, JClass *clazz) 
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix2x3dv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -14105,7 +14105,7 @@ int org_mini_gl_GL_glProgramUniformMatrix3x2dv(Runtime *runtime, JClass *clazz) 
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix3x2dv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -14127,7 +14127,7 @@ int org_mini_gl_GL_glProgramUniformMatrix2x4dv(Runtime *runtime, JClass *clazz) 
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix2x4dv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -14149,7 +14149,7 @@ int org_mini_gl_GL_glProgramUniformMatrix4x2dv(Runtime *runtime, JClass *clazz) 
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix4x2dv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -14171,7 +14171,7 @@ int org_mini_gl_GL_glProgramUniformMatrix3x4dv(Runtime *runtime, JClass *clazz) 
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix3x4dv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -14193,7 +14193,7 @@ int org_mini_gl_GL_glProgramUniformMatrix4x3dv(Runtime *runtime, JClass *clazz) 
     __refer ptr_pvalue = NULL;
     if(pvalue){
         offset_pvalue *= env->data_type_bytes[pvalue->mb.arr_type_index];
-        ptr_pvalue = pvalue->arr_body + offset_pvalue;
+        ptr_pvalue = jarray_body(pvalue) + offset_pvalue;
     } else if(offset_pvalue) { ptr_pvalue = (__refer)(intptr_t)offset_pvalue;}
 
     glProgramUniformMatrix4x3dv((GLuint)pprogram, (GLint)plocation, (GLsizei)pcount, (GLboolean)ptranspose, (const GLdouble*)(ptr_pvalue));
@@ -14225,10 +14225,10 @@ int org_mini_gl_GL_glGetProgramPipelineInfoLog(Runtime *runtime, JClass *clazz) 
     __refer ptr_plength = NULL;
     if(plength){
         offset_plength *= env->data_type_bytes[plength->mb.arr_type_index];
-        ptr_plength = plength->arr_body + offset_plength;
+        ptr_plength = jarray_body(plength) + offset_plength;
     } else if(offset_plength) { ptr_plength = (__refer)(intptr_t)offset_plength;}
     Instance *pinfoLog = env->localvar_getRefer(runtime->localvar, pos++);
-    __refer ptr_pinfoLog = pinfoLog->arr_body ;
+    __refer ptr_pinfoLog = jarray_body(pinfoLog) ;
 
     glGetProgramPipelineInfoLog((GLuint)ppipeline, (GLsizei)pbufSize, (GLsizei*)(ptr_plength), (GLchar*)(ptr_pinfoLog));
     
@@ -14304,7 +14304,7 @@ int org_mini_gl_GL_glVertexAttribL1dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttribL1dv((GLuint)pindex, (const GLdouble*)(ptr_pv));
@@ -14323,7 +14323,7 @@ int org_mini_gl_GL_glVertexAttribL2dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttribL2dv((GLuint)pindex, (const GLdouble*)(ptr_pv));
@@ -14342,7 +14342,7 @@ int org_mini_gl_GL_glVertexAttribL3dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttribL3dv((GLuint)pindex, (const GLdouble*)(ptr_pv));
@@ -14361,7 +14361,7 @@ int org_mini_gl_GL_glVertexAttribL4dv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glVertexAttribL4dv((GLuint)pindex, (const GLdouble*)(ptr_pv));
@@ -14383,7 +14383,7 @@ int org_mini_gl_GL_glVertexAttribLPointer(Runtime *runtime, JClass *clazz) {
     __refer ptr_ppointer = NULL;
     if(ppointer){
         offset_ppointer *= env->data_type_bytes[ppointer->mb.arr_type_index];
-        ptr_ppointer = ppointer->arr_body + offset_ppointer;
+        ptr_ppointer = jarray_body(ppointer) + offset_ppointer;
     } else if(offset_ppointer) { ptr_ppointer = (__refer)(intptr_t)offset_ppointer;}
 
     glVertexAttribLPointer((GLuint)pindex, (GLint)psize, (GLenum)ptype, (GLsizei)pstride, (const void*)(ptr_ppointer));
@@ -14403,7 +14403,7 @@ int org_mini_gl_GL_glGetVertexAttribLdv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pparams = NULL;
     if(pparams){
         offset_pparams *= env->data_type_bytes[pparams->mb.arr_type_index];
-        ptr_pparams = pparams->arr_body + offset_pparams;
+        ptr_pparams = jarray_body(pparams) + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
     glGetVertexAttribLdv((GLuint)pindex, (GLenum)ppname, (GLdouble*)(ptr_pparams));
@@ -14423,7 +14423,7 @@ int org_mini_gl_GL_glViewportArrayv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glViewportArrayv((GLuint)pfirst, (GLsizei)pcount, (const GLfloat*)(ptr_pv));
@@ -14458,7 +14458,7 @@ int org_mini_gl_GL_glViewportIndexedfv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glViewportIndexedfv((GLuint)pindex, (const GLfloat*)(ptr_pv));
@@ -14478,7 +14478,7 @@ int org_mini_gl_GL_glScissorArrayv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glScissorArrayv((GLuint)pfirst, (GLsizei)pcount, (const GLint*)(ptr_pv));
@@ -14513,7 +14513,7 @@ int org_mini_gl_GL_glScissorIndexedv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glScissorIndexedv((GLuint)pindex, (const GLint*)(ptr_pv));
@@ -14533,7 +14533,7 @@ int org_mini_gl_GL_glDepthRangeArrayv(Runtime *runtime, JClass *clazz) {
     __refer ptr_pv = NULL;
     if(pv){
         offset_pv *= env->data_type_bytes[pv->mb.arr_type_index];
-        ptr_pv = pv->arr_body + offset_pv;
+        ptr_pv = jarray_body(pv) + offset_pv;
     } else if(offset_pv) { ptr_pv = (__refer)(intptr_t)offset_pv;}
 
     glDepthRangeArrayv((GLuint)pfirst, (GLsizei)pcount, (const GLdouble*)(ptr_pv));
@@ -14567,7 +14567,7 @@ int org_mini_gl_GL_glGetFloati_v(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glGetFloati_v((GLenum)ptarget, (GLuint)pindex, (GLfloat*)(ptr_pdata));
@@ -14587,7 +14587,7 @@ int org_mini_gl_GL_glGetDoublei_v(Runtime *runtime, JClass *clazz) {
     __refer ptr_pdata = NULL;
     if(pdata){
         offset_pdata *= env->data_type_bytes[pdata->mb.arr_type_index];
-        ptr_pdata = pdata->arr_body + offset_pdata;
+        ptr_pdata = jarray_body(pdata) + offset_pdata;
     } else if(offset_pdata) { ptr_pdata = (__refer)(intptr_t)offset_pdata;}
 
     glGetDoublei_v((GLenum)ptarget, (GLuint)pindex, (GLdouble*)(ptr_pdata));

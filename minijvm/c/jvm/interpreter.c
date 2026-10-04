@@ -56,6 +56,14 @@ s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
         push_ref(stack, ins);
         return 0;
     } else {
+        /* JVM spec: entering a catch handler clears the operand stack and
+         * pushes only the exception reference; locals survive.  The clear
+         * must target the operand region (above the locals slots) - NOT
+         * localvar_dispose, whose push would land on local 0 and clobber
+         * `this`.  This also stops boundary-thrown invokes (NPE with no
+         * callee frame to consume the args) from leaking the argument
+         * slots once per caught iteration. */
+        stack->sp = runtime->localvar + runtime->localvar_slots;
         push_ref(stack, ins);
 #if _JVM_DEBUG_LOG_LEVEL > 3
         jvm_printf("Exception : %s\n", utf8_cstr(ins->mb.clazz->name));
@@ -70,7 +78,7 @@ s32 _jarray_check_exception(Instance *arr, s32 index, Runtime *runtime) {
     if (!arr) {
         Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
         push_ref(runtime->stack, (__refer) exception);
-    } else if (index >= arr->arr_length || index < 0) {
+    } else if (index >= jarray_length(arr) || index < 0) {
         Instance *exception = exception_create(JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, runtime);
         push_ref(runtime->stack, (__refer) exception);
     } else {
@@ -125,7 +133,56 @@ static s32 filterClassName(Utf8String *clsName) {
         r->stack->sp = sp;\
         check_suspend_and_pause(r);\
     }\
+    /* OSR probe: the heat test stays inline so cold loops pay only the\n\
+     * counter increment; the call happens past the threshold only */\
+    if (offset < 0 && JIT_ENABLE\
+        && ca->jit.interpreted_count++ > JIT_COMPILE_EXEC_COUNT\
+        && osr_hot_backedge(r, ca, (s32)(offset), sp, &ret)) goto label_osr_exit;\
 }
+
+#if JIT_ENABLE
+/*
+ * On-stack replacement attempt, called at a backward branch once the
+ * method's backedge/entry counter passed the compile threshold.  Returns
+ * 1 when the live frame was transferred into the compiled body (the
+ * trampoline call ran the method to completion): *retp then holds the
+ * body's final RUNTIME_STATUS and the shared stack carries its result at
+ * (sp - return_slots), so the caller must exit through label_osr_exit.
+ * Only javac-shaped loops qualify: the backward target must see an empty
+ * operand stack, because the compiled code models the operand region from
+ * base+max_locals upward.
+ */
+static s32 osr_hot_backedge(Runtime *r, CodeAttribute *ca, s32 offset, StackEntry *sp, s32 *retp) {
+    s32 ret;
+
+    if (offset == -1 || !ca) {
+        /* -1 is the jdwp per-instruction probe */
+        return 0;
+    }
+    if (r->jvm->jdwp_enable) {
+        return 0;
+    }
+    if (ca->jit.state == JIT_GEN_ERROR) {
+        return 0; /* gave up compiling: probe forever cheap */
+    }
+    /* empty operand stack at the loop header: all loop state in locals */
+    if (sp != r->localvar + r->localvar_slots) {
+        return 0;
+    }
+    /* the trampoline loads SP/locals from the shared state */
+    r->stack->sp = sp;
+    ret = jit_osr_execute(r, (s32) (r->pc - ca->code));
+    if (ret < 0) {
+        return 0;
+    }
+    *retp = ret;
+    return 1;
+}
+#else
+static s32 osr_hot_backedge(Runtime *r, CodeAttribute *ca, s32 offset, StackEntry *sp, s32 *retp) {
+    return 0;
+}
+#endif
 
 s32 invokedynamic_prepare(Runtime *runtime, BootstrapMethod *bootMethod, ConstantInvokeDynamic *cid) {
     // =====================================================================
@@ -181,6 +238,8 @@ s32 invokedynamic_prepare(Runtime *runtime, BootstrapMethod *bootMethod, Constan
         Utf8String *ustr = utf8_create_c(STR_INS_JAVA_LANG_OBJECT);
         more_args = jarray_create_by_type_name(runtime, args_cnt, ustr, clazz->jloader);
         utf8_destroy(ustr);
+
+        if (!more_args) return exception_throw_out_of_memory(runtime);
 
         push_ref(stack, more_args);
     }
@@ -291,9 +350,8 @@ s32 checkcast(Runtime *runtime, Instance *ins, s32 typeIdx) {
                 return 1;
             }
         } else if (ins->mb.type == MEM_TYPE_ARR) {
-            Utf8String *utf = class_get_constant_classref(clazz, typeIdx)->name;
-            u8 ch = utf8_char_at(utf, 1);
-            if (getDataTypeIndex(ch) == ins->mb.clazz->mb.arr_type_index) {
+            JClass *other = getClassByConstantClassRef(clazz, typeIdx, runtime);
+            if (other && instance_of(ins, other)) {
                 return 1;
             }
         } else if (ins->mb.type == MEM_TYPE_CLASS) {
@@ -316,21 +374,26 @@ s32 checkcast(Runtime *runtime, Instance *ins, s32 typeIdx) {
  * @param father  Runtime of the parent
  * @param son     Runtime of the child
  */
-static inline void _synchronized_lock_method(MethodInfo *method, Runtime *runtime) {
+static inline s32 _synchronized_lock_method(MethodInfo *method, Runtime *runtime) {
     //synchronized process
-    if (!jdwp_is_ignore_sync(runtime->jvm->jdwpserver)) {
+    runtime->lock = NULL;
+    if (!jdwp_is_ignore_sync(runtime->jvm->jdwpserver, runtime)) {
         if (method->is_static) {
             runtime->lock = (MemoryBlock *) runtime->clazz;
         } else {
             runtime->lock = (MemoryBlock *) localvar_getRefer(runtime->localvar, 0);
         }
-        jthread_lock(runtime->lock, runtime);
+        if (jthread_lock(runtime->lock, runtime) != 0) {
+            runtime->lock = NULL;
+            return RUNTIME_STATUS_ERROR;
+        }
     }
+    return RUNTIME_STATUS_NORMAL;
 }
 
 static inline void _synchronized_unlock_method(MethodInfo *method, Runtime *runtime) {
     //synchronized process
-    if (!jdwp_is_ignore_sync(runtime->jvm->jdwpserver)) {
+    if (runtime->lock) {
         jthread_unlock(runtime->lock, runtime);
         runtime->lock = NULL;
     }
@@ -508,6 +571,49 @@ static inline s32 _optimize_inline_setter(JClass *clazz, s32 cfrIdx, Runtime *ru
 }
 
 
+/* Shared result handling for one compiled-code call.  Since the calling
+ * convention unification, a compiled java body and a resolved JNI native
+ * are the same callable shape (Runtime*, JClass*), so this tail is common:
+ *  - EXCEPTION: normalize the reference to base+1.  A native leaves it at
+ *    the call boundary; a compiled body already did this in its own
+ *    exception path and the pop/dispose/push is idempotent for that state.
+ *  - NORMAL: shape the result from (sp - return_slots), exactly like the
+ *    interpreted return opcodes.
+ *  - ERROR / INTERRUPT carry no reference and must not touch the stack. */
+static s32 _finish_compiled_call(MethodInfo *method, Runtime *r, s32 ret) {
+    if (ret == RUNTIME_STATUS_EXCEPTION) {
+        r->ins = pop_ref(r->stack);
+        localvar_dispose(r);
+        push_ref(r->stack, r->ins);
+    } else if (ret == RUNTIME_STATUS_NORMAL) {
+        switch (method->return_slots) {
+            case 0: {
+                // V
+                localvar_dispose(r);
+                break;
+            }
+            case 1: {
+                // F I R
+                peek_entry(r->stack->sp - method->return_slots, &r->entry);
+                localvar_dispose(r);
+                push_entry(r->stack, &r->entry);
+                break;
+            }
+            case 2: {
+                //J D return type , 2slots
+                r->lval1 = pop_long(r->stack);
+                localvar_dispose(r);
+                push_long(r->stack, r->lval1);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+    return ret;
+}
+
 s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #if _JVM_DEBUG_METHOD_PROFILE || _JVM_DEBUG_SLOW_CALL_PROFILE
     s64 start_time = nanoTime();
@@ -560,7 +666,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     if (!(method->is_native)) {
         CodeAttribute *ca = method->converted_code;
         if (ca) {
-            if (stack->max_size < (stack->sp - stack->store) + ca->max_stack) {
+            /* full frame need: caller SP + locals reserve + callee max_stack.
+             * localvar_init below raises sp by max(max_locals, para_slots) - para_slots,
+             * so the reserve must be part of the bound or deep frames can overrun. */
+            s32 local_reserve = ca->max_locals > method->para_slots ? ca->max_locals - method->para_slots : 0;
+            if (stack->max_size < (stack->sp - stack->store) + local_reserve + ca->max_stack) {
                 jvm_printf("Stack overflow :\n");
                 print_runtime_stack(r);
                 exit(1);
@@ -570,7 +680,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             localvar_init(r, ca->max_locals, method->para_slots);
 
             //method sync begin
-            if (method->is_sync)_synchronized_lock_method(method, r);
+            if (method->is_sync && _synchronized_lock_method(method, r) != RUNTIME_STATUS_NORMAL) {
+                ret = RUNTIME_STATUS_ERROR;
+                goto label_exit_while;
+            }
 
             if (r->thrd_info->is_stop) {
                 //if stop=1 then exit thread
@@ -579,33 +692,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             }
 
             if (JIT_ENABLE && ca->jit.state == JIT_GEN_SUCCESS) {
-                //jvm_printf("jit call %s.%s()\n", method->_this_class->name->data, method->name->data);
-                ret = ca->jit.func(method, r);
-                if (!ret) {
-                    switch (method->return_slots) {
-                        case 0: {
-                            // V
-                            localvar_dispose(r);
-                            break;
-                        }
-                        case 1: {
-                            // F I R
-                            peek_entry(stack->sp - method->return_slots, &r->entry);
-                            localvar_dispose(r);
-                            push_entry(stack, &r->entry);
-                            break;
-                        }
-                        case 2: {
-                            //J D return type , 2slots
-                            r->lval1 = pop_long(stack);
-                            localvar_dispose(r);
-                            push_long(stack, r->lval1);
-                            break;
-                        }
-                        default: {
-                            break;
-                        }
-                    }
+                // compiled java body: same callable shape as a native
+                ret = ca->jit.func(r, clazz);
+                if (ret != RUNTIME_STATUS_ERROR) {
+                    ret = _finish_compiled_call(method, r, ret);
                 }
             } else {
                 if (JIT_ENABLE && ca->jit.state == JIT_GEN_UNKNOW) {
@@ -624,7 +714,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 sp = r->stack->sp;
 
                 do {
-                    if (jdwp_client_count(r->jvm->jdwpserver)) {
+                    if (r->jvm->jdwp_enable && jdwp_client_count(r->jvm->jdwpserver)) {
                         stack->sp = sp;
 
                         if (!r->thrd_info->no_pause) {
@@ -985,10 +1075,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                r->ival1 = *((s32 *) (r->ins->arr_body) + r->idx);
+                                r->ival1 = *((s32 *) (jarray_body(r->ins)) + r->idx);
                                 (sp++)->ivalue = r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1007,10 +1097,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                r->lval1 = *(((s64 *) r->ins->arr_body) + r->idx);
+                                r->lval1 = *(((s64 *) jarray_body(r->ins)) + r->idx);
                                 (sp++)->lvalue = r->lval1;
                                 (sp++);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1029,10 +1119,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                r->rval1 = *(((__refer *) r->ins->arr_body) + r->idx);
+                                r->rval1 = *(((__refer *) jarray_body(r->ins)) + r->idx);
                                 (sp++)->rvalue = r->rval1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1051,10 +1141,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                r->ival1 = *(((s8 *) r->ins->arr_body) + r->idx);
+                                r->ival1 = *(((s8 *) jarray_body(r->ins)) + r->idx);
                                 (sp++)->ivalue = r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1073,10 +1163,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                r->ival1 = *(((u16 *) r->ins->arr_body) + r->idx);
+                                r->ival1 = *(((u16 *) jarray_body(r->ins)) + r->idx);
                                 (sp++)->ivalue = r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1095,10 +1185,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                r->ival1 = *(((s16 *) r->ins->arr_body) + r->idx);
+                                r->ival1 = *(((s16 *) jarray_body(r->ins)) + r->idx);
                                 (sp++)->ivalue = r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1231,10 +1321,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                *(((s32 *) r->ins->arr_body) + r->idx) = r->ival1;
+                                *(((s32 *) jarray_body(r->ins)) + r->idx) = r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(r);
@@ -1255,10 +1345,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                *(((s64 *) r->ins->arr_body) + r->idx) = r->lval1;
+                                *(((s64 *) jarray_body(r->ins)) + r->idx) = r->lval1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(r);
@@ -1277,10 +1367,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
+                            } else if (!jarray_reference_store_check(r->ins, r->rval1)) {
+                                goto label_arraystore_throw;
                             } else {
-                                *(((__refer *) r->ins->arr_body) + r->idx) = r->rval1;
+                                *(((__refer *) jarray_body(r->ins)) + r->idx) = r->rval1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(r);
@@ -1299,10 +1391,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                *(((s8 *) r->ins->arr_body) + r->idx) = (s8) r->ival1;
+                                *(((s8 *) jarray_body(r->ins)) + r->idx) = (s8) r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(r);
@@ -1321,10 +1413,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                *(((u16 *) r->ins->arr_body) + r->idx) = (u16) r->ival1;
+                                *(((u16 *) jarray_body(r->ins)) + r->idx) = (u16) r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(r);
@@ -1343,10 +1435,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
                                 goto label_null_throw;
-                            } else if (r->idx < 0 || r->idx >= r->ins->arr_length) {
+                            } else if (r->idx < 0 || r->idx >= jarray_length(r->ins)) {
                                 goto label_outofbounds_throw;
                             } else {
-                                *(((s16 *) r->ins->arr_body) + r->idx) = (s16) r->ival1;
+                                *(((s16 *) jarray_body(r->ins)) + r->idx) = (s16) r->ival1;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(r);
@@ -2110,7 +2202,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(r);
                             jvm_printf("f2i: %f\n", (sp - 1)->fvalue);
 #endif
-                            (sp - 1)->ivalue = (s32) (sp - 1)->fvalue;
+                            (sp - 1)->ivalue = jvm_float_to_int((sp - 1)->fvalue);
                             r->pc++;
 
                             break;
@@ -2123,7 +2215,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("f2l: %f\n", (sp - 1)->fvalue);
 #endif
                             ++sp;
-                            (sp - 2)->lvalue = (s64) (sp - 2)->fvalue;
+                            (sp - 2)->lvalue = jvm_float_to_long((sp - 2)->fvalue);
                             r->pc++;
 
                             break;
@@ -2149,7 +2241,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("d2i: %lf\n", (sp - 2)->dvalue);
 #endif
                             --sp;
-                            (sp - 1)->ivalue = (s32) (sp - 1)->dvalue;
+                            (sp - 1)->ivalue = jvm_double_to_int((sp - 1)->dvalue);
                             r->pc++;
 
                             break;
@@ -2161,7 +2253,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(r);
                             jvm_printf("d2l: %lf\n", (sp - 2)->dvalue);
 #endif
-                            (sp - 2)->lvalue = (s64) (sp - 2)->dvalue;
+                            (sp - 2)->lvalue = jvm_double_to_long((sp - 2)->dvalue);
                             r->pc++;
 
                             break;
@@ -3003,46 +3095,53 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 goto label_null_throw;
                             } else {
                                 MethodInfo *m = NULL;
-                                if (r->cmr->methodInfo) {
-                                    if (r->cmr->methodInfo->_vtable_index >= 0 && r->ins->mb.clazz->vtable) {
-                                        m = r->ins->mb.clazz->vtable[r->cmr->methodInfo->_vtable_index];
+                                /* inline vtable dispatch: no inline cache, the
+                                 * vtable slot fetch is 3 loads + 2 compares.
+                                 * DISP_ITABLE (class ref resolved to a default
+                                 * method) falls through to select_dispatch_target */
+                                {
+                                    s32 kind = dispatch_kind_load(r->cmr);
+                                    if (kind == DISP_UNRESOLVED) {
+                                        /* first execution: resolve (may load) */
+                                        spin_lock(&r->jvm->lock_cloader);
+                                        {
+                                            s32 derr = resolve_dispatch_plan(r, r->cmr, op_invokevirtual);
+                                            if (derr) {
+                                                spin_unlock(&r->jvm->lock_cloader);
+                                                stack->sp = sp;
+                                                push_ref(stack, exception_create_dispatch(derr, r));
+                                                goto label_exception_handle;
+                                            }
+                                        }
+                                        spin_unlock(&r->jvm->lock_cloader);
+                                        kind = dispatch_kind_load(r->cmr);
                                     }
-                                    // else if (r->cmr->methodInfo->_itable_index >= 0 && r->ins->mb.clazz->itable) {
-                                    //     Itable *itable = r->ins->mb.clazz->itable;
-                                    //     JClass *interfaceClass = r->cmr->methodInfo->_this_class;
-                                    //     s32 i;
-                                    //     for (i = 0; i < r->ins->mb.clazz->itable_length; i++) {
-                                    //         if (itable->interfaces[i] == interfaceClass) {
-                                    //             if (r->cmr->methodInfo->_itable_index < itable->entries[i].method_count) {
-                                    //                 m = itable->entries[i].methods[r->cmr->methodInfo->_itable_index];
-                                    //             }
-                                    //             break;
-                                    //         }
-                                    //     }
-                                    // }
-                                }
-
-                                if (m) {
-                                    r->m = m;
-                                } else {
-                                    r->m = (MethodInfo *) pairlist_get(r->cmr->virtual_methods, r->ins->mb.clazz);
-                                }
-
-                                if (!r->m) {
-                                    stack->sp = sp;
-                                    r->m = find_instance_methodInfo_by_name(r->ins, r->cmr->name, r->cmr->descriptor, r);
-                                    sp = stack->sp;
-                                    spin_lock(&r->jvm->lock_cloader);
-                                    {
-                                        pairlist_put(r->cmr->virtual_methods, r->ins->mb.clazz, r->m); //放入缓存，以便下次直接调用
+                                    if (kind == DISP_VTABLE) {
+                                        JClass *rc = r->ins->mb.clazz;
+                                        if (!rc->vtable || r->cmr->disp_slot >= rc->vtable_length) {
+                                            stack->sp = sp;
+                                            push_ref(stack, exception_create_dispatch(JVM_EXCEPTION_INCOMPATIBLECLASSCHANGE, r));
+                                            goto label_exception_handle;
+                                        }
+                                        m = rc->vtable[r->cmr->disp_slot];
+                                        if (!m || (!m->converted_code && !m->is_native)) {
+                                            stack->sp = sp;
+                                            push_ref(stack, exception_create_dispatch(JVM_EXCEPTION_ABSTRACTMETHOD, r));
+                                            goto label_exception_handle;
+                                        }
+                                    } else {
+                                        /* ITABLE or LINK_ERROR: delegate */
+                                        s32 derr = select_dispatch_target_resolved(
+                                            r->cmr, r->ins, op_invokevirtual, kind, &m);
+                                        if (derr) {
+                                            stack->sp = sp;
+                                            push_ref(stack, exception_create_dispatch(derr, r));
+                                            goto label_exception_handle;
+                                        }
                                     }
-                                    spin_unlock(&r->jvm->lock_cloader);
                                 }
-
-                                if (!r->m) {
-                                    r->err_msg = utf8_cstr(r->cmr->name);
-                                    goto label_nosuchmethod_throw;
-                                } else {
+                                r->m = m;
+                                {
                                     s8 match = 0;
                                     if (r->m->is_getter) {
                                         //optimize getter eg:  int getSize(){return size;}
@@ -3083,8 +3182,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             break;
                         }
-
-
                         case op_invokespecial: {
                             r->cmr = class_get_constant_method_ref(clazz, *((u16 *) (r->pc + 1)));
                             r->m = r->cmr->methodInfo;
@@ -3122,23 +3219,20 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->m = (MethodInfo *) pairlist_get(r->cmr->virtual_methods, r->ins->mb.clazz);
-                                if (!r->m) {
+                                MethodInfo *m = NULL;
+                                s32 kind = dispatch_kind_load(r->cmr);
+                                s32 derr = kind == DISP_UNRESOLVED
+                                               ? select_dispatch_target(r, r->cmr, r->ins,
+                                                                        op_invokeinterface, &m)
+                                               : select_dispatch_target_resolved(
+                                                   r->cmr, r->ins, op_invokeinterface, kind, &m);
+                                if (derr) {
                                     stack->sp = sp;
-                                    r->m = find_instance_methodInfo_by_name(r->ins, r->cmr->name, r->cmr->descriptor, r);
-                                    sp = stack->sp;
-                                    spin_lock(&r->jvm->lock_cloader);
-                                    {
-                                        pairlist_put(r->cmr->virtual_methods, r->ins->mb.clazz, r->m); // store in cache for direct use in the next call
-                                    }
-                                    spin_unlock(&r->jvm->lock_cloader);
+                                    push_ref(stack, exception_create_dispatch(derr, r));
+                                    goto label_exception_handle;
                                 }
-                                if (!r->m) {
-                                    r->err_msg = utf8_cstr(r->cmr->name);
-                                    goto label_nosuchmethod_throw;
-                                } else {
-                                    *r->pc = op_invokeinterface_fast;
-                                }
+                                r->m = m;
+                                *r->pc = op_invokeinterface_fast;
                             }
                             break;
                         }
@@ -3180,6 +3274,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             }
                             sp = stack->sp;
 
+                            if (!r->ins) {
+                                goto label_outofmemory_throw;
+                            }
+
                             (sp++)->rvalue = r->ins;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -3196,9 +3294,16 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             r->count = (--sp)->ivalue;
 
+                            if (r->count < 0) {
+                                goto label_negativearraysize_throw;
+                            }
+
                             stack->sp = sp;
                             r->ins = jarray_create_by_type_index(r, r->count, r->idx);
                             sp = stack->sp;
+                            if (!r->ins) {
+                                goto label_outofmemory_throw;
+                            }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(r);
                             jvm_printf("(a)newarray  [%llx] type:%c , r->count:%d  \n", (s64) (intptr_t) r->ins, getDataTypeTag(r->idx), r->count);
@@ -3213,6 +3318,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->idx = *((u16 *) (r->pc + 1));
 
                             r->count = (--sp)->ivalue;
+                            if (r->count < 0) {
+                                goto label_negativearraysize_throw;
+                            }
                             r->other = pairlist_get(clazz->arr_class_type, (__refer) (intptr_t) r->idx);
 
                             stack->sp = sp;
@@ -3227,6 +3335,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             }
                             r->ins = jarray_create_by_class(r, r->count, r->other);
                             sp = stack->sp;
+
+                            if (!r->ins) {
+                                goto label_outofmemory_throw;
+                            }
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(r);
@@ -3243,12 +3355,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(r);
-                            jvm_printf("arraylength  [%llx].arr_body[%llx] len:%d  \n", (s64) (intptr_t) r->ins, (s64) (intptr_t) r->ins->arr_body, r->ins->arr_length);
+                            jvm_printf("arraylength  [%llx].arr_body[%llx] len:%d  \n", (s64) (intptr_t) r->ins, (s64) (intptr_t) jarray_body(r->ins), jarray_length(r->ins));
 #endif
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                (sp++)->ivalue = r->ins->arr_length;
+                                (sp++)->ivalue = jarray_length(r->ins);
                                 r->pc++;
                             }
                             break;
@@ -3318,7 +3430,16 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             stack->sp = sp;
                             if (!r->ins)goto label_null_throw;
-                            jthread_lock(&r->ins->mb, r);
+                            //jdwp invoke: all java threads are frozen, the jdwp
+                            //dispatcher is the only executor - locking is
+                            //skipped (a real lock could be owned by a frozen
+                            //thread and deadlock the dispatcher)
+                            if (!jdwp_is_ignore_sync(r->jvm->jdwpserver, r)) {
+                                if (jthread_lock(&r->ins->mb, r) != RUNTIME_STATUS_NORMAL) {
+                                    ret = RUNTIME_STATUS_ERROR;
+                                    goto label_exit_while;
+                                }
+                            }
                             sp = stack->sp;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(r);
@@ -3333,9 +3454,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->ins = (--sp)->rvalue;
                             stack->sp = sp;
                             if (!r->ins)goto label_null_throw;
-                            int ret = jthread_unlock(&r->ins->mb, r);
-                            if (ret < 0) {
-                                s32 debug = 1;
+                            //symmetric with op_monitorenter: never unlock a
+                            //monitor that was acquired with locking skipped
+                            if (!jdwp_is_ignore_sync(r->jvm->jdwpserver, r)) {
+                                int ret = jthread_unlock(&r->ins->mb, r);
+                                if (ret < 0) {
+                                    s32 debug = 1;
+                                }
                             }
                             sp = stack->sp;
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -3428,12 +3553,22 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #else
                             s32 dim[r->count];
 #endif
-                            for (r->idx = 0; r->idx < r->count; r->idx++)
+                            s32 has_negative_dimension = 0;
+                            for (r->idx = 0; r->idx < r->count; r->idx++) {
                                 dim[r->idx] = (--sp)->ivalue;
+                                if (dim[r->idx] < 0) has_negative_dimension = 1;
+                            }
+
+                            if (has_negative_dimension) {
+                                goto label_negativearraysize_throw;
+                            }
 
                             stack->sp = sp;
                             r->ins = jarray_multi_create(r, dim, r->count, r->ustr, 0);
                             sp = stack->sp;
+                            if (!r->ins) {
+                                goto label_outofmemory_throw;
+                            }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(r);
                             jvm_printf("multianewarray  [%llx] type:%s , r->count:%d  \n", (s64) (intptr_t) r->ins, utf8_cstr(r->ustr), r->count);
@@ -3447,7 +3582,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifnull: {
                             r->ins = (--sp)->rvalue;
                             if (!r->ins) {
-                                r->pc += *((s16 *) (r->pc + 1));
+                                r->offset = *((s16 *) (r->pc + 1));
+                                r->pc += r->offset;
+                                check_gc_pause(r->offset);
                             } else {
                                 r->pc += 3;
                             }
@@ -3464,7 +3601,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifnonnull: {
                             r->ins = (--sp)->rvalue;
                             if (r->ins) {
-                                r->pc += *((s16 *) (r->pc + 1));
+                                r->offset = *((s16 *) (r->pc + 1));
+                                r->pc += r->offset;
+                                check_gc_pause(r->offset);
                             } else {
                                 r->pc += 3;
                             }
@@ -3490,7 +3629,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_jsr_w: {
                             r->offset = *((s32 *) (r->pc + 1));
-                            (sp++)->rvalue = (r->pc + 3);
+                            (sp++)->rvalue = (r->pc + 5);
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(r);
                             jvm_printf("jsr_w: %d\n", r->offset);
@@ -3665,7 +3804,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
 
                                 (sp++)->rvalue = *((__refer *) r->ptr);
                                 r->pc += 3;
@@ -3684,7 +3823,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
 
                                 (sp++)->lvalue = *((s64 *) r->ptr);
                                 sp++;
@@ -3704,7 +3843,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
 
                                 (sp++)->ivalue = *((s32 *) r->ptr);
                                 r->pc += 3;
@@ -3723,7 +3862,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
 
                                 (sp++)->ivalue = *((s16 *) r->ptr);
                                 r->pc += 3;
@@ -3742,7 +3881,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
 
                                 (sp++)->ivalue = *((u16 *) r->ptr);
                                 r->pc += 3;
@@ -3761,7 +3900,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
 
                                 (sp++)->ivalue = *((s8 *) r->ptr);
                                 r->pc += 3;
@@ -3782,7 +3921,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 goto label_null_throw;
                             } else {
                                 // check variable type to determain long/s32/f64/f32
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
                                 *((__refer *) r->ptr) = r->rval1;
                                 r->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -3802,7 +3941,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
                                 *((s64 *) r->ptr) = r->lval1;
                                 r->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -3821,7 +3960,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
                                 *((s32 *) r->ptr) = r->ival1;
                                 r->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -3840,7 +3979,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
                                 *((s16 *) r->ptr) = (s16) r->ival1;
                                 r->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -3859,7 +3998,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->ptr = &(r->ins->obj_fields[r->offset]);
+                                r->ptr = &(instance_fields(r->ins)[r->offset]);
                                 *((s8 *) r->ptr) = (s8) r->ival1;
                                 r->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -3878,44 +4017,44 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 goto label_null_throw;
                             } else {
                                 MethodInfo *m = NULL;
-                                if (r->cmr->methodInfo) {
-                                    if (r->cmr->methodInfo->_vtable_index >= 0 && r->ins->mb.clazz->vtable) {
-                                        m = r->ins->mb.clazz->vtable[r->cmr->methodInfo->_vtable_index];
+                                /* inline vtable dispatch (same as cold path,
+                                 * plan is expected published by now) */
+                                {
+                                    s32 kind = dispatch_kind_load(r->cmr);
+                                    if (kind == DISP_VTABLE) {
+                                        JClass *rc = r->ins->mb.clazz;
+                                        if (!rc->vtable || r->cmr->disp_slot >= rc->vtable_length) {
+                                            stack->sp = sp;
+                                            push_ref(stack, exception_create_dispatch(JVM_EXCEPTION_INCOMPATIBLECLASSCHANGE, r));
+                                            goto label_exception_handle;
+                                        }
+                                        m = rc->vtable[r->cmr->disp_slot];
+                                        if (!m || (!m->converted_code && !m->is_native)) {
+                                            stack->sp = sp;
+                                            push_ref(stack, exception_create_dispatch(JVM_EXCEPTION_ABSTRACTMETHOD, r));
+                                            goto label_exception_handle;
+                                        }
+                                    } else {
+                                        /* ITABLE / UNRESOLVED / LINK_ERROR */
+                                        s32 derr = select_dispatch_target_resolved(r->cmr, r->ins, op_invokevirtual, kind, &m);
+                                        if (derr) {
+                                            stack->sp = sp;
+                                            push_ref(stack, exception_create_dispatch(derr, r));
+                                            goto label_exception_handle;
+                                        }
                                     }
-//                                    else if (r->cmr->methodInfo->_itable_index >= 0 && r->ins->mb.clazz->itable) {
-//                                        //LinkedHashSet forEach() call here, the forEach method is in java.util.Iterator ,default method
-//                                        Itable *itable = r->ins->mb.clazz->itable;
-//                                        JClass *interfaceClass = r->cmr->methodInfo->_this_class;
-//                                        s32 i;
-//                                        for (i = 0; i < r->ins->mb.clazz->itable_length; i++) {
-//                                            if (itable->interfaces[i] == interfaceClass) {
-//                                                if (r->cmr->methodInfo->_itable_index < itable->entries[i].method_count) {
-//                                                    m = itable->entries[i].methods[r->cmr->methodInfo->_itable_index];
-//                                                }
-//                                                break;
-//                                            }
-//                                        }
-//                                    }
-                                }
-                                if (m) {
-                                    r->m = m;
-                                } else {
-                                    r->m = (MethodInfo *) pairlist_get(r->cmr->virtual_methods, r->ins->mb.clazz);
                                 }
 #if _JVM_DEBUG_BYTECODE_PROFILE
                                 spent = nanoTime() - start_at;
 #endif
-                                if (!r->m) {
-                                    *r->pc = op_invokevirtual;
-                                } else {
-                                    stack->sp = sp;
-                                    ret = execute_method_impl(r->m, r);
-                                    sp = stack->sp;
-                                    if (ret) {
-                                        goto label_exception_handle;
-                                    }
-                                    r->pc += 3;
+                                r->m = m;
+                                stack->sp = sp;
+                                ret = execute_method_impl(r->m, r);
+                                sp = stack->sp;
+                                if (ret) {
+                                    goto label_exception_handle;
                                 }
+                                r->pc += 3;
                             }
 
                             break;
@@ -3964,21 +4103,27 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!r->ins) {
                                 goto label_null_throw;
                             } else {
-                                r->m = (MethodInfo *) pairlist_get(r->cmr->virtual_methods, r->ins->mb.clazz);
+                                MethodInfo *m = NULL;
+                                s32 kind = dispatch_kind_load(r->cmr);
+                                s32 derr = kind == DISP_UNRESOLVED
+                                               ? select_dispatch_target(r, r->cmr, r->ins, op_invokeinterface, &m)
+                                               : select_dispatch_target_resolved(r->cmr, r->ins, op_invokeinterface, kind, &m);
+                                if (derr) {
+                                    stack->sp = sp;
+                                    push_ref(stack, exception_create_dispatch(derr, r));
+                                    goto label_exception_handle;
+                                }
 #if _JVM_DEBUG_BYTECODE_PROFILE
                                 spent = nanoTime() - start_at;
 #endif
-                                if (!r->m) {
-                                    *r->pc = op_invokeinterface;
-                                } else {
-                                    stack->sp = sp;
-                                    ret = execute_method_impl(r->m, r);
-                                    sp = stack->sp;
-                                    if (ret) {
-                                        goto label_exception_handle;
-                                    }
-                                    r->pc += 5;
+                                r->m = m;
+                                stack->sp = sp;
+                                ret = execute_method_impl(r->m, r);
+                                sp = stack->sp;
+                                if (ret) {
+                                    goto label_exception_handle;
                                 }
+                                r->pc += 5;
                             }
                             break;
                         }
@@ -4023,6 +4168,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         goto label_exception_handle;
                     }
 
+                label_outofmemory_throw: {
+                        stack->sp = sp;
+                        exception_throw_out_of_memory(r);
+                        goto label_exception_handle;
+                    }
+
                 label_null_throw: {
                         stack->sp = sp;
                         push_ref(stack, (__refer) exception_create(JVM_EXCEPTION_NULLPOINTER, r));
@@ -4053,8 +4204,25 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         goto label_exception_handle;
                     }
 
+                label_negativearraysize_throw: {
+                        stack->sp = sp;
+                        push_ref(stack, (__refer) exception_create(JVM_EXCEPTION_NEGATIVEARRAYSIZE, r));
+                        goto label_exception_handle;
+                    }
+
+                label_arraystore_throw: {
+                        stack->sp = sp;
+                        push_ref(stack, (__refer) exception_create(JVM_EXCEPTION_ARRAYSTORE, r));
+                        goto label_exception_handle;
+                    }
+
                 label_exception_handle:
-                    if (ret == RUNTIME_STATUS_ERROR) {
+                    if (ret == RUNTIME_STATUS_ERROR || ret == RUNTIME_STATUS_INTERRUPT) {
+                        /* ERROR / INTERRUPT carry no exception reference on
+                         * the stack and no catch block may observe them: exit
+                         * this frame and propagate the status unchanged.  A
+                         * JIT'd callee stopped at a safepoint returns
+                         * INTERRUPT through execute_method_impl. */
                         goto label_exit_while;
                     }
                     // there is exception handle, but not error handle
@@ -4077,6 +4245,15 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                     continue;
 
+                label_osr_exit:
+                    /* the compiled body ran this frame to completion through
+                     * the OSR trampoline; same result contract as an entry
+                     * compiled call */
+                    if (ret != RUNTIME_STATUS_ERROR) {
+                        ret = _finish_compiled_call(method, r, ret);
+                    }
+                    goto label_exit_while;
+
                 label_exit_while:
 #if _JVM_DEBUG_BYTECODE_PROFILE
                     //time
@@ -4093,7 +4270,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             jvm_printf("method code attribute is null.");
         }
     } else {
-        // native method
+        // native method: a resolved JNI function is the same callable
+        // shape as a compiled java body, so it shares the call tail
         localvar_init(r, method->para_slots, method->para_slots);
         // cache native method calls
         if (!method->native_func) {
@@ -4111,38 +4289,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             //if stop=1 then exit thread
             ret = RUNTIME_STATUS_ERROR;
         } else if (method->native_func) {
-            if (method->is_sync)_synchronized_lock_method(method, r);
-            ret = method->native_func(r, clazz);
-            if (method->is_sync)_synchronized_unlock_method(method, r);
-            if (ret) {
-                r->ins = pop_ref(stack);
-                localvar_dispose(r);
-                push_ref(stack, r->ins);
+            if (method->is_sync && _synchronized_lock_method(method, r) != RUNTIME_STATUS_NORMAL) {
+                ret = RUNTIME_STATUS_ERROR;
             } else {
-                switch (method->return_slots) {
-                    case 0: {
-                        // V
-                        localvar_dispose(r);
-                        break;
-                    }
-                    case 1: {
-                        // F I R
-                        peek_entry(stack->sp - method->return_slots, &r->entry);
-                        localvar_dispose(r);
-                        push_entry(stack, &r->entry);
-                        break;
-                    }
-                    case 2: {
-                        //J D return type , 2slots
-                        r->lval1 = pop_long(stack);
-                        localvar_dispose(r);
-                        push_long(stack, r->lval1);
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
+                ret = method->native_func(r, clazz);
+                if (method->is_sync)_synchronized_unlock_method(method, r);
+            }
+            if (ret != RUNTIME_STATUS_ERROR) {
+                ret = _finish_compiled_call(method, r, ret);
             }
         }
     }
@@ -4181,13 +4335,21 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     ATOMIC_ADD64(&method->profile_count, 1);
     // update max time
     s64 max = method->profile_max_time;
-    while(spent > max) {
-        if(ATOMIC_CAS64(&method->profile_max_time, max, spent)) break;
+    while (spent > max) {
+        if (ATOMIC_CAS64(&method->profile_max_time, max, spent)) break;
         max = method->profile_max_time;
     }
     //profile_method_print(pruntime->jvm);
 #endif
 #endif
+    //jdwp: stepping out of the outermost java frame (parent is the thread
+    //root runtime, e.g. a native GLFW/JNI callback or main itself) never
+    //reaches another interpreter instruction, so the pending step would be
+    //lost and the debugger would wait forever. Complete it here instead.
+    if (pruntime && pruntime->method == NULL
+        && IS_JDWP_ENABLED(r) && jdwp_client_count(r->jvm->jdwpserver)) {
+        jdwp_check_debug_step_on_return(r);
+    }
     runtime_destroy_inl(r);
     pruntime->son = NULL; //must clear , required for getLastSon()
 

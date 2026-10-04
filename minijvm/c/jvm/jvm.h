@@ -14,7 +14,7 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <stddef.h>
 
 #include "../utils/tinycthread.h"
 
@@ -39,7 +39,7 @@ extern "C" {
 
 #define GARBAGE_OVERLOAD_DEFAULT 80  // overload of max heap size ,will active garbage collection
 #define GARBAGE_PERIOD_MS_DEFAULT 10 * 1000
-#define MAX_HEAP_SIZE_DEFAULT  384 * 1024 * 1024
+#define MAX_HEAP_SIZE_DEFAULT  256 * 1024 * 1024
 #define MAX_STACK_SIZE_DEFAULT 4096
 
 
@@ -474,6 +474,11 @@ enum {
     JVM_EXCEPTION_VMSTOP,
     JVM_EXCEPTION_ILLEGALTHREADSTATE,
     JVM_EXCEPTION_ILLEGALMONITORSTATE,
+    JVM_EXCEPTION_NEGATIVEARRAYSIZE,
+    JVM_EXCEPTION_ARRAYSTORE,
+    JVM_EXCEPTION_ABSTRACTMETHOD,
+    JVM_EXCEPTION_ILLEGALACCESS,
+    JVM_EXCEPTION_INCOMPATIBLECLASSCHANGE,
 };
 
 enum {
@@ -497,6 +502,7 @@ extern const c8 STR_CLASS_JAVA_LANG_DOUBLE[];
 extern const c8 STR_CLASS_JAVA_LANG_FLOAT[];
 extern const c8 STR_CLASS_JAVA_LANG_OBJECT[];
 extern const c8 STR_CLASS_JAVA_LANG_THREAD[];
+extern const c8 STR_CLASS_JAVA_LANG_THREAD_GROUP[];
 extern const c8 STR_CLASS_JAVA_LANG_INTERRUPTED[];
 extern const c8 STR_CLASS_JAVA_LANG_CLASS[];
 extern const c8 STR_CLASS_JAVA_LANG_CLASSLOADER[];
@@ -511,12 +517,18 @@ extern const c8 STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ[];
 extern const c8 STR_CLASS_SUN_MISC_LAUNCHER[];
 extern const c8 STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD[];
 extern const c8 STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION[];
+extern const c8 STR_CLASS_JAVA_LANG_NEGATIVEARRAYSIZE[];
+extern const c8 STR_CLASS_JAVA_LANG_ARRAYSTORE[];
+extern const c8 STR_CLASS_JAVA_LANG_ABSTRACTMETHODERROR[];
+extern const c8 STR_CLASS_JAVA_LANG_ILLEGALACCESSERROR[];
+extern const c8 STR_CLASS_JAVA_LANG_INCOMPATIBLECLASSCHANGEERROR[];
 
 extern const c8 STR_FIELD_STACKFRAME[];
 extern const c8 STR_FIELD_NAME[];
 extern const c8 STR_FIELD_VALUE[];
 extern const c8 STR_FIELD_COUNT[];
 extern const c8 STR_FIELD_OFFSET[];
+extern const c8 STR_FIELD_HASH[];
 extern const c8 STR_FIELD_CLASSHANDLE[];
 extern const c8 STR_FIELD_CLASSLOADER[];
 extern const c8 STR_METHOD_CLINIT[];
@@ -718,19 +730,41 @@ void profile_slow_call_unregister_class(MiniJVM *jvm, JClass *clazz);
 #define GCFLAG_JTHREAD_GET(reg_v) (0x08 & reg_v)
 #define GCFLAG_JTHREAD_CLEAR(reg_v) (reg_v = ((~0x08) & reg_v))
 
+/* Object header: the three GC links live in external structures
+ * (registration ArrayLists / GcTempRootTable / classic_pending), the body
+ * pointer slot is gone — fields and elements are inline storage. */
 typedef struct _MemoryBlock {
-    JClass *clazz;
-    struct _MemoryBlock *next; //reg for gc
-    struct _MemoryBlock *hold_next; //hold by thread
-    struct _MemoryBlock *tmp_next; //for gc finalize
-    ThreadLock *volatile thread_lock;
-
-    s32 heap_size; //objsize of jclass or jarray or jclass , but not memoryblock
-    u8 type; //type of array or object runtime,class
-    u8 garbage_mark;
-    u8 gcflag; //flag for weak / finalize / reg / classloader
-    u8 arr_type_index;
+    JClass *clazz; //x64:  0..7
+    ThreadLock *volatile thread_lock; //x64:  8..15
+    s32 heap_size; //x64: 16..19
+    u8 type; //x64: 20
+    u8 garbage_mark; //x64: 21
+    u8 gcflag; //x64: 22
+    u8 arr_type_index; //x64: 23
 } MemoryBlock;
+
+/* GC registration, thread temp roots and finalize pending state live in
+ * external structures rather than consuming per-object header space. */
+
+/* Per-thread temporary root entry (replaces MemoryBlock.hold_next).
+ * Repeated holds of the same object bump ref_count; the object is only
+ * unrooted when the count drops to zero. */
+typedef struct _GcTempRootEntry {
+    Instance *object;
+    u32 ref_count;
+} GcTempRootEntry;
+
+#define GC_TEMP_ROOT_INLINE_CAPACITY 16
+
+typedef struct _GcTempRootTable {
+    GcTempRootEntry *entries;
+    s32 count;
+    s32 capacity;
+    /* JNI helpers normally hold only a handful of values.  Keeping the
+     * common case inline removes an allocation and leaves a reserve that is
+     * available even while native memory is tight. */
+    GcTempRootEntry inline_entries[GC_TEMP_ROOT_INLINE_CAPACITY];
+} GcTempRootTable;
 
 void memoryblock_destroy(__refer ref);
 
@@ -743,6 +777,7 @@ struct _PeerClassLoader {
     ArrayList *classpath;
     Hashtable *classes;
     //
+    u8 in_pending_destroy; //immix gc: capture flag, destroy deferred to post-resume
 };
 
 PeerClassLoader *classloader_create(MiniJVM *jvm);
@@ -860,6 +895,16 @@ typedef struct _ConstantFieldRef {
     Utf8String *clsName;
 } ConstantFieldRef;
 
+/* dynamic dispatch plan for virtual/interface call sites: resolved once
+ * (cold path, under lock_cloader) and immutable afterwards, so the
+ * steady state is a lock-free read of publish-time tables */
+enum {
+    DISP_UNRESOLVED = 0,
+    DISP_VTABLE, //slot indexes receiver_class->vtable
+    DISP_ITABLE, //slot indexes the row of disp_owner inside receiver_class->itable
+    DISP_LINK_ERROR, //resolution failed: every call takes the throwing slow path
+};
+
 typedef struct _ConstantMethodRef {
     ConstantItem item;
     u16 classIndex;
@@ -871,8 +916,38 @@ typedef struct _ConstantMethodRef {
     Utf8String *name;
     Utf8String *descriptor;
     Utf8String *clsName;
-    Pairlist *virtual_methods;
+    /* Immutable after release-publication of kind. All accesses to kind
+     * use dispatch_kind_load/store, including readers under the link lock. */
+    volatile s32 disp_kind;
+    s32 disp_slot;
+    JClass *disp_owner;
+    JClass *symbolic_owner;
 } ConstantMethodRef, ConstantInterfaceMethodRef;
+
+#if defined(_MSC_VER) || defined(__GNUC__)
+static inline s32 dispatch_kind_load(ConstantMethodRef *cmr) {
+    return ATOMIC_LOAD_ACQUIRE32(&cmr->disp_kind);
+}
+
+static inline void dispatch_kind_store(ConstantMethodRef *cmr, s32 kind) {
+    ATOMIC_STORE_RELEASE32(&cmr->disp_kind, kind);
+}
+#else
+/* One shared mutex, not a separate header-local lock per translation unit. */
+static pthread_mutex_t dispatch_publish_mutex = PTHREAD_MUTEX_INITIALIZER;
+s32 dispatch_kind_load(ConstantMethodRef *cmr) {
+    s32 kind;
+    pthread_mutex_lock(&dispatch_publish_mutex);
+    kind = cmr->disp_kind;
+    pthread_mutex_unlock(&dispatch_publish_mutex);
+    return kind;
+}
+void dispatch_kind_store(ConstantMethodRef *cmr, s32 kind) {
+    pthread_mutex_lock(&dispatch_publish_mutex);
+    cmr->disp_kind = kind;
+    pthread_mutex_unlock(&dispatch_publish_mutex);
+}
+#endif
 
 typedef struct _ConstantMethodHandle {
     ConstantItem item;
@@ -942,7 +1017,11 @@ typedef struct _LocalVarTable {
 
 typedef struct _SwitchTable SwitchTable;
 
-typedef s32 (*jit_func)(MethodInfo *method, Runtime *runtime);
+/* compiled java method entry: deliberately the same shape as
+ * java_native_fun below, so a JIT body and a JNI native are one callable
+ * kind (runtime first, clazz second) and call sites share one sequence.
+ * The method identity is read from runtime->method inside the body. */
+typedef s32 (*jit_func)(Runtime *runtime, JClass *clazz);
 
 struct _CodeAttribute {
     u16 attribute_name_index;
@@ -951,14 +1030,24 @@ struct _CodeAttribute {
     u16 max_locals;
     s32 code_length;
     u8 *code; // [code_length];
-    u8 *bytecode_for_jit; // [code_length];
+    u8 *bytecode_for_jit; // [code_length]; pristine classfile bytecode: runtime rewrites hit `code`, jit (and JDWP Bytecodes) read this
     spinlock_t compile_lock;
 
     struct _Jit {
         jit_func func;
+        /* released machine-code entry for JIT->JIT direct calls: published
+         * (MEMORY_BARRIER + plain store) only after func/len/metadata are all
+         * initialized; callers read it with acquire ordering.  NULL while
+         * compiling / for targets that must keep the generic entry. */
+        __refer direct_entry;
         s32 len;
         volatile s32 state;
         volatile s32 interpreted_count;
+        /* hot-int-local cache slots chosen at compile time; an OSR entry
+         * must preload the same S2/S3 registers the body expects */
+        s16 hot_local[2];
+        /* bc_pos -> OSR trampoline machine code (see jit_osr_execute) */
+        Pairlist *osr_entry_list;
         SwitchTable *switchtable; //a table that compile switch ,fill in jump address
         struct _ExceptionJumpTable {
             __refer exception_handle_jump_ptr; //a ptr list for exception jump, size= exceptiontable.length
@@ -1133,14 +1222,43 @@ struct _MethodInfo {
 #endif
 };
 
+/* ---------------- interface dispatch tables ----------------
+ *
+ * Each interface owns a read-only signature layout (built once at its
+ * preparation, never modified): inherited signatures first (keeping the
+ * superinterface slot numbers stable), then own declarations.  A class
+ * that implements interfaces gets one itable row per interface of its
+ * closure, filled with the method the receiver dispatches to for each
+ * signature (unified selector), or a slot status when there is no
+ * executable target.  Everything is immutable after the class reaches
+ * CLASS_STATUS_PREPARED, so dispatch reads need no locks. */
+
+enum {
+    ISLOT_OK = 0, //methods[slot] is the target
+    ISLOT_ABSTRACT, //no concrete implementation
+    ISLOT_CONFLICT, //multiple maximally-specific defaults
+    ISLOT_ACCESS_ERROR, //selected class method is not public
+};
+
+typedef struct _IfaceSlot {
+    Utf8String *name;
+    Utf8String *descriptor;
+} IfaceSlot;
+
+typedef struct _IfaceLayout {
+    s32 slot_count;
+    IfaceSlot *slots; //[slot_count]
+} IfaceLayout;
+
 typedef struct _ItableEntry {
-    MethodInfo **methods;
-    s32 method_count;
+    MethodInfo **methods; //[iface layout slot_count]
+    u8 *status; //[iface layout slot_count] ISLOT_*
+    s32 slot_count;
 } ItableEntry;
 
 typedef struct _Itable {
-    JClass **interfaces;
-    ItableEntry *entries;
+    JClass **interfaces; //[itable_length] row owner identity
+    ItableEntry *entries; //[itable_length]
 } Itable;
 
 //============================================
@@ -1166,6 +1284,7 @@ typedef struct _AttributePool {
 struct _ClassType {
     MemoryBlock mb;
     JClass *superclass;
+    JClass *component_class; // immediate component type for array classes
     __refer *constant_item_ptr; //存放常量池项目地址
     s32 constant_item_count; //总数
 
@@ -1216,6 +1335,7 @@ struct _ClassType {
     s32 vtable_length;
     struct _Itable *itable;
     s32 itable_length;
+    IfaceLayout *iface_layout; //interfaces only: own slot->signature layout
 };
 
 
@@ -1241,11 +1361,24 @@ void find_supers(JClass *clazz, Runtime *runtime);
 
 s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime);
 
+/* unified dynamic-dispatch entry points (class.c).  resolve_dispatch_plan
+ * is the cold/link path (lock_cloader held by the caller on first
+ * execution); select_dispatch_target acquires that lock only while
+ * unresolved. Its steady state reads immutable tables without locking.
+ * Both return 0 with *target set (select only), or a JVM_EXCEPTION_*
+ * that the caller must raise at the call site. */
+s32 resolve_dispatch_plan(Runtime *caller, ConstantMethodRef *cmr, u8 opcode);
+
+s32 select_dispatch_target(Runtime *caller, ConstantMethodRef *cmr, Instance *receiver,
+                           u8 opcode, MethodInfo **target);
+
+/* Steady-state variant for callers that already acquired disp_kind. */
+s32 select_dispatch_target_resolved(ConstantMethodRef *cmr, Instance *receiver,
+                                    u8 opcode, s32 kind, MethodInfo **target);
+
 void _class_optimize(JClass *clazz);
 
 void class_clinit(JClass *clazz, Runtime *runtime);
-
-void class_clear_cached_virtualmethod(MiniJVM *jvm, JClass *tgt);
 
 void class_build_vtable(JClass *clazz);
 
@@ -1278,15 +1411,90 @@ void class_clear_refer(PeerClassLoader *cloader, JClass *clazz);
 
 struct _InstanceType {
     MemoryBlock mb;
-
-    //
-    union {
-        c8 *obj_fields; //object fieldRef body
-        c8 *arr_body; //array body
-    };
-
-    s32 arr_length;
+    /* Java instance fields follow inline at JVM_OBJECT_BODY_OFFSET */
 };
+
+/* Array layout: shared 24B MemoryBlock + length + reserved (must stay 0,
+ * never holds a Java reference) so the element area is 8-byte aligned. */
+typedef struct _JArrayHeader {
+    MemoryBlock mb; //x64:  0..23
+    s32 length; //x64: 24..27
+    u32 reserved; //x64: 28..31, zeroed on creation
+    /* array elements follow inline at JVM_ARRAY_BODY_OFFSET */
+} JArrayHeader;
+
+/* ================ object layout access layer ================
+ * Single place that knows where instance fields, array length and
+ * array elements live. All runtime code must use these accessors
+ * (JIT emitters use the central JVM_*_OFFSET description instead),
+ * never the obj_fields / arr_body / arr_length members directly.
+ * Fields/elements are inline storage behind a fixed header
+ * (24B object / 32B array on x64).
+ * ============================================================ */
+
+#define JVM_OBJECT_BODY_OFFSET  ((s32) sizeof(Instance))
+#define JVM_ARRAY_LENGTH_OFFSET ((s32) offsetof(JArrayHeader, length))
+#define JVM_ARRAY_BODY_OFFSET   ((s32) sizeof(JArrayHeader))
+
+static inline c8 *instance_fields(Instance *ins) {
+    return ins ? (c8 *) ins + JVM_OBJECT_BODY_OFFSET : NULL;
+}
+
+static inline const c8 *instance_fields_const(const Instance *ins) {
+    return ins ? (const c8 *) ins + JVM_OBJECT_BODY_OFFSET : NULL;
+}
+
+static inline s32 jarray_length(Instance *arr) {
+    return arr ? ((JArrayHeader *) (void *) arr)->length : 0;
+}
+
+static inline void jarray_set_length(Instance *arr, s32 length) {
+    ((JArrayHeader *) (void *) arr)->length = length;
+}
+
+static inline c8 *jarray_body(Instance *arr) {
+    return arr ? (c8 *) arr + JVM_ARRAY_BODY_OFFSET : NULL;
+}
+
+static inline const c8 *jarray_body_const(const Instance *arr) {
+    return arr ? (const c8 *) arr + JVM_ARRAY_BODY_OFFSET : NULL;
+}
+
+/* generic data base for Unsafe-style access: arrays return the element
+ * area, plain objects the field area */
+static inline c8 *instance_data_base(Instance *ins) {
+    if (!ins) return NULL;
+    return ins->mb.type == MEM_TYPE_ARR ? jarray_body(ins) : instance_fields(ins);
+}
+
+#define JVM_INSTANCE_HEADER_SIZE ((s32) sizeof(Instance))
+#define JVM_ARRAY_HEADER_SIZE    ((s32) sizeof(JArrayHeader))
+
+/* Total requested size of a plain object (header + inline fields),
+ * -1 on overflow. */
+static inline s32 jvm_instance_alloc_size(JClass *clazz) {
+    if (!clazz || clazz->field_instance_len < 0) return -1;
+    s64 total = (s64) JVM_INSTANCE_HEADER_SIZE + (s64) clazz->field_instance_len;
+    return total > INT32_MAX ? -1 : (s32) total;
+}
+
+/* Total requested size of an array (header + inline elements), -1 on
+ * negative count / invalid width / overflow. */
+static inline s32 jvm_array_alloc_size(s32 arr_type_index, s32 count) {
+    if (count < 0 || arr_type_index < 0 || arr_type_index >= DATATYPE_COUNT) return -1;
+    if (DATA_TYPE_BYTES[arr_type_index] <= 0) return -1;
+    s64 total = (s64) JVM_ARRAY_HEADER_SIZE + (s64) DATA_TYPE_BYTES[arr_type_index] * count;
+    return total > INT32_MAX ? -1 : (s32) total;
+}
+
+/* Compile-time layout checks (C99 negative-array form). The 24/32B
+ * acceptance values are enforced on 64-bit builds; 32-bit builds keep
+ * their natural 16/24B layout. */
+typedef char jvm_static_assert_mb_x64[(sizeof(void *) != 8 || sizeof(MemoryBlock) == 24) ? 1 : -1];
+typedef char jvm_static_assert_ins_x64[(sizeof(void *) != 8 || sizeof(Instance) == 24) ? 1 : -1];
+typedef char jvm_static_assert_arrhdr_x64[(sizeof(void *) != 8 || sizeof(JArrayHeader) == 32) ? 1 : -1];
+typedef char jvm_static_assert_arrlen_off[(offsetof(JArrayHeader, length) == sizeof(Instance)) ? 1 : -1];
+typedef char jvm_static_assert_body_align[(JVM_OBJECT_BODY_OFFSET % 8 == 0 && JVM_ARRAY_BODY_OFFSET % 8 == 0) ? 1 : -1];
 
 
 Instance *instance_create(Runtime *runtime, JClass *clazz);
@@ -1412,17 +1620,20 @@ struct _JavaThreadInfo {
     Instance *context_classloader;
     Runtime *top_runtime;
     MemoryBlock pack;
-    MemoryBlock *tmp_holder; //for jni hold java object
-    MemoryBlock *objs_header; //link to new instance, until garbage accept
-    MemoryBlock *objs_tailer; //link to last instance, until garbage accept
+    GcTempRootTable temp_roots; //jni temp roots for this thread, refcounted
+    ArrayList *objs_array; //thread's registered objects, spliced to the GC at pause
+    ThreadLock *owned_lock_head; //monitors this thread currently owns (intrusive chain)
+    ThreadLock *waiting_lock; //monitor parked in Object.wait()
+    ThreadLock *entering_lock; //monitor blocked in monitorenter
     MemoryBlock *curThreadLock; //if thread is locked ,the filed save the lock
     ArrayList *held_locks; //list of locks held by this thread for precise debugging (JDWP only)
     MemoryBlock *pending_release_lock; //lock that needs to be released for suspension (JDWP only)
+    struct ImmixMutator *immix_mutator; //per-thread Immix allocation context (block backend)
 
     ArrayList *stacktrack; //save methodrawindex, the pos 0 is the throw point
     ArrayList *lineNo; //save methodrawindex, the pos 0 is the throw point
 
-    s64 objs_heap_of_thread; // heap use for objs_header, if translate to gc ,the var need clear to 0
+    s64 objs_heap_of_thread; // heap use for objs_array, cleared when spliced to the GC
     spinlock_t lock;
     u16 volatile suspend_count; //for jdwp suspend ,>0 suspend, ==0 resume
     u16 volatile no_pause; //can't pause when clinit
@@ -1520,6 +1731,8 @@ struct _Runtime {
     s32 idx;
     s32 offset;
     s32 count;
+    u8 in_pending_destroy; //immix gc: runtime destruction deferred to post-resume
+    u8 *jdwp_bp_skip_pc; //jdwp: pc of last reported breakpoint, suppress re-report until pc moves
 #if _JVM_DEBUG_SLOW_CALL_PROFILE
     s64 slow_profile_start_at;
     s64 slow_profile_child_spent;
@@ -1929,7 +2142,7 @@ struct _JNIENV {
 
     void (*instance_release_from_thread)(Instance *ref, Runtime *runtime);
 
-    void (*instance_hold_to_thread)(Instance *ref, Runtime *runtime);
+    s32 (*instance_hold_to_thread)(Instance *ref, Runtime *runtime);
 
     s32 (*execute_method)(MethodInfo *method, Runtime *runtime);
 
@@ -1971,6 +2184,7 @@ typedef struct _ShortCut {
     FieldInfo *string_offset;
     FieldInfo *string_count;
     FieldInfo *string_value;
+    FieldInfo *string_hash;
     //java.lang.StringBuilder
     FieldInfo *stringbuilder_value;
     FieldInfo *stringbuilder_count;
@@ -2039,11 +2253,27 @@ typedef struct _ShortCut {
 } ShortCut;
 
 
+/* Java object monitor state (design: ai/object-header-threadlock-owned-chain-design.md).
+ * Flat OS mutex held ONCE across the whole synchronized region; java
+ * re-entry is recursion_count only. The owner chain is an intrusive
+ * doubly-linked list on JavaThreadInfo so a force-stopped thread can
+ * release every monitor it still owns. metadata_lock publishes owner /
+ * counts / chain state (never block on mutex_lock while holding it). */
 struct _ThreadLock {
     cnd_t thread_cond;
-    mtx_t mutex_lock; //互斥锁
-    JavaThreadInfo *owner_thread; // 锁的所有者线程
-    int count; // 重入计数
+    mtx_t mutex_lock; //held once per synchronized region (mtx_timed, non-recursive)
+
+    JavaThreadInfo *owner_thread; //current owner (NULL when free/waiting)
+    u32 recursion_count; //java re-entry depth
+
+    MemoryBlock *object; //reverse pointer: held/waiting/entering GC root
+
+    ThreadLock *owner_prev; //intrusive owner chain
+    ThreadLock *owner_next;
+
+    u32 enter_waiter_count; //threads blocked in monitorenter
+    u32 wait_waiter_count; //threads parked in Object.wait()
+    spinlock_t metadata_lock; //publishes owner/counts/chain
 };
 
 typedef struct _SlowCallProfile {
@@ -2092,6 +2322,7 @@ struct _MiniJVM {
     Hashtable *table_jstring_const; //for cache same string
 
     ThreadLock threadlock;
+    spinlock_t monitor_create_lock; //guards lazy ThreadLock creation (objects)
 
     Utf8String *startup_dir;
 
@@ -2100,7 +2331,9 @@ struct _MiniJVM {
     Hashtable *sys_prop;
 
     GcCollector *collector;
+    Instance *out_of_memory_error; //preallocated: allocation failure cannot allocate its exception
     ArrayList *shutdown_hook; //shutdown hook ,it contains thread instance
+    c8 *gc_backend; //NULL|immix|malloc , select the Java object allocation backend
 
     ShortCut shortcut;
 
@@ -2108,7 +2341,8 @@ struct _MiniJVM {
     s32 jdwp_enable; // 0:disable java debug , 1:enable java debug and disable jit
     s32 jdwp_suspend_on_start;
     s32 jdwp_port;
-    s64 max_heap_size;
+    s64 max_heap_size; //current adaptive soft limit for Java objects
+    s64 max_vm_memory; //final safety ceiling (0 derives as 4 * Xmx)
     s32 heap_overload_percent;
     s64 garbage_collect_period_ms;
 

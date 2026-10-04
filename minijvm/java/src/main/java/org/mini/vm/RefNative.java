@@ -44,6 +44,15 @@ public class RefNative {
 
     static public native int stopThread(Thread t, Object obj);
 
+    /**
+     * The Runnable this thread will execute (null when the subclass overrides
+     * run()). Container code (e.g. AppLoader) uses it to attribute threads
+     * to their owning application by the runnable's class loader. Exposed as
+     * a native instead of a Thread method so code compiled against a stock
+     * JDK Thread still links.
+     */
+    static public native Runnable getThreadTarget(Thread t);
+
     static public native long getStackFrame(Thread t);
 
     //

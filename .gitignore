@@ -1,5 +1,10 @@
-.DS_Store
-.idea
+
+.*
+build-*
+jdbsrc
+test/jdwp_test/*.log
+test/jdwp_test/jdb_out.txt
+test/jdwp_test/jvm_out.txt
 
 Thumbs.db
 /build

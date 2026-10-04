@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "jvm.h"
+#include "garbage.h"
 
 extern s32 _gc_pause_the_world(MiniJVM *jvm);
 
@@ -120,19 +121,22 @@ static void hprof_collect_class_closure(Hashset *classes, JClass *clazz) {
     }
 }
 
-static void hprof_collect_live_classes(Hashset *classes, MemoryBlock *header, u8 mark_cnt) {
-    MemoryBlock *mb = header;
-    while (mb) {
-        if (mb->garbage_mark == mark_cnt) {
-            if (mb->type == MEM_TYPE_CLASS) {
-                hprof_collect_class_closure(classes, (JClass *) mb);
-                if (mb->clazz) hprof_collect_class_closure(classes, mb->clazz);
-            } else {
-                if (mb->clazz) hprof_collect_class_closure(classes, mb->clazz);
-            }
+typedef struct _HprofClassScan {
+    Hashset *classes;
+    u8 mark_cnt;
+} HprofClassScan;
+
+static s32 hprof_collect_live_classes_iter(MemoryBlock *mb, void *data) {
+    HprofClassScan *scan = (HprofClassScan *) data;
+    if (mb->garbage_mark == scan->mark_cnt) {
+        if (mb->type == MEM_TYPE_CLASS) {
+            hprof_collect_class_closure(scan->classes, (JClass *) mb);
+            if (mb->clazz) hprof_collect_class_closure(scan->classes, mb->clazz);
+        } else {
+            if (mb->clazz) hprof_collect_class_closure(scan->classes, mb->clazz);
         }
-        mb = mb->next;
     }
+    return 0;
 }
 
 static void hprof_collect_strings_for_class(Hashtable *str2id, u32 id_size, u64 *seq, JClass *clazz) {
@@ -177,11 +181,14 @@ static int hprof_write_load_class(FILE *fp, Hashtable *str2id, u32 id_size, u32 
 }
 
 static void hprof_heap_bb_write_root_unknown(ByteBuf *seg, u32 id_size, u64 obj_id) {
+    //ROOT_UNKNOWN = 0xFF (verified against jhat's HprofReader switch:
+    //0xFF -> readID only; 0x01 is JNI-GLOBAL with an extra u4)
     bytebuf_write_byte(seg, (c8) 0xFF);
     hprof_bb_write_id(seg, id_size, obj_id);
 }
 
-// ROOT_THREAD_OBJ (0x08): thread object root
+// ROOT_THREAD_OBJECT = 0x08 (verified against jhat's HprofReader:
+// case 8 reads ID + u4 thread serial + u4 stack serial)
 // Format: tag(1) | object ID(id_size) | thread serial(4) | stack trace serial(4)
 static void hprof_heap_bb_write_root_thread_obj(ByteBuf *seg, u32 id_size, u64 obj_id, u32 thread_serial) {
     bytebuf_write_byte(seg, (c8) 0x08);
@@ -263,7 +270,11 @@ static s32 hprof_instance_value_bytes(JClass *clazz, u32 id_size) {
         chain[depth++] = clazz;
         clazz = clazz->superclass;
     }
-    for (s32 i = depth - 1; i >= 0; i--) {
+    /* HPROF INSTANCE_DUMP values are ordered by the runtime class first,
+     * followed by its superclass, then the superclass' superclass, etc.
+     * Keep this traversal in the same order as the value writer below.
+     * CLASS_DUMP contains only the fields declared by that one class. */
+    for (s32 i = 0; i < depth; i++) {
         FieldPool *fp = &chain[i]->fieldPool;
         for (s32 j = 0; j < fp->field_used; j++) {
             FieldInfo *fi = &fp->field[j];
@@ -294,7 +305,11 @@ static void hprof_heap_bb_write_instance_dump(ByteBuf *seg, u32 id_size, Instanc
         chain[depth++] = clazz;
         clazz = clazz->superclass;
     }
-    for (s32 i = depth - 1; i >= 0; i--) {
+    /* HPROF 1.0.2 requires: class fields, then superclass fields, then
+     * successively higher superclasses.  Writing the hierarchy in the
+     * opposite direction shifts every inherited value onto the wrong field
+     * when readers such as VisualVM decode the instance. */
+    for (s32 i = 0; i < depth; i++) {
         FieldPool *fp = &chain[i]->fieldPool;
         for (s32 j = 0; j < fp->field_used; j++) {
             FieldInfo *fi = &fp->field[j];
@@ -339,10 +354,10 @@ static void hprof_heap_bb_write_object_array_dump(ByteBuf *seg, u32 id_size, Ins
     bytebuf_write_byte(seg, (c8) 0x22);
     hprof_bb_write_id(seg, id_size, (u64) (uintptr_t) arr);
     bytebuf_write_int(seg, 0);
-    bytebuf_write_int(seg, arr ? arr->arr_length : 0);
+    bytebuf_write_int(seg, arr ? jarray_length(arr) : 0);
     hprof_bb_write_id(seg, id_size, (u64) (uintptr_t) (arr ? arr->mb.clazz : NULL));
     if (!arr) return;
-    for (s32 i = 0; i < arr->arr_length; i++) {
+    for (s32 i = 0; i < jarray_length(arr); i++) {
         s64 v = jarray_get_field(arr, i);
         hprof_bb_write_id(seg, id_size, (u64) (uintptr_t) (void *) (intptr_t) v);
     }
@@ -352,30 +367,30 @@ static void hprof_heap_bb_write_primitive_array_dump(ByteBuf *seg, u32 id_size, 
     bytebuf_write_byte(seg, (c8) 0x23);
     hprof_bb_write_id(seg, id_size, (u64) (uintptr_t) arr);
     bytebuf_write_int(seg, 0);
-    bytebuf_write_int(seg, arr ? arr->arr_length : 0);
+    bytebuf_write_int(seg, arr ? jarray_length(arr) : 0);
     u8 t = hprof_type_from_array_class(arr ? arr->mb.clazz : NULL);
     bytebuf_write_byte(seg, (c8) t);
     if (!arr) return;
-    c8 *p = arr->arr_body;
+    c8 *p = jarray_body(arr);
     if (t == DATATYPE_BOOLEAN || t == DATATYPE_BYTE) {
-        bytebuf_write_batch(seg, p, arr->arr_length);
+        bytebuf_write_batch(seg, p, jarray_length(arr));
     } else if (t == DATATYPE_JCHAR || t == DATATYPE_SHORT) {
-        for (s32 i = 0; i < arr->arr_length; i++) {
+        for (s32 i = 0; i < jarray_length(arr); i++) {
             s16 v = *((s16 *) (p + i * 2));
             bytebuf_write_short(seg, v);
         }
     } else if (t == DATATYPE_INT || t == DATATYPE_FLOAT) {
-        for (s32 i = 0; i < arr->arr_length; i++) {
+        for (s32 i = 0; i < jarray_length(arr); i++) {
             s32 v = *((s32 *) (p + i * 4));
             bytebuf_write_int(seg, v);
         }
     } else if (t == DATATYPE_LONG || t == DATATYPE_DOUBLE) {
-        for (s32 i = 0; i < arr->arr_length; i++) {
+        for (s32 i = 0; i < jarray_length(arr); i++) {
             s64 v = *((s64 *) (p + i * 8));
             bytebuf_write_long(seg, v);
         }
     } else {
-        bytebuf_write_batch(seg, p, arr->arr_length);
+        bytebuf_write_batch(seg, p, jarray_length(arr));
     }
 }
 
@@ -385,6 +400,54 @@ static int hprof_flush_segment(FILE *fp, ByteBuf *seg) {
     seg->rp = 0;
     seg->wp = 0;
     return rc;
+}
+
+typedef struct _HprofThreadScan {
+    ByteBuf *seg;
+    u32 id_size;
+    u32 thread_serial;
+    u8 mark_cnt;
+} HprofThreadScan;
+
+static s32 hprof_thread_root_iter(MemoryBlock *mb, void *data) {
+    HprofThreadScan *scan = (HprofThreadScan *) data;
+    if (mb->garbage_mark == scan->mark_cnt &&
+        mb->type == MEM_TYPE_INS &&
+        GCFLAG_JTHREAD_GET(mb->gcflag)) {
+        hprof_heap_bb_write_root_thread_obj(scan->seg, scan->id_size,
+                                            (u64) (uintptr_t) mb, scan->thread_serial++);
+    }
+    return 0;
+}
+
+typedef struct _HprofDumpScan {
+    FILE *file;
+    ByteBuf *seg;
+    u32 id_size;
+    u8 mark_cnt;
+    int rc;
+} HprofDumpScan;
+
+static s32 hprof_instance_dump_iter(MemoryBlock *mb, void *data) {
+    HprofDumpScan *scan = (HprofDumpScan *) data;
+    if (mb->garbage_mark == scan->mark_cnt) {
+        if (mb->type == MEM_TYPE_INS) {
+            hprof_heap_bb_write_instance_dump(scan->seg, scan->id_size, (Instance *) mb,
+                                              scan->mark_cnt);
+        } else if (mb->type == MEM_TYPE_ARR) {
+            Instance *arr = (Instance *) mb;
+            if (isDataReferByIndex(arr->mb.arr_type_index)) {
+                hprof_heap_bb_write_object_array_dump(scan->seg, scan->id_size, arr);
+            } else {
+                hprof_heap_bb_write_primitive_array_dump(scan->seg, scan->id_size, arr);
+            }
+        }
+        if (scan->seg->wp >= 4 * 1024 * 1024) {
+            scan->rc = hprof_flush_segment(scan->file, scan->seg);
+            if (scan->rc != 0) return 1;
+        }
+    }
+    return 0;
 }
 
 int hprof_write_heap(GcCollector *collector, const char *path) {
@@ -409,7 +472,12 @@ int hprof_write_heap(GcCollector *collector, const char *path) {
     u64 str_seq = 1;
 
     Hashset *classes = hashset_create();
-    hprof_collect_live_classes(classes, collector->header, collector->mark_cnt);
+    {
+        HprofClassScan scan;
+        scan.classes = classes;
+        scan.mark_cnt = collector->mark_cnt;
+        gc_iterate_heap_objects(collector, hprof_collect_live_classes_iter, &scan);
+    }
 
     HashsetIterator ci;
     hashset_iterate(classes, &ci);
@@ -451,27 +519,20 @@ int hprof_write_heap(GcCollector *collector, const char *path) {
         if (v) hprof_heap_bb_write_root_unknown(seg, id_size, (u64) (uintptr_t) v);
     }
     
-    // Custom classloader classes as ROOT
-    MiniJVM *jvm = collector->jvm;
-    for (s32 i = 0; i < jvm->classloaders->length; i++) {
-        PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
-        hashtable_iterate(pcl->classes, &hti);
-        while (hashtable_iter_has_more(&hti)) {
-            HashtableValue v = hashtable_iter_next_value(&hti);
-            if (v) hprof_heap_bb_write_root_unknown(seg, id_size, (u64) (uintptr_t) v);
-        }
-    }
+    /* Do not emit every custom-loader class as ROOT_UNKNOWN.  Such classes
+     * are unloadable together with their ClassLoader; declaring them roots in
+     * HPROF fabricates retention paths and hides the real reference that is
+     * preventing a loader from unloading.  Their CLASS_DUMP records are still
+     * emitted below. */
     
     // Thread objects as ROOT_THREAD_OBJ
-    u32 thread_serial = 1;
-    MemoryBlock *mb_scan = collector->header;
-    while (mb_scan) {
-        if (mb_scan->garbage_mark == collector->mark_cnt && 
-            mb_scan->type == MEM_TYPE_INS && 
-            GCFLAG_JTHREAD_GET(mb_scan->gcflag)) {
-            hprof_heap_bb_write_root_thread_obj(seg, id_size, (u64) (uintptr_t) mb_scan, thread_serial++);
-        }
-        mb_scan = mb_scan->next;
+    {
+        HprofThreadScan thread_scan;
+        thread_scan.seg = seg;
+        thread_scan.id_size = id_size;
+        thread_scan.thread_serial = 1;
+        thread_scan.mark_cnt = collector->mark_cnt;
+        gc_iterate_heap_objects(collector, hprof_thread_root_iter, &thread_scan);
     }
 
     hashset_iterate(classes, &ci);
@@ -484,25 +545,15 @@ int hprof_write_heap(GcCollector *collector, const char *path) {
         }
     }
 
-    MemoryBlock *mb = collector->header;
-    while (mb) {
-        if (mb->garbage_mark == collector->mark_cnt) {
-            if (mb->type == MEM_TYPE_INS) {
-                hprof_heap_bb_write_instance_dump(seg, id_size, (Instance *) mb, collector->mark_cnt);
-            } else if (mb->type == MEM_TYPE_ARR) {
-                Instance *arr = (Instance *) mb;
-                if (isDataReferByIndex(arr->mb.arr_type_index)) {
-                    hprof_heap_bb_write_object_array_dump(seg, id_size, arr);
-                } else {
-                    hprof_heap_bb_write_primitive_array_dump(seg, id_size, arr);
-                }
-            }
-            if (seg->wp >= 4 * 1024 * 1024) {
-                rc = hprof_flush_segment(fp, seg);
-                if (rc != 0) goto cleanup_seg;
-            }
-        }
-        mb = mb->next;
+    {
+        HprofDumpScan dump_scan;
+        dump_scan.file = fp;
+        dump_scan.seg = seg;
+        dump_scan.id_size = id_size;
+        dump_scan.mark_cnt = collector->mark_cnt;
+        dump_scan.rc = 0;
+        gc_iterate_heap_objects(collector, hprof_instance_dump_iter, &dump_scan);
+        if (dump_scan.rc != 0) goto cleanup_seg;
     }
 
     rc = hprof_flush_segment(fp, seg);

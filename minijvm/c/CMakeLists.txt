@@ -20,10 +20,12 @@ endif ()
 
 include_directories(jvm/ utils/ utils/sljit/ utils/https/ utils/https/mbedtls/include utils/mimalloc/include)
 
-aux_source_directory(./jvm SOURCE_JVM)
-aux_source_directory(./utils SOURCE_UTILS)
-aux_source_directory(./utils/https SOURCE_HTTPS)
-aux_source_directory(./utils/https/mbedtls/library SOURCE_TLS)
+# CONFIGURE_DEPENDS: re-glob when sources are added/removed, so new .c files
+# in these dirs are picked up without manually re-running CMake configure.
+file(GLOB SOURCE_JVM CONFIGURE_DEPENDS ./jvm/*.c)
+file(GLOB SOURCE_UTILS CONFIGURE_DEPENDS ./utils/*.c)
+file(GLOB SOURCE_HTTPS CONFIGURE_DEPENDS ./utils/https/*.c)
+file(GLOB SOURCE_TLS CONFIGURE_DEPENDS ./utils/https/mbedtls/library/*.c)
 set(SOURCE_SLJIT ./utils/sljit/sljitLir.c)
 set(SOURCE_MIMALLOC ./utils/mimalloc/src/static.c)
 

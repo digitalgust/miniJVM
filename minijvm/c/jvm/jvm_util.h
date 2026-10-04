@@ -8,6 +8,8 @@
 #ifdef __cplusplus
 extern "C" {
 
+
+
 #endif
 
 #include "jvm.h"
@@ -22,8 +24,6 @@ extern "C" {
 s32 isDir(Utf8String *path);
 
 void swap_endian_little_big(u8 *ptr, s32 size);
-
-s32 instance_base_size();
 
 s32 getDataTypeIndex(c8 ch);
 
@@ -53,7 +53,7 @@ void sys_properties_set_c(MiniJVM *jvm, c8 const *key, c8 const *val);
 
 void instance_release_from_thread(Instance *ref, Runtime *runtime);
 
-void instance_hold_to_thread(Instance *ins, Runtime *runtime);
+s32 instance_hold_to_thread(Instance *ins, Runtime *runtime);
 
 void invoke_deepth(Runtime *runtime);
 
@@ -62,7 +62,12 @@ void printDumpOfClasses(void);
 
 Instance *exception_create(s32 exception_type, Runtime *runtime);
 
+/* Dispatch error paths must never push a NULL exception reference. */
+Instance *exception_create_dispatch(s32 exception_type, Runtime *runtime);
+
 Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 const *errmsg);
+
+s32 exception_throw_out_of_memory(Runtime *runtime);
 
 void exception_throw(s32 exception_type, Runtime *runtime, c8 const *errmsg);
 
@@ -80,11 +85,11 @@ Instance *method_handles_lookup_create(Runtime *runtime, JClass *caller);
  * @return addr
  */
 static inline c8 *getInstanceFieldPtr(Instance *ins, FieldInfo *fi) {
-    return &(ins->obj_fields[fi->offset_instance]);
+    return instance_fields(ins) + fi->offset_instance;
 }
 
 static inline c8 *getInstanceFieldPtrByOffset(Instance *ins, u16 offset) {
-    return &(ins->obj_fields[offset]);
+    return instance_fields(ins) + offset;
 }
 
 static inline c8 *getStaticFieldPtr(FieldInfo *fi) {
@@ -276,6 +281,10 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms);
 
 s32 jthread_wakeup(Runtime *runtime);
 
+void jthread_release_all_owned(Runtime *runtime);
+
+void jthread_assert_no_owned_locks(JavaThreadInfo *ti);
+
 s32 jthread_sleep(Runtime *runtime, s64 ms);
 
 s32 jthread_yield(Runtime *runtime);
@@ -343,6 +352,7 @@ static inline Runtime *runtime_create_inl(Runtime *parent) {
         runtime->parent = parent;
         parent->son = runtime;
     }
+    runtime->jdwp_bp_skip_pc = NULL; //pooled runtime may carry a stale skip pc
     return runtime;
 }
 
@@ -391,6 +401,16 @@ JClass *array_class_get_by_index(Runtime *runtime, s32 typeIdx);
 s32 jarray_destroy(Instance *arr);
 
 Instance *jarray_multi_create(Runtime *runtime, s32 *dim, s32 dim_size, Utf8String *desc, s32 deep);
+
+s32 jarray_reference_store_check(Instance *arr, Instance *value);
+
+s32 jvm_float_to_int(f32 value);
+
+s32 jvm_double_to_int(f64 value);
+
+s64 jvm_float_to_long(f32 value);
+
+s64 jvm_double_to_long(f64 value);
 
 void jarray_set_field(Instance *arr, s32 index, s64 val);
 

@@ -118,7 +118,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "1387"
             endingLineNumber = "1387"
-            landmarkName = "jdwp_eventset_clear(jdwpserver, id)"
+            landmarkName = "jdwp_eventset_create(jdwpserver, client, req)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
@@ -134,7 +134,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "709"
             endingLineNumber = "709"
-            landmarkName = "_gc_copy_objs(jvm)"
+            landmarkName = "_gc_malloc_adjust_soft_limit(collector)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

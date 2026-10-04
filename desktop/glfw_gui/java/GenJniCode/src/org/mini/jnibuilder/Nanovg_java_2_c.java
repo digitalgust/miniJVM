@@ -230,7 +230,7 @@ public class Nanovg_java_2_c {
                             pushCode += "    if (_ptr_re_val) {\n"
                                     + "        s32 _j_t_bytes = sizeof(" + cType + ");\n"
                                     + "        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, " + jvmType + ");\n"
-                                    + "        memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);\n"
+                                    + "        memcpy(jarray_body(_arr), _ptr_re_val,_struct_bytes);\n"
                                     + "        env->push_ref(runtime->stack, _arr);\n"
                                     + "    } else {\n"
                                     + "        env->push_ref(runtime->stack, NULL);\n"
@@ -346,7 +346,7 @@ public class Nanovg_java_2_c {
                             varCode += "    Instance *" + argvName + " = env->localvar_getRefer(runtime->localvar, pos++);\n";
                             varCode += "    __refer ptr_" + argvName + " = NULL;\n";
                             varCode += "    if(" + argvName + "){\n";
-                            varCode += "        ptr_" + argvName + " = " + argvName + "->arr_body" + ";\n";
+                            varCode += "        ptr_" + argvName + " = " + Util.jarrBody(argvName) + ";\n";
                             varCode += "    }\n";
                             if (Util.isStruct(nativeArgvs[nativei])) {
                                 curArgvType = "*(" + nativeArgvs[nativei] + "*)";

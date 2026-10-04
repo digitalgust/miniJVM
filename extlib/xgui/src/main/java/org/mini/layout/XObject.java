@@ -51,6 +51,8 @@ public abstract class XObject implements GLayout {
     protected float[] color;
     protected String bgPic = null;
     protected float bgPicAlpha = GObject.DEFAULT_BG_ALPHA;
+    protected String picPara = null; //大图分格参数 "cols,rows,index"，index从0起
+    protected int corner = -1; //背景圆角半径, -1表示未定义, 未定义时保留各GUI组件自己的默认圆角(如按钮4)
 
     protected String href = null;
     // 脚本引擎
@@ -204,6 +206,10 @@ public abstract class XObject implements GLayout {
             bgPic = attValue;
         } else if (attName.equals("bgpicalpha")) {
             bgPicAlpha = Float.parseFloat(attValue);
+        } else if (attName.equals("picpara")) {
+            picPara = attValue;
+        } else if (attName.equals("corner")) {
+            corner = Integer.parseInt(attValue);
         } else if (attName.equals("href")) {
             href = attValue;
         } else if (attName.equals("onclose")) {
@@ -225,6 +231,33 @@ public abstract class XObject implements GLayout {
         } catch (Exception e) {
         }
         return null;
+    }
+
+    /**
+     * 按 picpara="cols,rows,index" 把大图包成网格子图，index 从 0 起，从左到右从上到下编号。
+     * picpara 为空或格式错时原样返回整图。
+     */
+    protected static GImage applyPicPara(GImage img, String picPara) {
+        if (img == null || picPara == null) {
+            return img;
+        }
+        try {
+            String[] ss = picPara.split(",");
+            if (ss.length < 3) {
+                return img;
+            }
+            int cols = Integer.parseInt(ss[0].trim());
+            int rows = Integer.parseInt(ss[1].trim());
+            int index = Integer.parseInt(ss[2].trim());
+            return new GSubImage(img, cols, rows, index);
+        } catch (Exception e) {
+            SysLog.warn("picpara format error:" + picPara);
+            return img;
+        }
+    }
+
+    protected GImage applyPicPara(GImage img) {
+        return applyPicPara(img, picPara);
     }
 
     public final void initGuiMore() {
@@ -257,10 +290,11 @@ public abstract class XObject implements GLayout {
                 gui.setBgColor(bgColor);
             }
             if (bgPic != null) {
-                GImage img = getAssist().loadImage(bgPic);
+                GImage img = applyPicPara(getAssist().loadImage(bgPic));
                 gui.setBgImg(img);
             }
             gui.setBgImgAlpha(bgPicAlpha);
+            if (corner >= 0) gui.setCornerRadius(corner);
 
             if (gui instanceof GContainer) {
 

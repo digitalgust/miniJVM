@@ -356,8 +356,10 @@ public class Thread implements Runnable {
 
 
     static public boolean interrupted() {
-        return interrupted0(Thread.currentThread());
+        return interruptedClear0(Thread.currentThread());
     }
+
+    static public native boolean interruptedClear0(Thread t);
 
     static public native boolean interrupted0(Thread t);
 

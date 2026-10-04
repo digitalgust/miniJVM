@@ -79,7 +79,7 @@ public class ReflectField {
                     setFieldVal(object, fieldId, (Character) val);
 
                 } else {
-                    setFieldVal(object, fieldId, (Byte) val);
+                    setFieldVal(object, fieldId, (Short) val);
                 }
                 break;
             }
@@ -93,7 +93,7 @@ public class ReflectField {
                 break;
             }
             case '8': {
-                if (type == RConst.TAG_FLOAT) {
+                if (type == RConst.TAG_DOUBLE) {
                     double dv = ((Double) val).doubleValue();
                     setFieldVal(object, fieldId, Double.doubleToLongBits(dv));
                 } else {

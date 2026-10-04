@@ -40,6 +40,7 @@ const c8 STR_CLASS_JAVA_LANG_STRING[] = "java/lang/String";
 const c8 STR_CLASS_JAVA_LANG_STRINGBUILDER[] = "java/lang/StringBuilder";
 const c8 STR_CLASS_JAVA_LANG_OBJECT[] = "java/lang/Object";
 const c8 STR_CLASS_JAVA_LANG_THREAD[] = "java/lang/Thread";
+const c8 STR_CLASS_JAVA_LANG_THREAD_GROUP[] = "java/lang/ThreadGroup";
 const c8 STR_CLASS_JAVA_LANG_CLASS[] = "java/lang/Class";
 const c8 STR_CLASS_JAVA_LANG_CLASSLOADER[] = "java/lang/ClassLoader";
 const c8 STR_CLASS_JAVA_LANG_REF_REFERENCE[] = "java/lang/ref/Reference";
@@ -71,6 +72,11 @@ const c8 STR_CLASS_JAVA_LANG_INTERRUPTED[] = "java/lang/InterruptedException";
 const c8 STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION[] = "org/mini/vm/VmStopException";
 const c8 STR_CLASS_JAVA_LANG_ILLEGALTHREADSTATE[] = "java.lang.IllegalThreadStateException";
 const c8 STR_CLASS_JAVA_LANG_ILLEGALMONITORSTATE[] = "java.lang.IllegalMonitorStateException";
+const c8 STR_CLASS_JAVA_LANG_NEGATIVEARRAYSIZE[] = "java.lang.NegativeArraySizeException";
+const c8 STR_CLASS_JAVA_LANG_ARRAYSTORE[] = "java.lang.ArrayStoreException";
+const c8 STR_CLASS_JAVA_LANG_ABSTRACTMETHODERROR[] = "java.lang.AbstractMethodError";
+const c8 STR_CLASS_JAVA_LANG_ILLEGALACCESSERROR[] = "java.lang.IllegalAccessError";
+const c8 STR_CLASS_JAVA_LANG_INCOMPATIBLECLASSCHANGEERROR[] = "java.lang.IncompatibleClassChangeError";
 
 
 const c8 STR_FIELD_STACKFRAME[] = "stackFrame";
@@ -78,6 +84,7 @@ const c8 STR_FIELD_NAME[] = "name";
 const c8 STR_FIELD_VALUE[] = "value";
 const c8 STR_FIELD_COUNT[] = "count";
 const c8 STR_FIELD_OFFSET[] = "offset";
+const c8 STR_FIELD_HASH[] = "hash";
 const c8 STR_FIELD_CLASSHANDLE[] = "classHandle";
 const c8 STR_FIELD_CLASSLOADER[] = "classLoader";
 const c8 STR_METHOD_CLINIT[] = "<clinit>";
@@ -118,6 +125,11 @@ const c8 *STRS_CLASS_EXCEPTION[] = {
     STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION,
     STR_CLASS_JAVA_LANG_ILLEGALTHREADSTATE,
     STR_CLASS_JAVA_LANG_ILLEGALMONITORSTATE,
+    STR_CLASS_JAVA_LANG_NEGATIVEARRAYSIZE,
+    STR_CLASS_JAVA_LANG_ARRAYSTORE,
+    STR_CLASS_JAVA_LANG_ABSTRACTMETHODERROR,
+    STR_CLASS_JAVA_LANG_ILLEGALACCESSERROR,
+    STR_CLASS_JAVA_LANG_INCOMPATIBLECLASSCHANGEERROR,
 };
 
 c8 *INST_NAME[] = {

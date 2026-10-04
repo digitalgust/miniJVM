@@ -8,6 +8,7 @@ package org.mini.gui;
 import org.mini.glfm.Glfm;
 import org.mini.gui.event.GChildrenListener;
 import org.mini.gui.gscript.Interpreter;
+import org.mini.gui.gscript.Obj;
 import org.mini.nanovg.Nanovg;
 
 import java.util.*;
@@ -62,11 +63,13 @@ abstract public class GContainer extends GObject {
 
     public void setInterpreter(Interpreter interpreter) {
         this.interpreter = interpreter;
+        this.interpreter.putGlobalVar(INTERPRETER_HOLDER_VAR_NAME, Interpreter.getCachedObj(this));
     }
 
     public void loadScript(String scriptStr) {
         if (interpreter == null) {
-            interpreter = new Interpreter();
+            Interpreter inp = new Interpreter();
+            setInterpreter(inp);
         }
         interpreter.loadFromString(scriptStr);
     }

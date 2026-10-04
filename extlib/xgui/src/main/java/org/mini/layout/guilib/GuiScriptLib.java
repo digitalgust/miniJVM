@@ -54,11 +54,14 @@ public class GuiScriptLib extends Lib {
             methodNames.put("setCmd".toLowerCase(), this::setCmd);//
             methodNames.put("getCmd".toLowerCase(), this::getCmd);//
             methodNames.put("close".toLowerCase(), this::close);//  close frame
+            methodNames.put("closeother".toLowerCase(), this::closeOther);// close other same-name frames, keep self
             methodNames.put("getCurSlot".toLowerCase(), this::getCurSlot);//
             methodNames.put("showSlot".toLowerCase(), this::showSlot);//
             methodNames.put("getImg".toLowerCase(), this::getImg);//
             methodNames.put("setImg".toLowerCase(), this::setImg);//
             methodNames.put("setImgPath".toLowerCase(), this::setImgPath);//
+            methodNames.put("setPicIndex".toLowerCase(), this::setPicIndex);//
+            methodNames.put("getPicIndex".toLowerCase(), this::getPicIndex);//
             methodNames.put("getBgImg".toLowerCase(), this::getBgImg);//
             methodNames.put("setBgImgPath".toLowerCase(), this::setBgImgPath);//
             methodNames.put("getAttachStr".toLowerCase(), this::getAttachStr);//
@@ -67,6 +70,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("setAttachInt".toLowerCase(), this::setAttachInt);//
             methodNames.put("setBgColorHexStr".toLowerCase(), this::setBgColorHexStr);//  set background color
             methodNames.put("setColorHexStr".toLowerCase(), this::setColorHexStr);//  set color
+            methodNames.put("setBlink".toLowerCase(), this::setBlink);//  呼吸边框选中提示
             methodNames.put("setPreIconColor".toLowerCase(), this::setPreIconColor);//  set color
             methodNames.put("clearPreIconColor".toLowerCase(), this::clearPreIconColor);//  set color
             methodNames.put("setImgAlphaStr".toLowerCase(), this::setImgAlphaStr);//
@@ -315,6 +319,31 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
+    /**
+     * setBlink(name, periodMs) 或 setBlink(name, periodMs, "RRGGBBAA")
+     * 仅GImageItem有效: 周期ms内边框alpha呼吸起伏, periodMs=0关闭
+     */
+    public DataType setBlink(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
+        if (gobj instanceof GImageItem) {
+            GImageItem item = (GImageItem) gobj;
+            int period = Interpreter.popBackInt(para);
+            if (para.size() > 0) {
+                String rgbaStr = Interpreter.popBackStr(para);
+                try {
+                    int c = (int) Long.parseLong(rgbaStr, 16);
+                    float[] color = Nanovg.nvgRGBA((byte) ((c >> 24) & 0xff), (byte) ((c >> 16) & 0xff), (byte) ((c >> 8) & 0xff), (byte) ((c >> 0) & 0xff));
+                    item.setBlink(period, color);
+                    return null;
+                } catch (Exception e) {
+                }
+            }
+            item.setBlink(period);
+        }
+        return null;
+    }
+
     public DataType setPreIconColor(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
         GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
@@ -475,6 +504,36 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
+
+    /**
+     * closeOther("FRAME")：关闭桌面上除自己外的所有同名 frame（防叠帧兜底；
+     * 与 GameScriptLib 内同名实现功能一致，双份共存互不影响——此处供 xgui
+     * 构件升级后直接可用）。参数可省略，默认取自己所在帧名。
+     */
+    public DataType closeOther(ArrayList<DataType> para) {
+        Obj xmlobj = (Obj) inp.getGlobalVar(GObject.INTERPRETER_HOLDER_VAR_NAME);
+        GObject gobj = (GObject) xmlobj.getVal();
+        String name = gobj != null ? gobj.getName() : null;
+        if (para != null && !para.isEmpty()) {
+            name = Interpreter.popBackStr(para);
+        }
+        if (name == null || name.isEmpty() || gobj == null) {
+            return null;
+        }
+
+        java.util.List<GObject> tops = new java.util.ArrayList<>(formHolder.getForm().getElements());
+        for (GObject go : tops) {
+            if (go == gobj) {
+                continue;
+            }
+            if (name.equals(go.getName())) {
+                GToolkit.closeFrame(go);
+            }
+        }
+        return null;
+    }
+
+
     public DataType getCurSlot(ArrayList<DataType> para) {
         Int val = Interpreter.getCachedInt(0);
         String compont = Interpreter.popBackStr(para);
@@ -541,6 +600,23 @@ public class GuiScriptLib extends Lib {
         String compont = Interpreter.popBackStr(para);
         GImage img = GToolkit.getCompImage(formHolder.getForm(), compont);
         return Interpreter.getCachedObj(img);
+    }
+
+    /**
+     * 切换组件 picpara 子图索引（0起），未用 picpara 的组件无效果。可每帧调用做帧动画。
+     * setPicIndex(组件名, 索引)
+     */
+    public DataType setPicIndex(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        int index = Interpreter.popBackInt(para);
+        GToolkit.setCompPicIndex(formHolder.getForm(), compont, index);
+        return null;
+    }
+
+    public DataType getPicIndex(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        int index = GToolkit.getCompPicIndex(formHolder.getForm(), compont);
+        return Interpreter.getCachedInt(index);
     }
 
     public DataType setAttachStr(ArrayList<DataType> para) {

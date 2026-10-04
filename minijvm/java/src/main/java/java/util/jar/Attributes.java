@@ -10,7 +10,37 @@
 
 package java.util.jar;
 
+import java.util.HashMap;
+
 public class Attributes {
+    private final HashMap<String, String> values = new HashMap<String, String>();
+
+    public String getValue(String name) {
+        if (name == null) return null;
+        return values.get(normalize(name));
+    }
+
+    public String getValue(Name name) {
+        return name == null ? null : getValue(name.toString());
+    }
+
+    public String putValue(String name, String value) {
+        if (name == null || value == null) throw new NullPointerException();
+        return values.put(normalize(name), value);
+    }
+
+    public int size() {
+        return values.size();
+    }
+
+    public void clear() {
+        values.clear();
+    }
+
+    private static String normalize(String name) {
+        return name.toLowerCase();
+    }
+
     public static class Name {
         private final String name;
 
@@ -22,6 +52,21 @@ public class Attributes {
                 throw new IllegalArgumentException();
 
             name = s;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof Name && name.equalsIgnoreCase(((Name) other).name);
+        }
+
+        @Override
+        public int hashCode() {
+            return name.toLowerCase().hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return name;
         }
     }
 }

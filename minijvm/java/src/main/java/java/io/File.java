@@ -202,6 +202,25 @@ public class File implements Comparable {
         this.prefixLength = fs.prefixLength(this.path);
     }
 
+
+    public File(URI uri) {
+        this(pathFromUri(uri));
+    }
+
+    private static String pathFromUri(URI uri) {
+        if (uri == null) {
+            throw new NullPointerException();
+        }
+        if (!uri.isAbsolute() || uri.isOpaque() || !"file".equalsIgnoreCase(uri.getScheme())) {
+            throw new IllegalArgumentException("URI is not an absolute file URI");
+        }
+        String path = uri.getPath();
+        if (path == null) {
+            throw new IllegalArgumentException("URI has no path");
+        }
+        return path;
+    }
+
     /* Note: The two-argument File constructors do not interpret an empty
        parent abstract pathname as the current user directory.  An empty parent
        instead causes the child to be resolved against the system-dependent

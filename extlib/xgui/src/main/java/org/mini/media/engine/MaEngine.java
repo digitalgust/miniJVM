@@ -5,6 +5,9 @@ import org.mini.media.MaNativeObject;
 import org.mini.media.MiniAudio;
 import org.mini.util.SysLog;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
 
 public class MaEngine extends MaNativeObject {
@@ -12,6 +15,10 @@ public class MaEngine extends MaNativeObject {
     int channels;
     int ratio;
     long device;
+
+    /* ma_sound_uninit dereferences the engine, every sound born here is swept
+       in finalize() before the engine itself goes down */
+    private final List<MaSound> sounds = new ArrayList<>();
 
     public MaEngine() {
         handle = MiniAudio.ma_engine_init();
@@ -21,6 +28,31 @@ public class MaEngine extends MaNativeObject {
             ratio = MiniAudio.ma_engine_get_sample_rate(handle);
             device = MiniAudio.ma_engine_get_device(handle);
             MaDevice.putDevice(device);
+        }
+    }
+
+    void addSound(MaSound sound) {
+        synchronized (sounds) {
+            if (!sounds.contains(sound)) {
+                sounds.add(sound);
+            }
+        }
+    }
+
+    void removeSound(MaSound sound) {
+        synchronized (sounds) {
+            sounds.remove(sound);
+        }
+    }
+
+    /**
+     * Copy of the registry, for owners that track liveness themselves and want
+     * to release sounds they no longer reference. The copy keeps callers
+     * outside the registry lock; close() re-enters it via removeSound().
+     */
+    public List<MaSound> snapshotSounds() {
+        synchronized (sounds) {
+            return new ArrayList<>(sounds);
         }
     }
 
@@ -76,6 +108,15 @@ public class MaEngine extends MaNativeObject {
     @Override
     public void finalize() {
         SysLog.info("clean " + this + " " + handle);
+        /* sounds must be uninitialized while the engine is still alive */
+        List<MaSound> pending;
+        synchronized (sounds) {
+            pending = new ArrayList<>(sounds);
+            sounds.clear();
+        }
+        for (MaSound sound : pending) {
+            sound.dispose();
+        }
         MiniAudio.ma_engine_stop(handle);
         MiniAudio.ma_engine_uninit(handle);
         MaDevice.removeDevice(device);

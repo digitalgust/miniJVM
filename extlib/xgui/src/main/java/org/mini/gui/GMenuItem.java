@@ -214,7 +214,9 @@ public class GMenuItem extends GContainer {
             if (!isSelected()) {
                 alpha = 0.9f;
             }
-            imgPaint = nvgImagePattern(vg, img_x, img_y, img_w, img_h, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), alpha);
+            float scaleX = img_w / (float) img.getWidth();
+            float scaleY = img_h / (float) img.getHeight();
+            imgPaint = nvgImagePattern(vg, img_x - img.getSx() * scaleX, img_y - img.getSy() * scaleY, img.getTexWidth() * scaleX, img.getTexHeight() * scaleY, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), alpha);
             nvgBeginPath(vg);
             nvgRoundedRect(vg, img_x, img_y, img_w, img_h, 5);
             nvgFillPaint(vg, imgPaint);

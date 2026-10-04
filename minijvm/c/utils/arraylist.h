@@ -128,6 +128,14 @@ ArrayList *arraylist_create(int length);
 
 void arraylist_destroy(ArrayList *arraylist);
 
+/** Ensure that at least @p capacity entries can be appended without a
+ * further allocation.  Returns zero on invalid input, integer overflow, or
+ * allocation failure. */
+int arraylist_ensure_capacity(ArrayList *arraylist, int capacity);
+
+/** Unlocked variant for callers that already provide synchronization. */
+int arraylist_ensure_capacity_unsafe(ArrayList *arraylist, int capacity);
+
 /**
  * Append a value to the end of an ArrayList.
  *

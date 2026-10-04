@@ -327,6 +327,9 @@
     <ClCompile Include="..\..\minijvm\c\jvm\heapdump_hprof.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\jvm\immix.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\minijvm\c\jvm\garbage.h">
@@ -394,6 +397,9 @@
     </ClInclude>
     <ClInclude Include="..\..\minijvm\c\utils\https\ssl_client.h">
       <Filter>头文件\https</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\minijvm\c\jvm\immix.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
