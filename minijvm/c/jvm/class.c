@@ -1256,11 +1256,28 @@ static MethodInfo *find_method_in_interface_tree(JClass *clazz, Utf8String *meth
     return NULL;
 }
 
+static MethodInfo *find_method_in_supers_interfaces(JClass *start, Utf8String *methodName, Utf8String *methodType, Instance *jloader, Runtime *runtime, s32 requireCode) {
+    JClass *other = start;
+    while (other) {
+        s32 i;
+        for (i = 0; i < other->interfacePool.clasz_used; i++) {
+            ConstantClassRef *ccr = (other->interfacePool.clasz + i);
+            Utf8String *icl_name = class_get_constant_utf8(other, ccr->stringIndex)->utfstr;
+            JClass *icl = classes_load_get_without_resolve(jloader, icl_name, runtime);
+            MethodInfo *mi = find_method_in_interface_tree(icl, methodName, methodType, runtime, requireCode);
+            if (mi != NULL) {
+                return mi;
+            }
+        }
+        other = getSuperClass(other);
+    }
+    return NULL;
+}
+
 MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName, Utf8String *methodType, Instance *jloader, Runtime *runtime) {
     MethodInfo *mi = NULL;
     JClass *start = classes_load_get_without_resolve(jloader, clsName, runtime);
-    JClass *other = start;
-    if (!other) {
+    if (!start) {
         jvm_printf("method not exist :%s.%s%s\n", utf8_cstr(clsName), utf8_cstr(methodName), utf8_cstr(methodType));
         return NULL;
     }
@@ -1280,24 +1297,23 @@ MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName,
         return find_method_in_interface_tree(start, methodName, methodType, runtime, 0);
     }
 
+    JClass *other = start;
     while (mi == NULL && other) {
         mi = find_declared_method(other, methodName, methodType);
         other = getSuperClass(other);
     }
 
-    other = start;
-    while (mi == NULL && other) {
-        s32 i;
-        for (i = 0; i < other->interfacePool.clasz_used; i++) {
-            ConstantClassRef *ccr = (other->interfacePool.clasz + i);
-            Utf8String *icl_name = class_get_constant_utf8(other, ccr->stringIndex)->utfstr;
-            JClass *icl = classes_load_get_without_resolve(jloader, icl_name, runtime);
-            mi = find_method_in_interface_tree(icl, methodName, methodType, runtime, 1);
-            if (mi != NULL) {
-                break;
-            }
-        }
-        other = getSuperClass(other);
+    if (mi == NULL) {
+        /* JVMS 5.4.3.3 step 3: prefer a superinterface declaration WITH code
+         * (a default method can be the invocation target itself). */
+        mi = find_method_in_supers_interfaces(start, methodName, methodType, jloader, runtime, 1);
+    }
+    if (mi == NULL) {
+        /* ... but a superinterface may also declare the method ABSTRACT
+         * (e.g. invokevirtual with a class owner whose superclass chain
+         * never redeclares it); resolution must still succeed, the concrete
+         * target is selected from the receiver at dispatch time. */
+        mi = find_method_in_supers_interfaces(start, methodName, methodType, jloader, runtime, 0);
     }
     return mi;
 }

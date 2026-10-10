@@ -24,33 +24,36 @@
  */
 
 
-
 package java.lang;
 
 /**
- * Thrown to indicate some unexpected internal error has occurred in 
- * the Java Virtual Machine. 
+ * Thrown to indicate some unexpected internal error has occurred in
+ * the Java Virtual Machine.
  *
- * @author  unascribed
+ * @author unascribed
  * @version 1.21, 12/19/03
- * @since   JDK1.0
+ * @since JDK1.0
  */
 public
 class InternalError extends VirtualMachineError {
     /**
-     * Constructs an <code>InternalError</code> with no detail message. 
+     * Constructs an <code>InternalError</code> with no detail message.
      */
     public InternalError() {
-	super();
+        super();
     }
 
     /**
-     * Constructs an <code>InternalError</code> with the specified 
-     * detail message. 
+     * Constructs an <code>InternalError</code> with the specified
+     * detail message.
      *
-     * @param   s   the detail message.
+     * @param s the detail message.
      */
     public InternalError(String s) {
-	super(s);
+        super(s);
+    }
+
+    public InternalError(Throwable throwable) {
+        super(throwable);
     }
 }

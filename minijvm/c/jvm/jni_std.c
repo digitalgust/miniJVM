@@ -1184,7 +1184,10 @@ s32 java_lang_System_nanotime(Runtime *runtime, JClass *clazz) {
 s32 java_lang_System_identityHashCode(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *tmps = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    push_ref(stack, (__refer) tmps);
+    /* The declared return type is int, not a reference. Match Object.hashCode's
+     * address hash without invoking an overridden Java hashCode method. */
+    u64 address = (u64) (intptr_t) tmps;
+    push_int(stack, (s32) (address ^ (address >> 32)));
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
@@ -1417,7 +1420,15 @@ s32 java_lang_Thread_getContextClassLoader0(Runtime *runtime, JClass *clazz) {
     Instance *ins_thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Runtime *rt_thread = jthread_get_stackframe_value(runtime->jvm, ins_thread);
     if (rt_thread) {
-        push_ref(stack, rt_thread->thrd_info->context_classloader);
+        Instance *cl = rt_thread->thrd_info->context_classloader;
+        if (!cl) {
+            /* HotSpot defaults an unset context class loader to the SYSTEM
+             * class loader; leaving it NULL breaks delegates that rely on the
+             * TCCL (e.g. janino's ClassLoaderIClassLoader). */
+            s32 ret = execute_method_impl(runtime->jvm->shortcut.launcher_getSystemClassLoader, runtime);
+            if (ret == RUNTIME_STATUS_NORMAL) cl = pop_ref(runtime->stack);
+        }
+        push_ref(stack, cl);
     } else {
         push_ref(stack, NULL);
     }

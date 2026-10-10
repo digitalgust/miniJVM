@@ -55,11 +55,11 @@ public class ReflectField {
     }
 
     public Type getGenericType() {
-        String s = "";
-        if (signature != null) signature.substring(signature.indexOf(')') + 1);
-        else s = descriptor.substring(descriptor.indexOf(')') + 1);
+        // A FIELD's "signature" IS the complete type signature (JVMS 4.7.9) - unlike a
+        // method signature there is no "(...)ret" layout to strip; the previous code was
+        // copied from the method path and even dropped its substring() result.
         TypeFieldImpl t = new TypeFieldImpl();
-        t.name = s;
+        t.name = ReflectClass.getNameByDescriptor(signature != null ? signature : descriptor);
         return t;
     }
 
