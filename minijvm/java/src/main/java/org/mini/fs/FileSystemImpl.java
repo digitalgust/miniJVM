@@ -101,7 +101,25 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
 
     @Override
     public String canonicalize(String path) throws IOException {
-        return getFullPath(path);
+        File existing = new File(getFullPath(path));
+        java.util.List<String> suffix = new java.util.ArrayList<String>();
+        while (!existing.exists()) {
+            // File.getParent() in this runtime itself calls getCanonicalPath().
+            // Walk the lexical path here to avoid re-entering canonicalize().
+            String current = existing.getPath();
+            int last = current.lastIndexOf(getSeparator());
+            if (last < 0) throw new IOException("cannot resolve path: " + path);
+            int length = last == 0 || (last == 2 && current.charAt(1) == ':') ? last + 1 : last;
+            if (length == current.length()) throw new IOException("cannot resolve path: " + path);
+            File parent = new File(current.substring(0, length));
+            suffix.add(existing.getName());
+            existing = parent;
+        }
+        String resolved = InnerFile.realpath0(SocketNative.toCStyle(existing.getPath()));
+        if (resolved == null) throw new IOException("cannot resolve path: " + path);
+        File result = new File(resolved);
+        for (int i = suffix.size() - 1; i >= 0; i--) result = new File(result, suffix.get(i));
+        return getFullPath(result.getPath());
     }
 
     @Override

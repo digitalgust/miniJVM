@@ -137,7 +137,7 @@ public final class Class<T> implements java.io.Serializable,
         return forName(className, true, c == null ? null : c.getClassLoader());
     }
 
-    public static native Class<?> forName(String className, boolean resolve, ClassLoader loader) throws ClassNotFoundException;
+    public static native Class<?> forName(String className, boolean initialize, ClassLoader loader) throws ClassNotFoundException;
 
     /**
      * Creates a new instance of a class.

@@ -74,7 +74,7 @@ s32 com_sun_cldc_io_ResourceInputStream_open(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Class_forName(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *jstr = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    s32 resolve = localvar_getInt(runtime->localvar, 1);
+    s32 initialize = localvar_getInt(runtime->localvar, 1);
     Instance *classloader = (Instance *) localvar_getRefer(runtime->localvar, 2);
     JClass *cl = NULL;
     s32 ret = RUNTIME_STATUS_NORMAL;
@@ -82,7 +82,10 @@ s32 java_lang_Class_forName(Runtime *runtime, JClass *clazz) {
         Utf8String *ustr = utf8_create();
         jstring_2_utf8(jstr, ustr, runtime);
         utf8_replace_c(ustr, ".", "/");
-        cl = classes_load_get_with_clinit(classloader, ustr, runtime);
+        /* Loading/linking a class does not initialize it unless requested. */
+        cl = initialize
+             ? classes_load_get_with_clinit(classloader, ustr, runtime)
+             : classes_load_get_with_resolve(classloader, ustr, runtime);
         if (!cl) {
             Instance *exception = exception_create_str(JVM_EXCEPTION_CLASSNOTFOUND, runtime, utf8_cstr(ustr));
             push_ref(stack, (__refer) exception);

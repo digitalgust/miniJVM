@@ -302,6 +302,8 @@ public class InnerFile {
 
     public static native String getcwd();
 
+    public static native String realpath0(byte[] path);
+
     public static native int mkdir0(byte[] pathbuf);
 
     public static native int delete0(byte[] pathbuf);

@@ -1237,6 +1237,27 @@ s32 org_mini_fs_InnerFile_listWinDrivers(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+s32 org_mini_fs_InnerFile_realpath0(Runtime *runtime, JClass *clazz) {
+    Instance *path = localvar_getRefer(runtime->localvar, 0);
+    Instance *result = NULL;
+    if (path) {
+        Utf8String *text = utf8_create_c(jarray_body(path));
+        ByteBuf *platform = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(platform, text);
+        char *resolved = mini_realpath(platform->buf);
+        if (resolved) {
+            utf8_clear(text);
+            conv_platform_encoding_2_utf8(text, resolved);
+            result = jstring_create(text, runtime);
+            free(resolved);
+        }
+        bytebuf_destroy(platform);
+        utf8_destroy(text);
+    }
+    push_ref(runtime->stack, result);
+    return 0;
+}
+
 s32 org_mini_fs_InnerFile_getcwd(Runtime *runtime, JClass *clazz) {
     ByteBuf *platformPath = bytebuf_create(1024);
 
@@ -1812,6 +1833,7 @@ static java_native_method METHODS_IO_TABLE[] = {
     {"org/mini/fs/InnerFile", "loadFS", "([BLorg/mini/fs/InnerFileStat;)I", org_mini_fs_InnerFile_loadFS},
     {"org/mini/fs/InnerFile", "listDir", "([B)[Ljava/lang/String;", org_mini_fs_InnerFile_listDir},
     {"org/mini/fs/InnerFile", "getcwd", "()Ljava/lang/String;", org_mini_fs_InnerFile_getcwd},
+    {"org/mini/fs/InnerFile", "realpath0", "([B)Ljava/lang/String;", org_mini_fs_InnerFile_realpath0},
     {"org/mini/fs/InnerFile", "chmod", "([BI)I", org_mini_fs_InnerFile_chmod},
     {"org/mini/fs/InnerFile", "mkdir0", "([B)I", org_mini_fs_InnerFile_mkdir0},
     {"org/mini/fs/InnerFile", "getOS", "()I", org_mini_fs_InnerFile_getOS},
