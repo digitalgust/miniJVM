@@ -49,7 +49,7 @@ package java.lang;
  * @see     java.lang.Short
  * @since   JDK1.0
  */
-public abstract class Number {
+public abstract class Number implements java.io.Serializable {
     /**
      * Returns the value of the specified number as an <code>int</code>.
      * This may involve rounding or truncation.
