@@ -10,7 +10,7 @@ import org.mini.vm.RefNative;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
-import java.util.WeakHashMap;
+import java.util.*;
 
 /**
  * @author Gust
@@ -36,6 +36,7 @@ public class SpecTest {
         test_reference();
         test_weakhashmap();
         test_finalized();
+        test_type();
         print("test end");
     }
 
@@ -1337,6 +1338,22 @@ public class SpecTest {
 
         if (weakHashMap.size() != 1) {
             printerr("weakHashMap 2");
+        }
+    }
+
+    static void test_type() {
+        Map<String, List<Map<String, Integer>>> map = new HashMap<>();
+        List<Map<String, Integer>> list = new ArrayList<>();
+        map.put("1", list);
+        Map<String, Integer> map1 = new HashMap<>();
+        list.add(map1);
+        map1.put("x", 4);
+
+        List<Map<String, Integer>> listR = map.get("1");
+        Map<String, Integer> mapR = listR.get(0);
+        Integer x = mapR.get("x");
+        if (x != 4) {
+            printerr("test_type err");
         }
     }
 }

@@ -14,6 +14,9 @@ public class StopParkTest {
     static final Object panel = new Object();
     static volatile boolean exit = false;
     static volatile int wokeByNotify = -1;
+    static volatile boolean notifyReady = false;
+    static boolean notifyReleased = false; // guarded by panel
+    static final int TIMED_WAIT_MS = 300;
 
     // exact shape of the leaked UpdaterWorker: wait(0) nobody notifies,
     // outer catch swallows interrupt, loop restarts
@@ -48,7 +51,9 @@ public class StopParkTest {
         public void run() {
             synchronized (panel) {
                 try {
-                    panel.wait();
+                    notifyReady = true;
+                    // Object.wait may return spuriously; only the condition permits progress.
+                    while (!notifyReleased) panel.wait();
                     wokeByNotify = 1;
                 } catch (Exception e) {
                     wokeByNotify = 0;
@@ -61,9 +66,14 @@ public class StopParkTest {
         public void run() {
             synchronized (panel) {
                 try {
-                    long t0 = System.currentTimeMillis();
-                    panel.wait(300);
-                    wokeByNotify = (int) (System.currentTimeMillis() - t0);
+                    long t0 = System.nanoTime();
+                    long remaining;
+                    // A wait call does not guarantee a minimum blocking duration.
+                    // Retry after spurious wakeups, using a monotonic elapsed-time budget.
+                    while ((remaining = TIMED_WAIT_MS * 1000000L - (System.nanoTime() - t0)) > 0) {
+                        panel.wait((remaining + 999999L) / 1000000L);
+                    }
+                    wokeByNotify = (int) ((System.nanoTime() - t0) / 1000000L);
                 } catch (Exception e) {
                     wokeByNotify = -2;
                 }
@@ -123,14 +133,34 @@ public class StopParkTest {
         System.out.println("stop-sleep ok");
 
         // 3. notify still wakes a waiter (semantics preserved)
+        wokeByNotify = -1;
+        synchronized (panel) {
+            notifyReady = false;
+            notifyReleased = false;
+        }
         Thread t3 = new Thread(new NotifiedWaiter());
         t3.start();
-        Thread.sleep(300);
+        long readyDeadline = System.nanoTime() + 2000000000L;
+        while (!notifyReady && System.nanoTime() - readyDeadline < 0) Thread.sleep(10);
+        if (!notifyReady) {
+            System.out.println("STOP FAIL: notify waiter did not start");
+            System.exit(1);
+        }
+        // Even a real notification must not bypass the still-false condition.
         synchronized (panel) {
+            panel.notifyAll();
+        }
+        Thread.sleep(150);
+        if (wokeByNotify != -1 || !t3.isAlive()) {
+            System.out.println("STOP FAIL: waiter proceeded before notification condition");
+            System.exit(1);
+        }
+        synchronized (panel) {
+            notifyReleased = true;
             panel.notify();
         }
         t3.join(2000);
-        if (wokeByNotify != 1) {
+        if (t3.isAlive() || wokeByNotify != 1) {
             System.out.println("STOP FAIL: notify did not wake waiter: " + wokeByNotify);
             System.exit(1);
         }
@@ -141,7 +171,7 @@ public class StopParkTest {
         Thread t4 = new Thread(new TimedWaiter());
         t4.start();
         t4.join(2000);
-        if (wokeByNotify < 250 || wokeByNotify > 1500) {
+        if (t4.isAlive() || wokeByNotify < TIMED_WAIT_MS) {
             System.out.println("STOP FAIL: timed wait returned at " + wokeByNotify + "ms");
             System.exit(1);
         }

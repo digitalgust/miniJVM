@@ -1,7 +1,9 @@
 package test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class InvokeTest {
 
@@ -62,6 +64,14 @@ public class InvokeTest {
     }
 
     public static void main(String[] args) {
+        Map<String, String> map = new HashMap<>();   //enabled
+        String s = map.get("1"); //neednot  (String) myMap.get(key)
+        Runnable r = () -> {
+            System.out.println(s);
+        };  //enabled and executed.
+        Runnable r1 = r::run;  //enabled
+        r1.run();
+
         List<Fruit> list = new ArrayList<>();
         list.add(new Apple("apple", 10));
         list.add(new Orange("orange", 20));

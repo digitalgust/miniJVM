@@ -83,7 +83,9 @@ package java.lang;
  * @see java.lang.String
  * @since JDK1.0, CLDC 1.0
  */
-public class StringBuilder implements Appendable, CharSequence {
+public class StringBuilder implements java.io.Serializable, Appendable, CharSequence {
+
+    private static final long serialVersionUID = 4383685877147921099L;
 
     /**
      * The value is used for character storage.

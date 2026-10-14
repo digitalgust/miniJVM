@@ -92,7 +92,9 @@ import java.util.regex.Pattern;
  * @see java.lang.StringBuffer#append(java.lang.String)
  * @since JDK1.0, CLDC 1.0
  */
-public final class String implements Comparable<String>, CharSequence {
+public final class String implements java.io.Serializable, Comparable<String>, CharSequence {
+
+    private static final long serialVersionUID = -6849794470754667710L;
 
     /**
      * The value is used for character storage.
