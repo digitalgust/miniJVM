@@ -52,7 +52,7 @@ public class ReflectMethod {
         paras_class = getMethodPara(clazzObj.getClassLoader(), descriptor);
 
         // 使用signature解析泛型参数类型（用于getGenericParameterTypes）
-        paras_type = getGenericParaType(signature != null ? signature : descriptor);
+        paras_type = paras_class;
     }
 
     public Class[] getParameterTypes() {
@@ -81,24 +81,49 @@ public class ReflectMethod {
     public Object invoke(Object obj, Object... args)
             throws IllegalAccessException,
             IllegalArgumentException {
-        if (obj == null && ((accessFlags & RConst.ACC_STATIC) == 0)) {//none static method but obj is null
-            throw new NullPointerException();
-        }
-        if (obj != null) {
-            if (!clazzObj.isAssignableFrom(obj.getClass())) {
-                throw new IllegalArgumentException("instance type error:" + obj.getClass() + " expected:" + clazzObj);
-            }
-        }
-        Class[] pc = getParameterTypes();
-        if (args.length != paras.length) {
-            throw new IllegalArgumentException();
-        }
-        if ((accessFlags & RConst.ACC_PRIVATE) != 0) {
-            throw new IllegalAccessException();
-        }
+        return invoke(obj, convertArguments(args), false);
+    }
 
+    public void checkReceiver(Object obj) {
+        if ((accessFlags & RConst.ACC_STATIC) != 0) return;
+        if (obj == null) throw new NullPointerException();
+        if (!clazzObj.isInstance(obj)) throw new IllegalArgumentException("instance type mismatch");
+    }
+
+    public Object invoke(Object obj, Object[] args, boolean overrideAccess) throws IllegalAccessException {
+        checkReceiver(obj);
+        if (!overrideAccess && (accessFlags & RConst.ACC_PRIVATE) != 0) throw new IllegalAccessException();
         return invokeMethod(obj, args);
     }
+
+    public Object[] convertArguments(Object[] args) {
+        if (args == null) args = new Object[0];
+        if (args.length != paras_class.length) throw new IllegalArgumentException("argument count mismatch");
+        Object[] result = args.clone();
+        for (int i = 0; i < result.length; i++) result[i] = convertArgument(paras_class[i], args[i]);
+        return result;
+    }
+
+    public static Object convertArgument(Class<?> target, Object value) {
+        if (!target.isPrimitive()) {
+            if (value != null && !target.isInstance(value)) throw new IllegalArgumentException("argument type mismatch");
+            return value;
+        }
+        if (target == boolean.class && value instanceof Boolean || target == char.class && value instanceof Character) return value;
+        int rank = value instanceof Byte ? 1 : value instanceof Short ? 2 : value instanceof Character ? 3
+            : value instanceof Integer ? 4 : value instanceof Long ? 5 : value instanceof Float ? 6 : value instanceof Double ? 7 : 0;
+        int required = target == byte.class ? 1 : target == short.class ? 2 : target == int.class ? 4
+            : target == long.class ? 5 : target == float.class ? 6 : target == double.class ? 7 : 0;
+        if (rank == 0 || required == 0 || rank > required) throw new IllegalArgumentException("argument type mismatch");
+        Number number = value instanceof Character ? Integer.valueOf(((Character) value).charValue()) : (Number) value;
+        if (target == byte.class) return Byte.valueOf(number.byteValue());
+        else if (target == short.class) return Short.valueOf(number.shortValue());
+        else if (target == int.class) return Integer.valueOf(number.intValue());
+        else if (target == long.class) return Long.valueOf(number.longValue());
+        else if (target == float.class) return Float.valueOf(number.floatValue());
+        else return Double.valueOf(number.doubleValue());
+    }
+
 
     public static Class<?>[] getMethodPara(ClassLoader loader, String descriptor) {
         List<String> paras = ReflectClass.splitDescriptor(descriptor);

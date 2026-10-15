@@ -58,9 +58,8 @@ public class ReflectField {
         // A FIELD's "signature" IS the complete type signature (JVMS 4.7.9) - unlike a
         // method signature there is no "(...)ret" layout to strip; the previous code was
         // copied from the method path and even dropped its substring() result.
-        TypeFieldImpl t = new TypeFieldImpl();
-        t.name = ReflectClass.getNameByDescriptor(signature != null ? signature : descriptor);
-        return t;
+        return GenericSignature.forField(refClass.classObj, signature,
+            ReflectClass.getClassByDescriptor(refClass.classObj.getClassLoader(), descriptor));
     }
 
     public void setValObj(Object object, Object val) {

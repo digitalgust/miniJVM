@@ -258,17 +258,14 @@ JClass *array_class_get_by_name(Runtime *runtime, Instance *jloader, Utf8String 
     JClass *clazz = NULL;
     if (name) {
         Utf8String *ustr = utf8_create_c("[");
-        if (!isDataReferByTag(utf8_char_at(name, 0))) {
-            //not : L [
-            if (!isDataReferByTag(utf8_char_at(name, 0))) {
-                utf8_append_c(ustr, "L");
-            }
+        /* A class binary name beginning with L is not necessarily an L...; descriptor. */
+        if (utf8_char_at(name, 0) == '['
+            || (utf8_char_at(name, 0) == 'L' && utf8_char_at(name, name->length - 1) == ';')) {
             utf8_append(ustr, name);
-            if (utf8_char_at(name, name->length - 1) != ';') {
-                utf8_append_c(ustr, ";");
-            }
         } else {
+            utf8_append_c(ustr, "L");
             utf8_append(ustr, name);
+            utf8_append_c(ustr, ";");
         }
         clazz = array_class_create_get(runtime, jloader, ustr);
         utf8_destroy(ustr);

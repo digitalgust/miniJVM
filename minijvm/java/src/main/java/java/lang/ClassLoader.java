@@ -133,11 +133,13 @@ public abstract class ClassLoader {
             throw new NullPointerException();
         }
 
-        if (offset < 0 || offset > length || offset + length > b.length) {
+        if (offset < 0 || length < 0 || offset > b.length - length) {
             throw new IndexOutOfBoundsException();
         }
 
-        return RefNative.defineClass(this, name, b, offset, length);
+        Class<?> defined = RefNative.defineClass(this, name, b, offset, length);
+        defined.reflectionMetadata = org.mini.reflect.ClassMetadata.read(new java.io.ByteArrayInputStream(b, offset, length));
+        return defined;
     }
 
     protected Class defineClass(String name, byte[] b, int offset, int length, ProtectionDomain domain) {

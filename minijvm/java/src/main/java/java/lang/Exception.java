@@ -55,7 +55,7 @@ public class Exception extends Throwable {
     }
 
     public Exception(Throwable cause) {
-        this.cause = cause;
+        super(cause);
     }
 
     public Exception(String message, Throwable cause) {

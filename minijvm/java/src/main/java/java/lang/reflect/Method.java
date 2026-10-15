@@ -55,6 +55,11 @@ public class Method<T> extends AccessibleObject implements Member, GenericDeclar
 
     Class clazz;
     ReflectMethod refMethod;
+    private org.mini.reflect.GenericSignature genericInfo;
+    private synchronized org.mini.reflect.GenericSignature genericInfo() {
+        if (genericInfo == null) genericInfo = org.mini.reflect.GenericSignature.forMethod(clazz, this, refMethod);
+        return genericInfo;
+    }
 
     // 缓存解析后的注解数组
     private Annotation[] cachedAnnotations;
@@ -73,7 +78,11 @@ public class Method<T> extends AccessibleObject implements Member, GenericDeclar
     public Object invoke(Object obj, Object... args)
             throws IllegalAccessException,
             IllegalArgumentException, InvocationTargetException {
-        return refMethod.invoke(obj, args);
+        checkAccess(org.mini.vm.RefNative.getCallerClass(), clazz, getModifiers(), obj);
+        refMethod.checkReceiver(obj);
+        Object[] converted = refMethod.convertArguments(args);
+        try { return refMethod.invoke(obj, converted, true); }
+        catch (Throwable target) { throw new InvocationTargetException(target); }
     }
 
     public String getName() {
@@ -81,7 +90,7 @@ public class Method<T> extends AccessibleObject implements Member, GenericDeclar
     }
 
     public Class<?>[] getParameterTypes() {
-        return refMethod.getParameterTypes();
+        return refMethod.getParameterTypes().clone();
     }
 
     public Class<?> getReturnType() {
@@ -90,11 +99,13 @@ public class Method<T> extends AccessibleObject implements Member, GenericDeclar
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof Method) {
-            return refMethod == ((Method) o).refMethod;
-        }
-        return false;
+        if (!(o instanceof Method)) return false;
+        Method other = (Method) o;
+        return clazz == other.clazz && getName().equals(other.getName()) && getReturnType() == other.getReturnType()
+            && java.util.Arrays.equals(getParameterTypes(), other.getParameterTypes());
     }
+
+    @Override public int hashCode() { return clazz.getName().hashCode() ^ getName().hashCode(); }
 
     @Override
     public Class<T> getDeclaringClass() {
@@ -105,6 +116,8 @@ public class Method<T> extends AccessibleObject implements Member, GenericDeclar
     public int getModifiers() {
         return refMethod.accessFlags;
     }
+
+    public boolean isBridge() { return (getModifiers() & 0x0040) != 0; }
 
     @Override
     public boolean isSynthetic() {
@@ -213,15 +226,15 @@ public class Method<T> extends AccessibleObject implements Member, GenericDeclar
     }
 
     public Type[] getGenericParameterTypes() {
-        return refMethod.getGenericParameterTypes();
+        return genericInfo().parameters.clone();
     }
 
     public Type getGenericReturnType() {
-        return refMethod.getGenericReturnType();
+        return genericInfo().result;
     }
 
     public Type[] getGenericExceptionTypes() {
-        return refMethod.getGenericExceptionTypes();
+        return genericInfo().exceptions.clone();
     }
 
     public Class<?>[] getExceptionTypes() {
@@ -229,6 +242,6 @@ public class Method<T> extends AccessibleObject implements Member, GenericDeclar
     }
 
     public TypeVariable<Method>[] getTypeParameters() {
-        return new TypeVariable[0];
+        return (TypeVariable<Method>[]) genericInfo().variables.clone();
     }
 }

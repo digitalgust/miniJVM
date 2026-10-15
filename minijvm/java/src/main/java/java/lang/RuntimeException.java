@@ -61,7 +61,7 @@ class RuntimeException extends Exception {
     }
     
     public RuntimeException(Throwable cause) {
-        this.cause = cause;
+        super(cause);
     }
     
     public RuntimeException(String message, Throwable cause) {

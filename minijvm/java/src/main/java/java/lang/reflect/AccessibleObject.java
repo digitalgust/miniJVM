@@ -22,7 +22,28 @@ public abstract class AccessibleObject implements AnnotatedElement {
     }
 
     public void setAccessible(boolean v) {
+        if (v && this instanceof Constructor && ((Constructor<?>) this).getDeclaringClass() == Class.class)
+            throw new SecurityException("Cannot make java.lang.Class constructor accessible");
         accessible = v;
+    }
+
+    protected void checkAccess(Class<?> caller, Class<?> owner, int flags, Object receiver) throws IllegalAccessException {
+        if (accessible) return;
+        if (caller == owner) return;
+        boolean samePackage = caller != null && caller.getClassLoader() == owner.getClassLoader()
+            && packageName(caller).equals(packageName(owner));
+        if (Modifier.isPrivate(flags)) throw new IllegalAccessException();
+        if (!Modifier.isPublic(owner.getModifiers()) && !samePackage) throw new IllegalAccessException();
+        if (Modifier.isPublic(flags) || samePackage) return;
+        if (Modifier.isProtected(flags) && caller != null && owner.isAssignableFrom(caller)
+            && (Modifier.isStatic(flags) || receiver == null || caller.isInstance(receiver))) return;
+        throw new IllegalAccessException();
+    }
+
+    private static String packageName(Class<?> type) {
+        String name = type.getName();
+        int dot = name.lastIndexOf('.');
+        return dot < 0 ? "" : name.substring(0, dot);
     }
 
     // Access and property flags for Member descendants

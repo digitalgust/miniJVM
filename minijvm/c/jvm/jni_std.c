@@ -258,15 +258,23 @@ s32 java_lang_Class_getSuperclass(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Class_getInterfaces(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 0));
-    s32 len = cl ? cl->interfacePool.clasz_used : 0;
+    s32 is_array = cl && cl->name && utf8_char_at(cl->name, 0) == '[';
+    s32 len = is_array ? 2 : cl ? cl->interfacePool.clasz_used : 0;
     Utf8String *ustr = utf8_create_c(STR_INS_JAVA_LANG_CLASS);
-    Instance *jarr = jarray_create_by_type_name(runtime, len, ustr, cl->jloader);
+    Instance *jarr = jarray_create_by_type_name(runtime, len, ustr, NULL);
     utf8_destroy(ustr);
     if (!jarr) return exception_throw_out_of_memory(runtime);
     s32 i;
     for (i = 0; i < len; i++) {
-        ConstantClassRef *ccr = (cl->interfacePool.clasz + i);
-        JClass *other = classes_load_get_with_clinit(cl->jloader, class_get_constant_utf8(cl, ccr->stringIndex)->utfstr, runtime);
+        JClass *other;
+        if (is_array) {
+            Utf8String *interface_name = utf8_create_c(i == 0 ? "java/lang/Cloneable" : "java/io/Serializable");
+            other = classes_load_get_with_resolve(NULL, interface_name, runtime);
+            utf8_destroy(interface_name);
+        } else {
+            ConstantClassRef *ccr = (cl->interfacePool.clasz + i);
+            other = classes_load_get_with_resolve(cl->jloader, class_get_constant_utf8(cl, ccr->stringIndex)->utfstr, runtime);
+        }
         if (other) {
             Instance *cins = insOfJavaLangClass_create_get(runtime, other);
             jarray_set_field(jarr, i, (s64) (intptr_t) cins);

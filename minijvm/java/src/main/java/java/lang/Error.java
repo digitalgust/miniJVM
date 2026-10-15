@@ -47,14 +47,14 @@ public class Error extends Throwable {
   }
 
   public Error(String message) {
-    this(message, null);
+    super(message);
   }
 
   public Error(Throwable cause) {
-    this(null, cause);
+    super(cause);
   }
 
   public Error() {
-    this(null, null);
+    super();
   }
 }

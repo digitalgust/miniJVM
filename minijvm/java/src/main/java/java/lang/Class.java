@@ -83,6 +83,37 @@ public final class Class<T> implements java.io.Serializable,
     private transient volatile Method[] declaredMethodsCached;
     private transient volatile Method[] methodsCached;
     private transient volatile Class[] cachedDeclaredClasses;
+    private transient volatile org.mini.reflect.GenericSignature genericInfo;
+    transient volatile org.mini.reflect.ClassMetadata reflectionMetadata;
+
+    private synchronized org.mini.reflect.ClassMetadata metadata() {
+        if (reflectionMetadata == null) reflectionMetadata = org.mini.reflect.ClassMetadata.read(this);
+        return reflectionMetadata;
+    }
+
+    private org.mini.reflect.GenericSignature genericInfo() {
+        org.mini.reflect.GenericSignature result = genericInfo;
+        if (result != null) return result;
+        // Parsing can consult another class's metadata. Do not hold this Class's monitor across that work.
+        result = org.mini.reflect.GenericSignature.forClass(this);
+        synchronized (this) {
+            if (genericInfo == null) genericInfo = result;
+            return genericInfo;
+        }
+    }
+
+    public Type getGenericSuperclass() {
+        if (isPrimitive() || isInterface() || this == Object.class) return null;
+        return isArray() ? Object.class : genericInfo().superclass;
+    }
+
+    public Type[] getGenericInterfaces() {
+        return isPrimitive() || isArray() ? getInterfaces() : genericInfo().interfaces.clone();
+    }
+
+    public String getTypeName() {
+        return isArray() ? getComponentType().getTypeName() + "[]" : getName();
+    }
     ;
 
     /*
@@ -502,9 +533,17 @@ public final class Class<T> implements java.io.Serializable,
     }
 
     public int getModifiers() {
+        if (isPrimitive()) return Modifier.PUBLIC | Modifier.FINAL | Modifier.ABSTRACT;
+        if (isArray()) return (getComponentType().getModifiers() & (Modifier.PUBLIC | Modifier.PROTECTED | Modifier.PRIVATE))
+            | Modifier.FINAL | Modifier.ABSTRACT;
         checkRefectClassLoaded();
-        return refClass.accessFlags;
+        int flags = metadata().modifiers;
+        return (flags < 0 ? refClass.accessFlags : flags) & 0x761f;
     }
+
+    public boolean isMemberClass() { return getDeclaringClass() != null; }
+    public boolean isLocalClass() { return !isAnonymousClass() && metadata().enclosing != null; }
+    public boolean isAnonymousClass() { return metadata().nested && metadata().simpleName == null; }
 
     public Method getMethod(String name, Class<?>... parameterTypes) throws NoSuchMethodException {
         // 遍历类及其父类的所有方法
@@ -890,25 +929,43 @@ public final class Class<T> implements java.io.Serializable,
         }
     }
 
-    public Class getDeclaringClass() {
-        if (isPrimitive() || isArray()) {
-            return null;
-        } else {
-            return this;//todo
-        }
+    public Class<?> getDeclaringClass() { return related(metadata().declaring); }
+
+    public Class<?> getEnclosingClass() {
+        org.mini.reflect.ClassMetadata m = metadata();
+        return related(m.enclosing == null ? m.declaring : m.enclosing);
     }
 
+    public Method getEnclosingMethod() {
+        org.mini.reflect.ClassMetadata m = metadata();
+        if (m.enclosingMethodName == null || m.enclosingMethodName.charAt(0) == '<') return null;
+        Class<?> owner = getEnclosingClass();
+        ReflectMethod ref = owner.getRefClass().getMethod(m.enclosingMethodName, m.enclosingMethodDescriptor);
+        return ref == null ? null : new Method(owner, ref);
+    }
+
+    public Constructor<?> getEnclosingConstructor() {
+        org.mini.reflect.ClassMetadata m = metadata();
+        if (!"<init>".equals(m.enclosingMethodName)) return null;
+        Class<?> owner = getEnclosingClass();
+        ReflectMethod ref = owner.getRefClass().getMethod(m.enclosingMethodName, m.enclosingMethodDescriptor);
+        return ref == null ? null : new Constructor(owner, ref);
+    }
+
+    private Class<?> related(String name) {
+        if (name == null) return null;
+        try { return Class.forName(name, false, getClassLoader()); }
+        catch (ClassNotFoundException e) { throw new TypeNotPresentException(name, e); }
+    }
 
     public Class<?>[] getDeclaredClasses() throws SecurityException {
-        if (cachedDeclaredClasses != null) {
-            return cachedDeclaredClasses;
+        if (cachedDeclaredClasses == null) {
+            java.util.List<String> members = metadata().members;
+            Class<?>[] result = new Class<?>[members.size()];
+            for (int i = 0; i < result.length; i++) result[i] = related(members.get(i));
+            cachedDeclaredClasses = result;
         }
-        if (isPrimitive() || isArray() || this.equals(Void.class)) {
-            cachedDeclaredClasses = new Class[0];
-        } else {
-            cachedDeclaredClasses = new Class[0];
-        }
-        return cachedDeclaredClasses;
+        return cachedDeclaredClasses.clone();
     }
 
     public boolean desiredAssertionStatus() {
@@ -944,7 +1001,7 @@ public final class Class<T> implements java.io.Serializable,
     public native Class[] getInterfaces();
 
     @Override
-    public TypeVariable<?>[] getTypeParameters() {
-        return new TypeVariable[0];
+    public TypeVariable<Class<T>>[] getTypeParameters() {
+        return isPrimitive() || isArray() ? new TypeVariable[0] : (TypeVariable<Class<T>>[]) genericInfo().variables.clone();
     }
 }
