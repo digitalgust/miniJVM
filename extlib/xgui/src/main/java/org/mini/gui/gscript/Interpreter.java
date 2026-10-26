@@ -1188,13 +1188,19 @@ public class Interpreter {
         ArrayList<DataType> expr = getCachedVector();
         evaluationCell(stat, varTable, expr); //求变量和过程调用、子表达式的值
 
-        if (stat.type == 0 || stat.containsArrExpr) { //array element can be any type ,so check type every times
-            stat.type = getTypeOfExpr(expr);
+        byte exprType = stat.type;
+        if (exprType == 0) {
+            exprType = getTypeOfExpr(expr);
+            // Only constants have a stable type. A previous Str result must not
+            // force later Obj/Int/etc. values through string normalization.
+            if (!stat.dynamicType) {
+                stat.type = exprType;
+            }
         }
 
         DataType resultDt = null;
 
-        switch (stat.type) {
+        switch (exprType) {
             case T_NUM:
 
                 //左递归运算

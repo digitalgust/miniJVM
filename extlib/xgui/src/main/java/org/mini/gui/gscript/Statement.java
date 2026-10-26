@@ -180,8 +180,8 @@ class ExprCellArr extends ExprCell {
  * ------------------------------------------------------
  */
 class Expression extends ExprCell {
-    byte type;//表达式求值类型，
-    boolean containsArrExpr = false;
+    byte type;// Cached evaluation type for expressions containing only constants.
+    boolean dynamicType;
 
     ExprCell[] cells;
 
@@ -240,7 +240,6 @@ class Expression extends ExprCell {
                 tgt.add(new ExprCellCall(s, inp));
             } else if (inp.isArr(s)) {//是数组
                 tgt.add(new ExprCellArr(s, inp));
-                containsArrExpr = true;
             } else if (Bool.isBool(s)) {//是BOOL值
                 Bool pbt = new Bool(s);
                 pbt.setRecyclable(false);
@@ -288,18 +287,13 @@ class Expression extends ExprCell {
                     if (bracketCount == 0) {
                         // 提取子表达式内容,直接把子表达式转为数组，用Expression (ExprCell[] para, Interpreter inp)初始化
                         int subExprLength = endIndex - (i + 1);
-                        boolean hasArrExpr = false;
                         ArrayList<ExprCell> subExpr = Interpreter.getCachedVector();
                         for (int j = 0; j < subExprLength; j++) {
                             ExprCell cell = (ExprCell) tgt.get(i + 1 + j);
                             subExpr.add(cell);
-                            if (cell instanceof ExprCellArr) {
-                                hasArrExpr = true;
-                            }
                         }
 
                         Expression subExpression = new Expression(subExpr, inp);
-                        subExpression.containsArrExpr = hasArrExpr;
                         Interpreter.putCachedVector(subExpr);
 
                         // 移除旧的元素
@@ -388,6 +382,14 @@ class Expression extends ExprCell {
         if (cellslen > 0) {
             for (int i = 0; i < cellslen; i++) {
                 cells[i] = (ExprCell) tgt.get(i);
+                // Variables, calls and array elements can change type between evaluations.
+                // Propagate this through both parenthesized and generated subexpressions.
+                ExprCell cell = cells[i];
+                if (cell.celltype == EXPR_CELL_VAR || cell.celltype == EXPR_CELL_CALL
+                        || cell.celltype == EXPR_CELL_ARR
+                        || (cell.celltype == EXPR_CELL_EXPR && ((Expression) cell).dynamicType)) {
+                    dynamicType = true;
+                }
             }
         }
     }
