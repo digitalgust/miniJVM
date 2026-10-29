@@ -20,6 +20,7 @@ public class GLabel extends GObject {
     protected byte[] text_arr;
     protected char preicon;
     protected float[] lineh = {0};
+    private final float[] textBounds = new float[4];
     protected boolean touched;
 
     int align = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
@@ -52,7 +53,10 @@ public class GLabel extends GObject {
 
     public void setAlign(int ali) {
         align = ali;
-        if ((align & 0x7f) == 0) {
+        if ((align & (NVG_ALIGN_LEFT | NVG_ALIGN_CENTER | NVG_ALIGN_RIGHT)) == 0) {
+            align |= NVG_ALIGN_LEFT;
+        }
+        if ((align & (NVG_ALIGN_TOP | NVG_ALIGN_MIDDLE | NVG_ALIGN_BOTTOM | NVG_ALIGN_BASELINE)) == 0) {
             align |= NVG_ALIGN_TOP;
         }
     }
@@ -205,20 +209,29 @@ public class GLabel extends GObject {
         nvgFontSize(vg, getFontSize());
         nvgFillColor(vg, getColor());
         nvgFontFace(vg, GToolkit.getFontWord());
-        nvgTextMetrics(vg, null, null, lineh);
-
-        nvgTextAlign(vg, align);
-        float dx, dy;
-        dx = x;
-        dy = y;
-        if ((align & Nanovg.NVG_ALIGN_MIDDLE) != 0) {
-            dy += lineh[0];
-        } else if ((align & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
-            dy += getFontSize();
-        }
-
         if (text_arr != null) {
-            nvgTextBoxJni(vg, dx, dy + 2, w - TEXT_BOUND_DEC, text_arr, 0, text_arr.length);
+            // NanoVG aligns each row vertically, not the whole text block.
+            // Measure and draw with TOP alignment, then position the block ourselves.
+            int horizontalAlign = align & (NVG_ALIGN_LEFT | NVG_ALIGN_CENTER | NVG_ALIGN_RIGHT);
+            nvgTextAlign(vg, horizontalAlign | NVG_ALIGN_TOP);
+            float textWidth = Math.max(0, w - TEXT_BOUND_DEC);
+            float dx = x;
+            if ((align & NVG_ALIGN_CENTER) != 0) {
+                dx += (w - textWidth) * .5f;
+            } else if ((align & NVG_ALIGN_RIGHT) != 0) {
+                dx += w - textWidth;
+            }
+
+            // Glyphs can extend above TOP's nominal y=0 (CJK, accents, raster rounding).
+            // Compensate for the measured overhang even when aligning to the top.
+            nvgTextBoxBoundsJni(vg, 0, 0, textWidth, text_arr, 0, text_arr.length, textBounds);
+            float dy = y - textBounds[1];
+            if ((align & NVG_ALIGN_MIDDLE) != 0) {
+                dy += (h - (textBounds[3] - textBounds[1])) * .5f;
+            } else if ((align & NVG_ALIGN_BOTTOM) != 0) {
+                dy = y + h - textBounds[3];
+            }
+            nvgTextBoxJni(vg, dx, dy, textWidth, text_arr, 0, text_arr.length);
         }
     }
 
