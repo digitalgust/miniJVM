@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package java.lang;
 
 public class TypeNotPresentException extends RuntimeException {

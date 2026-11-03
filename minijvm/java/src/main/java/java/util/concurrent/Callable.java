@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package java.util.concurrent;
 
 /** A computation that returns a result or throws an exception. */

@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.mini.util;
 
 import org.mini.zip.Zip;

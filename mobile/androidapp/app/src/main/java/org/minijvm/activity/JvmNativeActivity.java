@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.minijvm.activity;
 
 import android.Manifest;

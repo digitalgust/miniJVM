@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.minijvm.activity.bridge;
 
 import java.lang.reflect.Array;

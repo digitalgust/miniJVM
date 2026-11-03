@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package java.lang;
 
 /** Exact hexadecimal significand rounding, shared by Float and Double. */

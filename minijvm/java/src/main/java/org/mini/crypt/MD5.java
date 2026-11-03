@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.mini.crypt;
 
 import java.io.File;

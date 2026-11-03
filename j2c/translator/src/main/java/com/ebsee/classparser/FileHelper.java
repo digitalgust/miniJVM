@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package com.ebsee.classparser;
 import java.io.*;
 import java.util.ArrayList;

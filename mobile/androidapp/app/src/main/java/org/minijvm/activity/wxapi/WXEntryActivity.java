@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.minijvm.activity.wxapi;
 
 import android.app.Activity;

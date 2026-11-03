@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.mini.util;
 
 /** Same as 'java.util.Map' but uses primitive 'long' keys to minimise boxing (and GC) overhead. */

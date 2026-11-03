@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package test;
 
 import static java.lang.Math.cos;

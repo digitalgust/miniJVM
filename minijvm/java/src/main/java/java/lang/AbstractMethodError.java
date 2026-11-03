@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package java.lang;
 
 /** The selected instance method has no concrete implementation. */

@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package java.lang.reflect;
 
 import org.mini.vm.RefNative;

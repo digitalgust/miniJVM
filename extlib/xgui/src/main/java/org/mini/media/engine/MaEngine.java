@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.mini.media.engine;
 
 import org.mini.media.MaDevice;

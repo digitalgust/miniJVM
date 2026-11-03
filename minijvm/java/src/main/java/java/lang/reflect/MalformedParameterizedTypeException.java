@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package java.lang.reflect;
 
 public class MalformedParameterizedTypeException extends RuntimeException {

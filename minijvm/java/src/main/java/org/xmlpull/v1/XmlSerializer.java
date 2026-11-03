@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.xmlpull.v1;
 
 import java.io.IOException;

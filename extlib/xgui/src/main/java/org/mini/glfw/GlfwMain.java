@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.mini.glfw;
 
 import org.mini.gui.callback.GCallBack;

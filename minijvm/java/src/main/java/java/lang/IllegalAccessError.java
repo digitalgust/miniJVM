@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package java.lang;
 
 /** A linked field or method is not accessible to the caller. */

@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package java.lang;
 
 /** A class definition changed incompatibly after a caller was compiled. */

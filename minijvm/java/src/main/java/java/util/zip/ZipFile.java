@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package java.util.zip;
 
 import java.io.ByteArrayInputStream;
