@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.mini.net.https;
 
 import org.mini.net.SocketNative;

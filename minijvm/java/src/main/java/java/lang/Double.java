@@ -139,6 +139,22 @@ public final class Double extends Number implements Comparable<Double> {
      * @param d the <code>double</code> to be converted.
      * @return a string representation of the argument.
      */
+    public static String toHexString(double value) {
+        if (isNaN(value)) return "NaN";
+        if (isInfinite(value)) return value < 0 ? "-Infinity" : "Infinity";
+        long bits = doubleToRawLongBits(value);
+        long fraction = bits & 0x000fffffffffffffL;
+        int exponent = (int) ((bits >>> 52) & 2047);
+        boolean zero = exponent == 0 && fraction == 0;
+        String hex = Long.toHexString(fraction);
+        StringBuilder padded = new StringBuilder();
+        for (int i = hex.length(); i < 13; i++) padded.append('0');
+        padded.append(hex);
+        while (padded.length() > 1 && padded.charAt(padded.length() - 1) == '0') padded.setLength(padded.length() - 1);
+        return (bits < 0 ? "-" : "") + "0x" + (exponent == 0 ? "0." : "1.") + padded
+            + "p" + (zero ? 0 : exponent == 0 ? -1022 : exponent - 1023);
+    }
+
     public static String toString(double d) {
         return new FloatingDecimal(d).toJavaFormatString();
     }
@@ -181,7 +197,7 @@ public final class Double extends Number implements Comparable<Double> {
      *                               parsable number.
      */
     public static Double valueOf(String s) throws NumberFormatException {
-        return new Double(FloatingDecimal.readJavaFormatString(s).doubleValue());
+        return new Double(parseDouble(s));
     }
 
     public static Double valueOf(double i) {
@@ -201,6 +217,12 @@ public final class Double extends Number implements Comparable<Double> {
      * @since JDK1.2
      */
     public static double parseDouble(String s) throws NumberFormatException {
+        String special = s.trim();
+        if (special.equals("NaN") || special.equals("+NaN") || special.equals("-NaN")) return NaN;
+        if (special.equals("Infinity") || special.equals("+Infinity")) return POSITIVE_INFINITY;
+        if (special.equals("-Infinity")) return NEGATIVE_INFINITY;
+        String hex = HexadecimalFloatingPoint.input(s);
+        if (hex != null) return longBitsToDouble(HexadecimalFloatingPoint.bits(hex, 53, 11));
         return FloatingDecimal.readJavaFormatString(s).doubleValue();
     }
 

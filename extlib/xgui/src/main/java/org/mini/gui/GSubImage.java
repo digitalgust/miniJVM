@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 /*
  * To change this license header, choose License Headers and Project Properties.
  * To change this template file, choose Tools | Templates.

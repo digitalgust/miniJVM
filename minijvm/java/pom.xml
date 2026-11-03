@@ -17,6 +17,10 @@
             <name>MIT</name>
             <url>https://spdx.org/licenses/MIT.html</url>
         </license>
+        <license>
+            <name>GPL-2.0-only WITH Classpath-exception-2.0</name>
+            <url>https://openjdk.org/legal/gplv2+ce.html</url>
+        </license>
     </licenses>
     <scm>
         <connection>https://github.com/digitalgust/miniJVM.git</connection>
@@ -188,7 +192,17 @@
             <resource>
                 <directory>src/main/resource</directory>
                 <includes>
-                    <include>**/*.*</include>
+                    <include>**/*</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>${project.basedir}</directory>
+                <targetPath>META-INF</targetPath>
+                <includes>
+                    <include>LICENSE</include>
+                    <include>MIT_LICENSE</include>
+                    <include>CLASSPATH_EXCEPTION</include>
                 </includes>
                 <filtering>false</filtering>
             </resource>

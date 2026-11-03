@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package java.security;
 
 import java.util.Properties;

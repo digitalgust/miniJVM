@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.mini.apploader;
 
 import org.mini.glfm.Glfm;

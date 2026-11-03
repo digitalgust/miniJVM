@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package com.ebsee;
 
 import com.ebsee.j2c.Util;

@@ -74,7 +74,7 @@ import java.util.Objects;
  */
 public class Throwable {
 
-    Throwable cause;
+    Throwable cause = this;
     /**
      * WARNING: this must be the first variable. Specific details about the
      * <code>Throwable</code> object.
@@ -105,7 +105,7 @@ public class Throwable {
     }
 
     public Throwable(Throwable cause) {
-        this.cause = cause;
+        this(cause == null ? null : cause.toString(), cause);
     }
 
     public Throwable(String message, Throwable cause) {

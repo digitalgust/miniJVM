@@ -38,4 +38,17 @@ public final class Modifier {
   public static boolean isNative   (int v) { return (v &    NATIVE) != 0; }
   public static boolean isAbstract (int v) { return (v &  ABSTRACT) != 0; }
   public static boolean isInterface(int v) { return (v & INTERFACE) != 0; }
+  public static boolean isVolatile(int value) { return (value & VOLATILE) != 0; }
+  public static boolean isSynchronized(int value) { return (value & SYNCHRONIZED) != 0; }
+  public static boolean isStrict(int value) { return (value & STRICT) != 0; }
+  public static String toString(int value) {
+    int[] flags = {PUBLIC, PROTECTED, PRIVATE, ABSTRACT, STATIC, FINAL, TRANSIENT, VOLATILE, SYNCHRONIZED, NATIVE, STRICT, INTERFACE};
+    String[] words = {"public", "protected", "private", "abstract", "static", "final", "transient", "volatile", "synchronized", "native", "strictfp", "interface"};
+    StringBuilder text = new StringBuilder();
+    for (int i = 0; i < flags.length; i++) if ((value & flags[i]) != 0) {
+      if (text.length() != 0) text.append(' ');
+      text.append(words[i]);
+    }
+    return text.toString();
+  }
 }

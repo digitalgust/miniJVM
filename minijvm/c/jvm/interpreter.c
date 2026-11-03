@@ -929,7 +929,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 }
                                 case CONSTANT_CLASS: {
                                     stack->sp = sp;
-                                    r->other = classes_load_get_with_clinit(clazz->jloader, class_get_constant_classref(clazz, r->idx)->name, r);
+                                    r->other = classes_load_get_with_resolve(clazz->jloader, class_get_constant_classref(clazz, r->idx)->name, r);
                                     if (!r->other->ins_class) {
                                         r->other->ins_class = insOfJavaLangClass_create_get(r, r->other);
                                     }
@@ -3275,6 +3275,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             sp = stack->sp;
 
                             if (!r->ins) {
+                                /* Surface WHICH class failed: "new" on an unresolvable class
+                                 * must not degrade into a stackless OOM without a trace. */
+                                ConstantClassRef *ccf_ = class_get_constant_classref(clazz, r->idx);
+                                Utf8String *cname_ = ccf_ ? class_get_utf8_string(clazz, ccf_->stringIndex) : NULL;
+                                jvm_printf("[WARN] op_new failed in %s.%s : want=%s resolved=%s\n",
+                                           utf8_cstr(r->clazz->name), utf8_cstr(r->m->name),
+                                           cname_ ? utf8_cstr(cname_) : "?",
+                                           r->other ? utf8_cstr(r->other->name) : "NULL");
                                 goto label_outofmemory_throw;
                             }
 
@@ -4278,7 +4286,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             // find and cache the native method
             java_native_method *native = find_native_method(r->jvm, utf8_cstr(clazz->name), utf8_cstr(method->name), utf8_cstr(method->descriptor));
             if (!native) {
-                _nosuchmethod_check_exception(utf8_cstr(method->name), stack, r);
+                push_ref(stack, (__refer) exception_create_str(JVM_EXCEPTION_UNSATISFIEDLINK, r, utf8_cstr(method->name)));
                 ret = RUNTIME_STATUS_EXCEPTION;
             } else {
                 method->native_func = native->func_pointer;

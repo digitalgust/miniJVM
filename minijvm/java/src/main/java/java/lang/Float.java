@@ -139,6 +139,22 @@ public final class Float extends Number implements Comparable<Float> {
      * @param f the float to be converted.
      * @return a string representation of the argument.
      */
+    public static String toHexString(float value) {
+        if (isNaN(value)) return "NaN";
+        if (isInfinite(value)) return value < 0 ? "-Infinity" : "Infinity";
+        long bits = floatToRawIntBits(value);
+        long fraction = bits & 0x007fffffL;
+        int exponent = (int) ((bits >>> 23) & 255);
+        boolean zero = exponent == 0 && fraction == 0;
+        String hex = Long.toHexString(fraction << 1);
+        StringBuilder padded = new StringBuilder();
+        for (int i = hex.length(); i < 6; i++) padded.append('0');
+        padded.append(hex);
+        while (padded.length() > 1 && padded.charAt(padded.length() - 1) == '0') padded.setLength(padded.length() - 1);
+        return (bits < 0 ? "-" : "") + "0x" + (exponent == 0 ? "0." : "1.") + padded
+            + "p" + (zero ? 0 : exponent == 0 ? -126 : exponent - 127);
+    }
+
     public static String toString(float f) {
         return new FloatingDecimal(f).toJavaFormatString();
     }
@@ -178,7 +194,7 @@ public final class Float extends Number implements Comparable<Float> {
      *                               parsable number.
      */
     public static Float valueOf(String s) throws NumberFormatException {
-        return new Float(FloatingDecimal.readJavaFormatString(s).floatValue());
+        return new Float(parseFloat(s));
     }
 
     public static Float valueOf(float i) {
@@ -196,6 +212,12 @@ public final class Float extends Number implements Comparable<Float> {
      * @since JDK1.2
      */
     public static float parseFloat(String s) throws NumberFormatException {
+        String special = s.trim();
+        if (special.equals("NaN") || special.equals("+NaN") || special.equals("-NaN")) return NaN;
+        if (special.equals("Infinity") || special.equals("+Infinity")) return POSITIVE_INFINITY;
+        if (special.equals("-Infinity")) return NEGATIVE_INFINITY;
+        String hex = HexadecimalFloatingPoint.input(s);
+        if (hex != null) return intBitsToFloat((int) HexadecimalFloatingPoint.bits(hex, 24, 8));
         return FloatingDecimal.readJavaFormatString(s).floatValue();
     }
 

@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package java.net;
 
 import org.mini.net.SocketNative;

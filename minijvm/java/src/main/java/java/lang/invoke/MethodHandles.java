@@ -69,7 +69,8 @@ public class MethodHandles {
         public MethodHandle findConstructor(Class<?> clazz, MethodType type) throws NoSuchMethodException {
             Constructor m = clazz.getConstructor(type.parameterArray());
             if ((m.getModifiers() & (Modifier.STATIC)) == 0) {
-                MethodHandle mh = new MethodHandle(MethodHandle.REF_invokeVirtual, clazz.getClassLoader(), m);
+                MethodHandle mh = new MethodHandle(MethodHandle.REF_newInvokeSpecial, clazz.getClassLoader(),
+                    new Method(clazz, m.getReflectMethod()));
                 return mh;
             }
             throw new NoSuchMethodException();

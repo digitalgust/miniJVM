@@ -1645,21 +1645,21 @@ public class Collections {
 //                return StreamSupport.stream(spliterator(), true);
 //            }
 //
-//            public Iterator<Map.Entry<K,V>> iterator() {
-//                return new Iterator<Map.Entry<K,V>>() {
-//                    private final Iterator<? extends Map.Entry<? extends K, ? extends V>> i = c.iterator();
-//
-//                    public boolean hasNext() {
-//                        return i.hasNext();
-//                    }
-//                    public Map.Entry<K,V> next() {
-//                        return new UnmodifiableEntry<>(i.next());
-//                    }
-//                    public void remove() {
-//                        throw new UnsupportedOperationException();
-//                    }
-//                };
-//            }
+            public Iterator<Map.Entry<K,V>> iterator() {
+                return new Iterator<Map.Entry<K,V>>() {
+                    private final Iterator<? extends Map.Entry<? extends K, ? extends V>> i = c.iterator();
+
+                    public boolean hasNext() {
+                        return i.hasNext();
+                    }
+                    public Map.Entry<K,V> next() {
+                        return new UnmodifiableEntry<>(i.next());
+                    }
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
 
             @SuppressWarnings("unchecked")
             public Object[] toArray() {

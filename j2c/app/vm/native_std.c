@@ -2035,6 +2035,48 @@ struct java_lang_String *func_org_mini_fs_InnerFile_getTmpDir___Ljava_lang_Strin
 }
 
 
+/* Resolve an existing path, including symbolic links and Windows junctions.
+ * Input/output use the platform encoding; caller frees the result. */
+static char *mini_realpath(const char *path) {
+#if __JVM_OS_VS__ || __JVM_OS_MINGW__
+    HANDLE handle = CreateFileA(path, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (handle == INVALID_HANDLE_VALUE) return NULL;
+    DWORD size = GetFinalPathNameByHandleA(handle, NULL, 0, FILE_NAME_NORMALIZED);
+    char *buffer = size ? (char *) malloc((size_t) size + 1) : NULL;
+    DWORD length = buffer ? GetFinalPathNameByHandleA(handle, buffer, size + 1, FILE_NAME_NORMALIZED) : 0;
+    CloseHandle(handle);
+    if (!length || length > size) { free(buffer); return NULL; }
+    if (strncmp(buffer, "\\\\?\\UNC\\", 8) == 0) {
+        memmove(buffer + 2, buffer + 8, strlen(buffer + 8) + 1);
+        buffer[0] = buffer[1] = '\\';
+    } else if (strncmp(buffer, "\\\\?\\", 4) == 0) {
+        memmove(buffer, buffer + 4, strlen(buffer + 4) + 1);
+    }
+    return buffer;
+#else
+    return realpath(path, NULL);
+#endif
+}
+
+struct java_lang_String *func_org_mini_fs_InnerFile_realpath0___3B_Ljava_lang_String_2(JThreadRuntime *runtime, JArray *path) {
+    if (!path) return NULL;
+    Utf8String *text = utf8_create_c(path->prop.as_s8_arr);
+    ByteBuf *platform = bytebuf_create(0);
+    conv_utf8_2_platform_encoding(platform, text);
+    char *resolved = mini_realpath(platform->buf);
+    struct java_lang_String *result = NULL;
+    if (resolved) {
+        utf8_clear(text);
+        conv_platform_encoding_2_utf8(text, resolved);
+        result = (struct java_lang_String *) construct_string_with_cstr(runtime, utf8_cstr(text));
+        free(resolved);
+    }
+    bytebuf_destory(platform);
+    utf8_destory(text);
+    return result;
+}
+
 struct java_lang_String *func_org_mini_fs_InnerFile_getcwd___Ljava_lang_String_2(JThreadRuntime *runtime) {
     ByteBuf *platformPath = bytebuf_create(1024);
 

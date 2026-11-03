@@ -74,7 +74,7 @@ s32 com_sun_cldc_io_ResourceInputStream_open(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Class_forName(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *jstr = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    s32 resolve = localvar_getInt(runtime->localvar, 1);
+    s32 initialize = localvar_getInt(runtime->localvar, 1);
     Instance *classloader = (Instance *) localvar_getRefer(runtime->localvar, 2);
     JClass *cl = NULL;
     s32 ret = RUNTIME_STATUS_NORMAL;
@@ -82,7 +82,10 @@ s32 java_lang_Class_forName(Runtime *runtime, JClass *clazz) {
         Utf8String *ustr = utf8_create();
         jstring_2_utf8(jstr, ustr, runtime);
         utf8_replace_c(ustr, ".", "/");
-        cl = classes_load_get_with_clinit(classloader, ustr, runtime);
+        /* Loading/linking a class does not initialize it unless requested. */
+        cl = initialize
+             ? classes_load_get_with_clinit(classloader, ustr, runtime)
+             : classes_load_get_with_resolve(classloader, ustr, runtime);
         if (!cl) {
             Instance *exception = exception_create_str(JVM_EXCEPTION_CLASSNOTFOUND, runtime, utf8_cstr(ustr));
             push_ref(stack, (__refer) exception);
@@ -255,15 +258,23 @@ s32 java_lang_Class_getSuperclass(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Class_getInterfaces(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 0));
-    s32 len = cl ? cl->interfacePool.clasz_used : 0;
+    s32 is_array = cl && cl->name && utf8_char_at(cl->name, 0) == '[';
+    s32 len = is_array ? 2 : cl ? cl->interfacePool.clasz_used : 0;
     Utf8String *ustr = utf8_create_c(STR_INS_JAVA_LANG_CLASS);
-    Instance *jarr = jarray_create_by_type_name(runtime, len, ustr, cl->jloader);
+    Instance *jarr = jarray_create_by_type_name(runtime, len, ustr, NULL);
     utf8_destroy(ustr);
     if (!jarr) return exception_throw_out_of_memory(runtime);
     s32 i;
     for (i = 0; i < len; i++) {
-        ConstantClassRef *ccr = (cl->interfacePool.clasz + i);
-        JClass *other = classes_load_get_with_clinit(cl->jloader, class_get_constant_utf8(cl, ccr->stringIndex)->utfstr, runtime);
+        JClass *other;
+        if (is_array) {
+            Utf8String *interface_name = utf8_create_c(i == 0 ? "java/lang/Cloneable" : "java/io/Serializable");
+            other = classes_load_get_with_resolve(NULL, interface_name, runtime);
+            utf8_destroy(interface_name);
+        } else {
+            ConstantClassRef *ccr = (cl->interfacePool.clasz + i);
+            other = classes_load_get_with_resolve(cl->jloader, class_get_constant_utf8(cl, ccr->stringIndex)->utfstr, runtime);
+        }
         if (other) {
             Instance *cins = insOfJavaLangClass_create_get(runtime, other);
             jarray_set_field(jarr, i, (s64) (intptr_t) cins);
@@ -1184,7 +1195,10 @@ s32 java_lang_System_nanotime(Runtime *runtime, JClass *clazz) {
 s32 java_lang_System_identityHashCode(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *tmps = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    push_ref(stack, (__refer) tmps);
+    /* The declared return type is int, not a reference. Match Object.hashCode's
+     * address hash without invoking an overridden Java hashCode method. */
+    u64 address = (u64) (intptr_t) tmps;
+    push_int(stack, (s32) (address ^ (address >> 32)));
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
@@ -1417,7 +1431,15 @@ s32 java_lang_Thread_getContextClassLoader0(Runtime *runtime, JClass *clazz) {
     Instance *ins_thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Runtime *rt_thread = jthread_get_stackframe_value(runtime->jvm, ins_thread);
     if (rt_thread) {
-        push_ref(stack, rt_thread->thrd_info->context_classloader);
+        Instance *cl = rt_thread->thrd_info->context_classloader;
+        if (!cl) {
+            /* HotSpot defaults an unset context class loader to the SYSTEM
+             * class loader; leaving it NULL breaks delegates that rely on the
+             * TCCL (e.g. janino's ClassLoaderIClassLoader). */
+            s32 ret = execute_method_impl(runtime->jvm->shortcut.launcher_getSystemClassLoader, runtime);
+            if (ret == RUNTIME_STATUS_NORMAL) cl = pop_ref(runtime->stack);
+        }
+        push_ref(stack, cl);
     } else {
         push_ref(stack, NULL);
     }

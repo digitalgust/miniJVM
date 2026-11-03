@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.mini.gui.gscript;
 
 public class Int extends DataType {

@@ -1,6 +1,23 @@
-Author description:
-/minijvm/java/ -----------GPL2.0 However, you can use the minijvm_rt.jar binary file in the release to avoid the infectious nature of the GPL.
-/*             -----------MIT
+miniJVM licensing
+=================
+
+Code authored for the miniJVM project is licensed under the MIT License below,
+unless a file or directory says otherwise.
+
+The Java runtime library also contains files derived from OpenJDK. Those files
+retain their own notices and are licensed under:
+
+    GPL-2.0-only WITH Classpath-exception-2.0
+
+The Classpath Exception permits independent applications to link with the
+runtime library and to be distributed under terms of the application's
+author's choice. It does not remove the GPL obligations for the covered
+runtime files themselves or for modifications derived from them. Distributing
+compiled .class or JAR files does not by itself change their license.
+
+Distributions of minijvm_rt.jar must include its META-INF/MIT_LICENSE, META-INF/LICENSE,
+META-INF/CLASSPATH_EXCEPTION and META-INF/NOTICE files. Individual source-file
+notices take precedence over this summary.
 
 MIT License
 

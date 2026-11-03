@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package com.ebsee.classparser;
 /**
  * Thrown when parsing fails on a Java .class file. Subclasses of this

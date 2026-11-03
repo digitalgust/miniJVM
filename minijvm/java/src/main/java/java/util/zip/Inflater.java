@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package java.util.zip;
 
 import org.mini.zip.Zip;

@@ -62,8 +62,8 @@ const c8 STR_CLASS_JAVA_IO_FILENOTFOUND[] = "java.io.FileNotFoundException";
 const c8 STR_CLASS_JAVA_LANG_ARITHMETIC[] = "java.lang.ArithmeticException";
 const c8 STR_CLASS_JAVA_LANG_CLASSNOTFOUND[] = "java.lang.ClassNotFoundException";
 const c8 STR_CLASS_JAVA_LANG_NULLPOINTER[] = "java.lang.NullPointerException";
-const c8 STR_CLASS_JAVA_LANG_NOSUCHMETHOD[] = "java.lang.NoSuchMethodException";
-const c8 STR_CLASS_JAVA_LANG_NOSUCHFIELD[] = "java.lang.NoSuchFieldException";
+const c8 STR_CLASS_JAVA_LANG_NOSUCHMETHOD[] = "java.lang.NoSuchMethodError";
+const c8 STR_CLASS_JAVA_LANG_NOSUCHFIELD[] = "java.lang.NoSuchFieldError";
 const c8 STR_CLASS_JAVA_LANG_ILLEGALARGUMENT[] = "java.lang.IllegalArgumentException";
 const c8 STR_CLASS_JAVA_LANG_CLASSCAST[] = "java.lang.ClassCastException";
 const c8 STR_CLASS_JAVA_LANG_ARRAYINDEXOUTOFBOUNDS[] = "java.lang.ArrayIndexOutOfBoundsException";
@@ -130,6 +130,7 @@ const c8 *STRS_CLASS_EXCEPTION[] = {
     STR_CLASS_JAVA_LANG_ABSTRACTMETHODERROR,
     STR_CLASS_JAVA_LANG_ILLEGALACCESSERROR,
     STR_CLASS_JAVA_LANG_INCOMPATIBLECLASSCHANGEERROR,
+    "java.lang.UnsatisfiedLinkError",
 };
 
 c8 *INST_NAME[] = {

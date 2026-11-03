@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.mini.layout.xwebview;
 
 import org.mini.gui.GFrame;

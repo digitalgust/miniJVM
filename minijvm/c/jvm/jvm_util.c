@@ -258,17 +258,14 @@ JClass *array_class_get_by_name(Runtime *runtime, Instance *jloader, Utf8String 
     JClass *clazz = NULL;
     if (name) {
         Utf8String *ustr = utf8_create_c("[");
-        if (!isDataReferByTag(utf8_char_at(name, 0))) {
-            //not : L [
-            if (!isDataReferByTag(utf8_char_at(name, 0))) {
-                utf8_append_c(ustr, "L");
-            }
+        /* A class binary name beginning with L is not necessarily an L...; descriptor. */
+        if (utf8_char_at(name, 0) == '['
+            || (utf8_char_at(name, 0) == 'L' && utf8_char_at(name, name->length - 1) == ';')) {
             utf8_append(ustr, name);
-            if (utf8_char_at(name, name->length - 1) != ';') {
-                utf8_append_c(ustr, ";");
-            }
         } else {
+            utf8_append_c(ustr, "L");
             utf8_append(ustr, name);
+            utf8_append_c(ustr, ";");
         }
         clazz = array_class_create_get(runtime, jloader, ustr);
         utf8_destroy(ustr);
@@ -1312,12 +1309,21 @@ s32 check_suspend_and_pause(Runtime *runtime) {
 
 //===============================    实例化数组  ==================================
 Instance *jarray_create_by_class(Runtime *runtime, s32 count, JClass *clazz) {
-    if (count < 0 || !clazz)return NULL;
+    if (count < 0 || !clazz) {
+        jvm_printf("[WARN] array create failed: count=%d clazz=%p\n", count, (void *) clazz);
+        return NULL;
+    }
     s32 typeIdx = clazz->mb.arr_type_index;
     s32 insSize = jvm_array_alloc_size(typeIdx, count);
-    if (insSize < 0) return NULL;
+    if (insSize < 0) {
+        jvm_printf("[WARN] array create failed: insSize<0 count=%d typeIdx=%d\n", count, typeIdx);
+        return NULL;
+    }
     Instance *arr = gc_obj_alloc(runtime, insSize, IMMIX_OBJECT_ARRAY);
-    if (!arr) return NULL;
+    if (!arr) {
+        jvm_printf("[WARN] array create failed: gc_obj_alloc NULL count=%d insSize=%d\n", count, insSize);
+        return NULL;
+    }
     arr->mb.heap_size = insSize;
     arr->mb.type = MEM_TYPE_ARR;
     arr->mb.clazz = clazz;

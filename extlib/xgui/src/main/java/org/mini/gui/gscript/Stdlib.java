@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.mini.gui.gscript;
 
 import org.mini.apploader.AppManager;

@@ -64,6 +64,15 @@ public final class Field<T> extends AccessibleObject implements Member {
         clazz = cl;
     }
 
+    private void access(Class<?> caller, Object obj, boolean write) throws IllegalAccessException {
+        checkAccess(caller, clazz, getModifiers(), obj);
+        if (!Modifier.isStatic(getModifiers())) {
+            if (obj == null) throw new NullPointerException();
+            if (!clazz.isInstance(obj)) throw new IllegalArgumentException("instance type mismatch");
+        }
+        if (write && Modifier.isFinal(getModifiers()) && (!isAccessible() || Modifier.isStatic(getModifiers()))) throw new IllegalAccessException();
+    }
+
     public ReflectField getRefField() {
         return refField;
     }
@@ -100,7 +109,7 @@ public final class Field<T> extends AccessibleObject implements Member {
     }
 
     public Type getGenericType() {
-        return refField.getGenericType();
+        return org.mini.reflect.GenericSignature.forField(clazz, refField.signature, getType());
     }
 
     @Override
@@ -184,6 +193,7 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public Object get(Object obj)
             throws IllegalArgumentException, IllegalAccessException {
+        access(org.mini.vm.RefNative.getCallerClass(), obj, false);
         return refField.getValObj(obj);
     }
 
@@ -207,7 +217,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public boolean getBoolean(Object obj)
             throws IllegalArgumentException, IllegalAccessException {
-        return (Boolean) refField.getValObj(obj);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, false);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        return (Boolean) org.mini.reflect.ReflectMethod.convertArgument(boolean.class, refField.getValObj(obj));
     }
 
     /**
@@ -230,7 +242,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public byte getByte(Object obj)
             throws IllegalArgumentException, IllegalAccessException {
-        return (Byte) refField.getValObj(obj);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, false);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        return (Byte) org.mini.reflect.ReflectMethod.convertArgument(byte.class, refField.getValObj(obj));
     }
 
     /**
@@ -255,7 +269,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public char getChar(Object obj)
             throws IllegalArgumentException, IllegalAccessException {
-        return (Character) refField.getValObj(obj);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, false);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        return (Character) org.mini.reflect.ReflectMethod.convertArgument(char.class, refField.getValObj(obj));
     }
 
     /**
@@ -280,7 +296,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public short getShort(Object obj)
             throws IllegalArgumentException, IllegalAccessException {
-        return (Short) refField.getValObj(obj);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, false);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        return (Short) org.mini.reflect.ReflectMethod.convertArgument(short.class, refField.getValObj(obj));
     }
 
     /**
@@ -305,7 +323,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public int getInt(Object obj)
             throws IllegalArgumentException, IllegalAccessException {
-        return (Integer) refField.getValObj(obj);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, false);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        return (Integer) org.mini.reflect.ReflectMethod.convertArgument(int.class, refField.getValObj(obj));
     }
 
     /**
@@ -330,7 +350,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public long getLong(Object obj)
             throws IllegalArgumentException, IllegalAccessException {
-        return (Long) refField.getValObj(obj);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, false);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        return (Long) org.mini.reflect.ReflectMethod.convertArgument(long.class, refField.getValObj(obj));
     }
 
     /**
@@ -355,7 +377,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public float getFloat(Object obj)
             throws IllegalArgumentException, IllegalAccessException {
-        return (Float) refField.getValObj(obj);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, false);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        return (Float) org.mini.reflect.ReflectMethod.convertArgument(float.class, refField.getValObj(obj));
     }
 
     /**
@@ -380,7 +404,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public double getDouble(Object obj)
             throws IllegalArgumentException, IllegalAccessException {
-        return (Double) refField.getValObj(obj);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, false);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        return (Double) org.mini.reflect.ReflectMethod.convertArgument(double.class, refField.getValObj(obj));
     }
 
     /**
@@ -455,7 +481,8 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public void set(Object obj, Object value)
             throws IllegalArgumentException, IllegalAccessException {
-        refField.setValObj(obj, value);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, true);
+        refField.setValObj(obj, org.mini.reflect.ReflectMethod.convertArgument(getType(), value));
     }
 
     /**
@@ -479,7 +506,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public void setBoolean(Object obj, boolean z)
             throws IllegalArgumentException, IllegalAccessException {
-        refField.setValObj(obj, (Boolean) z);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, true);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        refField.setValObj(obj, org.mini.reflect.ReflectMethod.convertArgument(getType(), z));
     }
 
     /**
@@ -503,7 +532,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public void setByte(Object obj, byte b)
             throws IllegalArgumentException, IllegalAccessException {
-        refField.setValObj(obj, (Byte) b);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, true);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        refField.setValObj(obj, org.mini.reflect.ReflectMethod.convertArgument(getType(), b));
     }
 
     /**
@@ -527,7 +558,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public void setChar(Object obj, char c)
             throws IllegalArgumentException, IllegalAccessException {
-        refField.setValObj(obj, (Character) c);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, true);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        refField.setValObj(obj, org.mini.reflect.ReflectMethod.convertArgument(getType(), c));
     }
 
     /**
@@ -551,7 +584,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public void setShort(Object obj, short s)
             throws IllegalArgumentException, IllegalAccessException {
-        refField.setValObj(obj, (Short) s);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, true);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        refField.setValObj(obj, org.mini.reflect.ReflectMethod.convertArgument(getType(), s));
     }
 
     /**
@@ -575,7 +610,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public void setInt(Object obj, int i)
             throws IllegalArgumentException, IllegalAccessException {
-        refField.setValObj(obj, (Integer) i);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, true);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        refField.setValObj(obj, org.mini.reflect.ReflectMethod.convertArgument(getType(), i));
     }
 
     /**
@@ -599,7 +636,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public void setLong(Object obj, long l)
             throws IllegalArgumentException, IllegalAccessException {
-        refField.setValObj(obj, (Long) l);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, true);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        refField.setValObj(obj, org.mini.reflect.ReflectMethod.convertArgument(getType(), l));
     }
 
     /**
@@ -623,7 +662,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public void setFloat(Object obj, float f)
             throws IllegalArgumentException, IllegalAccessException {
-        refField.setValObj(obj, (Float) f);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, true);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        refField.setValObj(obj, org.mini.reflect.ReflectMethod.convertArgument(getType(), f));
     }
 
     /**
@@ -647,7 +688,9 @@ public final class Field<T> extends AccessibleObject implements Member {
      */
     public void setDouble(Object obj, double d)
             throws IllegalArgumentException, IllegalAccessException {
-        refField.setValObj(obj, (Double) d);
+        access(org.mini.vm.RefNative.getCallerClass(), obj, true);
+        if (!getType().isPrimitive()) throw new IllegalArgumentException("not a primitive field");
+        refField.setValObj(obj, org.mini.reflect.ReflectMethod.convertArgument(getType(), d));
     }
 
     public String toString() {

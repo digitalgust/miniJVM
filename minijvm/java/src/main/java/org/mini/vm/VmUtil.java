@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.mini.vm;
 
 import org.mini.reflect.ReflectMethod;

@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package test.ext;
 
 import org.mini.gl.GL;

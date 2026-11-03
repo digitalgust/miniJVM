@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 public class InterpLoopBench {
     // called 4900 times (< 5000 entry threshold): stays interpreted forever;
     // each call runs a 4000-iteration loop -> ~19.6M interpreted backedges,

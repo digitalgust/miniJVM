@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package java.lang.reflect;
 
 import org.mini.vm.RefNative;
@@ -93,7 +95,7 @@ public class Proxy implements java.io.Serializable {
             final Constructor<?> cons = cl.getConstructor(constructorParams);
             final InvocationHandler ih = h;
             return cons.newInstance(new Object[]{h});
-        } catch (IllegalAccessException | InstantiationException e) {
+        } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
             throw new InternalError(e.toString());
         } catch (NoSuchMethodException e) {
             throw new InternalError(e.toString());

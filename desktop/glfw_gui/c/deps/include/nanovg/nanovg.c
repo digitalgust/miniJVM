@@ -2923,9 +2923,12 @@ void nvgTextBoxBounds(NVGcontext* ctx, float x, float y, float breakRowWidth, co
 			rmaxx = x + row->maxx + dx;
 			minx = nvg__minf(minx, rminx);
 			maxx = nvg__maxf(maxx, rmaxx);
-			// Vertical bounds.
-			miny = nvg__minf(miny, y + rminy);
-			maxy = nvg__maxf(maxy, y + rmaxy);
+			// Keep the line box, but include glyphs extending beyond font metrics.
+			// This also includes the rasterizer's interpolation border and rounding.
+			float glyphBounds[4];
+			fonsTextBounds(ctx->fs, 0, y * scale, row->start, row->end+1, glyphBounds);
+			miny = nvg__minf(miny, nvg__minf(y + rminy, glyphBounds[1] * invscale));
+			maxy = nvg__maxf(maxy, nvg__maxf(y + rmaxy, glyphBounds[3] * invscale));
 
 			y += lineh * state->lineHeight;
 		}

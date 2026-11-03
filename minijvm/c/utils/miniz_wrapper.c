@@ -17,13 +17,14 @@ s32 zip_loadfile(char const *jarpath, char const *filename, ByteBuf *buf) {
         ret = -1;
     } else {
 
-        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, 0);//
+        /* ZIP/JAR entry names are case-sensitive, including Java class names. */
+        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, MZ_ZIP_FLAG_CASE_SENSITIVE);
         if (!mz_zip_reader_file_stat(&zipArchive, file_index, &file_stat)) {
             ret = -1;
         } else {
             size_t uncompressed_size = (size_t) file_stat.m_uncomp_size;
             bytebuf_expand(buf, uncompressed_size);
-            mz_bool p = mz_zip_reader_extract_file_to_mem(&zipArchive, file_stat.m_filename, buf->buf, uncompressed_size, 0);
+            mz_bool p = mz_zip_reader_extract_file_to_mem(&zipArchive, file_stat.m_filename, buf->buf, uncompressed_size, MZ_ZIP_FLAG_CASE_SENSITIVE);
             if (p == MZ_FALSE) {
                 ret = -1;
             } else {
@@ -54,7 +55,7 @@ s32 zip_loadfile_to_mem(char const *jarpath, char const *filename, c8 *buf, s64 
         ret = -1;
     } else {
 
-        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, 0);//
+        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, MZ_ZIP_FLAG_CASE_SENSITIVE);
         if (!mz_zip_reader_file_stat(&zipArchive, file_index, &file_stat)) {
             ret = -1;
         } else {
@@ -84,7 +85,7 @@ s64 zip_get_file_unzip_size(char const *jarpath, char const *filename) {
         ret = -1;
     } else {
 
-        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, 0);//
+        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, MZ_ZIP_FLAG_CASE_SENSITIVE);
         if (!mz_zip_reader_file_stat(&zipArchive, file_index, &file_stat)) {
             ret = -1;
         } else {
@@ -111,7 +112,7 @@ s32 zip_get_file_index(char const *jarpath, char const *filename) {
         ret = -1;
     } else {
 
-        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, 0);//
+        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, MZ_ZIP_FLAG_CASE_SENSITIVE);
         if (!mz_zip_reader_file_stat(&zipArchive, file_index, &file_stat)) {
             ret = -1;
         } else {

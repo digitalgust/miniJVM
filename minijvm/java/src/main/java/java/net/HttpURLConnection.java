@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package java.net;
 
 import javax.microedition.io.Connection;

@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -55,12 +57,11 @@ public class ReflectField {
     }
 
     public Type getGenericType() {
-        String s = "";
-        if (signature != null) signature.substring(signature.indexOf(')') + 1);
-        else s = descriptor.substring(descriptor.indexOf(')') + 1);
-        TypeFieldImpl t = new TypeFieldImpl();
-        t.name = s;
-        return t;
+        // A FIELD's "signature" IS the complete type signature (JVMS 4.7.9) - unlike a
+        // method signature there is no "(...)ret" layout to strip; the previous code was
+        // copied from the method path and even dropped its substring() result.
+        return GenericSignature.forField(refClass.classObj, signature,
+            ReflectClass.getClassByDescriptor(refClass.classObj.getClassLoader(), descriptor));
     }
 
     public void setValObj(Object object, Object val) {

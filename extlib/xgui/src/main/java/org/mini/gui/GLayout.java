@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.mini.gui;
 
 import org.mini.layout.XContainer;

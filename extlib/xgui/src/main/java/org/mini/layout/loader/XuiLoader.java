@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.mini.layout.loader;
 
 import org.mini.apploader.AppLoader;

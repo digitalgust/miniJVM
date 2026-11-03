@@ -692,17 +692,22 @@ int _mi_prim_getenv(const char* name, char* result, size_t result_size) {
 // Random
 //----------------------------------------------------------------
 
+#if defined(MI_USE_RTLGENRANDOM) || MI_WIN_DESKTOP
+// Windows 7 needs this path even without MI_USE_RTLGENRANDOM (see below).
+#pragma comment (lib,"advapi32.lib")
+#define RtlGenRandom  SystemFunction036
+mi_decl_externc BOOLEAN NTAPI RtlGenRandom(PVOID RandomBuffer, ULONG RandomBufferLength);
+#endif
+
 #if defined(MI_USE_RTLGENRANDOM) // || defined(__cplusplus)
 // We prefer to use BCryptGenRandom instead of (the unofficial) RtlGenRandom but when using
 // dynamic overriding, we observed it can raise an exception when compiled with C++, and
 // sometimes deadlocks when also running under the VS debugger.
 // In contrast, issue #623 implies that on Windows Server 2019 we need to use BCryptGenRandom.
 // To be continued..
-#pragma comment (lib,"advapi32.lib")
-#define RtlGenRandom  SystemFunction036
-mi_decl_externc BOOLEAN NTAPI RtlGenRandom(PVOID RandomBuffer, ULONG RandomBufferLength);
-
 bool _mi_prim_random_buf(void* buf, size_t buf_len) {
+  mi_assert(buf_len <= ULONG_MAX);
+  if (buf_len > ULONG_MAX) return false;
   return (RtlGenRandom(buf, (ULONG)buf_len) != 0);
 }
 
@@ -718,6 +723,16 @@ static  PBCryptGenRandom pBCryptGenRandom = NULL;
 bool _mi_prim_random_buf(void* buf, size_t buf_len) {
   mi_assert(buf_len <= ULONG_MAX);
   if (buf_len > ULONG_MAX) return false;
+  #if MI_WIN_DESKTOP
+  // During TLS process attach, Win7's BCryptGenRandom can register a thread-pool
+  // wait and block on a worker whose startup is waiting for the loader to finish.
+  // mimalloc 3.5 reseeds both the main and metadata heaps here; the second call
+  // reproduces this deadlock. Use the OS RNG already supported by mimalloc on
+  // Win7 and older, and retain BCrypt on Win8+ (including Server 2019).
+  if (win_major_version < 6 || (win_major_version == 6 && win_minor_version <= 1)) {
+    return (RtlGenRandom(buf, (ULONG)buf_len) != 0);
+  }
+  #endif
   mi_atomic_do_once {
     HINSTANCE hDll = mi_win_loadlibrary(TEXT("bcrypt.dll"));
     if (hDll != NULL) {

@@ -221,6 +221,7 @@ s32 org_mini_reflect_ReflectField_getFieldVal(Runtime *runtime, JClass *clazz) {
 
     c8 *fptr;
     if (fi->access_flags & ACC_STATIC) {
+        class_clinit(fi->_this_class, runtime);
         fptr = getStaticFieldPtr(fi);
     } else {
         fptr = getInstanceFieldPtr(ins, fi);
@@ -265,6 +266,7 @@ s32 org_mini_reflect_ReflectField_setFieldVal(Runtime *runtime, JClass *clazz) {
 
     c8 *fptr;
     if (fi->access_flags & ACC_STATIC) {
+        class_clinit(fi->_this_class, runtime);
         fptr = getStaticFieldPtr(fi);
     } else {
         fptr = getInstanceFieldPtr(ins, fi);
@@ -1495,6 +1497,22 @@ s32 org_mini_reflect_ReflectMethod_invokeMethod(Runtime *runtime, JClass *clazz)
     Instance *argsArr = (Instance *) localvar_getRefer(runtime->localvar, pos++);
     s32 ret = 0;
     if (methodInfo) {
+        /* Reflection invokes ordinary instance methods virtually; private methods and constructors are exact. */
+        if (!methodInfo->is_static && !(methodInfo->access_flags & ACC_PRIVATE)
+            && utf8_char_at(methodInfo->name, 0) != '<') {
+            ConstantMethodRef reference = {0};
+            Runtime linker = *runtime;
+            MethodInfo *target = NULL;
+            linker.clazz = methodInfo->_this_class;
+            reference.methodInfo = methodInfo;
+            reference.clsName = methodInfo->_this_class->name;
+            reference.name = methodInfo->name;
+            reference.descriptor = methodInfo->descriptor;
+            u8 opcode = (methodInfo->_this_class->cff.access_flags & ACC_INTERFACE) ? op_invokeinterface : op_invokevirtual;
+            s32 error = select_dispatch_target(&linker, &reference, ins, opcode, &target);
+            if (error) { exception_throw(error, runtime, "reflection method dispatch"); return RUNTIME_STATUS_EXCEPTION; }
+            methodInfo = target;
+        }
         s32 i;
         s32 argsLen = argsArr ? jarray_length(argsArr) : 0;
         //validate before anything is pushed: null cannot be unboxed into a primitive parameter
@@ -1602,8 +1620,6 @@ s32 org_mini_reflect_ReflectMethod_invokeMethod(Runtime *runtime, JClass *clazz)
                     //do nothing
                 }
             }
-        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
-            print_exception(runtime);
         }
     } else
         push_ref(runtime->stack, NULL);

@@ -36,7 +36,7 @@ import java.io.IOException;
  *
  * @since 1.5
  */
-public interface Closeable {
+public interface Closeable extends AutoCloseable {
 
     /**
      * Closes this stream and releases any system resources associated

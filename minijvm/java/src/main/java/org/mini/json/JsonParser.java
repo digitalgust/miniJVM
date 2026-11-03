@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 package org.mini.json;
 
 import java.lang.reflect.Array;
@@ -13,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.mini.util.SysLog;
+//import org.mini.util.SysLog;
 
 public class JsonParser<T> {
     private List<SimpleModule> modules = new ArrayList<>();
@@ -694,13 +696,13 @@ public class JsonParser<T> {
                             }
                             continue;
                         }
-                        if (!(ins instanceof Polymorphic))
-                            SysLog.warn("[JSON]" + clazz.getName() + " field '" + ((JsonString) jc).str + "' setter or field not found.");
+//                        if (!(ins instanceof Polymorphic))
+//                            SysLog.warn("[JSON]" + clazz.getName() + " field '" + ((JsonString) jc).str + "' setter or field not found.");
                     }
                     return ins;
                 case JsonCell.TYPE_LIST:
-                    if (types == null)
-                        SysLog.warn("[JSON] need type declare , class:" + clazz);
+//                    if (types == null)
+//                        SysLog.warn("[JSON] need type declare , class:" + clazz);
                     if (clazz == null)
                         clazz = ArrayList.class;
                     list = (JsonList<JsonCell>) json;
