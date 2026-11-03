@@ -1,0 +1,12 @@
+miniJVM runtime library notices
+===============================
+
+This JAR contains a mixture of MIT-licensed miniJVM code and OpenJDK-derived
+files licensed under GPL-2.0-only WITH Classpath-exception-2.0.
+
+The applicable license is identified by each source file's header. The MIT
+license, full GPL version 2 text and Classpath Exception are included alongside
+this notice as META-INF/MIT_LICENSE, META-INF/LICENSE and
+META-INF/CLASSPATH_EXCEPTION.
+
+OpenJDK sources: https://github.com/openjdk/jdk6/tree/3e49aa876353eaa215cde71eb21acc9b7f9872a0

@@ -344,6 +344,10 @@ mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 
 ## License
 
-License: MIT
+miniJVM-authored code is MIT licensed. The Java runtime also contains
+OpenJDK-derived files under `GPL-2.0-only WITH Classpath-exception-2.0`.
+The Classpath Exception permits linking independent applications without
+placing those applications under the GPL. See [LICENSE](LICENSE) for the
+license scope and distribution requirements.
 
 Gust, digitalgust@163.com

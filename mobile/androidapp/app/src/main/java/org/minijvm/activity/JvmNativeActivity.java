@@ -51,7 +51,6 @@ import com.tencent.mm.opensdk.modelpay.PayReq;
 import com.tencent.mm.opensdk.openapi.IWXAPI;
 import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 
-import org.minijvm.activity.bridge.Base64;
 import org.minijvm.activity.bridge.JsonPrinter;
 import org.minijvm.activity.bridge.RMCDescriptor;
 import org.minijvm.activity.bridge.ReflectUtil;
@@ -1450,7 +1449,8 @@ public class JvmNativeActivity extends NativeActivity {
      */
     public Map<String, String> payV2(String orderInfo) {
         try {
-            String decOrderInfo = new String(Base64.decode(orderInfo), "utf-8");
+            String decOrderInfo = new String(android.util.Base64.decode(orderInfo,
+                    android.util.Base64.DEFAULT), "utf-8");
             Thread t = new Thread(() -> {
                 PayTask alipay = new PayTask(JvmNativeActivity.this);
                 Map<String, String> result = alipay.payV2(decOrderInfo, true);
@@ -1472,7 +1472,8 @@ public class JvmNativeActivity extends NativeActivity {
      */
     public Map<String, String> wxPay(String orderInfo) {
         try {
-            orderInfo = new String(Base64.decode(orderInfo), "utf-8");
+            orderInfo = new String(android.util.Base64.decode(orderInfo,
+                    android.util.Base64.DEFAULT), "utf-8");
             org.minijvm.activity.bridge.JsonParser<Map> parser = new org.minijvm.activity.bridge.JsonParser<>();
             Map params = parser.deserial(orderInfo, Map.class);
             String appId = String.valueOf(params.get("appid"));
@@ -1535,7 +1536,8 @@ public class JvmNativeActivity extends NativeActivity {
     public synchronized Map<String, String> thirdPartyAuth(String requestBase64) {
         Map<String, String> failed = new HashMap<>();
         try {
-            String requestJson = new String(Base64.decode(requestBase64), "utf-8");
+            String requestJson = new String(android.util.Base64.decode(requestBase64,
+                    android.util.Base64.DEFAULT), "utf-8");
             org.minijvm.activity.bridge.JsonParser<Map> parser =
                     new org.minijvm.activity.bridge.JsonParser<>();
             Map request = parser.deserial(requestJson, Map.class);
