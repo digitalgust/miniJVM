@@ -105,8 +105,8 @@ JObject *construct_string_with_utfraw_index(JThreadRuntime *runtime, s32 utfInde
     }
     Utf8String *ustr = get_utf8str(utfRaw);
     JObject *ins = construct_string_with_ustr(runtime, ustr);
+    ins = jstring_intern(ins);
     utfRaw->jstr = ins;
-    gc_refer_hold(ins);
     return ins;
 }
 
@@ -117,7 +117,7 @@ JObject *construct_string_with_cstr(JThreadRuntime *runtime, c8 const *str) {
 
 JObject *construct_string_with_cstr_and_size(JThreadRuntime *runtime, c8 const *str, s32 size) {
     if (!str)return NULL;
-    Utf8String *ustr = utf8_create_c(str);
+    Utf8String *ustr = utf8_create_part_c(str, 0, size);
     JObject *jstr = construct_string_with_ustr(runtime, ustr);
     utf8_destory(ustr);
     return jstr;
@@ -134,7 +134,11 @@ JObject *construct_string_with_ustr(JThreadRuntime *runtime, Utf8String *str) {
     JObject *ins = new_instance_with_class(runtime, clazz);
 
     u16 *buf = (u16 *) jvm_calloc(size * data_type_bytes[DATATYPE_JCHAR]);
-    s32 u16len = utf8_2_unicode(str, buf);
+    s32 u16len = j2c_utf8_2_unicode(str, buf);
+    if (u16len < 0) {
+        jvm_free(buf);
+        return NULL;
+    }
     JArray *carr = multi_array_create_by_typename(runtime, &u16len, 1, "[C");
     carr->prop.arr_length = u16len;
     memcpy(carr->prop.as_s8_arr, buf, u16len * data_type_bytes[DATATYPE_JCHAR]);
@@ -171,7 +175,7 @@ static JArray *multi_array_create_impl(JThreadRuntime *runtime, s32 *dimm, s32 d
         s32 totalBytes = arr_len * sizeof(char *) + sizeof(JArray);
         JArray *arr = (JArray *) jvm_calloc(totalBytes);
         arr->prop.heap_size = totalBytes;
-        arr->prop.clazz = cell_class;
+        arr->prop.clazz = clazz;
         arr->vm_table = g_procache.java_lang_object_raw->vmtable;
         arr->prop.type = INS_TYPE_ARRAY;
         arr->prop.arr_length = arr_len;
@@ -321,7 +325,13 @@ InstProp *instance_copy(JThreadRuntime *runtime, InstProp *src, s32 deep_copy) {
     } else if (src->type == INS_TYPE_ARRAY) {
         ins_len = src->arr_length * data_type_bytes[src->arr_type] + sizeof(JArray);
     }
-    InstProp *dst = (InstProp *) jvm_malloc(ins_len);
+    if (!ins_len) return NULL;
+    InstProp *dst = (InstProp *) jvm_calloc(ins_len);
+    if (!dst) return NULL;
+    dst->heap_size = ins_len;
+    dst->is_weakreference = src->is_weakreference;
+    ((JObject *) dst)->vm_table = ((JObject *) src)->vm_table;
+    dst->members = (JObject *) dst + 1;
     //memcpy(dst, src, sizeof(ins_len));
     dst->type = src->type;
     dst->thread_lock = NULL;

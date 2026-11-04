@@ -1,15 +1,19 @@
 
 #include "ssl_client.h"
 #include "ca_cert.h"
+#include "../tinycthread.h"
+#include <stdint.h>
 
 //#define SERVER_PORT "443"
 //#define SERVER_NAME "www.baidu.com"
 //#define GET_REQUEST "GET / HTTP/1.0\r\n\r\n"
 
 #define DEBUG_LEVEL 4
-int ca_inited = 0;
-char ca_crt_rsa[ca_crt_rsa_size];
-char *ca_ders[] = {
+static once_flag ca_once = ONCE_FLAG_INIT;
+static int ca_ready;
+static char *ca_crt_rsa;
+static size_t ca_crt_rsa_len;
+static const char *const ca_ders[] = {
 //        "##\r\n"
 //        "## Bundle of CA Root Certificates\r\n"
 //        "##\r\n"
@@ -3598,19 +3602,35 @@ static void my_debug(void *ctx, int level,
 }
 
 
-//    SSL_Entry *entry = malloc(sizeof(SSL_Entry));
-//    entry->pers = "ssl_client1";
-static char *LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890~!@#$%^&*()_+`{}[]|\\:\"<>?;',./";
+/* Publish the complete, immutable bundle only after initialization finishes. */
+static void init_ca_bundle(void) {
+    const size_t count = sizeof(ca_ders) / sizeof(ca_ders[0]);
+    size_t used = 0, capacity = 1;
+    for (size_t i = 0; i < count; i++) {
+        size_t len = strlen(ca_ders[i]);
+        if (len > SIZE_MAX - capacity) return;
+        capacity += len;
+    }
+    ca_crt_rsa = malloc(capacity);
+    if (!ca_crt_rsa) return;
+    for (size_t i = 0; i < count; i++) {
+        size_t len = strlen(ca_ders[i]);
+        memcpy(ca_crt_rsa + used, ca_ders[i], len);
+        used += len;
+    }
+    ca_crt_rsa[used] = 0;
+    ca_crt_rsa_len = used + 1;
+    ca_ready = 1;
+}
 
 int sslc_init(SSLC_Entry *entry) {
     int ret;
 
+    call_once(&ca_once, init_ca_bundle);
+    if (!ca_ready) return -1;
 
-    int letters_len = strlen(LETTERS);
-    int i;
-    for (i = 0; i < sizeof(entry->pers) - 1; i++) {
-        entry->pers[1] = LETTERS[rand() % letters_len];
-    }
+    /* The personalization string is not entropy; always initialize and terminate it. */
+    snprintf(entry->pers, sizeof(entry->pers), "%s", "miniJVM");
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_debug_set_threshold(DEBUG_LEVEL);
 #endif
@@ -3635,27 +3655,6 @@ int sslc_init(SSLC_Entry *entry) {
         return -1;
     }
 
-    if (!ca_inited) {
-        ca_inited = 1;
-        int ca_len = 0;
-        int lenarr[ca_der_count];
-        for (i = 0; i < ca_der_count; i++) {
-            char *str = ca_ders[i];
-            lenarr[i] = strlen(str);
-            ca_len += lenarr[i];
-        }
-        if (ca_len + 1 != ca_crt_rsa_size) {
-            SSL_LOG_PRINTF("ssl cert init error");
-            fflush(stdout);
-        }
-        memset(ca_crt_rsa, 0, ca_crt_rsa_size);
-        int p = 0;
-        for (i = 0; i < ca_der_count; i++) {
-            memmove(ca_crt_rsa + p, ca_ders[i], lenarr[i]);
-            p += lenarr[i];
-        }
-        ca_crt_rsa[p] = 0;
-    }
     SSL_LOG_PRINTF(" ok\n");
     return 0;
 }
@@ -3679,8 +3678,7 @@ int sslc_wrap(SSLC_Entry *entry, int netfd, char *hostname) {
 
 //    int ret = mbedtls_x509_crt_parse(&entry->cacert, (const unsigned char *) mbedtls_test_cas_pem,
 //                                     mbedtls_test_cas_pem_len);
-    //ca_crt_rsa[ca_crt_rsa_size - 1] = 0;
-    int ret = mbedtls_x509_crt_parse(&entry->cacert, (const unsigned char *) ca_crt_rsa, ca_crt_rsa_size);
+    int ret = mbedtls_x509_crt_parse(&entry->cacert, (const unsigned char *) ca_crt_rsa, ca_crt_rsa_len);
     if (ret < 0) {
         SSL_LOG_PRINTF(" failed\n  !  mbedtls_x509_crt_parse returned -0x%x\n\n", -ret);
         return -1;
@@ -3785,8 +3783,7 @@ int sslc_connect(SSLC_Entry *entry, char *hostname, char *port) {
 
 //    int ret = mbedtls_x509_crt_parse(&entry->cacert, (const unsigned char *) mbedtls_test_cas_pem,
 //                                     mbedtls_test_cas_pem_len);
-    //ca_crt_rsa[ca_crt_rsa_size - 1] = 0;
-    int ret = mbedtls_x509_crt_parse(&entry->cacert, (const unsigned char *) ca_crt_rsa, ca_crt_rsa_size);
+    int ret = mbedtls_x509_crt_parse(&entry->cacert, (const unsigned char *) ca_crt_rsa, ca_crt_rsa_len);
     if (ret < 0) {
         SSL_LOG_PRINTF(" failed\n  !  mbedtls_x509_crt_parse returned -0x%x\n\n", -ret);
         return -1;

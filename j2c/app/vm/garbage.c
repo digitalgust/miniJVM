@@ -82,6 +82,7 @@ void garbage_collector_destory(GcCollector *collector) {
         garbage_thread_timedwait(50);
     }
     garbage_thread_unlock();
+    thrd_join(collector->_garbage_thread, NULL);
 
     g_jvm->collector->runtime = jthreadruntime_create();
     //
@@ -177,6 +178,8 @@ void garbage_thread_timedwait(s64 ms) {
     timespec_get(&t, TIME_UTC);
     t.tv_sec += ms / 1000;
     t.tv_nsec += (ms % 1000) * 1000000;
+    t.tv_sec += t.tv_nsec / 1000000000;
+    t.tv_nsec %= 1000000000;
     s32 ret = cnd_timedwait(&g_jvm->collector->garbagelock.thread_cond, &g_jvm->collector->garbagelock.mutex_lock, &t);
 //    if (ret == ETIMEDOUT) {
 //        s32 debug = 1;
@@ -324,6 +327,14 @@ s64 gc_sum_heap(GcCollector *collector) {
 //==============================   thread_run() =====================================
 
 s32 _collect_thread_run(void *para) {
+    // Bootstrap Java classes on the main thread before attaching the collector.
+    while (!g_jvm->thread_list->length) {
+        if (g_jvm->collector->_garbage_thread_status == GARBAGE_THREAD_STOP) {
+            g_jvm->collector->_garbage_thread_status = GARBAGE_THREAD_DEAD;
+            return 0;
+        }
+        threadSleep(1);
+    }
     JThreadRuntime *runtime = jthreadruntime_create();
     jthread_bound(runtime);
     arraylist_remove(g_jvm->thread_list, runtime);//remove from threadlist
@@ -380,6 +391,8 @@ s64 _garbage_collect() {
 
     if (_garbage_pause_the_world() != 0) {
         _garbage_resume_the_world();
+        garbage_thread_unlock();
+        collector->isgc = 0;
         return -1;
     }
 #if PRJ_DEBUG_GARBAGE_DUMP
@@ -642,6 +655,9 @@ void _garbage_copy_refer() {
 
 
 s32 _garbage_copy_refer_thread(JThreadRuntime *pruntime) {
+    if (pruntime->context_classloader) arraylist_push_back_unsafe(g_jvm->collector->runtime_refer_copy, pruntime->context_classloader);
+    if (pruntime->pack) arraylist_push_back_unsafe(g_jvm->collector->runtime_refer_copy, pruntime->pack);
+    if (pruntime->exception) arraylist_push_back_unsafe(g_jvm->collector->runtime_refer_copy, pruntime->exception);
     if (pruntime->jthread) {
         InstProp *mb = (InstProp *) pruntime->jthread;
         if (mb->type == INS_TYPE_OBJECT || mb->type == INS_TYPE_ARRAY || mb->type == INS_TYPE_CLASS) {
@@ -680,8 +696,12 @@ s32 _garbage_copy_refer_thread(JThreadRuntime *pruntime) {
             MethodRaw *raw = get_methodraw_by_index(frame->methodRawIndex);
             JClass *clazz = get_class_by_nameIndex(raw->class_name);
             if (rstack) {
-                s32 size = *frame->spPtr;
-//                s32 size = g_methods[frame->methodRawIndex].max_stack;
+                // Generated reference slots are zeroed and retain only Java
+                // references. Keep them alive until this frame exits: native
+                // calls pop arguments before entering C, and primitive writes
+                // can later expose a previously used reference slot again.
+                // The generator reserves one extra slot for thrown exceptions.
+                s32 size = raw->max_stack + 1;
                 for (j = 0; j < size; j++) {
                     if (rstack[j].obj) {
                         //jvm_printf("rstack :%llx\n",(s64)(intptr_t)rstack[j].obj);
@@ -747,6 +767,7 @@ static inline void _jarray_mark_refer(InstProp *arr, u8 flag_cnt) {
  */
 static inline void _class_mark_refer(InstProp *ins, u8 flag_cnt) {
     JClass *clazz = (JClass *) ins;
+    _garbage_mark_object(clazz->ins_of_Class, flag_cnt);
     s32 i, len;
     ArrayList *fiList = ((JClass *) clazz)->fields;
     for (i = 0, len = fiList->length; i < len; i++) {

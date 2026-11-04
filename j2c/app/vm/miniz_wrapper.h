@@ -1,6 +1,10 @@
 #ifndef __TINY_JVM_MINIZ_WRAPPER_H__
 #define __TINY_JVM_MINIZ_WRAPPER_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "bytebuf.h"
 #include "arraylist.h"
 #include "utf8string.h"
@@ -19,7 +23,8 @@ s32 zip_savefile_mem(char const *jarpath, char const *filename, char const *buf,
 
 ArrayList *zip_get_filenames(char *jarpath);
 
-void zip_destory_filenames_list(ArrayList *list);
+void zip_destroy_filenames_list(ArrayList *list);
+#define zip_destory_filenames_list zip_destroy_filenames_list
 
 s32 zip_filecount(char *jarpath);
 
@@ -32,5 +37,13 @@ s32 zip_extract(char *zip_data, int size, ByteBuf *data);
 s32 gzip_compress(char *data, int size, ByteBuf *gzip_data);
 
 s32 gzip_extract(char *gzip_data, int size, ByteBuf *data);
+
+s32 zlib_extract(char *zlib_data, int size, int expected_size, ByteBuf *data);
+
+s32 zlib_compress(char *data, int size, ByteBuf *zlib_data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

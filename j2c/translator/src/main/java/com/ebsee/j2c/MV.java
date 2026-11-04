@@ -1777,7 +1777,7 @@ public class MV extends MethodVisitor {
             localValue = "&rlocal[0]";
         }
         add(insert++, "StackItem stack[" + max_stack + "];");
-        add(insert++, "RStackItem rstack[" + max_stack + "];");
+        add(insert++, "RStackItem rstack[" + max_stack + "] = {0};");
         add(insert++, "s32 sp = 0;");
         stackValue = "&rstack[0]";
         spPtrValue = "&sp";//"NULL";//"&sp";

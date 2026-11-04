@@ -12,7 +12,7 @@ c8 const *STR_JAVA_LANG_STRING = "java/lang/String";
 c8 const *STR_JAVA_LANG_THREAD = "java/lang/Thread";
 c8 const *STR_JAVA_LANG_INTEGER = "java/lang/Integer";
 c8 const *STR_JAVA_UTIL_LOGGING_LEVEL = "java/util/logging/Level";
-c8 const *STR_JAVA_LANG_OUT_OF_MEMORY_ERROR = "java/io/OutOfMemoryError";
+c8 const *STR_JAVA_LANG_OUT_OF_MEMORY_ERROR = "java/lang/OutOfMemoryError";
 c8 const *STR_JAVA_LANG_VIRTUAL_MACHINE_ERROR = "java/io/VirtualMachineError";
 c8 const *STR_JAVA_LANG_CLASS_NOT_FOUND_EXCEPTION = "java/lang/ClassNotFoundException";
 c8 const *STR_JAVA_LANG_ARITHMETIC_EXCEPTION = "java/lang/ArithmeticException";
@@ -565,6 +565,7 @@ Jvm *jvm_create(c8 *bootclasspath, c8 *classpath) {
     arraylist_push_back(jvm->classloaders, classLoader);
     //创建jstring 相关容器
     jvm->table_jstring_const = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
+    hashtable_register_free_functions(jvm->table_jstring_const, (HashtableKeyFreeFunc) utf8_destory, NULL);
     jvm->sys_prop = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
 
     g_jvm = jvm;
@@ -572,6 +573,7 @@ Jvm *jvm_create(c8 *bootclasspath, c8 *classpath) {
     sys_properties_load();
     sys_properties_set_c("sun.boot.class.path", bootclasspath);
     sys_properties_set_c("java.class.path", classpath);
+    sys_properties_set_c("java.class.version", "52.0");
     fill_procache();
     garbage_start();
 
@@ -809,9 +811,7 @@ s32 jthread_waitTime(InstProp *mb, JThreadRuntime *runtime, s64 waitms) {
 s32 jthread_sleep(JThreadRuntime *runtime, s64 ms) {
     static const s64 PERIOD = 500;
     s32 ret = 0;
-    jthread_block_enter(runtime);
-    u8 thread_status = runtime->thread_status;
-    runtime->thread_status = THREAD_STATUS_BLOCKED;
+    u8 thread_status = jthread_block_enter(runtime);
     if (ms < PERIOD) {
         threadSleep(ms);
     } else {
@@ -826,9 +826,8 @@ s32 jthread_sleep(JThreadRuntime *runtime, s64 ms) {
             }
         }
     }
-    runtime->thread_status = thread_status;
     jthread_block_exit(runtime, thread_status);
-    return 0;
+    return ret;
 }
 
 
@@ -891,8 +890,15 @@ JThreadRuntime *jthread_start(JObject *jthread) {
     JThreadRuntime *runtime = jthread_get_stackFrame(jthread);
     runtime->jthread = jthread;
     runtime->exec = method;
-    runtime->thread_status = THREAD_STATUS_NEW;
-    thrd_create(&runtime->thread, jthread_run, runtime);
+    runtime->thread_status = THREAD_STATUS_RUNNABLE;
+    gc_refer_hold(jthread);
+    thrd_t thread;
+    if (thrd_create(&thread, jthread_run, runtime) != thrd_success) {
+        runtime->thread_status = THREAD_STATUS_NEW;
+        gc_refer_release(jthread);
+        return NULL;
+    }
+    thrd_detach(thread);
     return runtime;
 }
 
@@ -901,9 +907,11 @@ JThreadRuntime *jthread_bound(JThreadRuntime *runtime) {
         runtime = jthreadruntime_create();
     }
     s32 ret = tss_set(TLS_KEY_JTHREADRUNTIME, runtime);
+    runtime->thread = thrd_current();
     Utf8String *ustr = utf8_create();
     tss_set(TLS_KEY_UTF8STR_CACHE, ustr);
-    if (!runtime->jthread) {
+    s32 initialize_thread = !runtime->jthread;
+    if (initialize_thread) {
         ClassRaw *raw = find_classraw(STR_JAVA_LANG_THREAD);
         if (!raw) {
             jvm_printf("ERROR: Cannot find Thread class raw\n");
@@ -934,8 +942,8 @@ JThreadRuntime *jthread_bound(JThreadRuntime *runtime) {
         if (!raw->clazz) {
             class_clinit(runtime, get_utf8str_by_utfraw_index(raw->name));
         }
-        runtime->jthread->prop.clazz = raw->clazz;
-        instance_init(runtime, runtime->jthread);
+        if (initialize_thread) runtime->jthread->prop.clazz = raw->clazz;
+        if (initialize_thread) instance_init(runtime, runtime->jthread);
         JThreadRuntime *r = jthread_get_stackFrame(runtime->jthread);
         if (r && r != runtime) {
             gc_move_refer_thread_2_gc(r);
@@ -950,12 +958,22 @@ JThreadRuntime *jthread_bound(JThreadRuntime *runtime) {
 }
 
 void jthread_unbound(JThreadRuntime *runtime) {
-    runtime->jthread = NULL;
+    garbage_thread_lock();
+    JObject *jthread = runtime->jthread;
+    gc_move_refer_thread_2_gc(runtime);
+    if (jthread) {
+        jthread_set_stackFrame(jthread, NULL);
+        jthread_lock(runtime, jthread);
+        jthread_notifyAll(&jthread->prop);
+        jthread_unlock(runtime, jthread);
+    }
     arraylist_remove(g_jvm->thread_list, runtime);
     runtime->thread_status = THREAD_STATUS_DEAD;
     if (runtime->context_classloader)gc_refer_release(runtime->context_classloader);
-    gc_refer_release(runtime->jthread);
+    gc_refer_release(jthread);
+    runtime->jthread = NULL;
     jthreadruntime_destroy(runtime);
+    garbage_thread_unlock();
     tss_set(TLS_KEY_JTHREADRUNTIME, NULL);
     Utf8String *ustr = tss_get(TLS_KEY_UTF8STR_CACHE);
     if (ustr) {

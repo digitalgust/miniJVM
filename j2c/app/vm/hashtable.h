@@ -1,6 +1,6 @@
 /*
 
-Copyright (vm) 2005-2008, Simon Howard
+Copyright (c) 2005-2008, Simon Howard
 
 Permission to use, copy, modify, and/or distribute this software 
 for any purpose with or without fee is hereby granted, provided 
@@ -49,7 +49,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 extern "C" {
 #endif
 
-#include "jvmtype.h"
+#include "d_type.h"
 #include "spinlock.h"
 #include "arraylist.h"
 
@@ -88,12 +88,13 @@ typedef void *HashtableValue;
  * Definition of a @ref HashtableIterator.
  */
 
+// Add version field to iterator to detect concurrent modifications
 struct _HashtableIterator {
     Hashtable *hash_table;
     HashtableEntry *next_entry;
-    u64 next_chain;
+    s64 next_chain;
+    s64 version;  // Add version field
 };
-
 /**
  * A null @ref HashtableValue.
  */
@@ -146,13 +147,14 @@ struct _HashtableEntry {
 
 struct _Hashtable {
     HashtableEntry **table;
-    u64 table_size;
+    s64 table_size;
+    s64 entries;
     HashtableHashFunc hash_func;
     HashtableEqualFunc equal_func;
     HashtableKeyFreeFunc key_free_func;
     HashtableValueFreeFunc value_free_func;
-    u64 entries;
     spinlock_t spinlock;
+    s64 version;  // Version counter for concurrent modification detection
 };
 
 /**
@@ -181,7 +183,8 @@ int DEFAULT_HASH_EQUALS_FUNC(HashtableValue value1, HashtableValue value2);
  * @param hash_table           The hash table to destroy.
  */
 
-void hashtable_destory(Hashtable *hash_table);
+void hashtable_destroy(Hashtable *hash_table);
+#define hashtable_destory hashtable_destroy
 
 void hashtable_clear(Hashtable *hash_table);
 
@@ -244,7 +247,7 @@ int hashtable_remove(Hashtable *hash_table, HashtableKey key, int resize);
  * @return                    The number of entries in the hash table.
  */
 
-u64 hashtable_num_entries(Hashtable *hash_table);
+s64 hashtable_num_entries(Hashtable *hash_table);
 
 /**
  * Initialise a @ref HashtableIterator to iterate over a hash table.
@@ -294,7 +297,25 @@ HashtableKey hashtable_iter_next_key(HashtableIterator *iterator);
 
 void hashtable_iter_safe(Hashtable *hash_table, HashtableIteratorFunc func, void *para);
 
-int hashtable_resize(Hashtable *hash_table, u64 size);
+int hashtable_resize(Hashtable *hash_table, s64 size);
+
+HashtableEntry *hashtable_iter_remove(HashtableIterator *iterator);
+
+/**
+ * Check if the hash table needs to grow and resize if necessary.
+ * Called internally after insertions.
+ *
+ * @param hash_table          The hash table to check.
+ */
+void hashtable_put_resize_check(Hashtable *hash_table);
+
+/**
+ * Check if the hash table needs to shrink and resize if necessary.
+ * Called internally after removals.
+ *
+ * @param hash_table          The hash table to check.
+ */
+void hashtable_remove_resize_check(Hashtable *hash_table);
 
 #ifdef __cplusplus
 }

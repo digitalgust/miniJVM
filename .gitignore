@@ -12,6 +12,7 @@ Thumbs.db
 /build
 target
 ai
+md
 dist
 testcase
 test/Win32

@@ -10,7 +10,6 @@
  *
  * Created on 2017年7月24日, 下午1:20
  */
-#include "jvmtype.h"
 #include "hashtable.h"
 
 #ifndef UNI_STRING_H
@@ -44,7 +43,8 @@ Utf8String *utf8_create_copy(Utf8String *str);
 
 Utf8String *utf8_create_part(Utf8String *str, int start, int len);
 
-void utf8_destory(Utf8String *);
+void utf8_destroy(Utf8String *uni_str);
+#define utf8_destory utf8_destroy
 
 void utf8_clear(Utf8String *ustr);
 
@@ -62,9 +62,9 @@ s64 utf8_aton(Utf8String *sp, int n);
 
 void utf8_upcase(Utf8String *a1);
 
-void utf8_append_s64(Utf8String *a1, s64 val, int radix);
-
 void utf8_lowercase(Utf8String *a1);
+
+void utf8_append_s64(Utf8String *a1, s64 val, int radix);
 
 void utf8_substring(Utf8String *a1, int start, int end);
 
@@ -107,6 +107,7 @@ u64 UNICODE_STR_HASH_FUNC(HashtableKey kmer);
 
 unsigned long _utf8_hashCode(Utf8String *ustr);
 
+int utf8_expand(Utf8String *ustr, int newlen);
 
 int utf8_index_of(Utf8String *ustr, utf8_char data);
 
@@ -123,6 +124,10 @@ int utf8_insert(Utf8String *ustr, int index, utf8_char data);
 int _utf8_enlarge(Utf8String *ustr);
 
 int _utf8_space_require(Utf8String *ustr, int size);
+
+s32 utf8_2_unicode(Utf8String *ustr, u16 *jchar_arr, s32 jchar_arr_u16_len);
+
+s32 unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 jchar_arr_u16_len);
 
 #ifdef __cplusplus
 };

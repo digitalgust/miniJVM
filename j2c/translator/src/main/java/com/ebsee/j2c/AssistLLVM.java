@@ -291,11 +291,13 @@ public class AssistLLVM {
 
         ps.println("// define filed name ");
         if (microDefFields != null) {
+            Set<String> fieldAliases = new HashSet<>();
             for (String[] pair : microDefFields) {
                 Field field = ClassManger.findField(pair[0].replace('.', '/'), pair[1], pair[2]);
                 if (field == null) {
-                    System.out.println("field not found:" + pair[0] + " " + pair[1] + " " + pair[2]);
+                    throw new IllegalStateException("Native field not found: " + pair[0] + "." + pair[1] + " " + pair[2]);
                 }
+                if (!fieldAliases.add(pair[3])) throw new IllegalStateException("Duplicate native field alias: " + pair[3]);
                 ps.println("#define " + pair[3] + " " + Util.getFieldVarName(field));
             }
         }
