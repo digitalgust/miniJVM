@@ -345,11 +345,20 @@ void class_load(Utf8String *className) {
     garbage_thread_unlock();
 }
 
+void class_clinit_by_index(JThreadRuntime *runtime, s32 classIndex) {
+    //O(1) fast path : generated code calls this before every static invoke / static field access
+    ClassRaw *raw = &g_classes[classIndex];
+    JClass *clazz = raw->clazz;
+    if (clazz && clazz->status == CLASS_STATUS_CLINITED)return;
+    class_clinit(runtime, get_utf8str_by_utfraw_index(raw->name));
+}
+
 void class_clinit(JThreadRuntime *runtime, Utf8String *className) {
-    ClassRaw *classRaw = find_classraw(utf8_cstr(className));
-    if (!classRaw)return;
+    if (utf8_char_at(className, 0) == '[')return;//array class has no clinit
     JClass *clazz = classes_get(className);
     if (clazz && clazz->status == CLASS_STATUS_CLINITED)return;
+    ClassRaw *classRaw = clazz ? clazz->raw : find_classraw(utf8_cstr(className));
+    if (!classRaw)return;
 
     garbage_thread_lock();
     runtime->no_pause++;
@@ -368,14 +377,16 @@ void class_clinit(JThreadRuntime *runtime, Utf8String *className) {
 //            class_clinit(runtime, dcClazz->name);
 //        }
 
-        c8 *methodName = "<clinit>";
-        c8 *signature = "()V";
-        MethodRaw *methodRaw = find_methodraw(utf8_cstr(className), methodName, signature);
-        if (methodRaw) {
-            class_clinit_func_t func = (class_clinit_func_t) methodRaw->func_ptr;
-            func(runtime);
-            exception_check_print(runtime);
-            //jvm_printf("clinit :%s\n", utf8_cstr(clazz->name));
+        //find <clinit> in clazz->methods, avoid find_methodraw global linear scan
+        for (i = 0; i < clazz->methods->length; i++) {
+            MethodInfo *mi = (MethodInfo *) arraylist_get_value(clazz->methods, i);
+            if (utf8_equals_c(mi->name, "<clinit>") && utf8_equals_c(mi->desc, "()V")) {
+                class_clinit_func_t func = (class_clinit_func_t) mi->raw->func_ptr;
+                func(runtime);
+                exception_check_print(runtime);
+                //jvm_printf("clinit :%s\n", utf8_cstr(clazz->name));
+                break;
+            }
         }
         clazz->status = CLASS_STATUS_CLINITED;
     }

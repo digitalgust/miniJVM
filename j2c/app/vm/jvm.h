@@ -528,6 +528,8 @@ void class_prepar(JClass *clazz);
 
 void class_clinit(JThreadRuntime *runtime, Utf8String *className);
 
+void class_clinit_by_index(JThreadRuntime *runtime, s32 classIndex);
+
 void class_load(Utf8String *className);
 
 StackFrame *stackframe_create();
