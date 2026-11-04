@@ -1,7 +1,7 @@
-
 #include <stdlib.h>
 #include <string.h>
 #include "utf8string.h"
+#include "d_type.h"
 
 Utf8String *utf8_create() {
 
@@ -30,7 +30,7 @@ Utf8String *utf8_create() {
     return uni_str;
 }
 
-void utf8_destory(Utf8String *uni_str) {
+void utf8_destroy(Utf8String *uni_str) {
     if (uni_str != NULL) {
         jvm_free(uni_str->data);
         jvm_free(uni_str);
@@ -130,6 +130,16 @@ void utf8_upcase(Utf8String *a1) {
     for (i = 0; i < a1->length; i++) {
         if (a1->data[i] >= 'a' && a1->data[i] <= 'z') {
             a1->data[i] = a1->data[i] - ('a' - 'A');
+        }
+    }
+    a1->hash = 0;
+}
+
+void utf8_lowercase(Utf8String *a1) {
+    int i;
+    for (i = 0; i < a1->length; i++) {
+        if (a1->data[i] >= 'A' && a1->data[i] <= 'A') {
+            a1->data[i] = a1->data[i] + ('a' - 'A');
         }
     }
     a1->hash = 0;
@@ -331,7 +341,7 @@ static inline void _utf8_replace_impl(Utf8String *a1, char const *a2, int count2
         utf8_append_data(a1, a3, count3);
         start = end + count2;
     }
-    utf8_destory(tmps);
+    utf8_destroy(tmps);
 }
 
 void utf8_replace(Utf8String *a1, Utf8String *a2, Utf8String *a3) {
@@ -379,13 +389,15 @@ int utf8_equals_c(Utf8String *a1, char const *a2) {
     return 0;
 }
 
+//为 hashtable / hashset 准备的 hash函数
 
 int UNICODE_STR_EQUALS_FUNC(HashtableValue value1, HashtableValue value2) {
     return utf8_equals(value1, value2) == 1;
 }
 
 u64 UNICODE_STR_HASH_FUNC(HashtableKey kmer) {
-    return _utf8_hashCode(kmer);
+    s64 v = _utf8_hashCode(kmer);
+    return v < 0 ? -v : v;
 }
 
 
@@ -401,7 +413,7 @@ unsigned long _utf8_hashCode(Utf8String *ustr) {
 }
 
 int _utf8_space_require(Utf8String *ustr, int need) {
-    if (ustr->length + need <= ustr->_alloced) {
+    if ((!ustr) || ustr->length + need <= ustr->_alloced) {
         return 0;
     }
 
@@ -417,16 +429,33 @@ int _utf8_space_require(Utf8String *ustr, int need) {
 
     /* Reallocate the array to the new size */
 
-    data = jvm_realloc(ustr->data, sizeof(utf8_char) * newsize);
-
+    data = jvm_malloc(sizeof(utf8_char) * newsize);
     if (data == NULL) {
         return 0;
-    } else {
-        ustr->data = data;
-        ustr->_alloced = newsize;
-
-        return 1;
     }
+
+    /* Copy existing data to new memory */
+    memmove(data, ustr->data, sizeof(utf8_char) * ustr->length);
+
+    /* Free old memory */
+    jvm_free(ustr->data);
+
+    ustr->data = data;
+    ustr->_alloced = newsize;
+
+    return 1;
+}
+
+int utf8_expand(Utf8String *ustr, int newlen) {
+    if (newlen <= ustr->length)return 0;
+    if (newlen > ustr->_alloced) {
+        if (!_utf8_space_require(ustr, newlen - ustr->length)) {
+            return 0;
+        }
+    }
+    ustr->length = newlen;
+    ustr->hash = 0;
+    return 1;
 }
 
 int utf8_insert(Utf8String *ustr, int index, utf8_char data) {
@@ -502,15 +531,252 @@ int utf8_index_of(Utf8String *ustr, utf8_char data) {
 }
 
 
+/**
+ * =============================== utf8 ==============================
+ */
+/**
+ * 把utf字符串转为 java unicode 双字节串
+ * @param ustr in
+ * @param arr out
+ */
 
-void utf8_lowercase(Utf8String *a1) {
-    int i;
-    for (i = 0; i < a1->length; i++) {
-        if (a1->data[i] >= 'A' && a1->data[i] <= 'A') {
-            a1->data[i] = a1->data[i] + ('a' - 'A');
+
+s32 enc_get_utf8_size(const c8 *pInput) {
+    u8 c = *((u8 *) pInput);
+    //printf("---c=%c---\n", c);
+    if (c < 0x80) return 1;                // 0xxxxxxx 返回0
+    if (c >= 0x80 && c < 0xC0) return -1;     // 10xxxxxx 返回-1
+    if (c >= 0xC0 && c < 0xE0) return 2;      // 110xxxxx 返回2
+    if (c >= 0xE0 && c < 0xF0) return 3;      // 1110xxxx 返回3
+    if (c >= 0xF0 && c < 0xF8) return 4;      // 11110xxx 返回4
+    if (c >= 0xF8 && c < 0xFC) return 5;      // 111110xx 返回5
+    if (c >= 0xFC) return 6;                // 1111110x 返回6
+    return 0;
+}
+
+//https://yuncode.net/code/c_5715d18940eb269
+
+/**
+ *
+ * @param ustr
+ * @param jchar_arr
+ * @return
+ */
+s32 utf8_2_unicode(Utf8String *ustr, u16 *jchar_arr, s32 jchar_arr_u16_len) {
+    if (ustr == NULL)return 0;
+    if (jchar_arr == NULL)jchar_arr_u16_len = 0;
+    c8 const *pInput = utf8_cstr(ustr);
+    //assert(pInput != NULL && Unic != NULL);
+    s32 outputSize = 0; //记录转换后的Unicode字符串的字节数
+    // b1 表示UTF-8编码的pInput中的高字节, b2 表示次高字节, ...
+    c8 b1, b2, b3, b4, b5, b6;
+    s32 codepoint = 0;
+    c8 *pOutput = (c8 *) &codepoint;
+
+    while (*pInput) {
+        //*Unic = 0x0; // 把 *Unic 初始化为全零
+        s32 utfbytes = enc_get_utf8_size(pInput);
+        if (utfbytes < 1) {
+            codepoint = (u8) *pInput;
+            if (outputSize < jchar_arr_u16_len) {
+                *jchar_arr = (u16) codepoint;
+                jchar_arr++;
+            }
+            outputSize++;
+            pInput++;
+            continue;
+        }
+        //printf("%d", utfbytes);
+        codepoint = 0;
+        s32 invalid_utf8 = 0;
+        switch (utfbytes) {
+            case 1:
+                *pOutput = *pInput;
+                *(pOutput + 1) = 0;
+                if (outputSize < jchar_arr_u16_len) {
+                    *jchar_arr = (u16) codepoint;
+                    jchar_arr++;
+                }
+                break;
+
+            case 2:
+                b1 = *pInput;
+                b2 = *(pInput + 1);
+                if ((b2 & 0xc0) != 0x80) {
+                    invalid_utf8 = 1;
+                    break;
+                }
+                *pOutput = (b1 << 6) + (b2 & 0x3F);
+                *(pOutput + 1) = (b1 >> 2) & 0x07;
+                if (outputSize < jchar_arr_u16_len) {
+                    *jchar_arr = (u16) codepoint;
+                    jchar_arr++;
+                }
+                break;
+
+            case 3:
+                b1 = *pInput;
+                b2 = *(pInput + 1);
+                b3 = *(pInput + 2);
+                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)) {
+                    invalid_utf8 = 1;
+                    break;
+                }
+                *pOutput = (b2 << 6) + (b3 & 0x3F);
+                *(pOutput + 1) = (b1 << 4) + ((b2 >> 2) & 0x0F);
+
+                if (outputSize < jchar_arr_u16_len) {
+                    *jchar_arr = (u16) codepoint;
+                    jchar_arr++;
+                }
+                break;
+
+            case 4:
+                b1 = *pInput;
+                b2 = *(pInput + 1);
+                b3 = *(pInput + 2);
+                b4 = *(pInput + 3);
+                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
+                    || ((b4 & 0xC0) != 0x80)) {
+                    invalid_utf8 = 1;
+                    break;
+                }
+                *pOutput = (b3 << 6) + (b4 & 0x3F);
+                *(pOutput + 1) = (b2 << 4) + ((b3 >> 2) & 0x0F);
+                *(pOutput + 2) = ((b1 << 2) & 0x1C) + ((b2 >> 4) & 0x03);
+                break;
+
+            case 5:
+                b1 = *pInput;
+                b2 = *(pInput + 1);
+                b3 = *(pInput + 2);
+                b4 = *(pInput + 3);
+                b5 = *(pInput + 4);
+                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
+                    || ((b4 & 0xC0) != 0x80) || ((b5 & 0xC0) != 0x80)) {
+                    invalid_utf8 = 1;
+                    break;
+                }
+                *pOutput = (b4 << 6) + (b5 & 0x3F);
+                *(pOutput + 1) = (b3 << 4) + ((b4 >> 2) & 0x0F);
+                *(pOutput + 2) = (b2 << 2) + ((b3 >> 4) & 0x03);
+                *(pOutput + 3) = (b1 << 6);
+                break;
+
+            case 6:
+                b1 = *pInput;
+                b2 = *(pInput + 1);
+                b3 = *(pInput + 2);
+                b4 = *(pInput + 3);
+                b5 = *(pInput + 4);
+                b6 = *(pInput + 5);
+                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
+                    || ((b4 & 0xC0) != 0x80) || ((b5 & 0xC0) != 0x80)
+                    || ((b6 & 0xC0) != 0x80)) {
+                    invalid_utf8 = 1;
+                    break;
+                }
+                *pOutput = (b5 << 6) + (b6 & 0x3F);
+                *(pOutput + 1) = (b5 << 4) + ((b6 >> 2) & 0x0F);
+                *(pOutput + 2) = (b3 << 2) + ((b4 >> 4) & 0x03);
+                *(pOutput + 3) = ((b1 << 6) & 0x40) + (b2 & 0x3F);
+                break;
+
+            default:
+                invalid_utf8 = 1;
+                utfbytes = 1;
+                break;
+        }
+        if (invalid_utf8) {
+            codepoint = (u8) *pInput;
+            if (outputSize < jchar_arr_u16_len) {
+                *jchar_arr = (u16) codepoint;
+                jchar_arr++;
+            }
+            outputSize++;
+            pInput++;
+            continue;
+        }
+        if (utfbytes >= 4) {
+            if (outputSize < jchar_arr_u16_len) {
+                codepoint -= 0x10000;
+                u16 c1 = codepoint >> 10;
+                *jchar_arr = (u16) (0xD800 | (c1 & 0x3ff));
+                jchar_arr++;
+                *jchar_arr = (u16) (0xDC00 | (codepoint & 0x3ff));
+                jchar_arr++;
+            }
+            outputSize += 2;
+        } else {
+            outputSize++;
+        }
+
+        pInput += utfbytes;
+    }
+    return outputSize;
+}
+
+
+s32 unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 jchar_arr_u16_len) {
+    if (!jchar_arr || !ustr || jchar_arr_u16_len < 0) return 0;
+
+    s32 i;
+    for (i = 0; i < jchar_arr_u16_len; i++) {
+        s32 unic = jchar_arr[i];
+        if (unic >= 0xd800 && unic <= 0xdbff) {
+            if (i + 1 < jchar_arr_u16_len) {
+                s32 c1 = jchar_arr[i + 1];
+                if (c1 >= 0xdc00 && c1 <= 0xdfff) {
+                    i++;
+                    s32 lead = unic & 0x3ff;
+                    s32 trail = c1 & 0x3ff;
+                    unic = (lead << 10) | trail | 0x10000;
+                }
+            }
+        }
+
+        if (unic <= 0x0000007F) {
+            // * U-00000000 - U-0000007F:  0xxxxxxx
+            utf8_pushback(ustr, unic & 0x7F);
+
+        } else if (unic >= 0x00000080 && unic <= 0x000007FF) {
+            // * U-00000080 - U-000007FF:  110xxxxx 10xxxxxx
+            utf8_pushback(ustr, ((unic >> 6) & 0x1F) | 0xC0);
+            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
+
+        } else if (unic >= 0x00000800 && unic <= 0x0000FFFF) {
+            // * U-00000800 - U-0000FFFF:  1110xxxx 10xxxxxx 10xxxxxx
+            utf8_pushback(ustr, ((unic >> 12) & 0x0F) | 0xE0);
+            utf8_pushback(ustr, ((unic >> 6) & 0x3F) | 0x80);
+            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
+
+        } else if (unic >= 0x00010000 && unic <= 0x001FFFFF) {
+            // * U-00010000 - U-001FFFFF:  11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+            utf8_pushback(ustr, ((unic >> 18) & 0x07) | 0xF0);
+            utf8_pushback(ustr, ((unic >> 12) & 0x3F) | 0x80);
+            utf8_pushback(ustr, ((unic >> 6) & 0x3F) | 0x80);
+            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
+
+        } else if (unic >= 0x00200000 && unic <= 0x03FFFFFF) {
+            // * U-00200000 - U-03FFFFFF:  111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+            utf8_pushback(ustr, ((unic >> 24) & 0x03) | 0xF8);
+            utf8_pushback(ustr, ((unic >> 18) & 0x3F) | 0x80);
+            utf8_pushback(ustr, ((unic >> 12) & 0x3F) | 0x80);
+            utf8_pushback(ustr, ((unic >> 6) & 0x3F) | 0x80);
+            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
+
+        } else if (unic >= 0x04000000 && unic <= 0x7FFFFFFF) {
+            // * U-04000000 - U-7FFFFFFF:  1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+            utf8_pushback(ustr, ((unic >> 30) & 0x01) | 0xFC);
+            utf8_pushback(ustr, ((unic >> 24) & 0x3F) | 0x80);
+            utf8_pushback(ustr, ((unic >> 18) & 0x3F) | 0x80);
+            utf8_pushback(ustr, ((unic >> 12) & 0x3F) | 0x80);
+            utf8_pushback(ustr, ((unic >> 6) & 0x3F) | 0x80);
+            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
+
         }
     }
-    a1->hash = 0;
+    return ustr->length;
 }
 
 

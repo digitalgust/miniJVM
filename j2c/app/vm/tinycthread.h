@@ -54,17 +54,17 @@ extern "C" {
 
 /* Which platform are we on? */
 #if !defined(_TTHREAD_PLATFORM_DEFINED_)
-#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
-#define _TTHREAD_WIN32_
-#else
-#define _TTHREAD_POSIX_
-#endif
-#define _TTHREAD_PLATFORM_DEFINED_
+  #if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+    #define _TTHREAD_WIN32_
+  #else
+    #define _TTHREAD_POSIX_
+  #endif
+  #define _TTHREAD_PLATFORM_DEFINED_
 #endif
 
 /* Activate some POSIX functionality (e.g. clock_gettime and recursive mutexes) */
 #if defined(_TTHREAD_POSIX_)
-#undef _FEATURES_H
+  #undef _FEATURES_H
   #if !defined(_GNU_SOURCE)
     #define _GNU_SOURCE
   #endif
@@ -84,24 +84,24 @@ extern "C" {
 
 /* Platform specific includes */
 #if defined(_TTHREAD_POSIX_)
-#include <pthread.h>
+  #include <pthread.h>
 #elif defined(_TTHREAD_WIN32_)
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#define __UNDEF_LEAN_AND_MEAN
-#endif
-#include <windows.h>
-#ifdef __UNDEF_LEAN_AND_MEAN
-#undef WIN32_LEAN_AND_MEAN
-#undef __UNDEF_LEAN_AND_MEAN
-#endif
+  #ifndef WIN32_LEAN_AND_MEAN
+    #define WIN32_LEAN_AND_MEAN
+    #define __UNDEF_LEAN_AND_MEAN
+  #endif
+  #include <windows.h>
+  #ifdef __UNDEF_LEAN_AND_MEAN
+    #undef WIN32_LEAN_AND_MEAN
+    #undef __UNDEF_LEAN_AND_MEAN
+  #endif
 #endif
 
 /* Compiler-specific information */
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
-#define TTHREAD_NORETURN _Noreturn
+  #define TTHREAD_NORETURN _Noreturn
 #elif defined(__GNUC__)
-#define TTHREAD_NORETURN __attribute__((__noreturn__))
+  #define TTHREAD_NORETURN __attribute__((__noreturn__))
 #else
   #define TTHREAD_NORETURN
 #endif
@@ -114,8 +114,8 @@ extern "C" {
 
 #if defined(_TTHREAD_WIN32_)
 struct _tthread_timespec {
-    time_t tv_sec;
-    long   tv_nsec;
+  time_t tv_sec;
+  long   tv_nsec;
 };
 #define timespec _tthread_timespec
 #endif
@@ -151,13 +151,13 @@ int _tthread_timespec_get(struct timespec *ts, int base);
 */
 
 #if !(defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201102L)) && !defined(_Thread_local)
-#if defined(__GNUC__) || defined(__INTEL_COMPILER) || defined(__SUNPRO_CC) || defined(__IBMCPP__)
+ #if defined(__GNUC__) || defined(__INTEL_COMPILER) || defined(__SUNPRO_CC) || defined(__IBMCPP__)
   #define _Thread_local __thread
  #else
   #define _Thread_local __declspec(thread)
  #endif
 #elif defined(__GNUC__) && defined(__GNUC_MINOR__) && (((__GNUC__ << 8) | __GNUC_MINOR__) < ((4 << 8) | 9))
-#define _Thread_local __thread
+ #define _Thread_local __thread
 #endif
 
 /* Macros */
@@ -182,13 +182,13 @@ int _tthread_timespec_get(struct timespec *ts, int base);
 /* Mutex */
 #if defined(_TTHREAD_WIN32_)
 typedef struct {
-    union {
-        CRITICAL_SECTION cs;      /* Critical section handle (used for non-timed mutexes) */
-        HANDLE mut;               /* Mutex handle (used for timed mutex) */
-    } mHandle;                  /* Mutex handle */
-    int mAlreadyLocked;         /* TRUE if the mutex is already locked */
-    int mRecursive;             /* TRUE if the mutex is recursive */
-    int mTimed;                 /* TRUE if the mutex is timed */
+  union {
+    CRITICAL_SECTION cs;      /* Critical section handle (used for non-timed mutexes) */
+    HANDLE mut;               /* Mutex handle (used for timed mutex) */
+  } mHandle;                  /* Mutex handle */
+  int mAlreadyLocked;         /* TRUE if the mutex is already locked */
+  int mRecursive;             /* TRUE if the mutex is recursive */
+  int mTimed;                 /* TRUE if the mutex is timed */
 } mtx_t;
 #else
 typedef pthread_mutex_t mtx_t;
@@ -252,9 +252,9 @@ int mtx_unlock(mtx_t *mtx);
 /* Condition variable */
 #if defined(_TTHREAD_WIN32_)
 typedef struct {
-    HANDLE mEvents[2];                  /* Signal and broadcast event HANDLEs. */
-    unsigned int mWaitersCount;         /* Count of the number of waiters. */
-    CRITICAL_SECTION mWaitersCountLock; /* Serialize access to mWaitersCount. */
+  HANDLE mEvents[2];                  /* Signal and broadcast event HANDLEs. */
+  unsigned int mWaitersCount;         /* Count of the number of waiters. */
+  CRITICAL_SECTION mWaitersCountLock; /* Serialize access to mWaitersCount. */
 } cnd_t;
 #else
 typedef pthread_cond_t cnd_t;
@@ -451,13 +451,13 @@ void *tss_get(tss_t key);
 int tss_set(tss_t key, void *val);
 
 #if defined(_TTHREAD_WIN32_)
-typedef struct {
+  typedef struct {
     LONG volatile status;
     CRITICAL_SECTION lock;
-} once_flag;
-#define ONCE_FLAG_INIT {0,}
+  } once_flag;
+  #define ONCE_FLAG_INIT {0,}
 #else
-#define once_flag pthread_once_t
+  #define once_flag pthread_once_t
   #define ONCE_FLAG_INIT PTHREAD_ONCE_INIT
 #endif
 
@@ -467,9 +467,9 @@ typedef struct {
  * @param func Callback to invoke.
  */
 #if defined(_TTHREAD_WIN32_)
-void call_once(once_flag *flag, void (*func)(void));
+  void call_once(once_flag *flag, void (*func)(void));
 #else
-#define call_once(flag,func) pthread_once(flag,func)
+  #define call_once(flag,func) pthread_once(flag,func)
 #endif
 
 #ifdef __cplusplus

@@ -5,8 +5,7 @@
 extern "C" {
 #endif
 
-#define ca_crt_rsa_size 230347
-#define ca_der_count 146
+/* The active PEM bundle and its length are computed from ca_ders in ssl_client.c. */
 
 
 //virtual studio limit string < 65535

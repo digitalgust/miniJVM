@@ -1,6 +1,6 @@
 /*
 
-Copyright (vm) 2005-2008, Simon Howard
+Copyright (c) 2005-2008, Simon Howard
 
 Permission to use, copy, modify, and/or distribute this software 
 for any purpose with or without fee is hereby granted, provided 
@@ -39,12 +39,12 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #ifndef ALGORITHM_ARRAYLIST_H
 #define ALGORITHM_ARRAYLIST_H
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "spinlock.h"
-
 /**
  * A value to be stored in an @ref ArrayList.
  */
@@ -91,9 +91,7 @@ typedef void (*ArrayListIteratorFunc)(ArrayListValue value, void *para);
 
 typedef int (*ArrayListEqualFunc)(ArrayListValue value1, ArrayListValue value2);
 
-static inline int DEFAULT_ARRAYLIST_EQUALS_FUNC(ArrayListValue value1, ArrayListValue value2) {
-    return value2 == value1;
-}
+int DEFAULT_ARRAYLIST_EQUALS_FUNC(ArrayListValue value1, ArrayListValue value2);
 
 /**
  * Compare two values in an arraylist.  Used by @ref arraylist_sort
@@ -128,7 +126,17 @@ ArrayList *arraylist_create(int length);
  * @param arraylist      The ArrayList to free.
  */
 
-void arraylist_destory(ArrayList *arraylist);
+void arraylist_destroy(ArrayList *arraylist);
+/* Compatibility with existing j2c platform code. */
+#define arraylist_destory arraylist_destroy
+
+/** Ensure that at least @p capacity entries can be appended without a
+ * further allocation.  Returns zero on invalid input, integer overflow, or
+ * allocation failure. */
+int arraylist_ensure_capacity(ArrayList *arraylist, int capacity);
+
+/** Unlocked variant for callers that already provide synchronization. */
+int arraylist_ensure_capacity_unsafe(ArrayList *arraylist, int capacity);
 
 /**
  * Append a value to the end of an ArrayList.
@@ -139,7 +147,7 @@ void arraylist_destory(ArrayList *arraylist);
  *                       if it was not possible to allocate more memory
  *                       for the new entry.
  */
-
+int arraylist_push_back_unsafe(ArrayList *arraylist, ArrayListValue data);
 
 int arraylist_push_back(ArrayList *arraylist, ArrayListValue data);
 
@@ -147,6 +155,7 @@ int arraylist_push_back(ArrayList *arraylist, ArrayListValue data);
 int arraylist_remove(ArrayList *arraylist, ArrayListValue data);
 
 int arraylist_remove_unsafe(ArrayList *arraylist, ArrayListValue data);
+
 /**
  * Prepend a value to the beginning of an ArrayList.
  *
@@ -156,6 +165,7 @@ int arraylist_remove_unsafe(ArrayList *arraylist, ArrayListValue data);
  *                       if it was not possible to allocate more memory
  *                       for the new entry.
  */
+int arraylist_push_front_unsafe(ArrayList *arraylist, ArrayListValue data);
 
 int arraylist_push_front(ArrayList *arraylist, ArrayListValue data);
 
@@ -210,13 +220,17 @@ ArrayListValue arraylist_get_value_unsafe(ArrayList *arraylist, int index);
 
 ArrayListValue arraylist_get_value(ArrayList *arraylist, int index);
 
+ArrayListValue arraylist_pop_back_unsafe(ArrayList *arraylist);
+
 ArrayListValue arraylist_pop_back(ArrayList *arraylist);
+
+ArrayListValue arraylist_pop_front_unsafe(ArrayList *arraylist);
 
 ArrayListValue arraylist_pop_front(ArrayList *arraylist);
 
-int arraylist_push_back_unsafe(ArrayList *arraylist, ArrayListValue data);
+ArrayListValue arraylist_peek_front(ArrayList *arraylist);
 
-ArrayListValue arraylist_pop_back_unsafe(ArrayList *arraylist);
+ArrayListValue arraylist_peek_back(ArrayList *arraylist);
 
 /**
  * Remove all entries from an ArrayList.

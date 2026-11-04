@@ -262,6 +262,7 @@ struct _InstProp {
     u8 type;
     u8 is_weakreference;
     u8 is_finalized;
+    u8 thread_started;
 };
 
 
@@ -533,7 +534,7 @@ StackFrame *stackframe_create();
 
 void stackframe_destroy(StackFrame *stackframe);
 
-s32 utf8_2_unicode(Utf8String *ustr, u16 *arr);
+s32 j2c_utf8_2_unicode(Utf8String *ustr, u16 *arr);
 
 int unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 u16arr_len);
 
@@ -616,6 +617,8 @@ s32 jarray_destroy(JArray *arr);
 s32 instance_of_classname_index(JObject *jobj, s32 classNameIdx);
 
 s32 checkcast(JObject *jobj, s32 classNameIdx);
+
+JObject *jstring_intern(JObject *jstr);
 
 s32 find_exception_handler_index(JThreadRuntime *runtime);
 

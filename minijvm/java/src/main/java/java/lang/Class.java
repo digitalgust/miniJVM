@@ -484,6 +484,7 @@ public final class Class<T> implements java.io.Serializable,
             }
             try {
                 final Method values = getMethod("values");
+                values.setAccessible(true);
                 T[] temporaryConstants = (T[]) values.invoke(null);
                 enumConstants = temporaryConstants;
             } // These can happen when users concoct enum-like classes

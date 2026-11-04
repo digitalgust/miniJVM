@@ -3,19 +3,22 @@
 //
 #include "memory.h"
 #include "bytebuf.h"
+#include <string.h>
 
 ByteBuf *bytebuf_create(u32 size) {
     if (!size)size = 256;
     if (size) {
         ByteBuf *bf = jvm_calloc(sizeof(ByteBuf));
+        if (!bf) return NULL;
         bf->buf = jvm_calloc(size);
+        if (!bf->buf) { jvm_free(bf); return NULL; }
         bf->_alloc_size = size;
         return bf;
     }
     return NULL;
 }
 
-void bytebuf_destory(ByteBuf *bf) {
+void bytebuf_destroy(ByteBuf *bf) {
     if (bf) {
         jvm_free(bf->buf);
         jvm_free(bf);
@@ -27,28 +30,74 @@ u32 bytebuf_available(ByteBuf *bf) {
 }
 
 
+static int bytebuf_reserve(ByteBuf *bf, u32 additional) {
+    if (!bf || additional > (u32) -1 - bf->wp) return 0;
+    u32 required = bf->wp + additional;
+    if (required > bf->_alloc_size) {
+        u32 capacity = bf->_alloc_size;
+        u32 grown = capacity <= (u32) -1 / 2 ? capacity * 2 : (u32) -1;
+        bytebuf_expand(bf, grown > required ? grown : required);
+    }
+    return bf->_alloc_size >= required;
+}
+
 s32 bytebuf_write(ByteBuf *bf, s32 v) {
-    if (bf->wp + sizeof(c8) > bf->_alloc_size)
-        bytebuf_expand(bf, bf->_alloc_size << 1);
+    if (!bytebuf_reserve(bf, 1)) return -1;
 
     bf->buf[bf->wp++] = v;
     return 1;
 }
 
+s32 bytebuf_write_byte(ByteBuf *bf, c8 v) {
+    return bytebuf_write(bf, v);
+}
+
+s32 bytebuf_write_short(ByteBuf *bf, s16 v) {
+    if (!bytebuf_reserve(bf, sizeof(s16))) return -1;
+    bf->buf[bf->wp++] = (u8) (v >> 8);
+    bf->buf[bf->wp++] = (u8) (v);
+    return 2;
+}
+
+s32 bytebuf_write_int(ByteBuf *bf, s32 v) {
+    if (!bytebuf_reserve(bf, sizeof(s32))) return -1;
+    bf->buf[bf->wp++] = (u8) (v >> 24);
+    bf->buf[bf->wp++] = (u8) (v >> 16);
+    bf->buf[bf->wp++] = (u8) (v >> 8);
+    bf->buf[bf->wp++] = (u8) (v);
+    return 4;
+}
+
+s32 bytebuf_write_long(ByteBuf *bf, s64 v) {
+    if (!bytebuf_reserve(bf, sizeof(s64))) return -1;
+    bf->buf[bf->wp++] = (u8) (v >> 56);
+    bf->buf[bf->wp++] = (u8) (v >> 48);
+    bf->buf[bf->wp++] = (u8) (v >> 40);
+    bf->buf[bf->wp++] = (u8) (v >> 32);
+    bf->buf[bf->wp++] = (u8) (v >> 24);
+    bf->buf[bf->wp++] = (u8) (v >> 16);
+    bf->buf[bf->wp++] = (u8) (v >> 8);
+    bf->buf[bf->wp++] = (u8) (v);
+    return 8;
+}
+
 
 s32 bytebuf_write_batch(ByteBuf *bf, c8 *data, s32 size) {
-    if (size < 0) {
+    if (size < 0 || !bytebuf_reserve(bf, (u32) size)) {
         return -1;
     }
-    if (bf->_alloc_size < bf->wp + size)//
-        bytebuf_expand(bf, bf->wp + size);
-    memcpy(&bf->buf[bf->wp], data, size);
+    if (size) memcpy(&bf->buf[bf->wp], data, size);
     bf->wp += size;
     return size;
 }
 
 //-----------------------------------------------------------------------------------
-
+s32 bytebuf_hasmore(ByteBuf *bf, u32 size) {
+    if (bf->rp + size > bf->wp) {
+        return 0;
+    }
+    return 1;
+}
 
 s32 bytebuf_read(ByteBuf *bf) {
     if (bf->rp + 1 > bf->wp) {
@@ -58,8 +107,60 @@ s32 bytebuf_read(ByteBuf *bf) {
     return i;
 }
 
+c8 bytebuf_read_byte(ByteBuf *bf) {
+    return (c8) bytebuf_read(bf);
+}
+
+s16 bytebuf_read_short(ByteBuf *bf) {
+    if (bf->rp + 2 > bf->wp) {
+        return -1;
+    }
+    s16 i = (u8) bf->buf[bf->rp++];
+    i <<= 8;
+    i |= (u8) bf->buf[bf->rp++];
+    return i;
+}
+
+s32 bytebuf_read_int(ByteBuf *bf) {
+    if (bf->rp + 4 > bf->wp) {
+        return -1;
+    }
+    s32 i = (u8) bf->buf[bf->rp++];
+    i <<= 8;
+    i |= (u8) bf->buf[bf->rp++];
+    i <<= 8;
+    i |= (u8) bf->buf[bf->rp++];
+    i <<= 8;
+    i |= (u8) bf->buf[bf->rp++];
+    return i;
+}
+
+s64 bytebuf_read_long(ByteBuf *bf) {
+    if (bf->rp + 8 > bf->wp) {
+        return -1;
+    }
+
+    s64 i = (u8) bf->buf[bf->rp++];
+    i <<= 8;
+    i |= (u8) bf->buf[bf->rp++];
+    i <<= 8;
+    i |= (u8) bf->buf[bf->rp++];
+    i <<= 8;
+    i |= (u8) bf->buf[bf->rp++];
+    i <<= 8;
+    i |= (u8) bf->buf[bf->rp++];
+    i <<= 8;
+    i |= (u8) bf->buf[bf->rp++];
+    i <<= 8;
+    i |= (u8) bf->buf[bf->rp++];
+    i <<= 8;
+    i |= (u8) bf->buf[bf->rp++];
+    return i;
+}
+
 
 s32 bytebuf_read_batch(ByteBuf *bf, c8 *data, s32 size) {
+    if (size <= 0) return size == 0 ? 0 : -1;
     s32 len = size < bf->wp - bf->rp ? size : bf->wp - bf->rp;
     if (len <= 0) {
         return -1;
@@ -75,7 +176,7 @@ s32 bytebuf_read_from(ByteBuf *bf, ByteBuf *src, s32 size) {
         return size;
     }
     s32 len = size < src->wp - src->rp ? size : src->wp - src->rp;
-    bytebuf_write_batch(bf, &src->buf[src->rp], len);
+    if (bytebuf_write_batch(bf, &src->buf[src->rp], len) < 0) return -1;
     src->rp += len;
     return len;
 }
@@ -86,7 +187,7 @@ s32 bytebuf_write_to(ByteBuf *bf, ByteBuf *dst, s32 size) {
         return size;
     }
     s32 len = size < bf->wp - bf->rp ? size : bf->wp - bf->rp;
-    bytebuf_write_batch(dst, &bf->buf[bf->rp], len);
+    if (bytebuf_write_batch(dst, &bf->buf[bf->rp], len) < 0) return -1;
     bf->rp += len;
     return len;
 }
@@ -94,14 +195,23 @@ s32 bytebuf_write_to(ByteBuf *bf, ByteBuf *dst, s32 size) {
 
 
 void bytebuf_expand(ByteBuf *bf, u32 size) {
-    if (size == 0) {
+    if (!bf || size <= bf->_alloc_size) {
         return;
     }
-//    if (size == 1854) {
-//        int debug = 1;
-//    }
-    void *p = jvm_realloc(bf->buf, size);
+
+    /* Calculate actual data size to copy */
+    u32 data_size = bf->wp;
+
+    void *p = jvm_malloc(size);
     if (p) {
+        /* Copy only the actual data that is in use */
+        if (data_size > 0) {
+            memmove(p, bf->buf, data_size);
+        }
+
+        /* Free old memory */
+        jvm_free(bf->buf);
+
         bf->buf = p;
         bf->_alloc_size = size;
     }

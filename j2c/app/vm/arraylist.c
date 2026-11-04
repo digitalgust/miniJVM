@@ -1,6 +1,6 @@
 /*
 
-Copyright (vm) 2005-2008, Simon Howard
+Copyright (c) 2005-2008, Simon Howard
 
 Permission to use, copy, modify, and/or distribute this software 
 for any purpose with or without fee is hereby granted, provided 
@@ -20,7 +20,9 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include <stdlib.h>
 #include <string.h>
-#include "jvmtype.h"
+#include <limits.h>
+
+#include "d_type.h"
 #include "arraylist.h"
 
 
@@ -44,6 +46,7 @@ ArrayList *arraylist_create(int length) {
     if (length <= 0) {
         length = 16;
     }
+    if ((size_t) length > UINT32_MAX / sizeof(ArrayListValue)) return NULL;
 
     /* Allocate the new ArrayList and fill in the obj_fields.  There are
      * initially no entries. */
@@ -70,7 +73,7 @@ ArrayList *arraylist_create(int length) {
     return new_arraylist;
 }
 
-void arraylist_destory(ArrayList *arraylist) {
+void arraylist_destroy(ArrayList *arraylist) {
     /* Do not free if a NULL pointer is passed */
 
     if (arraylist != NULL) {
@@ -80,21 +83,36 @@ void arraylist_destory(ArrayList *arraylist) {
     }
 }
 
-static inline int arraylist_enlarge(ArrayList *arraylist) {
+int arraylist_ensure_capacity_unsafe(ArrayList *arraylist, int capacity) {
     ArrayListValue *data;
     int newsize;
 
-    /* Double the allocated size */
+    if (!arraylist || capacity < 0) return 0;
+    if (capacity <= arraylist->_alloced) return 1;
+    if ((size_t) capacity > SIZE_MAX / sizeof(ArrayListValue) ||
+        (size_t) capacity > UINT32_MAX / sizeof(ArrayListValue)) return 0;
 
-    newsize = arraylist->_alloced * 2;
+    newsize = arraylist->_alloced > 0 ? arraylist->_alloced : 16;
+    while (newsize < capacity) {
+        if (newsize > INT_MAX / 2) {
+            newsize = capacity;
+            break;
+        }
+        newsize *= 2;
+    }
+    if ((size_t) newsize > UINT32_MAX / sizeof(ArrayListValue)) return 0;
 
     /* Reallocate the array to the new size */
 
-    data = jvm_realloc(arraylist->data, sizeof(ArrayListValue) * newsize);
+    data = jvm_calloc((size_t) newsize * sizeof(ArrayListValue));
 
     if (data == NULL) {
+        printf("[ERROR]arraylist alloc mem fail, size:%llu bytes\n",
+               (unsigned long long) ((size_t) newsize * sizeof(ArrayListValue)));
         return 0;
     } else {
+        memcpy(data, arraylist->data, (size_t) arraylist->length * sizeof(ArrayListValue));
+        jvm_free(arraylist->data);
         arraylist->data = data;
         arraylist->_alloced = newsize;
 
@@ -102,8 +120,25 @@ static inline int arraylist_enlarge(ArrayList *arraylist) {
     }
 }
 
+int arraylist_ensure_capacity(ArrayList *arraylist, int capacity) {
+    int result;
+    if (!arraylist) return 0;
+    spin_lock(&arraylist->spinlock);
+    result = arraylist_ensure_capacity_unsafe(arraylist, capacity);
+    spin_unlock(&arraylist->spinlock);
+    return result;
+}
+
+static inline int arraylist_enlarge(ArrayList *arraylist) {
+    if (!arraylist || arraylist->_alloced == INT_MAX) return 0;
+    return arraylist_ensure_capacity_unsafe(
+            arraylist,
+            arraylist->_alloced > INT_MAX / 2 ? INT_MAX : arraylist->_alloced * 2);
+}
+
 static inline int _arraylist_insert_impl(ArrayList *arraylist, int index, ArrayListValue data) {
 
+    if (arraylist->length == INT_MAX) return 0;
     int doit = 1;
     if (index < 0 || index > arraylist->length) {
         doit = 0;
@@ -123,7 +158,7 @@ static inline int _arraylist_insert_impl(ArrayList *arraylist, int index, ArrayL
         ++arraylist->length;
     }
 
-    return 1;
+    return doit;
 }
 
 int arraylist_insert(ArrayList *arraylist, int index, ArrayListValue data) {
@@ -133,6 +168,13 @@ int arraylist_insert(ArrayList *arraylist, int index, ArrayListValue data) {
         r = _arraylist_insert_impl(arraylist, index, data);
     }
     spin_unlock(&arraylist->spinlock);
+
+    return r;
+}
+
+int arraylist_push_front_unsafe(ArrayList *arraylist, ArrayListValue data) {
+    s32 r;
+    r = _arraylist_insert_impl(arraylist, 0, data);
 
     return r;
 }
@@ -205,11 +247,12 @@ int arraylist_remove(ArrayList *arraylist, ArrayListValue data) {
     int index = -1;
     spin_lock(&arraylist->spinlock);
     {
-        arraylist_remove_unsafe(arraylist, data);
+        index = arraylist_remove_unsafe(arraylist, data);
     }
     spin_unlock(&arraylist->spinlock);
     return index;
 }
+
 int arraylist_compare_ptr(ArrayListValue a, ArrayListValue b) {
     return a == b;
 }
@@ -220,6 +263,10 @@ void arraylist_remove_at(ArrayList *arraylist, int index) {
         arraylist_remove_range(arraylist, index, 1);
     }
     spin_unlock(&arraylist->spinlock);
+}
+
+int DEFAULT_ARRAYLIST_EQUALS_FUNC(ArrayListValue value1, ArrayListValue value2) {
+    return value2 == value1;
 }
 
 int arraylist_index_of(ArrayList *arraylist,
@@ -257,13 +304,43 @@ ArrayListValue arraylist_get_value(ArrayList *arraylist, int index) {
     return value;
 }
 
-ArrayListValue arraylist_pop_front(ArrayList *arraylist) {
+ArrayListValue arraylist_peek_front(ArrayList *arraylist) {
     ArrayListValue v = NULL;
     spin_lock(&arraylist->spinlock);
     {
         if (arraylist->length > 0) {
             v = arraylist->data[0];
-            arraylist_remove_range(arraylist, 0, 1);
+        }
+    }
+    spin_unlock(&arraylist->spinlock);
+    return v;
+}
+
+ArrayListValue arraylist_pop_front_unsafe(ArrayList *arraylist) {
+    ArrayListValue v = NULL;
+    if (arraylist->length > 0) {
+        v = arraylist->data[0];
+        arraylist_remove_range(arraylist, 0, 1);
+    }
+    return v;
+}
+
+ArrayListValue arraylist_pop_front(ArrayList *arraylist) {
+    ArrayListValue v = NULL;
+    spin_lock(&arraylist->spinlock);
+    {
+        v = arraylist_pop_front_unsafe(arraylist);
+    }
+    spin_unlock(&arraylist->spinlock);
+    return v;
+}
+
+ArrayListValue arraylist_peek_back(ArrayList *arraylist) {
+    ArrayListValue v = NULL;
+    spin_lock(&arraylist->spinlock);
+    {
+        if (arraylist->length > 0) {
+            v = arraylist->data[arraylist->length - 1];
         }
     }
     spin_unlock(&arraylist->spinlock);

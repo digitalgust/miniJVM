@@ -59,7 +59,7 @@ public class ClassManger {
         ClassFile cf = helper.getClassFile(className);
         if (className.startsWith("[")) cf = helper.getClassFile(Util.CLASS_JAVA_LANG_OBJECT);
         if (cf == null) {
-            System.out.println("class not found :" + className);
+            return null;
         }
         for (int i = 0, imax = cf.getFields().length; i < imax; i++) {
             f = cf.getFields()[i];
@@ -67,6 +67,7 @@ public class ClassManger {
                 return f;
             }
         }
+        f = null;
         String superName = cf.getSuperClassName();
         if (superName != null) f = findField(superName, fieldName, descript);
         if (f != null) {

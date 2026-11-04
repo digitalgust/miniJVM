@@ -17,22 +17,22 @@ s32 zip_loadfile(char const *jarpath, char const *filename, ByteBuf *buf) {
         ret = -1;
     } else {
 
-        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, 0);//
+        /* ZIP/JAR entry names are case-sensitive, including Java class names. */
+        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, MZ_ZIP_FLAG_CASE_SENSITIVE);
         if (!mz_zip_reader_file_stat(&zipArchive, file_index, &file_stat)) {
             ret = -1;
         } else {
             size_t uncompressed_size = (size_t) file_stat.m_uncomp_size;
-            void *p = mz_zip_reader_extract_file_to_heap(&zipArchive, file_stat.m_filename, &uncompressed_size, 0);
-            if (!p) {
+            bytebuf_expand(buf, uncompressed_size);
+            mz_bool p = mz_zip_reader_extract_file_to_mem(&zipArchive, file_stat.m_filename, buf->buf, uncompressed_size, MZ_ZIP_FLAG_CASE_SENSITIVE);
+            if (p == MZ_FALSE) {
                 ret = -1;
             } else {
-
-                bytebuf_write_batch(buf, p, (s32) uncompressed_size);
-                mz_free(p);
+                buf->wp = uncompressed_size;
             }
         }
+        mz_zip_reader_end(&zipArchive);
     }
-    mz_zip_reader_end(&zipArchive);
     return ret;
 }
 
@@ -47,12 +47,15 @@ s32 zip_loadfile_to_mem(char const *jarpath, char const *filename, c8 *buf, s64 
         filename += 1;
     }
 
+//    if (filename[0] == '0' && filename[1] == '\0') {
+//        s32 debug = 1;
+//    }
     int ret = 0;
     if (mz_zip_reader_init_file(&zipArchive, jarpath, 0) == MZ_FALSE) {//
         ret = -1;
     } else {
 
-        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, 0);//
+        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, MZ_ZIP_FLAG_CASE_SENSITIVE);
         if (!mz_zip_reader_file_stat(&zipArchive, file_index, &file_stat)) {
             ret = -1;
         } else {
@@ -62,8 +65,8 @@ s32 zip_loadfile_to_mem(char const *jarpath, char const *filename, c8 *buf, s64 
                 ret = -1;
             }
         }
+        mz_zip_reader_end(&zipArchive);
     }
-    mz_zip_reader_end(&zipArchive);
     return ret;
 }
 
@@ -82,15 +85,15 @@ s64 zip_get_file_unzip_size(char const *jarpath, char const *filename) {
         ret = -1;
     } else {
 
-        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, 0);//
+        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, MZ_ZIP_FLAG_CASE_SENSITIVE);
         if (!mz_zip_reader_file_stat(&zipArchive, file_index, &file_stat)) {
             ret = -1;
         } else {
             size_t uncompressed_size = (size_t) file_stat.m_uncomp_size;
             ret = uncompressed_size;
         }
+        mz_zip_reader_end(&zipArchive);
     }
-    mz_zip_reader_end(&zipArchive);
     return ret;
 }
 
@@ -109,14 +112,14 @@ s32 zip_get_file_index(char const *jarpath, char const *filename) {
         ret = -1;
     } else {
 
-        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, 0);//
+        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, MZ_ZIP_FLAG_CASE_SENSITIVE);
         if (!mz_zip_reader_file_stat(&zipArchive, file_index, &file_stat)) {
             ret = -1;
         } else {
             ret = file_index;
         }
+        mz_zip_reader_end(&zipArchive);
     }
-    mz_zip_reader_end(&zipArchive);
     return ret;
 }
 
@@ -125,6 +128,11 @@ s32 zip_savefile_mem(char const *jarpath, char const *filename, char const *buf,
     int file_index = 0;
     mz_zip_archive zipArchive = {0};
     mz_zip_archive_file_stat file_stat = {0};
+
+    //skit the first '/'
+    if (filename && filename[0] == '/') {
+        filename += 1;
+    }
 
     int ret = 0;
     if (mz_zip_reader_init_file(&zipArchive, jarpath, 0) == MZ_FALSE) {//
@@ -143,8 +151,8 @@ s32 zip_savefile_mem(char const *jarpath, char const *filename, char const *buf,
         if (mz_zip_writer_finalize_archive(&zipArchive) == MZ_FALSE) {//
             ret = -1;
         }
+        mz_zip_writer_end(&zipArchive);
     }
-    mz_zip_writer_end(&zipArchive);
     return ret;
 }
 
@@ -163,8 +171,8 @@ s32 zip_filecount(char *jarpath) {
         ret = -1;
     } else {
         ret = mz_zip_reader_get_num_files(&zipArchive);
+        mz_zip_reader_end(&zipArchive);
     }
-    mz_zip_reader_end(&zipArchive);
     return ret;
 }
 
@@ -187,20 +195,20 @@ ArrayList *zip_get_filenames(char *jarpath) {
             }
         }
 
+        mz_zip_reader_end(&zipArchive);
     }
-    mz_zip_reader_end(&zipArchive);
     return list;
 }
 
-void zip_destory_filenames_list(ArrayList *list) {
+void zip_destroy_filenames_list(ArrayList *list) {
     s32 i;
     for (i = 0; i < list->length; i++) {
         Utf8String *ustr = arraylist_get_value_unsafe(list, i);
         if (ustr) {
-            utf8_destory(ustr);
+            utf8_destroy(ustr);
         }
     }
-    arraylist_destory(list);
+    arraylist_destroy(list);
 }
 
 s32 zip_is_directory(char *jarpath, int index) {
@@ -212,8 +220,8 @@ s32 zip_is_directory(char *jarpath, int index) {
     } else {
 
         ret = mz_zip_reader_is_file_a_directory(&zipArchive, index);
+        mz_zip_reader_end(&zipArchive);
     }
-    mz_zip_reader_end(&zipArchive);
     return ret;
 }
 
@@ -228,18 +236,72 @@ s32 zip_extract(char *zip_data, int size, ByteBuf *data) {
             ret = -1;
         } else {
             size_t uncompressed_size = (size_t) file_stat.m_uncomp_size;
-            void *p = mz_zip_reader_extract_to_heap(&zipArchive, 0, &uncompressed_size, 0);
-            if (!p) {
+            bytebuf_expand(data, (s32) uncompressed_size);
+            mz_bool p = mz_zip_reader_extract_to_mem(&zipArchive, 0, data->buf, uncompressed_size, 0);
+            if (p == MZ_FALSE) {
                 ret = -1;
             } else {
-
-                bytebuf_write_batch(data, p, (s32) uncompressed_size);
-                mz_free(p);
+                data->wp = uncompressed_size;
             }
         }
         mz_zip_reader_end(&zipArchive);
     }
     return ret;
+}
+
+s32 zlib_extract(char *zlib_data, int size, int expected_size, ByteBuf *data) {
+    mz_ulong out_len;
+    int ret;
+
+    if (zlib_data == NULL || data == NULL || size < 0 || expected_size < 0) {
+        return -1;
+    }
+    if (expected_size == 0) {
+        data->wp = 0;
+        return 0;
+    }
+
+    bytebuf_expand(data, expected_size);
+    out_len = (mz_ulong) expected_size;
+    ret = mz_uncompress((unsigned char *) data->buf, &out_len, (const unsigned char *) zlib_data, (mz_ulong) size);
+    if (ret != MZ_OK || out_len != (mz_ulong) expected_size) {
+        data->wp = 0;
+        return -1;
+    }
+    data->wp = (s32) out_len;
+    return 0;
+}
+
+s32 zlib_compress(char *data, int size, ByteBuf *zlib_data) {
+    mz_ulong max_len;
+    mz_ulong out_len;
+    unsigned char *compressed_data;
+    int ret;
+
+    if (data == NULL || zlib_data == NULL || size < 0) {
+        return -1;
+    }
+    if (size == 0) {
+        zlib_data->wp = 0;
+        return 0;
+    }
+
+    max_len = mz_compressBound((mz_ulong) size);
+    compressed_data = (unsigned char *) MZ_MALLOC(max_len);
+    if (compressed_data == NULL) {
+        return -1;
+    }
+
+    out_len = max_len;
+    ret = mz_compress(compressed_data, &out_len, (const unsigned char *) data, (mz_ulong) size);
+    if (ret != MZ_OK) {
+        MZ_FREE(compressed_data);
+        return -1;
+    }
+
+    bytebuf_write_batch(zlib_data, (char *) compressed_data, (s32) out_len);
+    MZ_FREE(compressed_data);
+    return 0;
 }
 
 s32 zip_compress(char *data, int size, ByteBuf *zip_data) {
@@ -383,3 +445,145 @@ s32 gzip_extract(char *gzip_data, int size, ByteBuf *data) {
 
     return 0;
 }
+
+//
+//
+//void test_gzip_compression() {
+//    // 测试数据
+//    const char *original_data = "这是一个测试字符串，用于验证gzip压缩和解压功能是否正常工作。";
+//    int original_size = strlen(original_data) + 1; // 包含null终止符
+//
+//    // 初始化缓冲区
+//    ByteBuf *compressed_buf = bytebuf_create(1024);
+//    ByteBuf *decompressed_buf = bytebuf_create(1024);
+//
+//    // 压缩数据
+//    printf("开始压缩...\n");
+//    int compress_result = gzip_compress((char *) original_data, original_size, compressed_buf);
+//    if (compress_result != 0) {
+//        printf("压缩失败!\n");
+//        return;
+//    }
+//    printf("压缩成功，压缩后大小: %d 字节\n", compressed_buf->wp);
+//
+//    // 解压数据
+//    printf("开始解压...\n");
+//    int decompress_result = gzip_extract(compressed_buf->buf, compressed_buf->wp, decompressed_buf);
+//    if (decompress_result != 0) {
+//        printf("解压失败!\n");
+//        return;
+//    }
+//    printf("解压成功，解压后大小: %d 字节\n", decompressed_buf->wp);
+//
+//    // 比较数据
+//    if (original_size != decompressed_buf->wp) {
+//        printf("数据大小不一致! 原始: %d, 解压后: %d\n", original_size, decompressed_buf->wp);
+//    } else if (memcmp(original_data, decompressed_buf->buf, original_size) != 0) {
+//        printf("数据内容不一致!\n");
+//    } else {
+//        printf("测试通过! 原始数据和解压数据完全一致。\n");
+//    }
+//
+//    // 清理
+//    bytebuf_destroy(compressed_buf);
+//    bytebuf_destroy(decompressed_buf);
+//}
+//
+//void test_gzip_file_compression() {
+//    const char *input_file = "./f"; // 输入文件路径
+//    const char *compressed_file = "./test_compressed.gz"; // 压缩后文件路径
+//    const char *decompressed_file = "./test_decompressed.dat"; // 解压后文件路径
+//
+//    // 1. 读取原始文件内容
+//    ByteBuf *original_buf = bytebuf_create(0);
+//    FILE *fp = fopen(input_file, "rb");
+//    if (!fp) {
+//        printf("无法打开输入文件: %s\n", input_file);
+//        return;
+//    }
+//
+//    fseek(fp, 0, SEEK_END);
+//    long file_size = ftell(fp);
+//    fseek(fp, 0, SEEK_SET);
+//
+//    bytebuf_expand(original_buf, file_size);
+//    fread(original_buf->buf, 1, file_size, fp);
+//    original_buf->wp = file_size;
+//    fclose(fp);
+//
+//    // 2. 压缩数据
+//    ByteBuf *compressed_buf = bytebuf_create(0);
+//    printf("开始压缩文件...\n");
+//    if (gzip_compress(original_buf->buf, original_buf->wp, compressed_buf) != 0) {
+//        printf("文件压缩失败\n");
+//        goto cleanup;
+//    }
+//    printf("压缩成功，压缩后大小: %d 字节\n", compressed_buf->wp);
+//
+//
+//    // 保存压缩文件
+//    fp = fopen(compressed_file, "wb");
+//    if (!fp) {
+//        printf("无法创建压缩文件\n");
+//        goto cleanup;
+//    }
+//    fwrite(compressed_buf->buf, 1, compressed_buf->wp, fp);
+//    fclose(fp);
+//
+//
+//
+//    compressed_file = "./f_c.gz";
+//    FILE *fp1 = fopen(compressed_file, "rb");
+//    if (!fp1) {
+//        printf("无法打开输入文件: %s\n", compressed_file);
+//        return;
+//    }
+//
+//    fseek(fp1, 0, SEEK_END);
+//    long file_size1 = ftell(fp1);
+//    fseek(fp1, 0, SEEK_SET);
+//
+//    bytebuf_expand(compressed_buf, file_size1);
+//    fread(compressed_buf->buf, 1, file_size, fp1);
+//    compressed_buf->wp = file_size1;
+//    fclose(fp1);
+//    // 3. 解压数据
+//    ByteBuf *decompressed_buf = bytebuf_create(0);
+//    printf("开始解压文件...\n");
+//    if (gzip_extract(compressed_buf->buf, compressed_buf->wp, decompressed_buf) != 0) {
+//        printf("文件解压失败\n");
+//        goto cleanup;
+//    }
+//    printf("解压成功，解压后大小: %d 字节\n", decompressed_buf->wp);
+//
+//    // 保存解压文件
+//    fp = fopen(decompressed_file, "wb");
+//    if (!fp) {
+//        printf("无法创建解压文件\n");
+//        goto cleanup;
+//    }
+//    fwrite(decompressed_buf->buf, 1, decompressed_buf->wp, fp);
+//    fclose(fp);
+//
+//    // 4. 验证数据一致性
+//    if (original_buf->wp != decompressed_buf->wp) {
+//        printf("警告: 文件大小不一致 (原始: %d, 解压后: %d)\n", original_buf->wp, decompressed_buf->wp);
+//    } else if (memcmp(original_buf->buf, decompressed_buf->buf, original_buf->wp) != 0) {
+//        printf("警告: 文件内容不一致\n");
+//    } else {
+//        printf("测试成功! 原始文件和解压文件完全一致\n");
+//    }
+//
+//    cleanup:
+//    // 释放资源
+//    if (original_buf) bytebuf_destroy(original_buf);
+//    if (compressed_buf) bytebuf_destroy(compressed_buf);
+//    if (decompressed_buf) bytebuf_destroy(decompressed_buf);
+//}
+//
+//
+//int main() {
+//    test_gzip_compression();
+//    test_gzip_file_compression();
+//    return 0;
+//}

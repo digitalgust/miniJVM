@@ -3,14 +3,15 @@ project(app C)
 
 set(CMAKE_C_STANDARD 11)
 
-include_directories(generted/c)
+set(J2C_GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generted/c" CACHE PATH "Translator C output")
+include_directories(${J2C_GENERATED_DIR})
 include_directories(vm)
 include_directories(vm/https)
 include_directories(vm/https/mbedtls/include)
 include_directories(vm/https/mbedtls/include/mbedtls)
 
 file(GLOB_RECURSE SOURCES 
-    "generted/c/*.c"
+    "${J2C_GENERATED_DIR}/*.c"
     "vm/*.c"
     "vm/https/mbedtls/library/*.c"
     "platform/desktop/*.c"

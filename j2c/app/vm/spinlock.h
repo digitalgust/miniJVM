@@ -2,103 +2,316 @@
 // Created by Gust on 2017/11/15 0015.
 //
 
-
 #ifndef MINI_JVM_SPINLOCK_H
 #define MINI_JVM_SPINLOCK_H
 #ifdef __cplusplus
 extern "C" {
+
+
 #endif
-//======================= spinlock =============================
-//      reenter spinlock
+//======================= Spinlock =============================
+// This spinlock implementation provides basic lock and unlock functionalities
+// with support for reentrant locking. Reentrant locking allows the same thread
+// to acquire the lock multiple times without causing a deadlock. The lock is
+// owned by the thread that acquires it, and the ownership is tracked to ensure
+// that only the owning thread can release the lock. This implementation is
+// designed to be lightweight and efficient, suitable for scenarios where
+// low-overhead synchronization is required. The spinlock also includes adaptive
+// spinning and timeout features to enhance performance and responsiveness in
+// high-contention environments.
 
 #include "tinycthread.h"
+#include "d_type.h"  // Include d_type.h for type definitions
 
+#define MAX_SPIN 1024
 
 struct _SpinLock {
     volatile s32 lock;
     volatile s32 count;
+    volatile s32 owner_valid;
+#if defined(_TTHREAD_WIN32_)
+    volatile DWORD owner_tid; //for win32 handle
+#else
     volatile thrd_t owner;
+#endif
 };
+
 typedef struct _SpinLock spinlock_t;
 
-
-#if defined( __JVM_OS_VS__ )
-static inline s64 __sync_bool_compare_and_swap64(volatile s64* lock, s64 comparand, s64 exchange) {
-    //if *lock == comparand then *lock = exchange  and return old *lock value
-    if (InterlockedCompareExchange64(lock, exchange, comparand) == comparand)return 1;
-    else return 0;
-}
-static inline int __sync_bool_compare_and_swap(volatile int *lock,int comparand, int exchange) {
-    //if *lock == comparand then *lock = exchange  and return old *lock value
-    if(InterlockedCompareExchange(lock, exchange, comparand) == comparand)return 1;
-    else return 0;
-}
+// Platform specific atomic operations
+#if defined(_MSC_VER)
+// Windows/MSVC
+#include <windows.h>
+#include <intrin.h>
+#define ATOMIC_CAS(ptr, oldv, newv) (InterlockedCompareExchange((volatile LONG *)(ptr), (newv), (oldv)) == (oldv))
+#define ATOMIC_INC(ptr) InterlockedIncrement((volatile LONG *)(ptr))
+#define ATOMIC_DEC(ptr) InterlockedDecrement((volatile LONG *)(ptr))
+#define ATOMIC_ADD(ptr, val) InterlockedAdd((volatile LONG *)(ptr), (val))
+#define ATOMIC_SUB(ptr, val) InterlockedAdd((volatile LONG *)(ptr), -(val))
+#define ATOMIC_ADD64(ptr, val) InterlockedAdd64((volatile LONG64 *)(ptr), (val))
+#define ATOMIC_CAS64(ptr, oldv, newv) (InterlockedCompareExchange64((volatile LONG64 *)(ptr), (newv), (oldv)) == (oldv))
+#define MEMORY_BARRIER() MemoryBarrier()
+#if defined(_M_IX86) || defined(_M_X64)
+/* Aligned x86/x64 loads and stores have acquire/release hardware ordering. */
+#define ATOMIC_LOAD_ACQUIRE32(ptr) ((s32) __iso_volatile_load32((volatile const int *)(ptr)))
+#define ATOMIC_STORE_RELEASE32(ptr, value) __iso_volatile_store32((volatile int *)(ptr), (value))
+#elif (defined(_M_ARM) || defined(_M_ARM64)) && !defined(__clang__)
+#define ATOMIC_LOAD_ACQUIRE32(ptr) ((s32) __ldar32((volatile const unsigned int *)(ptr)))
+#define ATOMIC_STORE_RELEASE32(ptr, value) __stlr32((volatile unsigned int *)(ptr), (unsigned int)(value))
 #else
-#define  __sync_bool_compare_and_swap64 __sync_bool_compare_and_swap
+/* Interlocked operations provide acquire/release ordering on remaining MSVC targets. */
+#define ATOMIC_LOAD_ACQUIRE32(ptr) ((s32) InterlockedCompareExchange((volatile LONG *)(ptr), 0, 0))
+#define ATOMIC_STORE_RELEASE32(ptr, value) InterlockedExchange((volatile LONG *)(ptr), (LONG)(value))
+#endif
+#elif defined(__GNUC__)
+// GCC/Clang
+#define ATOMIC_CAS(ptr, old, newv) __sync_bool_compare_and_swap(ptr, old, newv)
+#define ATOMIC_INC(ptr) __sync_add_and_fetch(ptr, 1)
+#define ATOMIC_DEC(ptr) __sync_sub_and_fetch(ptr, 1)
+#define ATOMIC_ADD(ptr, val) __sync_add_and_fetch(ptr, val)
+#define ATOMIC_SUB(ptr, val) __sync_sub_and_fetch(ptr, val)
+#define ATOMIC_ADD64(ptr, val) __sync_add_and_fetch(ptr, val)
+#define ATOMIC_CAS64(ptr, oldv, newv) __sync_bool_compare_and_swap(ptr, oldv, newv)
+#define MEMORY_BARRIER() __sync_synchronize()
+#define ATOMIC_LOAD_ACQUIRE32(ptr) __atomic_load_n((ptr), __ATOMIC_ACQUIRE)
+#define ATOMIC_STORE_RELEASE32(ptr, value) __atomic_store_n((ptr), (value), __ATOMIC_RELEASE)
+#else
+// Generic implementation using mutex for unsupported platforms
+#include <pthread.h>
+static pthread_mutex_t atomic_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static inline int atomic_cas(volatile s32 *ptr, s32 old_val, s32 new_val) {
+    int result;
+    pthread_mutex_lock(&atomic_mutex);
+    if (*ptr == old_val) {
+        *ptr = new_val;
+        result = 1;
+    } else {
+        result = 0;
+    }
+    pthread_mutex_unlock(&atomic_mutex);
+    return result;
+}
+
+static inline s64 atomic_cas64(volatile s64 *ptr, s64 old_val, s64 new_val) {
+    s64 result;
+    pthread_mutex_lock(&atomic_mutex);
+    if (*ptr == old_val) {
+        *ptr = new_val;
+        result = 1;
+    } else {
+        result = 0;
+    }
+    pthread_mutex_unlock(&atomic_mutex);
+    return result;
+}
+
+static inline s32 atomic_inc(volatile s32 *ptr) {
+    s32 result;
+    pthread_mutex_lock(&atomic_mutex);
+    *ptr += 1;
+    result = *ptr;
+    pthread_mutex_unlock(&atomic_mutex);
+    return result;
+}
+
+static inline s32 atomic_dec(volatile s32 *ptr) {
+    s32 result;
+    pthread_mutex_lock(&atomic_mutex);
+    *ptr -= 1;
+    result = *ptr;
+    pthread_mutex_unlock(&atomic_mutex);
+    return result;
+}
+
+static inline s32 atomic_add(volatile s32 *ptr, s32 val) {
+    s32 result;
+    pthread_mutex_lock(&atomic_mutex);
+    *ptr += val;
+    result = *ptr;
+    pthread_mutex_unlock(&atomic_mutex);
+    return result;
+}
+
+static inline s64 atomic_add64(volatile s64 *ptr, s64 val) {
+    s64 result;
+    pthread_mutex_lock(&atomic_mutex);
+    *ptr += val;
+    result = *ptr;
+    pthread_mutex_unlock(&atomic_mutex);
+    return result;
+}
+
+static inline s32 atomic_sub(volatile s32 *ptr, s32 val) {
+    s32 result;
+    pthread_mutex_lock(&atomic_mutex);
+    *ptr -= val;
+    result = *ptr;
+    pthread_mutex_unlock(&atomic_mutex);
+    return result;
+}
+
+static inline s32 atomic_load_acquire32(volatile const s32 *ptr) {
+    s32 result;
+    pthread_mutex_lock(&atomic_mutex);
+    result = *ptr;
+    pthread_mutex_unlock(&atomic_mutex);
+    return result;
+}
+
+static inline void atomic_store_release32(volatile s32 *ptr, s32 value) {
+    pthread_mutex_lock(&atomic_mutex);
+    *ptr = value;
+    pthread_mutex_unlock(&atomic_mutex);
+}
+
+#define ATOMIC_CAS(ptr, old, new) atomic_cas(ptr, old, new)
+#define ATOMIC_INC(ptr) atomic_inc(ptr)
+#define ATOMIC_DEC(ptr) atomic_dec(ptr)
+#define ATOMIC_ADD(ptr, val) atomic_add(ptr, val)
+#define ATOMIC_SUB(ptr, val) atomic_sub(ptr, val)
+#define ATOMIC_ADD64(ptr, val) atomic_add64(ptr, val)
+#define ATOMIC_CAS64(ptr, oldv, newv) atomic_cas64(ptr, oldv, newv)
+#define ATOMIC_LOAD_ACQUIRE32(ptr) atomic_load_acquire32((volatile const s32 *)(ptr))
+#define ATOMIC_STORE_RELEASE32(ptr, value) atomic_store_release32((volatile s32 *)(ptr), (s32)(value))
+#define MEMORY_BARRIER()               \
+    pthread_mutex_lock(&atomic_mutex); \
+    pthread_mutex_unlock(&atomic_mutex)
+#endif
+
+#ifndef ETIMEDOUT
+#define ETIMEDOUT 110 // POSIX 超时错误码
 #endif
 
 static inline int spin_init(volatile spinlock_t *lock, s32 pshared) {
+    (void) pshared;
     lock->lock = 0;
     lock->count = 0;
-    lock->owner = 0;
+    lock->owner_valid = 0;
+#if defined(_TTHREAD_WIN32_)
+    lock->owner_tid = 0;
+#else
+    lock->owner = (thrd_t) 0;
+#endif
     return 0;
 }
 
 static inline int spin_destroy(spinlock_t *lock) {
+    (void) lock;
     return 0;
-}
-
-
-static inline int spin_lock_count(volatile spinlock_t *lock, s32 count) {
-    while (1) {
-        int i;
-        for (i = 0; i < count; i++) {
-            // if *lock == 0,then *lock = 1  ,  return true else return false
-            if (lock->owner == thrd_current()) {
-                lock->count++;
-                return 0;
-            }
-            if (__sync_bool_compare_and_swap(&lock->lock, 0, 1)) {
-                lock->owner = thrd_current();
-                lock->count = 1;
-                return 0;
-            }
-        }
-        thrd_yield();
-    }
 }
 
 static inline int spin_lock(volatile spinlock_t *lock) {
-    return spin_lock_count(lock, 100);
+    s32 spins = 0;
+    for (;;) {
+        if (lock->owner_valid) {
+#if defined(_TTHREAD_WIN32_)
+            if (lock->owner_tid == GetCurrentThreadId()) {
+                ATOMIC_INC(&lock->count);
+                return 0;
+            }
+#else
+            if (thrd_equal(lock->owner, thrd_current())) {
+                ATOMIC_INC(&lock->count);
+                return 0;
+            }
+#endif
+        }
+        if (ATOMIC_CAS(&lock->lock, 0, 1)) {
+#if defined(_TTHREAD_WIN32_)
+            lock->owner_tid = GetCurrentThreadId();
+#else
+            lock->owner = thrd_current();
+#endif
+            lock->owner_valid = 1;
+            lock->count = 1;
+            MEMORY_BARRIER();
+            return 0;
+        }
+        if ((++spins & (MAX_SPIN - 1)) == 0) {
+            thrd_yield();
+        }
+    }
 }
 
-//static inline int spin_trylock(volatile spinlock_t *lock) {
-//    if (lock->owner == thrd_current()) {
-//        lock->count++;
-//        return 0;
-//    }
-//    if (__sync_bool_compare_and_swap(&lock->lock, 0, 1)) {
-//        lock->owner = thrd_current();
-//        lock->count++;
-//        return 0;
-//    }
-//    return 1;
-//}
+static inline int spin_trylock(volatile spinlock_t *lock) {
+    if (lock->owner_valid) {
+#if defined(_TTHREAD_WIN32_)
+        if (lock->owner_tid == GetCurrentThreadId()) {
+            ATOMIC_INC(&lock->count);
+            return 0;
+        }
+#else
+        if (thrd_equal(lock->owner, thrd_current())) {
+            ATOMIC_INC(&lock->count);
+            return 0;
+        }
+#endif
+    }
+    if (ATOMIC_CAS(&lock->lock, 0, 1)) {
+#if defined(_TTHREAD_WIN32_)
+        lock->owner_tid = GetCurrentThreadId();
+#else
+        lock->owner = thrd_current();
+#endif
+        lock->owner_valid = 1;
+        lock->count = 1;
+        MEMORY_BARRIER();
+        return 0;
+    }
+    return 1;
+}
 
 static inline int spin_unlock(volatile spinlock_t *lock) {
-    if (lock->owner != thrd_current()) {
-        return 1;
-    }
-    lock->count--;
-    if (lock->count == 0) {
-        lock->owner = 0;
-        __sync_bool_compare_and_swap(&lock->lock, 1, 0);
+    if (!lock->owner_valid) return 1;
+#if defined(_TTHREAD_WIN32_)
+    if (lock->owner_tid != GetCurrentThreadId()) return 1;
+#else
+    if (!thrd_equal(lock->owner, thrd_current())) return 1;
+#endif
+    s32 new_count = ATOMIC_DEC(&lock->count);
+    if (new_count == 0) {
+        MEMORY_BARRIER();
+        lock->owner_valid = 0;
+#if defined(_TTHREAD_WIN32_)
+        lock->owner_tid = 0;
+#else
+        lock->owner = (thrd_t) 0;
+#endif
+        ATOMIC_CAS(&lock->lock, 1, 0);
     }
     return 0;
+}
+
+static inline int spin_lock_adaptive(volatile spinlock_t *lock) {
+    int spin = 4; // 初始自旋次数
+    for (;;) {
+        for (int i = 0; i < spin; i++) {
+            if (spin_trylock(lock) == 0) return 0;
+        }
+        // 自旋失败，指数退避
+        spin = spin < MAX_SPIN ? spin * 2 : MAX_SPIN; // min(spin * 2, MAX_SPIN);
+        thrd_yield(); // 或者使用 nanosleep
+    }
+}
+
+static inline s64 current_timestamp() {
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    return (s64) ts.tv_sec * 1000LL + ts.tv_nsec / 1000000LL;
+}
+
+static inline int spin_lock_timeout(volatile spinlock_t *lock, int timeout_ms) {
+    s64 start = current_timestamp();
+    while ((current_timestamp() - start) < timeout_ms) {
+        if (spin_trylock(lock) == 0) return 0;
+        thrd_yield();
+    }
+    return ETIMEDOUT;
 }
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif //MINI_JVM_SPINLOCK_H
+#endif // MINI_JVM_SPINLOCK_H

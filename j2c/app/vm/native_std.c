@@ -24,6 +24,7 @@
 #include "bytebuf.h"
 #include "miniz_wrapper.h"
 #include "garbage.h"
+#include "miniz.h"
 
 
 #if defined(__JVM_OS_MINGW__) || defined(__JVM_OS_CYGWIN__) || defined(__JVM_OS_VS__)
@@ -464,6 +465,7 @@ s32 jstring_equals(struct java_lang_String *jstr1, struct java_lang_String *jstr
     } else if (!jstr2) {
         return 0;
     }
+    if (jstr2->prop.clazz != g_procache.java_lang_string_raw->clazz) return 0;
     JArray *arr1 = jstr1->value_in_string;//取得 char[] value
     JArray *arr2 = jstr2->value_in_string;//取得 char[] value
     s32 count1 = -1, offset1 = -1, count2 = -1, offset2 = -1;
@@ -704,7 +706,7 @@ s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
     if (!is_platform_encoding_utf8() && !os_utf8) {
         if (!is_ascii(utf8_cstr(src))) {
             u16 *arr = jvm_calloc(src->length * sizeof(u16) + 2);
-            s32 len = utf8_2_unicode(src, arr);
+            s32 len = j2c_utf8_2_unicode(src, arr);
             s32 plen = conv_unicode_2_platform_encoding(dst, arr, len);
             jvm_free(arr);
             return plen;
@@ -1341,7 +1343,8 @@ struct java_lang_Class *func_java_lang_Class_forName__Ljava_lang_String_2ZLjava_
         Utf8String *ustr = utf8_create();
         jstring_2_utf8(p0, ustr);
         utf8_replace_c(ustr, ".", "/");
-        class_clinit(runtime, ustr);
+        if (p1) class_clinit(runtime, ustr);
+        else class_load(ustr);
         cl = get_class_by_name(ustr);
         utf8_destory(ustr);
         if (!cl) {
@@ -1364,12 +1367,12 @@ struct java_lang_Class *func_java_lang_Class_forName__Ljava_lang_String_2ZLjava_
 JArray *func_java_lang_Class_getInterfaces____3Ljava_lang_Class_2(JThreadRuntime *runtime, struct java_lang_Class *p0) {
     JClass *cl = (__refer) (intptr_t) p0->classHandle_in_class;
     s32 len = cl ? cl->interfaces->length : 0;
-    JArray *jarr = multi_array_create_by_typename(runtime, &len, 1, "Ljava/lang/Class;");
+    JArray *jarr = multi_array_create_by_typename(runtime, &len, 1, "[Ljava/lang/Class;");
     s32 i;
     for (i = 0; i < len; i++) {
-        jarr->prop.as_obj_arr[i] = (__refer) (intptr_t) arraylist_get_value(cl->interfaces, i);
+        jarr->prop.as_obj_arr[i] = ins_of_Class_create_get(runtime, arraylist_get_value(cl->interfaces, i));
     }
-    return NULL;
+    return jarr;
 }
 
 struct java_lang_String *func_java_lang_Class_getName0___Ljava_lang_String_2(JThreadRuntime *runtime, struct java_lang_Class *p0) {
@@ -1426,7 +1429,7 @@ s8 func_java_lang_Class_isInstance__Ljava_lang_Object_2_Z(JThreadRuntime *runtim
 
 s8 func_java_lang_Class_isInterface___Z(JThreadRuntime *runtime, struct java_lang_Class *p0) {
     ClassRaw *raw = ((JClass *) (__refer) (intptr_t) p0->classHandle_in_class)->raw;
-    if (raw)return (s8) (raw->acc_flag & ACC_INTERFACE);
+    if (raw)return (raw->acc_flag & ACC_INTERFACE) != 0;
     return 0;//array
 }
 
@@ -1450,6 +1453,7 @@ struct java_lang_Object *func_java_lang_Class_newInstance___Ljava_lang_Object_2(
 }
 
 s64 func_java_lang_Double_doubleToLongBits__D_J(JThreadRuntime *runtime, f64 p0) {
+    if (isnan(p0)) return (s64) 0x7ff8000000000000ULL;
     StackItem si;
     si.d = p0;
     return si.j;
@@ -1462,6 +1466,7 @@ f64 func_java_lang_Double_longBitsToDouble__J_D(JThreadRuntime *runtime, s64 p0)
 }
 
 s32 func_java_lang_Float_floatToIntBits__F_I(JThreadRuntime *runtime, f32 p0) {
+    if (isnan(p0)) return 0x7fc00000;
     StackItem si;
     si.f = p0;
     return si.i;
@@ -1640,8 +1645,8 @@ u16 func_java_lang_String_charAt0__I_C(JThreadRuntime *runtime, struct java_lang
     JArray *carr = p0->value_in_string;
     s32 offset = p0->offset_in_string;
     s32 count = p0->count_in_string;
-    if (p1 >= count) {
-        JObject *exception = new_instance_with_name(runtime, STR_JAVA_LANG_NULL_POINTER_EXCEPTION);
+    if (p1 < 0 || p1 >= count) {
+        JObject *exception = new_instance_with_name(runtime, "java/lang/StringIndexOutOfBoundsException");
         instance_init(runtime, exception);
         runtime->exception = exception;
         return 0;
@@ -1661,16 +1666,25 @@ s32 func_java_lang_String_indexOf__II_I(JThreadRuntime *runtime, struct java_lan
     return jstring_index_of(p0, p1, p2);
 }
 
-struct java_lang_String *func_java_lang_String_intern0___Ljava_lang_String_2(JThreadRuntime *runtime, struct java_lang_String *p0) {
+JObject *jstring_intern(JObject *jstr) {
+    if (!jstr) return NULL;
     Utf8String *ustr = utf8_create();
-    jstring_2_utf8(p0, ustr);
-    if (!ustr)return NULL;
+    jstring_2_utf8((struct java_lang_String *) jstr, ustr);
+    garbage_thread_lock();
     JObject *in_jstr = hashtable_get(g_jvm->table_jstring_const, ustr);
     if (!in_jstr) {
-        in_jstr = construct_string_with_cstr(runtime, utf8_cstr(ustr));
+        in_jstr = jstr;
         hashtable_put(g_jvm->table_jstring_const, ustr, in_jstr);
+        gc_refer_hold(in_jstr);
+    } else {
+        utf8_destory(ustr);
     }
-    return (__refer) in_jstr;
+    garbage_thread_unlock();
+    return in_jstr;
+}
+
+struct java_lang_String *func_java_lang_String_intern0___Ljava_lang_String_2(JThreadRuntime *runtime, struct java_lang_String *p0) {
+    return (__refer) jstring_intern((JObject *) p0);
 }
 
 JArray *func_java_lang_String_replace0__Ljava_lang_String_2Ljava_lang_String_2__3C(JThreadRuntime *runtime, struct java_lang_String *p0, struct java_lang_String *p1, struct java_lang_String *p2) {
@@ -1732,21 +1746,35 @@ void func_java_lang_System_arraycopy__Ljava_lang_Object_2ILjava_lang_Object_2II_
         runtime->exception = exception;
         return;
     } else if (src->prop.type != INS_TYPE_ARRAY
-               || dst->prop.type != src->prop.type) {
-        JObject *exception = new_instance_with_name(runtime, STR_JAVA_LANG_ILLEGAL_ARGUMENT_EXCEPTION);
+               || dst->prop.type != src->prop.type
+               || src->prop.arr_type != dst->prop.arr_type &&
+                  !(isDataReferByIndex(src->prop.arr_type) && isDataReferByIndex(dst->prop.arr_type))) {
+        JObject *exception = new_instance_with_name(runtime, "java/lang/ArrayStoreException");
         instance_init(runtime, exception);
         runtime->exception = exception;
         return;
-    } else if (srcPos < 0 || srcPos + len > src->prop.arr_length
-               || dstPos < 0 || dstPos + len > dst->prop.arr_length
+    } else if (srcPos < 0 || dstPos < 0 || len < 0
+               || srcPos > src->prop.arr_length - len
+               || dstPos > dst->prop.arr_length - len
             ) {
         JObject *exception = new_instance_with_name(runtime, STR_JAVA_LANG_ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
         instance_init(runtime, exception);
         runtime->exception = exception;
         return;
     } else {
-        s32 bytes = data_type_bytes[src->prop.clazz->array_cell_type];
-        memmove(&dst->prop.as_s8_arr[dstPos * bytes], &src->prop.as_s8_arr[srcPos * bytes], len * bytes);
+        if (isDataReferByIndex(src->prop.arr_type) && src != dst) {
+            for (s32 i = 0; i < len; i++) {
+                JObject *value = src->prop.as_obj_arr[srcPos + i];
+                if (value && !assignable_from(dst->prop.clazz->array_cell_class, value->prop.clazz)) {
+                    exception_throw("java/lang/ArrayStoreException", runtime, NULL);
+                    return;
+                }
+                dst->prop.as_obj_arr[dstPos + i] = value;
+            }
+        } else {
+            s32 bytes = data_type_bytes[src->prop.arr_type];
+            memmove(&dst->prop.as_s8_arr[(size_t) dstPos * bytes], &src->prop.as_s8_arr[(size_t) srcPos * bytes], (size_t) len * bytes);
+        }
     }
 }
 
@@ -1833,11 +1861,11 @@ struct java_lang_String *func_java_lang_System_setProperty0__Ljava_lang_String_2
     Utf8String *val = utf8_create();
     jstring_2_utf8(p1, val);
     Utf8String *old_val = (Utf8String *) hashtable_get(g_jvm->sys_prop, key);
-    hashtable_put(g_jvm->sys_prop, key, val);
     __refer jstr = NULL;
     if (old_val) {
         jstr = construct_string_with_cstr(runtime, utf8_cstr(old_val));
     }
+    hashtable_put(g_jvm->sys_prop, key, val);
     return jstr;
 }
 
@@ -1857,43 +1885,63 @@ struct java_lang_Thread *func_java_lang_Thread_currentThread___Ljava_lang_Thread
 
 struct java_lang_ClassLoader *func_java_lang_Thread_getContextClassLoader0___Ljava_lang_ClassLoader_2(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
     JThreadRuntime *tr = (JThreadRuntime *) (intptr_t) p0->stackFrame_in_thread;
-    return (struct java_lang_ClassLoader *) tr->context_classloader;
+    return tr ? (struct java_lang_ClassLoader *) tr->context_classloader : NULL;
 }
 
 void func_java_lang_Thread_interrupt0__Ljava_lang_Thread_2_V(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
-    return;
+    JThreadRuntime *tr = p0 ? jthread_get_stackFrame((JObject *) p0) : NULL;
+    if (tr) tr->is_interrupt = 1;
 }
 
 
 s8 func_java_lang_Thread_interrupted0__Ljava_lang_Thread_2_Z(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
-    return 0;
+    JThreadRuntime *tr = p0 ? jthread_get_stackFrame((JObject *) p0) : NULL;
+    return tr && tr->is_interrupt;
 }
 
 
 s8 func_java_lang_Thread_isAlive___Z(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
     JThreadRuntime *tr = (JThreadRuntime *) (intptr_t) p0->stackFrame_in_thread;
-    return tr->thread_status == THREAD_STATUS_RUNNING;
+    return tr && tr->thread_status != THREAD_STATUS_NEW && tr->thread_status != THREAD_STATUS_DEAD;
 }
 
 void func_java_lang_Thread_setContextClassLoader0__Ljava_lang_ClassLoader_2_V(JThreadRuntime *runtime, struct java_lang_Thread *p0, struct java_lang_ClassLoader *p1) {
 
     JThreadRuntime *tr = (JThreadRuntime *) (intptr_t) p0->stackFrame_in_thread;
-    tr->context_classloader = (JObject *) p1;
+    if (tr) tr->context_classloader = (JObject *) p1;
 
     return;
 }
 
 void func_java_lang_Thread_setPriority0__I_V(JThreadRuntime *runtime, struct java_lang_Thread *p0, s32 p1) {
-    p0->priority_0 = p1;
+    p0->priority_in_thread = p1;
     return;
 }
 
 void func_java_lang_Thread_sleep__J_V(JThreadRuntime *runtime, s64 t) {
-    jthread_sleep(runtime, t);
+    if (t < 0) {
+        exception_throw(STR_JAVA_LANG_ILLEGAL_ARGUMENT_EXCEPTION, runtime, NULL);
+    } else if (runtime->is_interrupt || jthread_sleep(runtime, t)) {
+        runtime->is_interrupt = 0;
+        exception_throw("java/lang/InterruptedException", runtime, NULL);
+    }
 }
 
 void func_java_lang_Thread_start___V(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
-    jthread_start((JObject *) p0);
+    JThreadRuntime *tr = jthread_get_stackFrame((JObject *) p0);
+    if (p0->prop.thread_started || tr && tr->thread_status != THREAD_STATUS_NEW) {
+        exception_throw("java/lang/IllegalThreadStateException", runtime, NULL);
+    } else {
+        if (!tr) {
+            tr = jthreadruntime_create();
+            jthread_set_stackFrame((JObject *) p0, tr);
+        }
+        p0->prop.thread_started = 1;
+        if (!jthread_start((JObject *) p0)) {
+            p0->prop.thread_started = 0;
+            exception_throw(STR_JAVA_LANG_OUT_OF_MEMORY_ERROR, runtime, NULL);
+        }
+    }
 }
 
 void func_java_lang_Thread_yield___V(JThreadRuntime *runtime) {
@@ -2171,20 +2219,19 @@ s32 func_org_mini_fs_InnerFile_loadFS___3BLorg_mini_fs_InnerFileStat_2_I(JThread
         struct stat buf;
         ret = stat(utf8_cstr(filepath), &buf);
         utf8_destory(filepath);
-        s32 a = S_ISDIR(buf.st_mode);
         if (ret == 0) {
-            p1->st_1dev_15 = buf.st_dev;
-            p1->st_1ino_16 = buf.st_ino;
-            p1->st_1mode_17 = buf.st_mode;
-            p1->st_1nlink_18 = buf.st_nlink;
-            p1->st_1uid_19 = buf.st_uid;
-            p1->st_1gid_20 = buf.st_gid;
-            p1->st_1rdev_21 = buf.st_rdev;
-            p1->st_1size_22 = buf.st_size;
-            p1->st_1atime_23 = buf.st_atime;
-            p1->st_1mtime_24 = buf.st_mtime;
-            p1->st_1ctime_25 = buf.st_ctime;
-            p1->exists_14 = 1;
+            p1->dev_in_filestat = buf.st_dev;
+            p1->ino_in_filestat = buf.st_ino;
+            p1->mode_in_filestat = buf.st_mode;
+            p1->nlink_in_filestat = buf.st_nlink;
+            p1->uid_in_filestat = buf.st_uid;
+            p1->gid_in_filestat = buf.st_gid;
+            p1->rdev_in_filestat = buf.st_rdev;
+            p1->size_in_filestat = buf.st_size;
+            p1->atime_in_filestat = buf.st_atime;
+            p1->mtime_in_filestat = buf.st_mtime;
+            p1->ctime_in_filestat = buf.st_ctime;
+            p1->exists_in_filestat = 1;
         }
     }
     return ret;
@@ -2593,8 +2640,8 @@ void func_org_mini_reflect_DirectMemObj_copyFrom0__ILjava_lang_Object_2II_V(JThr
     s32 tgt_off = p3;
     s32 copy_len = p4;
 
-    __refer memAddr = (__refer) (intptr_t) p0->memAddr_0;
-    s32 dmo_len = p0->length_1;
+    __refer memAddr = (__refer) (intptr_t) p0->address_in_directmem;
+    s32 dmo_len = p0->length_in_directmem;
 
     s32 ret = 0;
     if (src_off + copy_len > p2->prop.arr_length
@@ -2613,8 +2660,8 @@ void func_org_mini_reflect_DirectMemObj_copyTo0__ILjava_lang_Object_2II_V(JThrea
     s32 tgt_off = p3;
     s32 copy_len = p4;
 
-    __refer memAddr = (__refer) (intptr_t) p0->memAddr_0;
-    s32 dmo_len = p0->length_1;
+    __refer memAddr = (__refer) (intptr_t) p0->address_in_directmem;
+    s32 dmo_len = p0->length_in_directmem;
 
 
     s32 ret = 0;
@@ -2632,31 +2679,31 @@ void func_org_mini_reflect_DirectMemObj_copyTo0__ILjava_lang_Object_2II_V(JThrea
 s64 func_org_mini_reflect_DirectMemObj_getVal__I_J(JThreadRuntime *runtime, struct org_mini_reflect_DirectMemObj *p0, s32 p1) {
     s32 index = p1;
 
-    __refer memAddr = (__refer) (intptr_t) p0->memAddr_0;
-    s32 len = p0->length_1;
-    c8 desc = p0->typeDesc_2;
+    __refer memAddr = (__refer) (intptr_t) p0->address_in_directmem;
+    s32 len = p0->length_in_directmem;
+    c8 desc = p0->typedesc_in_directmem;
 
     if (memAddr && index >= 0 && index < len) {
         s64 val;
         switch (desc) {
             case '1': {
-                val = ((c8 *) (intptr_t) p0->memAddr_0)[index];
+                val = ((c8 *) (intptr_t) p0->address_in_directmem)[index];
                 break;
             }
             case '2': {
-                val = ((s16 *) (intptr_t) p0->memAddr_0)[index];
+                val = ((s16 *) (intptr_t) p0->address_in_directmem)[index];
                 break;
             }
             case '4': {
-                val = ((s32 *) (intptr_t) p0->memAddr_0)[index];
+                val = ((s32 *) (intptr_t) p0->address_in_directmem)[index];
                 break;
             }
             case '8': {
-                val = ((s64 *) (intptr_t) p0->memAddr_0)[index];
+                val = ((s64 *) (intptr_t) p0->address_in_directmem)[index];
                 break;
             }
             case 'R': {
-                val = (s64) (intptr_t) (((__refer *) (intptr_t) p0->memAddr_0)[index]);
+                val = (s64) (intptr_t) (((__refer *) (intptr_t) p0->address_in_directmem)[index]);
                 break;
             }
         }
@@ -2672,30 +2719,30 @@ s64 func_org_mini_reflect_DirectMemObj_getVal__I_J(JThreadRuntime *runtime, stru
 void func_org_mini_reflect_DirectMemObj_setVal__IJ_V(JThreadRuntime *runtime, struct org_mini_reflect_DirectMemObj *p0, s32 p1, s64 p2) {
     s32 index = p1;
 
-    __refer memAddr = (__refer) (intptr_t) p0->memAddr_0;
-    s32 len = p0->length_1;
-    c8 desc = p0->typeDesc_2;
+    __refer memAddr = (__refer) (intptr_t) p0->address_in_directmem;
+    s32 len = p0->length_in_directmem;
+    c8 desc = p0->typedesc_in_directmem;
 
     if (memAddr && index >= 0 && index < len) {
         switch (desc) {
             case '1': {
-                ((c8 *) (intptr_t) p0->memAddr_0)[index] = (s8) p2;
+                ((c8 *) (intptr_t) p0->address_in_directmem)[index] = (s8) p2;
                 break;
             }
             case '2': {
-                ((s16 *) (intptr_t) p0->memAddr_0)[index] = (s16) p2;
+                ((s16 *) (intptr_t) p0->address_in_directmem)[index] = (s16) p2;
                 break;
             }
             case '4': {
-                ((s32 *) (intptr_t) p0->memAddr_0)[index] = (s32) p2;
+                ((s32 *) (intptr_t) p0->address_in_directmem)[index] = (s32) p2;
                 break;
             }
             case '8': {
-                ((s64 *) (intptr_t) p0->memAddr_0)[index] = (s64) p2;
+                ((s64 *) (intptr_t) p0->address_in_directmem)[index] = (s64) p2;
                 break;
             }
             case 'R': {
-                ((__refer *) (intptr_t) p0->memAddr_0)[index] = (__refer) (intptr_t) p2;
+                ((__refer *) (intptr_t) p0->address_in_directmem)[index] = (__refer) (intptr_t) p2;
                 break;
             }
         }
@@ -2773,17 +2820,17 @@ struct java_lang_Object *func_org_mini_reflect_ReflectArray_newArray__Ljava_lang
 void func_org_mini_reflect_ReflectClass_mapClass__J_V(JThreadRuntime *runtime, struct org_mini_reflect_ReflectClass *p0, s64 p1) {
     if (!p0)return;
     JClass *target = (__refer) (intptr_t) p1;
-    p0->superclass_4 = (s64) (intptr_t) (getSuperClass(target) ? construct_string_with_ustr(runtime, getSuperClass(target)->name) : NULL);
-    p0->className_5 = (__refer) construct_string_with_ustr(runtime, target->name);
-    p0->accessFlags_6 = target->raw->acc_flag;
-    p0->source_7 = (__refer) construct_string_with_ustr(runtime, target->source_name);
-    p0->signature_8 = NULL;
-    p0->status_9 = target->status;
-    p0->classObj_13 = (__refer) ins_of_Class_create_get(runtime, target);
+    p0->superclass_in_reflectclass = (s64) (intptr_t) (getSuperClass(target) ? construct_string_with_ustr(runtime, getSuperClass(target)->name) : NULL);
+    p0->name_in_reflectclass = (__refer) construct_string_with_ustr(runtime, target->name);
+    p0->access_in_reflectclass = target->raw ? target->raw->acc_flag : ACC_PUBLIC | ACC_FINAL;
+    p0->source_in_reflectclass = (__refer) construct_string_with_ustr(runtime, target->source_name);
+    p0->signature_in_reflectclass = NULL;
+    p0->status_in_reflectclass = target->status;
+    p0->classobj_in_reflectclass = (__refer) ins_of_Class_create_get(runtime, target);
     s32 i;
     {
         JArray *jarr = multi_array_create_by_typename(runtime, &target->fields->length, 1, "[J");
-        p0->fieldIds_10 = jarr;
+        p0->fieldids_in_reflectclass = jarr;
         for (i = 0; i < target->fields->length; i++) {
             jarr->prop.as_s64_arr[i] = (s64) (intptr_t) arraylist_get_value(target->fields, i);
         }
@@ -2791,7 +2838,7 @@ void func_org_mini_reflect_ReflectClass_mapClass__J_V(JThreadRuntime *runtime, s
     //
     {
         JArray *jarr = multi_array_create_by_typename(runtime, &target->methods->length, 1, "[J");
-        p0->methodIds_11 = jarr;
+        p0->methodids_in_reflectclass = jarr;
         for (i = 0; i < target->methods->length; i++) {
             jarr->prop.as_s64_arr[i] = (u64) (intptr_t) arraylist_get_value(target->methods, i);
         }
@@ -2799,7 +2846,7 @@ void func_org_mini_reflect_ReflectClass_mapClass__J_V(JThreadRuntime *runtime, s
     //
     {
         JArray *jarr = multi_array_create_by_typename(runtime, &target->interfaces->length, 1, "[J");
-        p0->interfaces_12 = jarr;
+        p0->interfaces_in_reflectclass = jarr;
         for (i = 0; i < target->interfaces->length; i++) {
             jarr->prop.as_s64_arr[i] = (u64) (intptr_t) arraylist_get_value(target->interfaces, i);
         }
@@ -2825,7 +2872,7 @@ s64 func_org_mini_reflect_ReflectField_getFieldVal__Ljava_lang_Object_2J_J(JThre
                 break;
             }
             case 'Z': {
-                v = *(s32 *) ((c8 *) p0 + fieldInfo->offset_ins);
+                v = *(s8 *) ((c8 *) p0 + fieldInfo->offset_ins);
                 break;
             }
             case 'I': {
@@ -2859,11 +2906,11 @@ s64 func_org_mini_reflect_ReflectField_getFieldVal__Ljava_lang_Object_2J_J(JThre
 void func_org_mini_reflect_ReflectField_mapField__J_V(JThreadRuntime *runtime, struct org_mini_reflect_ReflectField *p0, s64 p1) {
     FieldInfo *fieldInfo = (__refer) (intptr_t) p1;
     if (p1) {
-        p0->fieldName_2 = (__refer) construct_string_with_ustr(runtime, fieldInfo->name);
-        p0->descriptor_3 = (__refer) construct_string_with_ustr(runtime, fieldInfo->desc);
-        p0->signature_4 = NULL;
-        p0->accessFlags_5 = fieldInfo->raw->access;
-        p0->type_6 = utf8_char_at(fieldInfo->desc, 0);
+        p0->name_in_reflectfield = (__refer) construct_string_with_ustr(runtime, fieldInfo->name);
+        p0->descriptor_in_reflectfield = (__refer) construct_string_with_ustr(runtime, fieldInfo->desc);
+        p0->signature_in_reflectfield = NULL;
+        p0->access_in_reflectfield = fieldInfo->raw->access;
+        p0->type_in_reflectfield = utf8_char_at(fieldInfo->desc, 0);
     }
 }
 
@@ -2885,7 +2932,7 @@ void func_org_mini_reflect_ReflectField_setFieldVal__Ljava_lang_Object_2JJ_V(JTh
                 break;
             }
             case 'Z': {
-                *(s32 *) ((c8 *) p0 + fieldInfo->offset_ins) = (s32) p2;
+                *(s8 *) ((c8 *) p0 + fieldInfo->offset_ins) = (s8) p2;
                 break;
             }
             case 'I': {
@@ -2937,8 +2984,12 @@ s64 func_org_mini_reflect_ReflectMethod_findMethod0__Ljava_lang_ClassLoader_2Lja
 
 struct java_lang_Object *func_org_mini_reflect_ReflectMethod_invokeMethod__Ljava_lang_Object_2_3Ljava_lang_Object_2_Ljava_lang_Object_2(JThreadRuntime *runtime, struct org_mini_reflect_ReflectMethod *p0, struct java_lang_Object *p1, JArray *p2) {
     MethodInfo *mi = (__refer) (intptr_t) p0->methodId_in_reflectmethod;
-    s32 len = p2->prop.arr_length;
-    ParaItem para[len], ret;
+    if (mi->raw->access & ACC_STATIC) {
+        class_clinit(runtime, mi->clazz->name);
+        if (runtime->exception) return NULL;
+    }
+    s32 len = p2 ? p2->prop.arr_length : 0;
+    ParaItem para[len ? len : 1], ret = {0};
     s32 i;
     //method para unboxing
     for (i = 0; i < mi->paratype->length; i++) {
@@ -2976,6 +3027,7 @@ struct java_lang_Object *func_org_mini_reflect_ReflectMethod_invokeMethod__Ljava
     }
     //call
     mi->raw->bridge_ptr(runtime, p1, para, &ret);
+    if (runtime->exception) return NULL;
 
     JObject *retobj = NULL;
     //method result boxing
@@ -3035,16 +3087,16 @@ JArray *func_org_mini_reflect_ReflectMethod_getExceptionTypes0__J__3Ljava_lang_C
 void func_org_mini_reflect_ReflectMethod_mapMethod__J_V(JThreadRuntime *runtime, struct org_mini_reflect_ReflectMethod *p0, s64 p1) {
     MethodInfo *methodInfo = (__refer) (intptr_t) p1;
     if (p1) {
-        p0->methodName_2 = (__refer) construct_string_with_ustr(runtime, methodInfo->name);
-        p0->descriptor_3 = (__refer) construct_string_with_ustr(runtime, methodInfo->desc);
-        p0->signature_4 = (__refer) construct_string_with_ustr(runtime, methodInfo->signature);;
-        p0->accessFlags_5 = methodInfo->raw->access;
-        p0->argCnt_10 = 0;
-        p0->codeStart_6 = 0;
-        p0->codeEnd_7 = 0;
-        p0->lines_8 = 0;
-        p0->lineNum_9 = NULL;
-        p0->localVarTable_11 = NULL;
+        p0->name_in_reflectmethod = (__refer) construct_string_with_ustr(runtime, methodInfo->name);
+        p0->descriptor_in_reflectmethod = (__refer) construct_string_with_ustr(runtime, methodInfo->desc);
+        p0->signature_in_reflectmethod = (__refer) construct_string_with_ustr(runtime, methodInfo->signature);;
+        p0->access_in_reflectmethod = methodInfo->raw->access;
+        p0->argcnt_in_reflectmethod = 0;
+        p0->codestart_in_reflectmethod = 0;
+        p0->codeend_in_reflectmethod = 0;
+        p0->lines_in_reflectmethod = 0;
+        p0->linenum_in_reflectmethod = NULL;
+        p0->locals_in_reflectmethod = NULL;
     }
 }
 
@@ -3577,9 +3629,9 @@ s8 func_sun_misc_Unsafe_compareAndSwapInt__Ljava_lang_Object_2JII_Z(JThreadRunti
 
         return 0;
     } else {
-        c8 *src = (c8 *) (ins ? ins->prop.as_c8_arr : NULL) + offset;
+        c8 *src = (ins ? (ins->prop.type == INS_TYPE_ARRAY ? ins->prop.as_c8_arr : (c8 *) ins) : (c8 *) 0) + offset;
         s32 *src32 = (s32 *) src;
-        s32 ret = __sync_bool_compare_and_swap(src32, oldv, newv);
+        s32 ret = ATOMIC_CAS(src32, oldv, newv);
         return ret;
     }
 }
@@ -3597,11 +3649,11 @@ s8 func_sun_misc_Unsafe_compareAndSwapLong__Ljava_lang_Object_2JJJ_Z(JThreadRunt
         runtime->exception = exception;
         return 0;
     } else {
-        c8 *src = (c8 *) (ins ? ins->prop.as_c8_arr : NULL) + offset;
+        c8 *src = (ins ? (ins->prop.type == INS_TYPE_ARRAY ? ins->prop.as_c8_arr : (c8 *) ins) : (c8 *) 0) + offset;
 #if __JVM_ARCH_64__
-        s32 ret = (s32) __sync_bool_compare_and_swap64((s64 *) src, oldv, newv);
+        s32 ret = (s32) ATOMIC_CAS64((s64 *) src, oldv, newv);
 #else
-        s32 ret = __sync_bool_compare_and_swap((s64 *) src, oldv, newv);
+        s32 ret = ATOMIC_CAS((s64 *) src, oldv, newv);
 #endif
         return ret;
     }
@@ -3620,12 +3672,12 @@ s8 func_sun_misc_Unsafe_compareAndSwapObject__Ljava_lang_Object_2JLjava_lang_Obj
         runtime->exception = exception;
         return 0;
     } else {
-        c8 *src = (c8 *) (ins ? ins->prop.as_c8_arr : NULL) + offset;
+        c8 *src = (ins ? (ins->prop.type == INS_TYPE_ARRAY ? ins->prop.as_c8_arr : (c8 *) ins) : (c8 *) 0) + offset;
         s32 ret = 0;
         if (sizeof(__refer) == 8) {
-            ret = __sync_bool_compare_and_swap64((s64 *) src, (s64) (intptr_t) oldv, (s64) (intptr_t) newv);
+            ret = ATOMIC_CAS64((s64 *) src, (s64) (intptr_t) oldv, (s64) (intptr_t) newv);
         } else {
-            ret = __sync_bool_compare_and_swap((s32 *) src, (s32) (intptr_t) oldv, (s32) (intptr_t) newv);
+            ret = ATOMIC_CAS((s32 *) src, (s32) (intptr_t) oldv, (s32) (intptr_t) newv);
         }
         return ret;
     }
@@ -3633,7 +3685,9 @@ s8 func_sun_misc_Unsafe_compareAndSwapObject__Ljava_lang_Object_2JLjava_lang_Obj
 
 
 s64 func_sun_misc_Unsafe_getAddress__J_J(JThreadRuntime *runtime, struct sun_misc_Unsafe *p0, s64 p1) {
-    return 0;
+    intptr_t value;
+    memcpy(&value, (void *) (intptr_t) p1, sizeof(value));
+    return (s64) value;
 }
 
 
@@ -3641,7 +3695,7 @@ s64 func_sun_misc_Unsafe_objectFieldBase__Ljava_lang_Object_2_J(JThreadRuntime *
     JObject *unsafe = (JObject *) p0;
     JObject *ins = (JObject *) p1;
 
-    return ins ? -1 : (s64) (intptr_t) ins->prop.as_c8_arr;
+    return ins ? (s64) (intptr_t) (ins->prop.type == INS_TYPE_ARRAY ? ins->prop.as_c8_arr : (c8 *) ins) : 0;
 }
 
 
@@ -3680,12 +3734,15 @@ void func_sun_misc_Unsafe_park__ZJ_V(JThreadRuntime *runtime, struct sun_misc_Un
 
 
 void func_sun_misc_Unsafe_putAddress__JJ_V(JThreadRuntime *runtime, struct sun_misc_Unsafe *p0, s64 p1, s64 p3) {
-    return;
+    intptr_t value = (intptr_t) p3;
+    memcpy((void *) (intptr_t) p1, &value, sizeof(value));
 }
 
 
 s64 func_sun_misc_Unsafe_staticFieldOffset__J_J(JThreadRuntime *runtime, struct sun_misc_Unsafe *p0, s64 p1) {
-    return 0;
+    FieldInfo *field = (FieldInfo *) (intptr_t) p1;
+    if (!field || !field->is_static) return -1;
+    return (s64) (intptr_t) ((c8 *) field->clazz->prop.members + field->offset_ins);
 }
 
 
@@ -3706,3 +3763,135 @@ void func_sun_misc_Unsafe_unpark__Ljava_lang_Object_2_V(JThreadRuntime *runtime,
 
 
 
+// Interfaces generated from the current bootstrap library (_native_gen.txt).
+s32 func_java_lang_String_hashCode___I(JThreadRuntime *runtime, struct java_lang_String *p0) {
+    u32 hash = 0;
+    for (s32 i = 0; i < p0->count_in_string; i++)
+        hash = 31u * hash + p0->value_in_string->prop.as_u16_arr[p0->offset_in_string + i];
+    return (s32) hash;
+}
+
+s8 func_java_lang_Thread_interruptedClear0__Ljava_lang_Thread_2_Z(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
+    JThreadRuntime *tr = p0 ? jthread_get_stackFrame((JObject *) p0) : NULL;
+    if (!tr) return 0;
+    s8 result = tr->is_interrupt;
+    tr->is_interrupt = 0;
+    return result;
+}
+
+struct java_lang_Runnable *func_org_mini_vm_RefNative_getThreadTarget__Ljava_lang_Thread_2_Ljava_lang_Runnable_2(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
+    return p0 ? p0->target_in_thread : NULL;
+}
+
+void func_org_mini_vm_RefNative_stringFromUtf8Bytes__Ljava_lang_String_2_3BII_V(JThreadRuntime *runtime, struct java_lang_String *p0, JArray *p1, s32 p2, s32 p3) {
+    if (!p0 || !p1) return;
+    if (p2 < 0 || p3 < 0 || p2 > p1->prop.arr_length - p3) return;
+    Utf8String *text = utf8_create_part_c(p1->prop.as_c8_arr, p2, p3);
+    s32 count = j2c_utf8_2_unicode(text, NULL);
+    if (count >= 0) {
+        JArray *chars = multi_array_create_by_typename(runtime, &count, 1, "[C");
+        j2c_utf8_2_unicode(text, chars->prop.as_u16_arr);
+        p0->value_in_string = chars;
+        p0->offset_in_string = 0;
+        p0->count_in_string = count;
+        p0->hash_in_string = 0;
+    }
+    utf8_destory(text);
+}
+
+static JArray *string_utf8_bytes(JThreadRuntime *runtime, struct java_lang_String *str, s32 terminate) {
+    if (!str) return NULL;
+    Utf8String *text = utf8_create();
+    jstring_2_utf8(str, text);
+    s32 count = text->length;
+    s32 length = count + (terminate && (!count || text->data[count - 1] != 0));
+    JArray *bytes = multi_array_create_by_typename(runtime, &length, 1, "[B");
+    memcpy(bytes->prop.as_c8_arr, text->data, count);
+    utf8_destory(text);
+    return bytes;
+}
+
+JArray *func_org_mini_vm_RefNative_stringToUtf8Bytes__Ljava_lang_String_2__3B(JThreadRuntime *runtime, struct java_lang_String *p0) {
+    return string_utf8_bytes(runtime, p0, 0);
+}
+JArray *func_org_mini_vm_RefNative_toCstyleBytes__Ljava_lang_String_2__3B(JThreadRuntime *runtime, struct java_lang_String *p0) {
+    return string_utf8_bytes(runtime, p0, 1);
+}
+
+JArray *func_org_mini_zip_Zip_zlibCompress0___3B__3B(JThreadRuntime *runtime, JArray *p0) {
+    if (!p0) return NULL;
+    mz_ulong capacity = mz_compressBound(p0->prop.arr_length);
+    u8 *data = malloc(capacity);
+    if (!data) return NULL;
+    JArray *result = NULL;
+    if (mz_compress(data, &capacity, (u8 *) p0->prop.as_c8_arr, p0->prop.arr_length) == MZ_OK && capacity <= 0x7fffffff) {
+        s32 length = (s32) capacity;
+        result = multi_array_create_by_typename(runtime, &length, 1, "[B");
+        memcpy(result->prop.as_c8_arr, data, length);
+    }
+    free(data);
+    return result;
+}
+JArray *func_org_mini_zip_Zip_zlibExtract0___3BI__3B(JThreadRuntime *runtime, JArray *p0, s32 p1) {
+    if (!p0 || p1 < 0) return NULL;
+    mz_ulong length = p1;
+    u8 *data = malloc(p1 ? (size_t) p1 : 1);
+    if (!data) return NULL;
+    JArray *result = NULL;
+    if (mz_uncompress(data, &length, (u8 *) p0->prop.as_c8_arr, p0->prop.arr_length) == MZ_OK && length <= 0x7fffffff) {
+        s32 size = (s32) length;
+        result = multi_array_create_by_typename(runtime, &size, 1, "[B");
+        memcpy(result->prop.as_c8_arr, data, size);
+    }
+    free(data);
+    return result;
+}
+
+// Interpreter/JIT profiling is unavailable in the ahead-of-time runtime.
+static void aot_profile_unsupported(JThreadRuntime *runtime) {
+    exception_throw("java/lang/UnsupportedOperationException", runtime, NULL);
+}
+void func_org_mini_vm_RefNative_clearSlowCallCache___V(JThreadRuntime *runtime) {
+    aot_profile_unsupported(runtime);
+    return;
+}
+void func_org_mini_vm_RefNative_clearSlowCallWatch___V(JThreadRuntime *runtime) {
+    aot_profile_unsupported(runtime);
+    return;
+}
+s32 func_org_mini_vm_RefNative_dumpHeap__Ljava_lang_String_2I_I(JThreadRuntime *runtime, struct java_lang_String* p0, s32 p1) {
+    aot_profile_unsupported(runtime);
+    return -1;
+}
+struct java_lang_String* func_org_mini_vm_RefNative_getMethodByUniId__I_Ljava_lang_String_2(JThreadRuntime *runtime, s32 p0) {
+    aot_profile_unsupported(runtime);
+    return NULL;
+}
+struct java_lang_String* func_org_mini_vm_RefNative_getProfileAll___Ljava_lang_String_2(JThreadRuntime *runtime) {
+    aot_profile_unsupported(runtime);
+    return NULL;
+}
+JArray * func_org_mini_vm_RefNative_getSlowCallSnapshotList____3Ljava_lang_String_2(JThreadRuntime *runtime) {
+    aot_profile_unsupported(runtime);
+    return NULL;
+}
+JArray * func_org_mini_vm_RefNative_getSlowCallStackSnapshot__I__3B(JThreadRuntime *runtime, s32 p0) {
+    aot_profile_unsupported(runtime);
+    return NULL;
+}
+struct java_lang_String* func_org_mini_vm_RefNative_getSlowCallWatchMethods___Ljava_lang_String_2(JThreadRuntime *runtime) {
+    aot_profile_unsupported(runtime);
+    return NULL;
+}
+void func_org_mini_vm_RefNative_resetProfile___V(JThreadRuntime *runtime) {
+    aot_profile_unsupported(runtime);
+    return;
+}
+void func_org_mini_vm_RefNative_unwatchSlowCallMethod__I_V(JThreadRuntime *runtime, s32 p0) {
+    aot_profile_unsupported(runtime);
+    return;
+}
+void func_org_mini_vm_RefNative_watchSlowCallMethod__IJ_V(JThreadRuntime *runtime, s32 p0, s64 p1) {
+    aot_profile_unsupported(runtime);
+    return;
+}

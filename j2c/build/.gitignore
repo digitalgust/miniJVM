@@ -7,3 +7,5 @@ app
 tools
 
 cmake*
+audit/
+runtime-regression/

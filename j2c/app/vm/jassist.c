@@ -277,197 +277,37 @@ void classes_put(JClass *clazz) {
  */
 
 
-s32 enc_get_utf8_size(const c8 *pInput) {
-    u8 c = *((u8 *) pInput);
-    //printf("---c=%c---\n", c);
-    if (c < 0x80) return 1;                // 0xxxxxxx 返回0
-    if (c >= 0x80 && c < 0xC0) return -1;     // 10xxxxxx 返回-1
-    if (c >= 0xC0 && c < 0xE0) return 2;      // 110xxxxx 返回2
-    if (c >= 0xE0 && c < 0xF0) return 3;      // 1110xxxx 返回3
-    if (c >= 0xF0 && c < 0xF8) return 4;      // 11110xxx 返回4
-    if (c >= 0xF8 && c < 0xFC) return 5;      // 111110xx 返回5
-    if (c >= 0xFC) return 6;                // 1111110x 返回6
-    return 0;
-}
-
-//https://yuncode.net/code/c_5715d18940eb269
-
-/**
- *
- * @param ustr
- * @param arr
- * @return
- */
-s32 utf8_2_unicode(Utf8String *ustr, u16 *arr) {
-    c8 const *pInput = utf8_cstr(ustr);
-    //assert(pInput != NULL && Unic != NULL);
-    int outputSize = 0; //记录转换后的Unicode字符串的字节数
-    // b1 表示UTF-8编码的pInput中的高字节, b2 表示次高字节, ...
-    c8 b1, b2, b3, b4, b5, b6;
-    s32 codepoint = 0;
-    c8 *pOutput = (c8 *) &codepoint;
-
-    while (*pInput) {
-        //*Unic = 0x0; // 把 *Unic 初始化为全零
-        int utfbytes = enc_get_utf8_size(pInput);
-        //printf("%d", utfbytes);
-        codepoint = 0;
-        switch (utfbytes) {
-            case 1:
-                *pOutput = *pInput;
-                *(pOutput + 1) = 0;
-                *arr = (u16) codepoint;
-                arr++;
-                break;
-
-            case 2:
-                b1 = *pInput;
-                b2 = *(pInput + 1);
-                if ((b2 & 0xc0) != 0x80)
-                    return -1;
-                *pOutput = (b1 << 6) + (b2 & 0x3F);
-                *(pOutput + 1) = (b1 >> 2) & 0x07;
-                *arr = (u16) codepoint;
-                arr++;
-                break;
-
-            case 3:
-                b1 = *pInput;
-                b2 = *(pInput + 1);
-                b3 = *(pInput + 2);
-                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80))
-                    return -1;
-                *pOutput = (b2 << 6) + (b3 & 0x3F);
-                *(pOutput + 1) = (b1 << 4) + ((b2 >> 2) & 0x0F);
-                *arr = (u16) codepoint;
-                arr++;
-                break;
-
-            case 4:
-                b1 = *pInput;
-                b2 = *(pInput + 1);
-                b3 = *(pInput + 2);
-                b4 = *(pInput + 3);
-                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
-                    || ((b4 & 0xC0) != 0x80))
-                    return -1;
-                *pOutput = (b3 << 6) + (b4 & 0x3F);
-                *(pOutput + 1) = (b2 << 4) + ((b3 >> 2) & 0x0F);
-                *(pOutput + 2) = ((b1 << 2) & 0x1C) + ((b2 >> 4) & 0x03);
-                break;
-
-            case 5:
-                b1 = *pInput;
-                b2 = *(pInput + 1);
-                b3 = *(pInput + 2);
-                b4 = *(pInput + 3);
-                b5 = *(pInput + 4);
-                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
-                    || ((b4 & 0xC0) != 0x80) || ((b5 & 0xC0) != 0x80))
-                    return -1;
-                *pOutput = (b4 << 6) + (b5 & 0x3F);
-                *(pOutput + 1) = (b3 << 4) + ((b4 >> 2) & 0x0F);
-                *(pOutput + 2) = (b2 << 2) + ((b3 >> 4) & 0x03);
-                *(pOutput + 3) = (b1 << 6);
-                break;
-
-            case 6:
-                b1 = *pInput;
-                b2 = *(pInput + 1);
-                b3 = *(pInput + 2);
-                b4 = *(pInput + 3);
-                b5 = *(pInput + 4);
-                b6 = *(pInput + 5);
-                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
-                    || ((b4 & 0xC0) != 0x80) || ((b5 & 0xC0) != 0x80)
-                    || ((b6 & 0xC0) != 0x80))
-                    return -1;
-                *pOutput = (b5 << 6) + (b6 & 0x3F);
-                *(pOutput + 1) = (b5 << 4) + ((b6 >> 2) & 0x0F);
-                *(pOutput + 2) = (b3 << 2) + ((b4 >> 4) & 0x03);
-                *(pOutput + 3) = ((b1 << 6) & 0x40) + (b2 & 0x3F);
-                break;
-
-            default:
-                return -1;
-                break;
+s32 j2c_utf8_2_unicode(Utf8String *ustr, u16 *arr) {
+    const u8 *bytes = (const u8 *) ustr->data;
+    s32 i = 0, count = 0;
+    while (i < ustr->length) {
+        u32 cp = bytes[i++], minimum = 0;
+        s32 extra = 0;
+        // Classfile constants use modified UTF-8 (C0 80 and UTF-16 surrogates).
+        if (cp == 0xc0 && i < ustr->length && bytes[i] == 0x80) { cp = 0; extra = 1; }
+        else if (cp >= 0xc2 && cp <= 0xdf) { cp &= 0x1f; extra = 1; minimum = 0x80; }
+        else if (cp >= 0xe0 && cp <= 0xef) { cp &= 0x0f; extra = 2; minimum = 0x800; }
+        else if (cp >= 0xf0 && cp <= 0xf4) { cp &= 7; extra = 3; minimum = 0x10000; }
+        else if (cp >= 0x80) return -1;
+        if (extra > ustr->length - i) return -1;
+        while (extra--) {
+            u32 next = bytes[i++];
+            if ((next & 0xc0) != 0x80) return -1;
+            cp = (cp << 6) | (next & 0x3f);
         }
-        if (utfbytes >= 4) {
-            codepoint -= 0x10000;
-            u16 c1 = codepoint >> 10;
-            *arr = (u16) (0xD800 | (c1 & 0x3ff));
-            arr++;
-            *arr = (u16) (0xDC00 | (codepoint & 0x3ff));
-            arr++;
-            outputSize += 2;
+        if (cp < minimum || cp > 0x10ffff) return -1;
+        if (cp >= 0x10000) {
+            cp -= 0x10000;
+            if (arr) arr[count] = 0xd800 | (cp >> 10);
+            count++;
+            if (arr) arr[count] = 0xdc00 | (cp & 0x3ff);
+            count++;
         } else {
-            outputSize++;
-        }
-
-        pInput += utfbytes;
-    }
-    return outputSize;
-}
-
-
-s32 unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 totalSize) {
-    s32 i;
-    for (i = 0; i < totalSize; i++) {
-        s32 unic = jchar_arr[i];
-        if (unic >= 0xd800 && unic <= 0xdbff) {
-            if (i + 1 < totalSize) {
-                int c1 = jchar_arr[i + 1];
-                if (c1 >= 0xdc00 && c1 <= 0xdfff) {
-                    i++;
-                    int lead = unic & 0x3ff;
-                    int trail = c1 & 0x3ff;
-                    unic = (lead << 10) | trail | 0x10000;
-                }
-            }
-        }
-
-        if (unic <= 0x0000007F) {
-            // * U-00000000 - U-0000007F:  0xxxxxxx
-            utf8_pushback(ustr, unic & 0x7F);
-
-        } else if (unic >= 0x00000080 && unic <= 0x000007FF) {
-            // * U-00000080 - U-000007FF:  110xxxxx 10xxxxxx
-            utf8_pushback(ustr, ((unic >> 6) & 0x1F) | 0xC0);
-            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
-
-        } else if (unic >= 0x00000800 && unic <= 0x0000FFFF) {
-            // * U-00000800 - U-0000FFFF:  1110xxxx 10xxxxxx 10xxxxxx
-            utf8_pushback(ustr, ((unic >> 12) & 0x0F) | 0xE0);
-            utf8_pushback(ustr, ((unic >> 6) & 0x3F) | 0x80);
-            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
-
-        } else if (unic >= 0x00010000 && unic <= 0x001FFFFF) {
-            // * U-00010000 - U-001FFFFF:  11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            utf8_pushback(ustr, ((unic >> 18) & 0x07) | 0xF0);
-            utf8_pushback(ustr, ((unic >> 12) & 0x3F) | 0x80);
-            utf8_pushback(ustr, ((unic >> 6) & 0x3F) | 0x80);
-            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
-
-        } else if (unic >= 0x00200000 && unic <= 0x03FFFFFF) {
-            // * U-00200000 - U-03FFFFFF:  111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
-            utf8_pushback(ustr, ((unic >> 24) & 0x03) | 0xF8);
-            utf8_pushback(ustr, ((unic >> 18) & 0x3F) | 0x80);
-            utf8_pushback(ustr, ((unic >> 12) & 0x3F) | 0x80);
-            utf8_pushback(ustr, ((unic >> 6) & 0x3F) | 0x80);
-            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
-
-        } else if (unic >= 0x04000000 && unic <= 0x7FFFFFFF) {
-            // * U-04000000 - U-7FFFFFFF:  1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
-            utf8_pushback(ustr, ((unic >> 30) & 0x01) | 0xFC);
-            utf8_pushback(ustr, ((unic >> 24) & 0x3F) | 0x80);
-            utf8_pushback(ustr, ((unic >> 18) & 0x3F) | 0x80);
-            utf8_pushback(ustr, ((unic >> 12) & 0x3F) | 0x80);
-            utf8_pushback(ustr, ((unic >> 6) & 0x3F) | 0x80);
-            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
-
+            if (arr) arr[count] = (u16) cp;
+            count++;
         }
     }
-    return ustr->length;
+    return count;
 }
 
 JClass *getSuperClass(JClass *clazz) {
@@ -495,22 +335,22 @@ s32 instance_of_class_name(InstProp *ins, s32 classNameIndex) {
 }
 
 s32 instance_of(InstProp *ins, JClass *clazz) {
-    if (!ins)return 0;
-    JClass *ins_of_class = ins->clazz;
-    while (ins_of_class) {
-        if (ins_of_class == clazz || isSonOfInterface(clazz, ins_of_class)) {
-            return 1;
-        }
-        ins_of_class = getSuperClass(ins_of_class);
-    }
-
-    return 0;
+    return ins && assignable_from(clazz, ins->clazz);
 }
 
 s32 assignable_from(JClass *clazzSuper, JClass *clazzSon) {
-
+    if (!clazzSuper || !clazzSon) return 0;
+    if (clazzSuper == clazzSon) return 1;
+    if (clazzSuper->array_cell_class && clazzSon->array_cell_class) {
+        JClass *a = clazzSuper->array_cell_class, *b = clazzSon->array_cell_class;
+        return a->primitive || b->primitive ? a == b : assignable_from(a, b);
+    }
+    if (clazzSon->array_cell_class &&
+        (utf8_equals_c(clazzSuper->name, STR_JAVA_LANG_OBJECT) ||
+         utf8_equals_c(clazzSuper->name, "java/lang/Cloneable") ||
+         utf8_equals_c(clazzSuper->name, "java/io/Serializable"))) return 1;
     while (clazzSon) {
-        if (clazzSuper == clazzSon) {
+        if (clazzSuper == clazzSon || isSonOfInterface(clazzSuper, clazzSon)) {
             return 1;
         }
         clazzSon = getSuperClass(clazzSon);
@@ -520,22 +360,7 @@ s32 assignable_from(JClass *clazzSuper, JClass *clazzSon) {
 
 
 s32 checkcast(JObject *jobj, s32 classNameIdx) {
-    InstProp *ins = (InstProp *) jobj;
-    JClass *cinfo = get_class_by_nameIndex(classNameIdx);
-    if (ins != NULL) {
-        if (ins->type == INS_TYPE_OBJECT) {
-            if (instance_of(ins, cinfo)) {
-                return 1;
-            }
-        } else if (ins->type == INS_TYPE_ARRAY) {
-            return jobj->prop.clazz->array_cell_type == cinfo->array_cell_type;//
-        } else if (ins->type == INS_TYPE_CLASS) {
-            return utf8_equals_c(jobj->prop.clazz->name, STR_JAVA_LANG_CLASS);
-        }
-    } else {
-        return 1;
-    }
-    return 0;
+    return !jobj || instance_of(&jobj->prop, get_class_by_nameIndex(classNameIdx));
 }
 
 
