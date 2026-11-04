@@ -82,9 +82,10 @@ cmake_language(DEFER CALL add_janino_benchmark_policy)
                 if ($timer.Elapsed.TotalMinutes -gt 25) { $process.Kill(); throw "Timed out: $id" }
             }
             $timer.Stop()
+            $process.WaitForExit() # finalize ExitCode and flush redirected output (Windows PowerShell 5.1 race)
             $stdout = Get-Content "$build/$id.stdout.log" -Raw
             $match = [regex]::Match($stdout, 'JANINO_BENCHMARK_PASS units=(\d+) compile_ms=(\d+) driver_ms=(\d+) initial_heap=(\d+) final_heap=(\d+)')
-            if ($process.ExitCode -ne 0 -or !$match.Success) { throw "Failed $id : $build/$id.stdout.log and stderr.log" }
+            if (($null -ne $process.ExitCode -and $process.ExitCode -ne 0) -or !$match.Success) { throw "Failed $id : $build/$id.stdout.log and stderr.log" }
             $files = @(Get-ChildItem $out -Recurse -Filter '*.class')
             if ($files.Count -ne $expected.Count) { throw "Class count differs: $id" }
             foreach ($file in $files) {
