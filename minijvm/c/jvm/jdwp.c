@@ -3309,15 +3309,32 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             case JDWP_CMD_ObjectReference_ReferenceType: {
                 //9.1
                 Instance *obj = (Instance *) jdwppacket_read_refer(req);
-                JClass *ref = obj->mb.clazz;
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                jdwppacket_write_byte(res, getClassType(ref));
+                // Object IDs come from the debugger, not necessarily from a live heap object.
+                // Validate before dereferencing and keep GC paused through the reply, as in 9.2.
+                gc_pause(jdwpserver->jvm->collector);
+                if (!obj || ((uintptr_t) obj % sizeof(void *)) != 0
+                        || !gc_is_alive(jdwpserver->jvm->collector, obj)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_OBJECT);
+                    jdwp_reply_put(client, res);
+                    gc_resume(jdwpserver->jvm->collector);
+                    break;
+                }
+                JClass *ref;
                 if (obj->mb.type == MEM_TYPE_CLASS) {
                     //类对象
                     ref = classes_get_c(jdwpserver->jvm, NULL, STR_CLASS_JAVA_LANG_CLASS);
+                } else {
+                    ref = obj->mb.clazz;
                 }
-                jdwppacket_write_refer(res, ref);
+                if (!ref || !is_class_exists(jdwpserver->jvm, ref)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_OBJECT);
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    jdwppacket_write_byte(res, getClassType(ref));
+                    jdwppacket_write_refer(res, ref);
+                }
                 jdwp_reply_put(client, res);
+                gc_resume(jdwpserver->jvm->collector);
                 break;
             }
             case JDWP_CMD_ObjectReference_GetValues: {

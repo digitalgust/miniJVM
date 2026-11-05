@@ -540,7 +540,7 @@ public class GTextField extends GTextObject {
         float FONT_WIDTH = GToolkit.getStyle().getIconFontWidth();
         // Edit
         if (boxStyle == BOX_STYLE_SEARCH) {
-            GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, h * .5f - 1f);
+            GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, h * .5f - 1f, bgColor);
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
@@ -548,7 +548,7 @@ public class GTextField extends GTextObject {
 
             nvgTextJni(vg, x + FONT_WIDTH, y + h * 0.55f, ICON_SEARCH_BYTE, 0, ICON_SEARCH_BYTE.length);
         } else {
-            GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, getCornerRadius());
+            GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, getCornerRadius(), bgColor);
         }
 
         if (passwordMode) {

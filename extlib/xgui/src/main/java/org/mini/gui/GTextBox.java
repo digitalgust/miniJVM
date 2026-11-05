@@ -1260,7 +1260,8 @@ public class GTextBox extends GTextObject {
         }
 
         void drawTextBox(long vg, float x, float y, float w, float h) {
-            GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, getCornerRadius());
+            // Read the outer control's color so every setBgColor overload is honored.
+            GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, getCornerRadius(), tbox.bgColor);
             nvgFontSize(vg, getFontSize());
             nvgFontFace(vg, GToolkit.getFontWord());
             nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);

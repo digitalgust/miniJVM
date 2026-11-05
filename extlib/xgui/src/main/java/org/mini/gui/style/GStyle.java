@@ -69,6 +69,27 @@ public abstract class GStyle {
         nvgStroke(vg);
     }
 
+    /**
+     * Draws an editor with an explicit background, or the theme default when null.
+     * The default path delegates to the existing method to preserve custom styles.
+     */
+    public void drawEditBoxBase(long vg, float x, float y, float w, float h, float r, float[] background) {
+        if (background == null) {
+            drawEditBoxBase(vg, x, y, w, h, r);
+            return;
+        }
+
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, r - 1f);
+        nvgFillColor(vg, background);
+        nvgFill(vg);
+
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, r - 0.5f);
+        nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 16));
+        nvgStroke(vg);
+    }
+
     public void drawFieldBoxBase(long vg, float x, float y, float w, float h, float r) {
         byte[] bg;
         bg = nvgBoxGradient(vg, x, y, w, h, r, h * 0.5f, nvgRGBA(0, 0, 0, 0), nvgRGBA(0, 0, 0, 40));
