@@ -21,6 +21,7 @@ import static org.mini.nanovg.Nanovg.*;
  * @author Gust
  */
 public class GListItem extends GContainer {
+    private static final float ITEM_PADDING = 2f;
 
     protected byte[] preicon_arr;
     protected String preicon;
@@ -204,11 +205,25 @@ public class GListItem extends GContainer {
         if (visible && enable) {
             int index = getIndex();
             list.select(index);
-            list.pulldown = false;
-            list.changeCurPanel();
+            list.closePopup();
             list.doStateChanged(list);
             GForm.flush();
         }
+    }
+
+    float measurePopupWidth(long vg, float[] bounds) {
+        String text = getText();
+        float textWidth = 0;
+        if (text != null && !text.isEmpty()) {
+            byte[] bytes = toCstyleBytes(text);
+            float advance = nvgTextBoundsJni(vg, 0, 0, bytes, 0, bytes.length, bounds);
+            textWidth = Math.max(advance, bounds[2]);
+        }
+        return textWidth + leadingWidth() + 3 * ITEM_PADDING;
+    }
+
+    private float leadingWidth() {
+        return img == null && preicon_arr == null ? 0 : list.list_item_heigh - ITEM_PADDING;
     }
 
     @Override
@@ -223,7 +238,7 @@ public class GListItem extends GContainer {
         if (list.isOutOfFilter(getIndex())) {
             outOfFilter = true;
         }
-        float pad = 2;
+        float pad = ITEM_PADDING;
         float thumb = list.list_item_heigh - pad;
 
         float tx, ty;
@@ -255,7 +270,7 @@ public class GListItem extends GContainer {
             nvgTextJni(vg, x + thumb * 0.5f, y + thumb * 0.5f + 2, preicon_arr, 0, preicon_arr.length);
         }
         nvgFillColor(vg, c);
-        GToolkit.drawTextLine(vg, tx + ((img == null && preicon_arr == null) ? 0 : thumb) + pad, ty + thumb / 2, getText(), list.getFontSize(), c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        GToolkit.drawTextLine(vg, tx + leadingWidth() + pad, ty + thumb / 2, getText(), list.getFontSize(), c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         Nanovg.nvgRestore(vg);
         return true;
     }

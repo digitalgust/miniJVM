@@ -16,6 +16,8 @@ public class XList extends XObject {
     protected boolean multiLine = true;
     protected boolean multiSelect = false;
     protected boolean scrollbar = false;
+    private float popupWidth;
+    private float popupMaxWidth;
     protected int itemheight = XDef.DEFAULT_LIST_HEIGHT;
 
     protected GList list;
@@ -37,6 +39,11 @@ public class XList extends XObject {
             multiSelect = "0".equals(attValue) ? false : true;
         } else if (attName.equals("scroll")) {
             scrollbar = "0".equals(attValue) ? false : true;
+        } else if (attName.equals("popw")) {
+            String value = attValue.trim();
+            popupWidth = value.equalsIgnoreCase("auto") ? GList.POPUP_WIDTH_AUTO : Float.parseFloat(value);
+        } else if (attName.equals("popmaxw")) {
+            popupMaxWidth = Float.parseFloat(attValue);
         } else if (attName.equals("itemh")) {
             itemheight = Integer.parseInt(attValue);
         }
@@ -102,6 +109,8 @@ public class XList extends XObject {
             list.setSelectMode(multiSelect ? GList.MODE_MULTI_SELECT : GList.MODE_SINGLE_SELECT);
             list.setItemHeight(itemheight);
             list.setScrollBar(scrollbar);
+            if (popupWidth != 0) list.setPopupWidth(popupWidth);
+            if (popupMaxWidth != 0) list.setPopupMaxWidth(popupMaxWidth);
             int selected = -1, selectCount = 0;
             for (int i = 0; i < items.size(); i++) {
                 // 创建子项，因为glist不是个标准容器，因此需要手动构建子项

@@ -285,7 +285,11 @@ abstract public class GObject implements GAttachable {
     }
 
     public void setParent(GContainer p) {
+        GContainer oldParent = parent;
         parent = p;
+        if (oldParent != null && oldParent != p && form != null) {
+            form.dismissListPopupFor(this);
+        }
     }
 
     public boolean isSuperParent(GContainer p) {
@@ -467,6 +471,7 @@ abstract public class GObject implements GAttachable {
     public void setVisible(boolean v) {
         if (visible == v) return;
         visible = v;
+        if (!v && form != null) form.dismissListPopupFor(this);
         doStateChanged(this);
     }
 

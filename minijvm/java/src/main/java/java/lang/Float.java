@@ -245,6 +245,17 @@ public final class Float extends Number implements Comparable<Float> {
     }
 
     /**
+     * Returns true if the specified value is neither NaN nor infinite.
+     *
+     * @param v the value to be tested.
+     * @return true if the value is finite.
+     * @since 1.8
+     */
+    public static boolean isFinite(float v) {
+        return !isNaN(v) && !isInfinite(v);
+    }
+
+    /**
      * The value of the Float.
      */
     private float value;

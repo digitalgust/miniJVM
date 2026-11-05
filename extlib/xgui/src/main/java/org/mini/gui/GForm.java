@@ -24,6 +24,7 @@ import static org.mini.gui.GToolkit.nvgRGBA;
 public class GForm extends GContainer {
 
     protected GObject flyingObject;
+    private GList activeListPopup;
 
     //键盘弹出,使form 向上移动
     float keyboardPopTranslateFormY;
@@ -66,6 +67,8 @@ public class GForm extends GContainer {
     }
 
     public boolean paint(long vg) {
+        GList list = activeListPopup;
+        if (list != null && !list.layoutPopup()) list.closePopup();
         super.paint(vg);
         paintFlyingObject(vg);
         return true;
@@ -181,8 +184,55 @@ public class GForm extends GContainer {
         }
     }
 
+    void showListPopup(GList list) {
+        if (activeListPopup == list) return;
+        if (activeListPopup != null) activeListPopup.closePopup();
+        if (!list.isSuperParent(this) || !list.isVisible()) return;
+        activeListPopup = list;
+        list.pulldown = true;
+        addImpl(list.popWin);
+        setCurrent(list.popWin);
+        flush();
+    }
+
+    void hideListPopup(GList list) {
+        if (activeListPopup == list) removeImpl(list.popWin);
+    }
+
+    @Override
+    void removeImpl(GObject child) {
+        if (activeListPopup != null && child == activeListPopup.popWin) {
+            activeListPopup.pulldown = false;
+            activeListPopup = null;
+            flush();
+        }
+        super.removeImpl(child);
+    }
+
+    void dismissListPopupFor(GObject ownerOrAncestor) {
+        GList list = activeListPopup;
+        for (GObject node = list; node != null; node = node.parent) {
+            if (node == ownerOrAncestor) {
+                list.closePopup();
+                return;
+            }
+        }
+    }
+
+    private boolean dismissListPopupOutside(int x, int y, boolean toggleHeader) {
+        GList list = activeListPopup;
+        if (list == null) return false;
+        if (list.layoutPopup() && list.popWin.isInArea(x, y)) return false;
+
+        // A press on the open list's header only closes it. Other presses pass through.
+        boolean onHeader = toggleHeader && list.isInArea(x, y);
+        list.closePopup();
+        return onHeader;
+    }
+
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        if (pressed && dismissListPopupOutside(x, y, button == Glfw.GLFW_MOUSE_BUTTON_1)) return;
         super.mouseButtonEvent(button, pressed, x, y);
         if (button == Glfw.GLFW_MOUSE_BUTTON_1 && !pressed) {
             if (flyingObject != null) {
@@ -193,6 +243,7 @@ public class GForm extends GContainer {
     }
 
     public void touchEvent(int touchid, int phase, int x, int y) {
+        if (phase == Glfm.GLFMTouchPhaseBegan && dismissListPopupOutside(x, y, true)) return;
         super.touchEvent(touchid, phase, x, y);
         if (phase == Glfm.GLFMTouchPhaseEnded && touchid == Glfw.GLFW_MOUSE_BUTTON_1) {
             if (flyingObject != null) {

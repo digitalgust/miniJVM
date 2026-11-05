@@ -245,11 +245,10 @@ abstract public class GContainer extends GObject {
     }
 
     void clearImpl() {
-        {
-            int size = elements.size();
-            for (int i = 0; i < size; i++) {
-                removeImpl(0);
-            }
+        // Removal can also detach a popup owned by the removed subtree.
+        int count = elements.size();
+        for (int i = 0; i < count && !elements.isEmpty(); i++) {
+            removeImpl(0);
         }
     }
 

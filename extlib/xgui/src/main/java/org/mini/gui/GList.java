@@ -11,7 +11,7 @@ import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.callback.GCmd;
 import org.mini.gui.event.GActionListener;
-import org.mini.gui.event.GFocusChangeListener;
+import org.mini.gui.callback.GCallBack;
 import org.mini.gui.event.GStateChangeListener;
 import org.mini.util.SysLog;
 
@@ -36,6 +36,7 @@ import static org.mini.nanovg.Nanovg.*;
 public class GList extends GContainer {
     public static final int MODE_MULTI_SHOW = 1, MODE_SINGLE_SHOW = 2;
     public static final int MODE_MULTI_SELECT = 4, MODE_SINGLE_SELECT = 8;
+    public static final float POPUP_WIDTH_AUTO = -1f;
     public static final float ITEM_HEIGH_DEFAULT = 36f;
     public static final float ITEM_IMG_H_DEFAULT = 28f;
     static float[] GRADIENT_COLOR0 = {1.0f, 1.0f, 1.0f, 0.125f};
@@ -44,6 +45,9 @@ public class GList extends GContainer {
     protected String preicon;
     protected List<Integer> selected = new ArrayList();
     protected boolean pulldown;
+    private float popupWidth;
+    private float popupMaxWidth;
+    private float popupContentWidth;
     //
     protected int showMode = MODE_SINGLE_SHOW;
     //
@@ -90,7 +94,6 @@ public class GList extends GContainer {
         popWin.addImpl(scrollBar);
         popWin.addImpl(popView);
         setScrollBar(false);
-        sizeAdjust();
         changeCurPanel();
         setCornerRadius(4.f);
 
@@ -117,11 +120,9 @@ public class GList extends GContainer {
 
     public void setScrollBar(boolean show) {
         this.showScrollbar = show;
-        if (show) {
-            scrollbarWidth = 20;
-        } else {
-            scrollbarWidth = 0;
-        }
+        scrollbarWidth = show ? 20 : 0;
+        scrollBar.setVisible(show);
+        sizeAdjust();
     }
 
     public void setItemHeight(float h) {
@@ -238,113 +239,150 @@ public class GList extends GContainer {
 
     public void clear() {
         popView.clearImpl();
+        sizeAdjust();
     }
 
 
-    void sizeAdjust() {
-        int itemcount = popView.elements.size();
+    /**
+     * Sets the dropdown width in layout units. Use 0 for the header width,
+     * or POPUP_WIDTH_AUTO to fit the widest item.
+     */
+    public void setPopupWidth(float width) {
+        if (Float.isNaN(width) || Float.isInfinite(width) || (width < 0 && width != POPUP_WIDTH_AUTO)) {
+            throw new IllegalArgumentException("Invalid popup width: " + width);
+        }
+        popupWidth = width;
+        sizeAdjust();
+    }
 
+    public float getPopupWidth() {
+        return popupWidth;
+    }
+
+    /** Sets the dropdown width limit. Use 0 to limit it only to the form. */
+    public void setPopupMaxWidth(float width) {
+        if (Float.isNaN(width) || Float.isInfinite(width) || width < 0) {
+            throw new IllegalArgumentException("Invalid maximum popup width: " + width);
+        }
+        popupMaxWidth = width;
+        sizeAdjust();
+    }
+
+    public float getPopupMaxWidth() {
+        return popupMaxWidth;
+    }
+
+    void sizeAdjust() {
         if (showMode == MODE_MULTI_SHOW) {
             popWin.setLocation(0, 0);
-            popWin.setSize(width, height);
-
+            resizeListPanel(width, height);
         } else {
-            float popH = getPopWinH();
-            popWin.setSize(width, popH);
-
             normalPanel.setLocation(0, 0);
             normalPanel.setSize(width, height);
+            if (pulldown) {
+                measurePopupContent();
+                if (!layoutPopup()) closePopup();
+            } else {
+                resizeListPanel(width, getPopWinH());
+            }
         }
-
-        reAlignItems();
-
-        scrollBar.setPos(popView.scrolly);
         GForm.flush();
     }
 
+    private void resizeListPanel(float w, float h) {
+        popWin.setSize(w, h);
+        reAlignItems();
+        scrollBar.setPos(popView.scrolly);
+    }
+
     public void reAlignItems() {
-        int i = 0;
-        for (GObject go : popView.getElementsImpl()) {
+        List<GObject> items = popView.getElementsImpl();
+        for (int i = 0; i < items.size(); i++) {
+            GObject go = items.get(i);
             go.setLocation(pad, i * list_item_heigh);
-            go.setSize(popView.getW() - pad * 2, list_item_heigh);
-            i++;
+            go.setSize(Math.max(0, popView.getW() - pad * 2), list_item_heigh);
         }
         popView.reAlign();
-        //selected.clear();
     }
 
     void changeCurPanel() {
-//        GObject frontCur = getFrontFocus();//save focus
-
-        super.clearImpl();
         if (showMode == MODE_SINGLE_SHOW) {
+            if (popWin.parent == this) super.removeImpl(popWin);
             super.addImpl(normalPanel);
-            //pop list in form
-            GForm form = getForm();
-            if (form != null) {
-                if (pulldown) {
-                    float popY, popH;
-                    popY = getY() + normalPanel.getH();
-                    popH = getPopWinH();
-                    if (popY + popH > form.getY() + form.getH()) {
-                        popY = form.getY() + form.getH() - popH;
-                    }
-                    popH = getPopWinH();
-                    popWin.setLocation(getX(), popY);
-                    popWin.setSize(popWin.getW(), popH);
-                    form.add(popWin);
-                    form.setCurrent(popWin);
-                } else {
-                    form.remove(popWin);
-                }
-            }
         } else {
+            if (normalPanel.parent == this) super.removeImpl(normalPanel);
             super.addImpl(popWin);
         }
-
-        //restore focus
-//        if (frontCur != null) {
-//            if (findSon(frontCur) != null) {
-//                GContainer p = frontCur.getParent();
-//                while (p != null) {
-//                    p.setCurrent(frontCur);
-//                    frontCur = p;
-//                    p = p.getParent();
-//                }
-//            }
-//        }
     }
 
     private float getPopWinH() {
-        float popY, popH;
-        GForm form = getForm();
-        int itemcount = popView.elements.size();
-        if (normalPanel.getY() > form.getY() + form.getH() / 2) {
-            popY = 0f;
-            popH = itemcount * list_item_heigh;
-            if (itemcount < list_rows_min) {
-                popH = list_rows_min * list_item_heigh;
+        return Math.max(list_rows_min, Math.min(list_rows_max, popView.elements.size())) * list_item_heigh;
+    }
+
+    private void measurePopupContent() {
+        popupContentWidth = 0;
+        if (popupWidth != POPUP_WIDTH_AUTO || popView.elements.isEmpty()) return;
+        GCallBack callback = GCallBack.getInstance();
+        long vg = callback == null ? 0 : callback.getNvContext();
+        if (vg == 0 || GToolkit.FontHolder.word == null) return;
+
+        nvgSave(vg);
+        try {
+            nvgFontSize(vg, getFontSize());
+            nvgFontFace(vg, GToolkit.getFontWord());
+            nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+            float[] bounds = new float[4];
+            List<GObject> items = popView.getElementsImpl();
+            for (int i = 0; i < items.size(); i++) {
+                GListItem item = (GListItem) items.get(i);
+                popupContentWidth = Math.max(popupContentWidth, item.measurePopupWidth(vg, bounds));
             }
-            if (itemcount > list_rows_max) {
-                popH = list_rows_max * list_item_heigh;
-            }
-            if (popY + popH > normalPanel.getY()) {
-                popH = normalPanel.getY() - popY;
-            }
-        } else {
-            popY = getY() + normalPanel.getH();
-            popH = itemcount * list_item_heigh;
-            if (itemcount < list_rows_min) {
-                popH = list_rows_min * list_item_heigh;
-            }
-            if (itemcount > list_rows_max) {
-                popH = list_rows_max * list_item_heigh;
-            }
-            if (popH > form.getY() + form.getH() - popY) {
-                popH = form.getY() + form.getH() - popY;
-            }
+        } finally {
+            nvgRestore(vg);
         }
-        return popH;
+        popupContentWidth = (float) Math.ceil(popupContentWidth + 2 * pad + scrollbarWidth);
+    }
+
+    boolean layoutPopup() {
+        float formW = form.getInnerW();
+        float formH = form.getInnerH();
+        if (formW <= 0 || formH <= 0) return false;
+
+        float preferredW = width;
+        if (popupWidth == POPUP_WIDTH_AUTO) preferredW = Math.max(width, popupContentWidth);
+        else if (popupWidth > 0) preferredW = popupWidth;
+        float maxW = popupMaxWidth > 0 ? Math.min(formW, popupMaxWidth) : formW;
+        float w = Math.min(maxW, Math.max(1, preferredW));
+
+        float anchorX = normalPanel.getX() - form.getInnerX();
+        float anchorY = normalPanel.getY() - form.getInnerY();
+        float above = Math.max(0, Math.min(formH, anchorY));
+        float belowY = Math.max(0, Math.min(formH, anchorY + normalPanel.getH()));
+        float below = formH - belowY;
+        float preferredH = getPopWinH();
+        boolean openBelow = below >= preferredH || below >= above;
+        float h = Math.min(preferredH, openBelow ? below : above);
+        if (h <= 0) return false;
+
+        float x = Math.max(0, Math.min(anchorX, formW - w));
+        float y = openBelow ? belowY : above - h;
+        if (popWin.getLocationLeft() != x || popWin.getLocationTop() != y) {
+            popWin.setLocation(x, y);
+        }
+        if (popWin.getW() != w || popWin.getH() != h || popView.getW() != Math.max(1, w - scrollbarWidth)) {
+            resizeListPanel(w, h);
+        }
+        return true;
+    }
+
+    private void openPopup() {
+        if (pulldown || showMode != MODE_SINGLE_SHOW || !enable || !isSuperParent(form)) return;
+        measurePopupContent();
+        if (layoutPopup()) form.showListPopup(this);
+    }
+
+    void closePopup() {
+        form.hideListPopup(this);
     }
 
     public void setItems(GImage[] imgs, String[] labs) {
@@ -359,6 +397,7 @@ public class GList extends GContainer {
     }
 
     public void setShowMode(int m) {
+        if (showMode != m) closePopup();
         this.showMode = m;
         if (m == MODE_MULTI_SHOW) {
             popWin.layer = LAYER_NORMAL;
@@ -372,6 +411,12 @@ public class GList extends GContainer {
 
     public int getShowMode() {
         return this.showMode;
+    }
+
+    @Override
+    public void setEnable(boolean enable) {
+        super.setEnable(enable);
+        if (!enable) closePopup();
     }
 
     public void setSelectMode(int m) {
@@ -572,29 +617,41 @@ public class GList extends GContainer {
             setCornerRadius(4.f);
         }
 
+        private boolean pressed;
+        private int activeTouch = -1;
+
         @Override
         public void touchEvent(int touchid, int phase, int x, int y) {
-            if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
-            if (phase == Glfm.GLFMTouchPhaseBegan) {
-            } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                pulldown = !pulldown;
-                GList.this.changeCurPanel();
+            if (phase == Glfm.GLFMTouchPhaseBegan && activeTouch == -1) {
+                activeTouch = touchid;
+            } else if (touchid == activeTouch && phase == Glfm.GLFMTouchPhaseEnded) {
+                activeTouch = -1;
+                if (isInArea(x, y)) openPopup();
+            } else if (touchid == activeTouch && phase == Glfm.GLFMTouchPhaseCancelled) {
+                activeTouch = -1;
             }
             super.touchEvent(touchid, phase, x, y);
-
         }
 
         @Override
-        public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        public void mouseButtonEvent(int button, boolean down, int x, int y) {
             if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
-                if (!pressed) {
-                    pulldown = !pulldown;
-                    GList.this.changeCurPanel();
+                if (down) {
+                    pressed = true;
                 } else {
-
+                    boolean clicked = pressed && isInArea(x, y);
+                    pressed = false;
+                    if (clicked) openPopup();
                 }
             }
-            super.mouseButtonEvent(button, pressed, x, y);
+            super.mouseButtonEvent(button, down, x, y);
+        }
+
+        @Override
+        void doFocusLost(GObject newFocus) {
+            pressed = false;
+            activeTouch = -1;
+            super.doFocusLost(newFocus);
         }
 
         @Override
@@ -685,16 +742,6 @@ public class GList extends GContainer {
         @Override
         public boolean paint(long vg) {
 
-            if (pulldown) {
-                if (getParent() != null && getParent().getCurrent() != this
-                        && form.getCurrent() != popWin
-                        || !isSuperParent(form)  // 不在form中显示了，比如窗口已经关闭，list不显示了
-                ) {
-                    pulldown = false;
-                    changeCurPanel();
-                }
-            }
-
             float x = getX();
             float y = getY();
             float w = getW();
@@ -730,27 +777,33 @@ public class GList extends GContainer {
         }
 
         @Override
+        void doFocusLost(GObject newFocus) {
+            if (pulldown) closePopup();
+            super.doFocusLost(newFocus);
+        }
+
+        @Override
         public void keyEventGlfw(int key, int scanCode, int action, int mods) {
-            if (parent.getCurrent() != GListPopWindow.this) return;
+            if (parent == null || parent.getCurrent() != this) return;
             if (action == Glfw.GLFW_PRESS) {
                 if (key == Glfw.GLFW_KEY_ESCAPE) {
-                    pulldown = false;
-                    GList.this.changeCurPanel();
+                    closePopup();
                 } else if (key == Glfw.GLFW_KEY_UP) {
+                    if (popView.elements.isEmpty()) return;
                     int selectIndex = getSelectedIndex();
                     selectIndex -= 1;
                     if (selectIndex < 0) selectIndex = popView.getElementSize() - 1;
                     select(selectIndex);
                     setCurrent(getSelectedItem());
                 } else if (key == Glfw.GLFW_KEY_DOWN) {
+                    if (popView.elements.isEmpty()) return;
                     int selectIndex = getSelectedIndex();
                     selectIndex += 1;
                     if (selectIndex >= popView.getElementSize()) selectIndex = 0;
                     select(selectIndex);
                     setCurrent(getSelectedItem());
                 } else if (action == Glfw.GLFW_PRESS) {
-                    pulldown = false;
-                    GList.this.changeCurPanel();
+                    closePopup();
 
                     if (key == Glfw.GLFW_KEY_ENTER) {
                         GListItem li = getSelectedItem();
