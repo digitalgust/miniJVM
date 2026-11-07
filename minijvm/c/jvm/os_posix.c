@@ -26,6 +26,25 @@
 
 #endif
 
+FILE *mini_fs_fopen(const char *path, const char *mode) { return fopen(path, mode); }
+int mini_fs_stat(const char *path, MiniFileStat *info) { return stat(path, info); }
+int mini_fs_mkdir(const char *path) { return mkdir(path, 0775); }
+int mini_fs_chmod(const char *path, int mode) { return chmod(path, mode); }
+int mini_fs_rename(const char *a, const char *b) { return rename(a, b); }
+int mini_fs_remove(const char *path) {
+    struct stat info;
+    if (stat(path, &info)) return -1;
+    return S_ISDIR(info.st_mode) ? rmdir(path) : remove(path);
+}
+char *mini_fs_getcwd(void) { return getcwd(NULL, 0); }
+char *mini_fs_realpath(const char *path) { return realpath(path, NULL); }
+MiniDirectory *mini_fs_opendir(const char *path) { return opendir(path); }
+char *mini_fs_readdir(MiniDirectory *dir) {
+    struct dirent *entry = readdir(dir);
+    return entry ? strdup(entry->d_name) : NULL;
+}
+void mini_fs_closedir(MiniDirectory *dir) { closedir(dir); }
+
 void os_setup_crash_handler() {
 }
 

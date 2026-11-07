@@ -783,13 +783,8 @@ extern s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src);
 extern s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src);
 
 s32 isDir(Utf8String *path) {
-    ByteBuf *platformPath = bytebuf_create(0);
-    conv_utf8_2_platform_encoding(platformPath, path);
-    struct stat buf;
-    stat(platformPath->buf, &buf);
-    s32 a = S_ISDIR(buf.st_mode);
-    bytebuf_destroy(platformPath);
-    return a;
+    MiniFileStat info;
+    return mini_fs_stat(utf8_cstr(path), &info) == 0 && S_ISDIR(info.st_mode);
 }
 
 s32 org_mini_fs_InnerFile_openFile(Runtime *runtime, JClass *clazz) {
@@ -797,13 +792,9 @@ s32 org_mini_fs_InnerFile_openFile(Runtime *runtime, JClass *clazz) {
     Instance *mode_arr = localvar_getRefer(runtime->localvar, 1);
     if (name_arr) {
         Utf8String *filepath = utf8_create_c(jarray_body(name_arr));
-        ByteBuf *platformPath = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(platformPath, filepath);
-
-        FILE *fd = fopen(platformPath->buf, jarray_body(mode_arr));
+        FILE *fd = mini_fs_fopen(utf8_cstr(filepath), jarray_body(mode_arr));
         push_long(runtime->stack, (s64) (intptr_t) fd);
 
-        bytebuf_destroy(platformPath);
         utf8_destroy(filepath);
     } else {
         push_long(runtime->stack, 0);
@@ -1087,48 +1078,38 @@ s32 org_mini_fs_InnerFile_loadFS(Runtime *runtime, JClass *clazz) {
     s32 ret = RUNTIME_STATUS_NORMAL;
     if (name_arr) {
         Utf8String *filepath = utf8_create_part_c(jarray_body(name_arr), 0, jarray_length(name_arr));
-        struct stat buf;
-        ByteBuf *platformPath = bytebuf_create(0);
-        s32 len = conv_utf8_2_platform_encoding(platformPath, filepath);
-        if (len < 0) {
-            Instance *exception = exception_create(JVM_EXCEPTION_ILLEGALARGUMENT, runtime);
-            push_ref(runtime->stack, (__refer) exception);
-            ret = RUNTIME_STATUS_EXCEPTION;
-        } else {
-            s32 state = stat(platformPath->buf, &buf);
-            s32 a = S_ISDIR(buf.st_mode);
-            if (state == 0) {
-                c8 *className = "org/mini/fs/InnerFileStat";
-                c8 *ptr;
-                ptr = getFieldPtr_byName_c(fd, className, "st_dev", "I", runtime);
-                setFieldInt(ptr, buf.st_dev);
-                ptr = getFieldPtr_byName_c(fd, className, "st_ino", "S", runtime);
-                setFieldShort(ptr, buf.st_ino);
-                ptr = getFieldPtr_byName_c(fd, className, "st_mode", "S", runtime);
-                setFieldShort(ptr, buf.st_mode);
-                ptr = getFieldPtr_byName_c(fd, className, "st_nlink", "S", runtime);
-                setFieldShort(ptr, buf.st_nlink);
-                ptr = getFieldPtr_byName_c(fd, className, "st_uid", "S", runtime);
-                setFieldShort(ptr, buf.st_uid);
-                ptr = getFieldPtr_byName_c(fd, className, "st_gid", "S", runtime);
-                setFieldShort(ptr, buf.st_gid);
-                ptr = getFieldPtr_byName_c(fd, className, "st_rdev", "S", runtime);
-                setFieldShort(ptr, buf.st_rdev);
-                ptr = getFieldPtr_byName_c(fd, className, "st_size", "J", runtime);
-                setFieldLong(ptr, buf.st_size);
-                ptr = getFieldPtr_byName_c(fd, className, "st_atime", "J", runtime);
-                setFieldLong(ptr, buf.st_atime);
-                ptr = getFieldPtr_byName_c(fd, className, "st_mtime", "J", runtime);
-                setFieldLong(ptr, buf.st_mtime);
-                ptr = getFieldPtr_byName_c(fd, className, "st_ctime", "J", runtime);
-                setFieldLong(ptr, buf.st_ctime);
-                ptr = getFieldPtr_byName_c(fd, className, "exists", "Z", runtime);
-                setFieldByte(ptr, 1);
-            }
-            bytebuf_destroy(platformPath);
-            utf8_destroy(filepath);
-            push_int(runtime->stack, state);
+        MiniFileStat buf;
+        s32 state = mini_fs_stat(utf8_cstr(filepath), &buf);
+        if (state == 0) {
+            c8 *className = "org/mini/fs/InnerFileStat";
+            c8 *ptr;
+            ptr = getFieldPtr_byName_c(fd, className, "st_dev", "I", runtime);
+            setFieldInt(ptr, buf.st_dev);
+            ptr = getFieldPtr_byName_c(fd, className, "st_ino", "S", runtime);
+            setFieldShort(ptr, buf.st_ino);
+            ptr = getFieldPtr_byName_c(fd, className, "st_mode", "S", runtime);
+            setFieldShort(ptr, buf.st_mode);
+            ptr = getFieldPtr_byName_c(fd, className, "st_nlink", "S", runtime);
+            setFieldShort(ptr, buf.st_nlink);
+            ptr = getFieldPtr_byName_c(fd, className, "st_uid", "S", runtime);
+            setFieldShort(ptr, buf.st_uid);
+            ptr = getFieldPtr_byName_c(fd, className, "st_gid", "S", runtime);
+            setFieldShort(ptr, buf.st_gid);
+            ptr = getFieldPtr_byName_c(fd, className, "st_rdev", "S", runtime);
+            setFieldShort(ptr, buf.st_rdev);
+            ptr = getFieldPtr_byName_c(fd, className, "st_size", "J", runtime);
+            setFieldLong(ptr, buf.st_size);
+            ptr = getFieldPtr_byName_c(fd, className, "st_atime", "J", runtime);
+            setFieldLong(ptr, buf.st_atime);
+            ptr = getFieldPtr_byName_c(fd, className, "st_mtime", "J", runtime);
+            setFieldLong(ptr, buf.st_mtime);
+            ptr = getFieldPtr_byName_c(fd, className, "st_ctime", "J", runtime);
+            setFieldLong(ptr, buf.st_ctime);
+            ptr = getFieldPtr_byName_c(fd, className, "exists", "Z", runtime);
+            setFieldByte(ptr, 1);
         }
+        utf8_destroy(filepath);
+        push_int(runtime->stack, state);
     }
     return ret;
 }
@@ -1139,24 +1120,23 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
         Utf8String *filepath = utf8_create_part_c(jarray_body(name_arr), 0, jarray_length(name_arr));
 
         ArrayList *files = arraylist_create(0);
-        DIR *dirp;
-        struct dirent *dp;
-        ByteBuf *platformPath = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(platformPath, filepath);
-        dirp = opendir(platformPath->buf); // pointer to the opened directory
+        MiniDirectory *dirp;
+        char *entry;
+        dirp = mini_fs_opendir(utf8_cstr(filepath)); // pointer to the opened directory
         if (dirp) {
             s32 root_failed = 0;
-            while ((dp = readdir(dirp)) != NULL) {
+            while ((entry = mini_fs_readdir(dirp)) != NULL) {
                 // read the directory through the directory pointer
-                if (strcmp(dp->d_name, ".") == 0) {
+                if (strcmp(entry, ".") == 0) {
+                    free(entry);
                     continue;
                 }
-                if (strcmp(dp->d_name, "..") == 0) {
+                if (strcmp(entry, "..") == 0) {
+                    free(entry);
                     continue;
                 }
-                //                Utf8String *ustr = utf8_create_c(dp->d_name);
-                Utf8String *ustr = utf8_create();
-                conv_platform_encoding_2_utf8(ustr, dp->d_name); //
+                Utf8String *ustr = utf8_create_c(entry);
+                free(entry);
                 Instance *jstr = jstring_create(ustr, runtime);
                 utf8_destroy(ustr);
                 if (!jstr || instance_hold_to_thread(jstr, runtime) != 0 ||
@@ -1166,14 +1146,13 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
                     break;
                 }
             }
-            (void) closedir(dirp); // close the directory
+            mini_fs_closedir(dirp); // close the directory
 
             s32 i;
             if (root_failed) {
                 for (i = 0; i < files->length; i++) {
                     instance_release_from_thread(arraylist_get_value(files, i), runtime);
                 }
-                bytebuf_destroy(platformPath);
                 arraylist_destroy(files);
                 utf8_destroy(filepath);
                 return exception_throw_out_of_memory(runtime);
@@ -1185,7 +1164,6 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
                 for (i = 0; i < files->length; i++) {
                     instance_release_from_thread(arraylist_get_value(files, i), runtime);
                 }
-                bytebuf_destroy(platformPath);
                 arraylist_destroy(files);
                 utf8_destroy(filepath);
                 return exception_throw_out_of_memory(runtime);
@@ -1199,7 +1177,6 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
         } else {
             push_ref(runtime->stack, NULL);
         }
-        bytebuf_destroy(platformPath);
         arraylist_destroy(files);
         utf8_destroy(filepath);
     } else {
@@ -1241,95 +1218,35 @@ s32 org_mini_fs_InnerFile_realpath0(Runtime *runtime, JClass *clazz) {
     Instance *path = localvar_getRefer(runtime->localvar, 0);
     Instance *result = NULL;
     if (path) {
-        Utf8String *text = utf8_create_c(jarray_body(path));
-        ByteBuf *platform = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(platform, text);
-        char *resolved = mini_realpath(platform->buf);
+        char *resolved = mini_fs_realpath(jarray_body(path));
         if (resolved) {
-            utf8_clear(text);
-            conv_platform_encoding_2_utf8(text, resolved);
-            result = jstring_create(text, runtime);
+            result = jstring_create_cstr(resolved, runtime);
             free(resolved);
         }
-        bytebuf_destroy(platform);
-        utf8_destroy(text);
     }
     push_ref(runtime->stack, result);
     return 0;
 }
 
 s32 org_mini_fs_InnerFile_getcwd(Runtime *runtime, JClass *clazz) {
-    ByteBuf *platformPath = bytebuf_create(1024);
-
-    __refer ret = getcwd(platformPath->buf, platformPath->_alloc_size);
-    if (ret) {
-        Utf8String *filepath = utf8_create();
-        conv_platform_encoding_2_utf8(filepath, platformPath->buf);
-
-        Instance *jstr = jstring_create(filepath, runtime);
-        push_ref(runtime->stack, jstr);
-
-        utf8_destroy(filepath);
-    } else {
-        push_ref(runtime->stack, NULL);
-    }
-
-    bytebuf_destroy(platformPath);
-#if _JVM_DEBUG_LOG_LEVEL > 5
-    invoke_deepth(runtime);
-    jvm_printf("org_mini_fs_InnerFile_getcwd  \n");
-#endif
+    char *path = mini_fs_getcwd();
+    Instance *result = path ? jstring_create_cstr(path, runtime) : NULL;
+    free(path);
+    push_ref(runtime->stack, result);
     return 0;
 }
 
 s32 org_mini_fs_InnerFile_chmod(Runtime *runtime, JClass *clazz) {
-    Instance *path_arr = localvar_getRefer(runtime->localvar, 0);
+    Instance *path = localvar_getRefer(runtime->localvar, 0);
     s32 mode = localvar_getInt(runtime->localvar, 1);
-    if (path_arr) {
-        Utf8String *filepath = utf8_create_c(jarray_body(path_arr));
-        ByteBuf *platformPath = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(platformPath, filepath);
-
-        s32 ret = chmod(platformPath->buf, mode);
-        push_int(runtime->stack, ret);
-
-        bytebuf_destroy(platformPath);
-        utf8_destroy(filepath);
-    } else {
-        push_int(runtime->stack, -1);
-    }
-#if _JVM_DEBUG_LOG_LEVEL > 5
-    invoke_deepth(runtime);
-    jvm_printf("org_mini_fs_InnerFile_fullpath  \n");
-#endif
+    push_int(runtime->stack, path ? mini_fs_chmod(jarray_body(path), mode) : -1);
     return 0;
 }
 
 s32 org_mini_fs_InnerFile_rename0(Runtime *runtime, JClass *clazz) {
-    Instance *old_arr = localvar_getRefer(runtime->localvar, 0);
-    Instance *new_arr = localvar_getRefer(runtime->localvar, 1);
-    if (old_arr && new_arr) {
-        Utf8String *filepath = utf8_create_c(jarray_body(old_arr));
-        ByteBuf *oldPath = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(oldPath, filepath);
-        utf8_clear(filepath);
-        utf8_append_c(filepath, jarray_body(new_arr));
-        ByteBuf *newPath = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(newPath, filepath);
-
-        s32 ret = rename(oldPath->buf, newPath->buf);
-        push_int(runtime->stack, ret);
-
-        bytebuf_destroy(oldPath);
-        bytebuf_destroy(newPath);
-        utf8_destroy(filepath);
-    } else {
-        push_int(runtime->stack, -1);
-    }
-#if _JVM_DEBUG_LOG_LEVEL > 5
-    invoke_deepth(runtime);
-    jvm_printf("org_mini_fs_InnerFile_rename0  \n");
-#endif
+    Instance *a = localvar_getRefer(runtime->localvar, 0);
+    Instance *b = localvar_getRefer(runtime->localvar, 1);
+    push_int(runtime->stack, a && b ? mini_fs_rename(jarray_body(a), jarray_body(b)) : -1);
     return 0;
 }
 
@@ -1368,25 +1285,8 @@ s32 org_mini_fs_InnerFile_getTmpDir(Runtime *runtime, JClass *clazz) {
 
 
 s32 org_mini_fs_InnerFile_mkdir0(Runtime *runtime, JClass *clazz) {
-    Instance *path_arr = localvar_getRefer(runtime->localvar, 0);
-    s32 ret = -1;
-    if (path_arr) {
-        Utf8String *filepath = utf8_create_c(jarray_body(path_arr));
-        ByteBuf *platformPath = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(platformPath, filepath);
-
-        ret = os_mkdir(platformPath->buf);
-        push_int(runtime->stack, ret);
-
-        bytebuf_destroy(platformPath);
-        utf8_destroy(filepath);
-    } else {
-        push_int(runtime->stack, ret);
-    }
-#if _JVM_DEBUG_LOG_LEVEL > 5
-    invoke_deepth(runtime);
-    jvm_printf("org_mini_fs_InnerFile_mkdir  \n");
-#endif
+    Instance *path = localvar_getRefer(runtime->localvar, 0);
+    push_int(runtime->stack, path ? mini_fs_mkdir(jarray_body(path)) : -1);
     return 0;
 }
 
@@ -1403,32 +1303,8 @@ s32 org_mini_fs_InnerFile_getOS(Runtime *runtime, JClass *clazz) {
 }
 
 s32 org_mini_fs_InnerFile_delete0(Runtime *runtime, JClass *clazz) {
-    Instance *path_arr = localvar_getRefer(runtime->localvar, 0);
-    s32 ret = -1;
-    if (path_arr) {
-        Utf8String *filepath = utf8_create_c(jarray_body(path_arr));
-        ByteBuf *platformPath = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(platformPath, filepath);
-
-        struct stat buf;
-        stat(platformPath->buf, &buf);
-        s32 a = S_ISDIR(buf.st_mode);
-        if (a) {
-            ret = rmdir(platformPath->buf);
-        } else {
-            ret = remove(platformPath->buf);
-        }
-        push_int(runtime->stack, ret);
-
-        bytebuf_destroy(platformPath);
-        utf8_destroy(filepath);
-    } else {
-        push_int(runtime->stack, ret);
-    }
-#if _JVM_DEBUG_LOG_LEVEL > 5
-    invoke_deepth(runtime);
-    jvm_printf("org_mini_fs_InnerFile_delete0  \n");
-#endif
+    Instance *path = localvar_getRefer(runtime->localvar, 0);
+    push_int(runtime->stack, path ? mini_fs_remove(jarray_body(path)) : -1);
     return 0;
 }
 

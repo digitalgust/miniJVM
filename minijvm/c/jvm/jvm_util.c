@@ -2332,7 +2332,7 @@ s32 _loadFileContents(c8 const *file, ByteBuf *buf) {
     size_t result;
 
     /* 若要一个byte不漏地读入整个文件，只能采用二进制方式打开 */
-    pFile = fopen(file, "rb");
+    pFile = mini_fs_fopen(file, "rb");
     if (pFile == NULL) {
         //jvm_printf("File error");
         return -1;

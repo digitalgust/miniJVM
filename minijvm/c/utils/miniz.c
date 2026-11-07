@@ -3066,21 +3066,54 @@ extern "C"
 #define NOMINMAX
 #endif
 #include <windows.h>
+#include <errno.h>
 
 static WCHAR *mz_utf8z_to_widechar(const char *str)
 {
-    int reqChars = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
-    WCHAR *wStr = (WCHAR *)malloc(reqChars * sizeof(WCHAR));
-    MultiByteToWideChar(CP_UTF8, 0, str, -1, wStr, reqChars);
-    return wStr;
+    int count = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str, -1, NULL, 0);
+    WCHAR *wide = count ? (WCHAR *) malloc((size_t) count * sizeof(WCHAR)) : NULL;
+    if (wide && !MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str, -1, wide, count)) {
+        free(wide); wide = NULL;
+    }
+    return wide;
 }
+
+static WCHAR *mz_path_to_widechar(const char *utf8) {
+    WCHAR *input = mz_utf8z_to_widechar(utf8), *absolute, *extended;
+    DWORD count, length;
+    size_t i, size;
+    if (!input) return NULL;
+    if (!input[0]) { free(input); errno = ENOENT; return NULL; }
+    for (i = 0; input[i]; i++) if (input[i] == L'/') input[i] = L'\\';
+    if (!wcsncmp(input, L"\\\\?\\", 4) || !wcsncmp(input, L"\\\\.\\", 4)) return input;
+    count = GetFullPathNameW(input, 0, NULL, NULL);
+    absolute = count ? (WCHAR *) malloc((size_t) count * sizeof(WCHAR)) : NULL;
+    length = absolute ? GetFullPathNameW(input, count, absolute, NULL) : 0;
+    free(input);
+    if (!length || length >= count) { free(absolute); errno = EINVAL; return NULL; }
+    /* Directory creation traditionally hits MAX_PATH before file creation does. */
+    if (length < 248) return absolute;
+    size = (size_t) length + 9;
+    extended = (WCHAR *) malloc(size * sizeof(WCHAR));
+    if (!extended) { free(absolute); errno = ENOMEM; return NULL; }
+    if (!wcsncmp(absolute, L"\\\\", 2)) {
+        wcscpy(extended, L"\\\\?\\UNC\\");
+        wcscat(extended, absolute + 2);
+    } else {
+        wcscpy(extended, L"\\\\?\\");
+        wcscat(extended, absolute);
+    }
+    free(absolute);
+    return extended;
+}
+
 
 static FILE *mz_fopen(const char *pFilename, const char *pMode)
 {
-    WCHAR *wFilename = mz_utf8z_to_widechar(pFilename);
+    WCHAR *wFilename = mz_path_to_widechar(pFilename);
     WCHAR *wMode = mz_utf8z_to_widechar(pMode);
     FILE *pFile = NULL;
-    errno_t err = _wfopen_s(&pFile, wFilename, wMode);
+    errno_t err = wFilename && wMode ? _wfopen_s(&pFile, wFilename, wMode) : EINVAL;
     free(wFilename);
     free(wMode);
     return err ? NULL : pFile;
@@ -3088,10 +3121,10 @@ static FILE *mz_fopen(const char *pFilename, const char *pMode)
 
 static FILE *mz_freopen(const char *pPath, const char *pMode, FILE *pStream)
 {
-    WCHAR *wPath = mz_utf8z_to_widechar(pPath);
+    WCHAR *wPath = mz_path_to_widechar(pPath);
     WCHAR *wMode = mz_utf8z_to_widechar(pMode);
     FILE *pFile = NULL;
-    errno_t err = _wfreopen_s(&pFile, wPath, wMode, pStream);
+    errno_t err = wPath && wMode ? _wfreopen_s(&pFile, wPath, wMode, pStream) : EINVAL;
     free(wPath);
     free(wMode);
     return err ? NULL : pFile;
@@ -3100,16 +3133,16 @@ static FILE *mz_freopen(const char *pPath, const char *pMode, FILE *pStream)
 #if defined(__MINGW32__)
 static int mz_stat(const char *path, struct _stat *buffer)
 {
-    WCHAR *wPath = mz_utf8z_to_widechar(path);
-    int res = _wstat(wPath, buffer);
+    WCHAR *wPath = mz_path_to_widechar(path);
+    int res = wPath ? _wstat(wPath, buffer) : -1;
     free(wPath);
     return res;
 }
 #else
 static int mz_stat64(const char *path, struct __stat64 *buffer)
 {
-    WCHAR *wPath = mz_utf8z_to_widechar(path);
-    int res = _wstat64(wPath, buffer);
+    WCHAR *wPath = mz_path_to_widechar(path);
+    int res = wPath ? _wstat64(wPath, buffer) : -1;
     free(wPath);
     return res;
 }
@@ -3133,7 +3166,12 @@ static int mz_stat64(const char *path, struct __stat64 *buffer)
 #endif
 #define MZ_FFLUSH fflush
 #define MZ_FREOPEN mz_freopen
-#define MZ_DELETE_FILE remove
+static int mz_remove(const char *path) {
+    WCHAR *wide = mz_path_to_widechar(path);
+    int result = wide ? _wremove(wide) : -1;
+    free(wide); return result;
+}
+#define MZ_DELETE_FILE mz_remove
 
 #elif defined(__WATCOMC__)
 #ifndef MINIZ_NO_TIME

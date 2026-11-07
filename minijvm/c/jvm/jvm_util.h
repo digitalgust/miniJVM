@@ -15,30 +15,28 @@ extern "C" {
 #include "jvm.h"
 #include "jdwp.h"
 
-/* Resolve an existing path, including symbolic links and Windows junctions.
- * Input/output use the platform encoding; caller frees the result. */
-static inline char *mini_realpath(const char *path) {
-#if __JVM_OS_VS__ || __JVM_OS_MINGW__
-    HANDLE handle = CreateFileA(path, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                                NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-    if (handle == INVALID_HANDLE_VALUE) return NULL;
-    DWORD size = GetFinalPathNameByHandleA(handle, NULL, 0, FILE_NAME_NORMALIZED);
-    char *buffer = size ? (char *) malloc((size_t) size + 1) : NULL;
-    DWORD length = buffer ? GetFinalPathNameByHandleA(handle, buffer, size + 1, FILE_NAME_NORMALIZED) : 0;
-    CloseHandle(handle);
-    if (!length || length > size) { free(buffer); return NULL; }
-    if (strncmp(buffer, "\\\\?\\UNC\\", 8) == 0) {
-        memmove(buffer + 2, buffer + 8, strlen(buffer + 8) + 1);
-        buffer[0] = buffer[1] = '\\';
-    } else if (strncmp(buffer, "\\\\?\\", 4) == 0) {
-        memmove(buffer, buffer + 4, strlen(buffer + 4) + 1);
-    }
-    return buffer;
+/* All filesystem paths are UTF-8. Windows implementations use UTF-16 and
+ * extended paths; callers free returned strings and directory entry names. */
+#include <sys/stat.h>
+#if defined(_WIN32)
+typedef struct _stat64 MiniFileStat;
+typedef struct MiniDirectory MiniDirectory;
 #else
-    return realpath(path, NULL);
+#include <dirent.h>
+typedef struct stat MiniFileStat;
+typedef DIR MiniDirectory;
 #endif
-}
-
+FILE *mini_fs_fopen(const char *path, const char *mode);
+int mini_fs_stat(const char *path, MiniFileStat *info);
+int mini_fs_mkdir(const char *path);
+int mini_fs_chmod(const char *path, int mode);
+int mini_fs_rename(const char *old_path, const char *new_path);
+int mini_fs_remove(const char *path);
+char *mini_fs_getcwd(void);
+char *mini_fs_realpath(const char *path);
+MiniDirectory *mini_fs_opendir(const char *path);
+char *mini_fs_readdir(MiniDirectory *dir);
+void mini_fs_closedir(MiniDirectory *dir);
 
 #define NANO_2_SEC_SCALE 1000000000
 #define NANO_2_MILLS_SCALE 1000000

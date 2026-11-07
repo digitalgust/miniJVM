@@ -18,6 +18,165 @@
 #include <io.h>
 #endif
 
+#include <windows.h>
+#include <wchar.h>
+#include <direct.h>
+#include <io.h>
+
+static inline wchar_t *mini_utf8_to_wide(const char *text) {
+    int count;
+    wchar_t *wide;
+    if (!text) { errno = EINVAL; return NULL; }
+    count = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text, -1, NULL, 0);
+    if (!count) { errno = EINVAL; return NULL; }
+    wide = (wchar_t *) malloc((size_t) count * sizeof(wchar_t));
+    if (!wide) { errno = ENOMEM; return NULL; }
+    if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text, -1, wide, count)) {
+        free(wide); errno = EINVAL; return NULL;
+    }
+    return wide;
+}
+
+static inline char *mini_wide_to_utf8(const wchar_t *wide) {
+    int count = WideCharToMultiByte(CP_UTF8, 0, wide, -1, NULL, 0, NULL, NULL);
+    char *text = count ? (char *) malloc((size_t) count) : NULL;
+    if (text && !WideCharToMultiByte(CP_UTF8, 0, wide, -1, text, count, NULL, NULL)) {
+        free(text); text = NULL;
+    }
+    return text;
+}
+
+/* Resolve relative paths and dot segments before adding the extended-path prefix.
+ * Short paths retain normal Win32 semantics; explicit device/extended paths are preserved. */
+static inline wchar_t *mini_win_path(const char *utf8) {
+    wchar_t *input = mini_utf8_to_wide(utf8), *absolute, *extended;
+    DWORD count, length;
+    size_t i, size;
+    if (!input) return NULL;
+    if (!input[0]) { free(input); errno = ENOENT; return NULL; }
+    for (i = 0; input[i]; i++) if (input[i] == L'/') input[i] = L'\\';
+    if (!wcsncmp(input, L"\\\\?\\", 4) || !wcsncmp(input, L"\\\\.\\", 4)) return input;
+    count = GetFullPathNameW(input, 0, NULL, NULL);
+    absolute = count ? (wchar_t *) malloc((size_t) count * sizeof(wchar_t)) : NULL;
+    length = absolute ? GetFullPathNameW(input, count, absolute, NULL) : 0;
+    free(input);
+    if (!length || length >= count) { free(absolute); errno = EINVAL; return NULL; }
+    /* Directory creation traditionally hits MAX_PATH before file creation does. */
+    if (length < 248) return absolute;
+    size = (size_t) length + 9;
+    extended = (wchar_t *) malloc(size * sizeof(wchar_t));
+    if (!extended) { free(absolute); errno = ENOMEM; return NULL; }
+    if (!wcsncmp(absolute, L"\\\\", 2)) {
+        wcscpy(extended, L"\\\\?\\UNC\\");
+        wcscat(extended, absolute + 2);
+    } else {
+        wcscpy(extended, L"\\\\?\\");
+        wcscat(extended, absolute);
+    }
+    free(absolute);
+    return extended;
+}
+
+FILE *mini_fs_fopen(const char *path, const char *mode) {
+    wchar_t *p = mini_win_path(path), *m = mini_utf8_to_wide(mode);
+    FILE *file = p && m ? _wfopen(p, m) : NULL;
+    free(p); free(m); return file;
+}
+int mini_fs_stat(const char *path, MiniFileStat *info) {
+    wchar_t *p = mini_win_path(path);
+    int result = p ? _wstat64(p, info) : -1;
+    free(p); return result;
+}
+int mini_fs_mkdir(const char *path) {
+    wchar_t *p = mini_win_path(path);
+    int result = p ? _wmkdir(p) : -1;
+    free(p); return result;
+}
+int mini_fs_chmod(const char *path, int mode) {
+    wchar_t *p = mini_win_path(path);
+    int result = p ? _wchmod(p, mode) : -1;
+    free(p); return result;
+}
+int mini_fs_rename(const char *old_path, const char *new_path) {
+    wchar_t *a = mini_win_path(old_path), *b = mini_win_path(new_path);
+    int result = a && b ? _wrename(a, b) : -1;
+    free(a); free(b); return result;
+}
+int mini_fs_remove(const char *path) {
+    wchar_t *p = mini_win_path(path);
+    int result = -1;
+    if (p) {
+        DWORD attributes = GetFileAttributesW(p);
+        if (attributes != INVALID_FILE_ATTRIBUTES)
+            result = attributes & FILE_ATTRIBUTE_DIRECTORY ? _wrmdir(p) : _wremove(p);
+    }
+    free(p); return result;
+}
+char *mini_fs_getcwd(void) {
+    DWORD count = GetCurrentDirectoryW(0, NULL);
+    wchar_t *wide = count ? (wchar_t *) malloc((size_t) count * sizeof(wchar_t)) : NULL;
+    DWORD length = wide ? GetCurrentDirectoryW(count, wide) : 0;
+    char *text = length && length < count ? mini_wide_to_utf8(wide) : NULL;
+    free(wide); return text;
+}
+char *mini_fs_realpath(const char *path) {
+    wchar_t *p = mini_win_path(path), *wide;
+    HANDLE handle;
+    DWORD count, length;
+    char *text = NULL;
+    if (!p) return NULL;
+    handle = CreateFileW(p, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                         NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    free(p);
+    if (handle == INVALID_HANDLE_VALUE) return NULL;
+    count = GetFinalPathNameByHandleW(handle, NULL, 0, FILE_NAME_NORMALIZED);
+    wide = count ? (wchar_t *) malloc(((size_t) count + 1) * sizeof(wchar_t)) : NULL;
+    length = wide ? GetFinalPathNameByHandleW(handle, wide, count + 1, FILE_NAME_NORMALIZED) : 0;
+    CloseHandle(handle);
+    if (length && length <= count) {
+        if (!wcsncmp(wide, L"\\\\?\\UNC\\", 8)) {
+            memmove(wide + 2, wide + 8, (wcslen(wide + 8) + 1) * sizeof(wchar_t));
+            wide[0] = wide[1] = L'\\';
+        } else if (!wcsncmp(wide, L"\\\\?\\", 4)) {
+            memmove(wide, wide + 4, (wcslen(wide + 4) + 1) * sizeof(wchar_t));
+        }
+        text = mini_wide_to_utf8(wide);
+    }
+    free(wide); return text;
+}
+
+struct MiniDirectory {
+    HANDLE handle;
+    WIN32_FIND_DATAW entry;
+    int first;
+};
+MiniDirectory *mini_fs_opendir(const char *path) {
+    wchar_t *p = mini_win_path(path), *pattern;
+    MiniDirectory *dir;
+    size_t size;
+    if (!p) return NULL;
+    size = wcslen(p);
+    pattern = (wchar_t *) malloc((size + 3) * sizeof(wchar_t));
+    dir = (MiniDirectory *) malloc(sizeof(MiniDirectory));
+    if (!pattern || !dir) { free(pattern); free(dir); free(p); return NULL; }
+    wcscpy(pattern, p); free(p);
+    if (size && pattern[size - 1] != L'\\') pattern[size++] = L'\\';
+    pattern[size++] = L'*'; pattern[size] = 0;
+    dir->handle = FindFirstFileW(pattern, &dir->entry);
+    free(pattern);
+    if (dir->handle == INVALID_HANDLE_VALUE) { free(dir); return NULL; }
+    dir->first = 1; return dir;
+}
+/* Caller frees each returned UTF-8 name. */
+char *mini_fs_readdir(MiniDirectory *dir) {
+    if (!dir->first && !FindNextFileW(dir->handle, &dir->entry)) return NULL;
+    dir->first = 0;
+    return mini_wide_to_utf8(dir->entry.cFileName);
+}
+void mini_fs_closedir(MiniDirectory *dir) {
+    FindClose(dir->handle); free(dir);
+}
+
 #pragma comment(lib, "Ws2_32.lib")
 
 #include <windows.h>
