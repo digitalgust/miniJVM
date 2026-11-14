@@ -136,13 +136,13 @@ public class XUtil {
     public static int measureHeight(int width, String str, int fontSize, boolean multiline) {
         long vg = GCallBack.getInstance().getNvContext();
         float[] boundle = GToolkit.getTextBoundle(vg, str, width, fontSize, multiline);
-        return (int) (boundle[GObject.HEIGHT] - boundle[GObject.TOP] + 1f);
+        return (int) Math.ceil(boundle[GObject.HEIGHT] - boundle[GObject.TOP]) + 2;
     }
 
     public static int measureWidth(int width, String str, int fontSize, boolean multiline) {
         long vg = GCallBack.getInstance().getNvContext();
         float[] boundle = GToolkit.getTextBoundle(vg, str, width, fontSize, GToolkit.getFontWord(), multiline);
-        return (int) (boundle[GObject.WIDTH] - boundle[GObject.LEFT] + 1f);
+        return (int) Math.ceil(boundle[GObject.WIDTH] - boundle[GObject.LEFT]);
     }
 
     public static int parseAlign(String align) {

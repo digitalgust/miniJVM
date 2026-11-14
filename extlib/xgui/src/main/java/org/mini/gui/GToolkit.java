@@ -469,21 +469,28 @@ public class GToolkit {
 
     public static float[] getTextBoundle(long vg, byte[] b, float width, float fontSize, byte[] font, boolean multiline) {
         float[] bond = bounds.get();
-        nvgFontSize(vg, fontSize);
-        nvgFontFace(vg, font);
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-        if (multiline) {
-            nvgTextBoxBoundsJni(vg, 0, 0, width + GLabel.TEXT_BOUND_DEC, b, 0, b.length, bond);
-        } else {
-            nvgTextBoundsJni(vg, 0, 0, b, 0, b.length, bond);
+        nvgSave(vg);
+        try {
+            nvgFontSize(vg, fontSize);
+            nvgFontFace(vg, font);
+            nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+            nvgTextLineHeight(vg, 1f);
+            if (multiline) {
+                nvgTextBoxBoundsJni(vg, 0, 0, Math.max(1, width), b, 0, b.length - 1, bond);
+            } else {
+                float advance = nvgTextBoundsJni(vg, 0, 0, b, 0, b.length - 1, bond);
+                bond[GObject.WIDTH] = Math.max(bond[GObject.WIDTH], advance);
+            }
+            bond[GObject.WIDTH] -= bond[GObject.LEFT];
+            bond[GObject.HEIGHT] -= bond[GObject.TOP];
+            bond[GObject.LEFT] = bond[GObject.TOP] = 0;
+            float[] line = new float[1];
+            nvgTextMetrics(vg, null, null, line);
+            bond[GObject.HEIGHT] = Math.max(bond[GObject.HEIGHT], line[0]);
+            return bond;
+        } finally {
+            nvgRestore(vg);
         }
-        bond[GObject.WIDTH] -= bond[GObject.LEFT];
-        bond[GObject.HEIGHT] -= bond[GObject.TOP];
-        bond[GObject.LEFT] = bond[GObject.TOP] = 0;
-        if (multiline) {
-            bond[GObject.WIDTH] += GLabel.TEXT_BOUND_DEC;
-        }
-        return bond;
     }
 
     public static void drawTextLine(long vg, float tx, float ty, String s, float fontSize, float[] color, int align) {

@@ -56,11 +56,11 @@ public class XImageItem extends XObject {
     }
 
     protected int getDefaultWidth(int parentViewW) {
-        return img_w;
+        return Math.min(img_w, Math.max(1, parentViewW));
     }
 
     protected int getDefaultHeight(int parentViewH) {
-        return img_h;
+        return img_w > 0 ? Math.max(1, (int) Math.ceil((double) img_h * width / img_w)) : img_h;
     }
 
     protected <T extends GObject> T createGuiImpl() {

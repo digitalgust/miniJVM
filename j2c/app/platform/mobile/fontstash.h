@@ -920,7 +920,8 @@ error:
 
 int fonsAddFontMem(FONScontext* stash, const char* name, unsigned char* data, int dataSize, int freeData)
 {
-	int i, ascent, descent, fh, lineGap;
+	int i, ascent, descent, lineGap;
+	float metricScale;
 	FONSfont* font;
 
 	int idx = fons__allocFont(stash);
@@ -948,10 +949,11 @@ int fonsAddFontMem(FONScontext* stash, const char* name, unsigned char* data, in
 	// Store normalized line height. The real line height is got
 	// by multiplying the lineh by font size.
 	fons__tt_getFontVMetrics( &font->font, &ascent, &descent, &lineGap);
-	fh = ascent - descent;
-	font->ascender = (float)ascent / (float)fh;
-	font->descender = (float)descent / (float)fh;
-	font->lineh = (float)(fh + lineGap) / (float)fh;
+	// Altered: normalize metrics with this backend's rasterizer scale.
+	metricScale = fons__tt_getPixelHeightScale(&font->font, 1.0f);
+	font->ascender = (float)ascent * metricScale;
+	font->descender = (float)descent * metricScale;
+	font->lineh = (float)(ascent - descent + lineGap) * metricScale;
 
 	return idx;
 
@@ -1506,6 +1508,13 @@ float fonsTextBounds(FONScontext* stash,
 
 	scale = fons__tt_getPixelHeightScale(&font->font, (float)isize/10.0f);
 
+	// Altered: align before raster snapping, exactly as fonsTextIterInit does.
+	if (bounds != NULL && !(state->align & FONS_ALIGN_LEFT)) {
+		float width = fonsTextBounds(stash, x, y, str, end, NULL);
+		if (state->align & FONS_ALIGN_RIGHT) x -= width;
+		else if (state->align & FONS_ALIGN_CENTER) x -= width * 0.5f;
+	}
+
 	// Align vertically.
 	y += fons__getVertAlign(stash, font, state->align, isize);
 
@@ -1536,17 +1545,6 @@ float fonsTextBounds(FONScontext* stash,
 	}
 
 	advance = x - startx;
-
-	// Align horizontally
-	if (state->align & FONS_ALIGN_LEFT) {
-		// empty
-	} else if (state->align & FONS_ALIGN_RIGHT) {
-		minx -= advance;
-		maxx -= advance;
-	} else if (state->align & FONS_ALIGN_CENTER) {
-		minx -= advance * 0.5f;
-		maxx -= advance * 0.5f;
-	}
 
 	if (bounds) {
 		bounds[0] = minx;

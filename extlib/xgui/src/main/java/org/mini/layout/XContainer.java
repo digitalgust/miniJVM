@@ -31,6 +31,7 @@ public abstract class XContainer
     public int align = Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP;
     public int actionType = ACTION_TYPE_BOTH;
     private int depth = -1;
+    private XFlow flow;
 
     protected XEventHandler eventHandler;
 
@@ -84,6 +85,42 @@ public abstract class XContainer
 
     protected void preAlignVertical() {
 
+
+        flow = null;
+        for (XObject child : children) {
+            if (child instanceof XLabel && ((XLabel) child).flows()) {
+                flow = new XFlow(this);
+                break;
+            }
+        }
+        if (flow != null) {
+            for (XObject child : children) {
+                if (child instanceof XLabel && ((XLabel) child).flows()) flow.text((XLabel) child);
+                else {
+                    child.preAlignVertical();
+                    if (!child.isFreeObj()) flow.object(child);
+                }
+            }
+            flow.finish();
+            if (height == XDef.NODEF) {
+                height = flow.height + getDiff_ViewH2Height();
+                viewH = flow.height;
+            }
+            // Create only after final bounds have been calculated.
+            createAndSetGui();
+            for (XObject child : children) {
+                child.createAndSetGui();
+                GObject go = child.getGui();
+                if (go != null) {
+                    ((GContainer) getGui()).add(go);
+                    if (go instanceof GFrame) {
+                        if (child.isHidden()) ((GContainer) getGui()).remove(go);
+                        ((GContainer) getGui()).addSubFrame((GFrame) go);
+                    }
+                }
+            }
+            return;
+        }
 
         //follow layout
         int dx = 0, dy = 0, curRowH = 0, curRowW = 0;
@@ -147,6 +184,10 @@ public abstract class XContainer
     }
 
     void align() {
+        if (flow != null) {
+            flow.align();
+            return;
+        }
         //for realign gui component
         List<List<XObject>> rows = new ArrayList();
         List<XObject> row = new ArrayList();
@@ -262,7 +303,7 @@ public abstract class XContainer
         }
 
         viewW = width - getDiff_viewW2Width();
-        viewH = height - getDiff_viewW2Width();
+        viewH = height - getDiff_ViewH2Height();
     }
 
 
@@ -278,7 +319,7 @@ public abstract class XContainer
             this.eventHandler = eventHandler;
         }
 
-        assist.setEventHandler(eventHandler);
+        assist.setEventHandler(this.eventHandler);
         setParentSize(parentW, parentH);
 
         preAlignHorizontal();

@@ -2804,8 +2804,11 @@ float nvgTextBounds(NVGcontext* ctx, float x, float y, const char* string, const
 
 	width = fonsTextBounds(ctx->fs, x*scale, y*scale, string, end, bounds);
 	if (bounds != NULL) {
-		// Use line bounds for height.
-		fonsLineBounds(ctx->fs, y*scale, &bounds[1], &bounds[3]);
+		// Altered: retain glyph overhang and device-pixel rounding too.
+		float lineMinY, lineMaxY;
+		fonsLineBounds(ctx->fs, y*scale, &lineMinY, &lineMaxY);
+		bounds[1] = nvg__minf(bounds[1], lineMinY);
+		bounds[3] = nvg__maxf(bounds[3], lineMaxY);
 		bounds[0] *= invscale;
 		bounds[1] *= invscale;
 		bounds[2] *= invscale;
@@ -2867,7 +2870,10 @@ void nvgTextBoxBounds(NVGcontext* ctx, float x, float y, float breakRowWidth, co
 			// Keep the line box, but include glyphs extending beyond font metrics.
 			// This also includes the rasterizer's interpolation border and rounding.
 			float glyphBounds[4];
-			fonsTextBounds(ctx->fs, 0, y * scale, row->start, row->end, glyphBounds);
+			// Altered: measure at the drawing origin, including fractional pixel snapping.
+			fonsTextBounds(ctx->fs, (x + dx) * scale, y * scale, row->start, row->end, glyphBounds);
+			minx = nvg__minf(minx, glyphBounds[0] * invscale);
+			maxx = nvg__maxf(maxx, glyphBounds[2] * invscale);
 			miny = nvg__minf(miny, nvg__minf(y + rminy, glyphBounds[1] * invscale));
 			maxy = nvg__maxf(maxy, nvg__maxf(y + rmaxy, glyphBounds[3] * invscale));
 

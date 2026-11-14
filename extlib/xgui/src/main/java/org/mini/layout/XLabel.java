@@ -7,6 +7,9 @@ import org.mini.gui.GObject;
 import org.mini.layout.loader.XmlExtAssist;
 import org.xmlpull.v1.KXmlParser;
 import org.mini.nanovg.Nanovg;
+import org.mini.gui.GToolkit;
+import java.util.List;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
  *
@@ -21,6 +24,25 @@ public class XLabel
     protected boolean multiLine = false;
 
     GLabel label;
+    List<XFlow.Part> parts;
+    private boolean initialized;
+
+    boolean flows() {
+        return multiLine && raw_width == XDef.NODEF && raw_widthPercent == XDef.NODEF
+                && raw_height == XDef.NODEF && raw_heightPercent == XDef.NODEF
+                && (align & NVG_ALIGN_LEFT) != 0 && (align & NVG_ALIGN_TOP) != 0;
+    }
+
+    @Override
+    public int getFontSize() {
+        return label == null ? super.getFontSize() : (int) Math.ceil(label.getFontSize());
+    }
+
+    @Override
+    protected void resetBoundle() {
+        super.resetBoundle();
+        parts = null;
+    }
 
     public XLabel(XContainer xc) {
         super((xc));
@@ -60,9 +82,8 @@ public class XLabel
 
 
     protected int getDefaultWidth(int parentViewW) {
-        int w = XUtil.measureWidth(parentViewW - GLabel.TEXT_BOUND_DEC, text, getFontSize(), multiLine);
-        //w = w + addon;
-        //w += GLabel.TEXT_BOUND_DEC;
+        int w = XUtil.measureWidth(Math.max(1, parentViewW - GLabel.TEXT_BOUND_DEC), text, getFontSize(), multiLine)
+                + (multiLine ? GLabel.TEXT_BOUND_DEC : addon);
         if (w > parentViewW) w = parentViewW;
         return w;
     }
@@ -72,7 +93,63 @@ public class XLabel
     }
 
     protected <T extends GObject> T createGuiImpl() {
-        return (T) new GLabel(getAssist().getForm(), text, x, y, width, height);
+        return (T) new GLabel(getAssist().getForm(), text, x, y, width, height) {
+            private void reflow() {
+                XContainer root = XLabel.this.getRoot();
+                if (root != null && root.getGui() != null) root.reSize(root.width, root.height);
+            }
+
+            @Override
+            public void setText(String value) {
+                String previous = getText();
+                super.setText(value);
+                if (initialized && !getText().equals(previous)) {
+                    XLabel.this.text = getText();
+                    reflow();
+                }
+            }
+
+            @Override
+            public void setFontSize(float value) {
+                float previous = getFontSize();
+                super.setFontSize(value);
+                if (initialized && getFontSize() != previous) reflow();
+            }
+
+            @Override
+            public boolean paint(long vg) {
+                if (parts == null) return super.paint(vg);
+                nvgSave(vg);
+                try {
+                    nvgFontFace(vg, GToolkit.getFontWord());
+                    nvgFontSize(vg, getFontSize());
+                    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+                    nvgTextLineHeight(vg, 1f);
+                    for (XFlow.Part p : parts) {
+                        float px = getX() + p.drawX - XLabel.this.x;
+                        float py = getY() + p.drawY - XLabel.this.y;
+                        if (getBgImg() != null) GToolkit.drawImageStretch(vg, getBgImg(), px, py, p.w, p.h, false, getBgImgAlpha(), getCornerRadius());
+                        // getBgColor() falls back to the theme even when this
+                        // label has no background. Only paint an explicit color.
+                        if (bgColor != null) GToolkit.drawRect(vg, px, py, p.w, p.h, bgColor);
+                        nvgFillColor(vg, getColor());
+                        nvgTextJni(vg, px, py - p.top, p.bytes, 0, p.bytes.length - 1);
+                    }
+                } finally { nvgRestore(vg); }
+                return true;
+            }
+
+            @Override
+            public boolean isInArea(float px, float py) {
+                if (parts == null) return super.isInArea(px, py);
+                for (XFlow.Part p : parts) {
+                    float left = getX() + p.drawX - XLabel.this.x;
+                    float top = getY() + p.drawY - XLabel.this.y;
+                    if (px >= left && px < left + p.w && py >= top && py < top + p.h) return true;
+                }
+                return false;
+            }
+        };
     }
 
     protected void createAndSetGui() {
@@ -81,6 +158,7 @@ public class XLabel
             initGuiMore();
             label.setAlign(align);
             label.setShowMode(multiLine ? GLabel.MODE_MULTI_SHOW : GLabel.MODE_SINGLE_SHOW);
+            initialized = true;
 
         } else {
             label.setLocation(x, y);

@@ -68,7 +68,7 @@ public class GLabel extends GObject {
     }
 
     public void setText(String text) {
-        text = text.replace("\\n", "\n");
+        text = text == null ? "" : text.replace("\\n", "\n");
         super.setText(text);
         text_arr = toCstyleBytes(text);
     }
@@ -150,19 +150,22 @@ public class GLabel extends GObject {
 
     @Override
     boolean paintFlying(long vg, float x, float y) {
-        float w = getW();
-        float h = getH();
+        nvgSave(vg);
+        try {
+            nvgTextLineHeight(vg, 1f);
+            nvgIntersectScissor(vg, x, y, getW(), getH());
+            float w = getW();
+            float h = getH();
 
-        if (bgColor != null) {
-            GToolkit.drawRect(vg, getX(), getY(), getW(), getH(), bgColor);
+            if (showMode == MODE_MULTI_SHOW) {
+                drawMultiText(vg, x, y, w, h);
+            } else {
+                drawLine(vg, x, y, w, h);
+            }
+            return true;
+        } finally {
+            nvgRestore(vg);
         }
-
-        if (showMode == MODE_MULTI_SHOW) {
-            drawMultiText(vg, x, y, w, h);
-        } else {
-            drawLine(vg, x, y, w, h);
-        }
-        return true;
     }
 
     void drawLine(long vg, float x, float y, float w, float h) {
@@ -194,7 +197,7 @@ public class GLabel extends GObject {
             } else if ((align & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
                 dy += h;
             }
-            nvgTextJni(vg, dx, dy + 2, text_arr, 0, text_arr.length);
+            nvgTextJni(vg, dx, dy, text_arr, 0, text_arr.length);
         }
 
     }
@@ -216,7 +219,7 @@ public class GLabel extends GObject {
             // Measure and draw with TOP alignment, then position the block ourselves.
             int horizontalAlign = align & (NVG_ALIGN_LEFT | NVG_ALIGN_CENTER | NVG_ALIGN_RIGHT);
             nvgTextAlign(vg, horizontalAlign | NVG_ALIGN_TOP);
-            float textWidth = Math.max(0, w - TEXT_BOUND_DEC);
+            float textWidth = Math.max(1, w - TEXT_BOUND_DEC);
             float dx = x;
             if ((align & NVG_ALIGN_CENTER) != 0) {
                 dx += (w - textWidth) * .5f;

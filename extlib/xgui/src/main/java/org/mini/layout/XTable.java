@@ -2,11 +2,15 @@
 
 package org.mini.layout;
 
-import org.mini.gui.GColorSelector;
+import org.mini.gui.GContainer;
+import org.mini.gui.GObject;
+import org.mini.gui.GPanel;
+import static org.mini.nanovg.Nanovg.*;
 
 public class XTable
         extends XPanel {
     static public final String XML_NAME = "table";
+    private boolean border;
 
     public XTable(XContainer xc) {
         super(xc);
@@ -14,6 +18,59 @@ public class XTable
 
     public String getXmlTag() {
         return XML_NAME;
+    }
+
+    @Override
+    protected void parseMoreAttribute(String name, String value) {
+        super.parseMoreAttribute(name, value);
+        if ("border".equals(name)) border = !"0".equals(value) && !"false".equalsIgnoreCase(value);
+    }
+
+    @Override
+    protected <T extends GObject> T createGuiImpl() {
+        return (T) new GPanel(getAssist().getForm(), x, y, width, height) {
+            @Override
+            public boolean paint(long vg) {
+                boolean result = super.paint(vg);
+                if (!border || getW() <= 0 || getH() <= 0) return result;
+                // Paint after cell backgrounds. Shared edges are drawn only once,
+                // using the final GUI bounds so resize and multiline rows agree.
+                nvgSave(vg);
+                try {
+                    float left = getX(), top = getY(), right = left + getW(), bottom = top + getH();
+                    nvgIntersectScissor(vg, left, top, getW(), getH());
+                    nvgBeginPath(vg);
+                    nvgRect(vg, left + .5f, top + .5f, Math.max(0, getW() - 1), Math.max(0, getH() - 1));
+                    for (XObject row : children) {
+                        GContainer rowGui = row.getGui();
+                        if (rowGui == null || rowGui.getH() <= 0) continue;
+                        float rowTop = Math.max(top + .5f, rowGui.getY());
+                        float rowBottom = Math.min(bottom - .5f, rowGui.getY() + rowGui.getH());
+                        if (rowBottom <= rowTop) continue;
+                        if (rowGui.getY() > top + .5f && rowGui.getY() < bottom - .5f) {
+                            nvgMoveTo(vg, left + .5f, rowGui.getY() + .5f);
+                            nvgLineTo(vg, right - .5f, rowGui.getY() + .5f);
+                        }
+                        XContainer cells = (XContainer) row;
+                        for (int i = 1; i < cells.children.size(); i++) {
+                            GObject cell = cells.children.get(i).getGui();
+                            if (cell == null || cell.getW() <= 0) continue;
+                            float edge = cell.getX() + .5f;
+                            if (edge > left + .5f && edge < right - .5f) {
+                                nvgMoveTo(vg, edge, rowTop);
+                                nvgLineTo(vg, edge, rowBottom);
+                            }
+                        }
+                    }
+                    nvgStrokeWidth(vg, 1f);
+                    nvgStrokeColor(vg, getColor());
+                    nvgStroke(vg);
+                } finally {
+                    nvgRestore(vg);
+                }
+                return result;
+            }
+        };
     }
 
     boolean parseNoTagText() {

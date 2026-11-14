@@ -15,6 +15,8 @@ import org.mini.util.SysLog;
 
 import java.util.TimerTask;
 
+import static org.mini.nanovg.Nanovg.*;
+
 /**
  * @author Gust
  */
@@ -26,6 +28,11 @@ public class GViewPort extends GContainer {
     protected float scrolly;
 
     protected boolean slideDirectionLimit = false;
+
+    private static final float SCROLL_INDICATOR_WIDTH = 3f;
+    private static final float SCROLL_INDICATOR_INSET = 2f;
+    private static final float SCROLL_INDICATOR_MIN_LENGTH = 16f;
+    private final float[] scrollIndicatorColor = new float[4];
 
     public GViewPort(GForm form) {
         super(form);
@@ -40,7 +47,48 @@ public class GViewPort extends GContainer {
                 GToolkit.drawRect(vg, getX(), getY(), getW(), getH(), bgColor);
             }
         }
-        return super.paint(vg);
+        boolean result = super.paint(vg);
+        paintScrollIndicators(vg);
+        return result;
+    }
+
+    /** Paint-only overlays: no child widgets, layout space or input handling. */
+    private void paintScrollIndicators(long vg) {
+        float w = getW(), h = getH();
+        float innerW = getInnerW(), innerH = getInnerH();
+        float minSize = SCROLL_INDICATOR_INSET * 3 + SCROLL_INDICATOR_WIDTH;
+        if (!(w > minSize && h > minSize) || Float.isInfinite(w) || Float.isInfinite(h)) return;
+        boolean horizontal = innerW > w + 0.5f && !Float.isInfinite(innerW);
+        boolean vertical = innerH > h + 0.5f && !Float.isInfinite(innerH);
+        if (!horizontal && !vertical) return;
+
+        float[] color = GToolkit.getStyle().getTextFontColor();
+        scrollIndicatorColor[0] = color[0];
+        scrollIndicatorColor[1] = color[1];
+        scrollIndicatorColor[2] = color[2];
+        scrollIndicatorColor[3] = 0.16f;
+        float x = getX(), y = getY();
+        float inset = SCROLL_INDICATOR_INSET, width = SCROLL_INDICATOR_WIDTH;
+        nvgSave(vg);
+        try {
+            nvgIntersectScissor(vg, x, y, w, h);
+            if (vertical) {
+                float track = h - inset * 2 - (horizontal ? width + inset : 0);
+                float length = Math.min(track, Math.max(SCROLL_INDICATOR_MIN_LENGTH, track * h / innerH));
+                float position = Float.isNaN(scrolly) ? 0 : Math.max(0, Math.min(1, scrolly));
+                GToolkit.drawRoundedRect(vg, x + w - inset - width,
+                        y + inset + (track - length) * position, width, length, width / 2, scrollIndicatorColor);
+            }
+            if (horizontal) {
+                float track = w - inset * 2 - (vertical ? width + inset : 0);
+                float length = Math.min(track, Math.max(SCROLL_INDICATOR_MIN_LENGTH, track * w / innerW));
+                float position = Float.isNaN(scrollx) ? 0 : Math.max(0, Math.min(1, scrollx));
+                GToolkit.drawRoundedRect(vg, x + inset + (track - length) * position,
+                        y + h - inset - width, length, width, width / 2, scrollIndicatorColor);
+            }
+        } finally {
+            nvgRestore(vg);
+        }
     }
 
 
