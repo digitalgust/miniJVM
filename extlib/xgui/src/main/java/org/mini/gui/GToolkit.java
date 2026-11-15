@@ -934,17 +934,39 @@ public class GToolkit {
         delBtn.setName(NAME_FILECHOOSER_DEL);
         gp.add(delBtn);
         delBtn.setActionListener(gobj -> {
+            GList fileList = GToolkit.getComponent(gobj.getFrame(), NAME_FILECHOOSER_FILELIST);
+            GListItem selectedItem = fileList == null ? null : fileList.getSelectedItem();
+            int selectedIndex = fileList == null ? -1 : fileList.getSelectedIndex();
+
+            // Prefer the item that is visibly selected. The path field also
+            // represents the current directory, so using it while a stale
+            // selection is shown can delete the entire directory by mistake.
+            File deleteTarget = selectedItem == null ? null : selectedItem.getAttachment();
+            if (deleteTarget == null) {
+                String pathText = pathLabel.getText();
+                if (pathText == null || pathText.length() == 0) {
+                    return;
+                }
+                deleteTarget = new File(pathText);
+            }
+            if (!deleteTarget.exists() || deleteTarget.getParentFile() == null) {
+                return;
+            }
+
+            final File target = deleteTarget;
+            final int deletedIndex = selectedIndex;
 
             GFrame confirm = getConfirmFrame(form,
                     GLanguage.getString(null, "Message"),
-                    GLanguage.getString(null, "Do you sure delete :") + pathLabel.getText(),
+                    GLanguage.getString(null, "Do you sure delete :") + target.getAbsolutePath(),
                     GLanguage.getString(null, "Delete"),
                     gobj1 -> {
-                        File f = new File(pathLabel.getText());
-                        AppLoader.deleteTree(f);
-                        pathLabel.setText(f == null ? "" : f.getParent());
+                        AppLoader.deleteTree(target);
+                        File parent = target.getParentFile();
+                        pathLabel.setText(parent == null ? "" : parent.getAbsolutePath());
                         gobj1.getFrame().close();
                         chooserRefresh(upBtn);
+                        chooserSelectAfterDelete(fileList, deletedIndex, pathLabel);
                     },
                     GLanguage.getString(null, "Cancel"),
                     null);
@@ -1006,6 +1028,31 @@ public class GToolkit {
         });
 
         return frame;
+    }
+
+    private static void chooserSelectAfterDelete(GList list, int deletedIndex, GTextField pathLabel) {
+        if (list == null || deletedIndex < 0) {
+            return;
+        }
+
+        if (list.getElementSize() == 0) {
+            GButton okButton = GToolkit.getComponent(list.getFrame(), NAME_FILECHOOSER_OK);
+            if (okButton != null) {
+                okButton.setAttachment(null);
+            }
+            return;
+        }
+
+        int nextIndex = Math.min(deletedIndex, list.getElementSize() - 1);
+        list.setSelectedIndex(nextIndex);
+        GListItem nextItem = list.getSelectedItem();
+        if (nextItem != null) {
+            File nextFile = nextItem.getAttachment();
+            if (nextFile != null) {
+                pathLabel.setText(nextFile.getAbsolutePath());
+                setChooserResult(nextItem);
+            }
+        }
     }
 
     private static void chooserRefresh(GObject gobj) {

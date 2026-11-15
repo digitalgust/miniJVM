@@ -238,6 +238,9 @@ public class GList extends GContainer {
     }
 
     public void clear() {
+        // Selection is stored as item indices. Keeping those indices after the
+        // items are replaced makes unrelated new items appear selected.
+        selected.clear();
         popView.clearImpl();
         sizeAdjust();
     }

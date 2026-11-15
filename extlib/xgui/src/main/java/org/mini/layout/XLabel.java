@@ -96,16 +96,26 @@ public class XLabel
         return (T) new GLabel(getAssist().getForm(), text, x, y, width, height) {
             private void reflow() {
                 XContainer root = XLabel.this.getRoot();
-                if (root != null && root.getGui() != null) root.reSize(root.width, root.height);
+                if (root != null && root.getGui() != null) {
+                    GObject rootGui = root.getGui();
+                    float left = rootGui.getLocationLeft();
+                    float top = rootGui.getLocationTop();
+                    root.reSize(root.width, root.height);
+                    // Reflow updates the contents, not the runtime position of
+                    // a frame that has been centered or dragged after build.
+                    rootGui.setLocation(left, top);
+                }
             }
 
             @Override
             public void setText(String value) {
                 String previous = getText();
                 super.setText(value);
+                boolean autoWidth = raw_width == XDef.NODEF && raw_widthPercent == XDef.NODEF;
+                boolean autoHeight = raw_height == XDef.NODEF && raw_heightPercent == XDef.NODEF;
                 if (initialized && !getText().equals(previous)) {
                     XLabel.this.text = getText();
-                    reflow();
+                    if (autoWidth || autoHeight) reflow();
                 }
             }
 
@@ -113,7 +123,9 @@ public class XLabel
             public void setFontSize(float value) {
                 float previous = getFontSize();
                 super.setFontSize(value);
-                if (initialized && getFontSize() != previous) reflow();
+                boolean autoWidth = raw_width == XDef.NODEF && raw_widthPercent == XDef.NODEF;
+                boolean autoHeight = raw_height == XDef.NODEF && raw_heightPercent == XDef.NODEF;
+                if (initialized && getFontSize() != previous && (autoWidth || autoHeight)) reflow();
             }
 
             @Override
