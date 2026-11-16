@@ -62,10 +62,20 @@ void JNI_OnUnload_mini(MiniJVM *jvm) {
     }
 }
 
-static Runtime *get_or_create_runtime(CallbackRuntimeEntry **entries, intptr_t key, JniEnv *env) {
+static intptr_t current_thread_key(JniEnv *env) {
+#if defined(_TTHREAD_WIN32_)
+    /* thrd_current() returns the same -2 pseudo-handle on Windows. */
+    (void) env;
+    return (intptr_t) GetCurrentThreadId();
+#else
+    return (intptr_t) env->thrd_current();
+#endif
+}
+
+static CallbackRuntimeEntry *get_or_create_runtime(CallbackRuntimeEntry **entries, intptr_t key, intptr_t thread_key, JniEnv *env) {
     CallbackRuntimeEntry *entry = *entries;
     while (entry) {
-        if (entry->key == key) return entry->runtime;
+        if (entry->key == key && entry->thread_key == thread_key) return entry;
         entry = entry->next;
     }
 
@@ -83,10 +93,11 @@ static Runtime *get_or_create_runtime(CallbackRuntimeEntry **entries, intptr_t k
         return NULL;
     }
     entry->key = key;
+    entry->thread_key = thread_key;
     entry->runtime = runtime;
     entry->next = *entries;
     *entries = entry;
-    return runtime;
+    return entry;
 }
 
 Runtime *getRuntimeCurThread(JniEnv *env) {
@@ -94,41 +105,84 @@ Runtime *getRuntimeCurThread(JniEnv *env) {
             || env->get_jvm_state(refers.jvm) != JVM_STATUS_RUNNING) {
         return NULL;
     }
-    thrd_t t = env->thrd_current();
+    intptr_t thread_key = current_thread_key(env);
     ma_mutex_lock(&refers.runtime_list_lock);
-    Runtime *runtime = refers.runtime_registry_shutting_down ? NULL
-            : get_or_create_runtime(&refers.runtime_list, (intptr_t) t, env);
+    CallbackRuntimeEntry *entry = refers.runtime_registry_shutting_down ? NULL
+            : get_or_create_runtime(&refers.runtime_list, thread_key, 0, env);
+    Runtime *runtime = entry ? env->getLastSon(entry->runtime) : NULL;
     ma_mutex_unlock(&refers.runtime_list_lock);
 
-    return runtime ? env->getLastSon(runtime) : NULL;
+    return runtime;
 }
 
-Runtime *getRuntimeForAudioDevice(JniEnv *env, void *device) {
+Runtime *acquireRuntimeForAudioDevice(JniEnv *env, void *device, CallbackRuntimeEntry **lease) {
+    if (!lease) return NULL;
+    *lease = NULL;
     if (!device || !refers.runtime_list_lock_initialized
             || env->get_jvm_state(refers.jvm) != JVM_STATUS_RUNNING) {
         return NULL;
     }
+    intptr_t thread_key = current_thread_key(env);
     ma_mutex_lock(&refers.runtime_list_lock);
-    Runtime *runtime = refers.runtime_registry_shutting_down ? NULL
-            : get_or_create_runtime(&refers.audio_runtime_list, (intptr_t) device, env);
+    CallbackRuntimeEntry *entry = refers.runtime_registry_shutting_down ? NULL
+            : get_or_create_runtime(&refers.audio_runtime_list, (intptr_t) device, thread_key, env);
+    Runtime *runtime = NULL;
+    if (entry) {
+        runtime = env->getLastSon(entry->runtime);
+        if (runtime) {
+            entry->active_callbacks++;
+            *lease = entry;
+        }
+    }
     ma_mutex_unlock(&refers.runtime_list_lock);
-    return runtime ? env->getLastSon(runtime) : NULL;
+    return runtime;
+}
+
+void releaseRuntimeForAudioCallback(JniEnv *env, CallbackRuntimeEntry *lease) {
+    if (!lease || !refers.runtime_list_lock_initialized) return;
+    CallbackRuntimeEntry *destroy = NULL;
+    ma_mutex_lock(&refers.runtime_list_lock);
+    if (lease->active_callbacks > 0) lease->active_callbacks--;
+    if (lease->retired && lease->active_callbacks == 0) destroy = lease;
+    ma_mutex_unlock(&refers.runtime_list_lock);
+    if (destroy) {
+        if (destroy->runtime) {
+            env->thread_unboundle(destroy->runtime);
+            env->runtime_destory(destroy->runtime);
+        }
+        free(destroy);
+    }
 }
 
 void releaseRuntimeForAudioDevice(JniEnv *env, void *device) {
     if (!device || !refers.runtime_list_lock_initialized) return;
     ma_mutex_lock(&refers.runtime_list_lock);
     CallbackRuntimeEntry **link = &refers.audio_runtime_list;
-    while (*link && (*link)->key != (intptr_t) device) link = &(*link)->next;
-    CallbackRuntimeEntry *removed = *link;
-    if (removed) *link = removed->next;
+    CallbackRuntimeEntry *removed = NULL;
+    while (*link) {
+        CallbackRuntimeEntry *entry = *link;
+        if (entry->key == (intptr_t) device) {
+            *link = entry->next;
+            entry->retired = 1;
+            if (entry->active_callbacks == 0) {
+                entry->next = removed;
+                removed = entry;
+            } else {
+                entry->next = NULL;
+            }
+        } else {
+            link = &entry->next;
+        }
+    }
     ma_mutex_unlock(&refers.runtime_list_lock);
-    if (removed) {
+    while (removed) {
+        CallbackRuntimeEntry *next = removed->next;
         if (removed->runtime) {
             env->thread_unboundle(removed->runtime);
             env->runtime_destory(removed->runtime);
         }
         free(removed);
+        removed = next;
     }
 }
 

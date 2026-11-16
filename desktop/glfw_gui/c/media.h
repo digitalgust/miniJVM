@@ -36,7 +36,8 @@ s32 count_MiniAudioFuncTable();
 
 //
 Runtime *getRuntimeCurThread(JniEnv *env);
-Runtime *getRuntimeForAudioDevice(JniEnv *env, void *device);
+Runtime *acquireRuntimeForAudioDevice(JniEnv *env, void *device, CallbackRuntimeEntry **lease);
+void releaseRuntimeForAudioCallback(JniEnv *env, CallbackRuntimeEntry *lease);
 void releaseRuntimeForAudioDevice(JniEnv *env, void *device);
 
 s64 get_gl_proc(const char *namez);
@@ -79,7 +80,10 @@ struct _GlobeRefer {
 
 struct _CallbackRuntimeEntry {
     intptr_t key;
+    intptr_t thread_key;
     Runtime *runtime;
+    s32 active_callbacks;
+    s8 retired;
     CallbackRuntimeEntry *next;
 };
 

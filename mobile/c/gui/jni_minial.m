@@ -88,11 +88,13 @@ void scaleSample(void *pSamples, ma_format format, s32 channels, s32 len, float 
 void on_recv_frames(ma_device *pDevice, ma_uint32 frameCount, const void *pSamples) {
     if (refers._callback_minial_on_recv_frames) {
         Runtime *runtime;
-        runtime = getRuntimeForAudioDevice(refers.env, pDevice);
+        CallbackRuntimeEntry *lease = NULL;
+        runtime = acquireRuntimeForAudioDevice(refers.env, pDevice, &lease);
         if (runtime) {
             //scaleSample(pSamples,pDevice->format,pDevice->channels,frameCount,1.f);
 
             JniEnv *env = refers.env;
+            StackEntry *stack_base = runtime->stack->sp;
             env->push_long(runtime->stack, (s64) (intptr_t)
                     pDevice);
             env->push_int(runtime->stack, frameCount);
@@ -103,6 +105,8 @@ void on_recv_frames(ma_device *pDevice, ma_uint32 frameCount, const void *pSampl
             } else if (ret == RUNTIME_STATUS_EXCEPTION) {
                 env->print_exception(runtime);
             }
+            runtime->stack->sp = stack_base;
+            releaseRuntimeForAudioCallback(env, lease);
             runtime = NULL;
         }
     }
@@ -112,9 +116,11 @@ void on_recv_frames(ma_device *pDevice, ma_uint32 frameCount, const void *pSampl
 ma_uint32 on_send_frames(ma_device *pDevice, ma_uint32 frameCount, void *pSamples) {
     if (refers._callback_minial_on_send_frames) {
         Runtime *runtime;
-        runtime = getRuntimeForAudioDevice(refers.env, pDevice);
+        CallbackRuntimeEntry *lease = NULL;
+        runtime = acquireRuntimeForAudioDevice(refers.env, pDevice, &lease);
         if (runtime) {
             JniEnv *env = refers.env;
+            StackEntry *stack_base = runtime->stack->sp;
             env->push_long(runtime->stack, (s64) (intptr_t)
                     pDevice);
             env->push_int(runtime->stack, frameCount);
@@ -125,7 +131,9 @@ ma_uint32 on_send_frames(ma_device *pDevice, ma_uint32 frameCount, void *pSample
             } else if (ret == RUNTIME_STATUS_EXCEPTION) {
                 env->print_exception(runtime);
             }
-            s32 v = env->pop_int(runtime->stack);
+            s32 v = ret == RUNTIME_STATUS_NORMAL ? env->pop_int(runtime->stack) : 0;
+            runtime->stack->sp = stack_base;
+            releaseRuntimeForAudioCallback(env, lease);
             //scaleSample(pSamples,pDevice->format,pDevice->channels,v,1.f);
             runtime = NULL;
             return v;
@@ -138,15 +146,19 @@ ma_uint32 on_send_frames(ma_device *pDevice, ma_uint32 frameCount, void *pSample
 void on_stop(ma_device *pDevice) {
     if (refers._callback_minial_on_stop) {
         Runtime *runtime;
-        runtime = getRuntimeForAudioDevice(refers.env, pDevice);
+        CallbackRuntimeEntry *lease = NULL;
+        runtime = acquireRuntimeForAudioDevice(refers.env, pDevice, &lease);
         if (runtime) {
             JniEnv *env = refers.env;
+            StackEntry *stack_base = runtime->stack->sp;
             env->push_long(runtime->stack, (s64) (intptr_t) pDevice);
             s32 ret = env->execute_method(refers._callback_minial_on_stop, runtime);
             if (ret == RUNTIME_STATUS_ERROR) {
             } else if (ret == RUNTIME_STATUS_EXCEPTION) {
                 env->print_exception(runtime);
             }
+            runtime->stack->sp = stack_base;
+            releaseRuntimeForAudioCallback(env, lease);
             runtime = NULL;
         }
     }
@@ -164,7 +176,10 @@ int org_mini_media_MiniAudio_ma_context_init(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
 
     ma_context *handle_context = env->jvm_calloc(sizeof(ma_context));
-    if (ma_context_init(NULL, 0, NULL, handle_context) != MA_SUCCESS) {
+    env->jthread_block_enter(runtime);
+    ma_result result = ma_context_init(NULL, 0, NULL, handle_context);
+    env->jthread_block_exit(runtime);
+    if (result != MA_SUCCESS) {
         env->push_long(runtime->stack, 0);
     } else {
         env->push_long(runtime->stack, (s64) (intptr_t)
@@ -179,7 +194,11 @@ int org_mini_media_MiniAudio_ma_context_uninit(Runtime *runtime, JClass *clazz) 
     ma_context *handle_context = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
 
-    if (handle_context)ma_context_uninit(handle_context);
+    if (handle_context) {
+        env->jthread_block_enter(runtime);
+        ma_context_uninit(handle_context);
+        env->jthread_block_exit(runtime);
+    }
     env->jvm_free(handle_context);
     return 0;
 }
@@ -189,9 +208,14 @@ int org_mini_media_MiniAudio_ma_decoder_init_file(Runtime *runtime, JClass *claz
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     Instance *path = env->localvar_getRefer(runtime->localvar, pos++);
+    ma_result result;
 
     ma_decoder *handle_decoder = env->jvm_calloc(sizeof(ma_decoder));
-    if (ma_decoder_init_file(jarray_body(path), NULL, handle_decoder) != MA_SUCCESS) {
+    /* File-backed decoders perform synchronous VFS reads during initialization. */
+    env->jthread_block_enter(runtime);
+    result = ma_decoder_init_file(jarray_body(path), NULL, handle_decoder);
+    env->jthread_block_exit(runtime);
+    if (result != MA_SUCCESS) {
         env->push_long(runtime->stack, 0);
     } else {
         env->push_long(runtime->stack, (s64) (intptr_t)
@@ -208,12 +232,16 @@ int org_mini_media_MiniAudio_ma_decoder_init_file_ex(Runtime *runtime, JClass *c
     s32 format = env->localvar_getInt(runtime->localvar, pos++);
     s32 channels = env->localvar_getInt(runtime->localvar, pos++);
     s32 sampleRate = env->localvar_getInt(runtime->localvar, pos++);
+    ma_result result;
 
 
     ma_decoder_config mdc = ma_decoder_config_init(format, channels, sampleRate);
 
     ma_decoder *handle_decoder = env->jvm_calloc(sizeof(ma_decoder));
-    if (ma_decoder_init_file(jarray_body(path), &mdc, handle_decoder) != MA_SUCCESS) {
+    env->jthread_block_enter(runtime);
+    result = ma_decoder_init_file(jarray_body(path), &mdc, handle_decoder);
+    env->jthread_block_exit(runtime);
+    if (result != MA_SUCCESS) {
         env->push_long(runtime->stack, 0);
     } else {
         env->push_long(runtime->stack, (s64) (intptr_t)
@@ -273,6 +301,7 @@ int org_mini_media_MiniAudio_ma_decoder_get_para(Runtime *runtime, JClass *clazz
 int org_mini_media_MiniAudio_ma_decoder_read(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
+    ma_result result;
     ma_decoder *handle_decoder = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
     s32 frameCount = env->localvar_getInt(runtime->localvar, pos++);
@@ -281,7 +310,11 @@ int org_mini_media_MiniAudio_ma_decoder_read(Runtime *runtime, JClass *clazz) {
 
     if (handle_decoder) {
         u64 readCount = 0;
-        if (ma_decoder_read_pcm_frames(handle_decoder, pSamples, frameCount, &readCount) != MA_SUCCESS) {
+        /* The decoder may perform blocking reads when it is backed by a file. */
+        env->jthread_block_enter(runtime);
+        result = ma_decoder_read_pcm_frames(handle_decoder, pSamples, frameCount, &readCount);
+        env->jthread_block_exit(runtime);
+        if (result != MA_SUCCESS) {
             env->push_int(runtime->stack, -1);
         } else {
             env->push_int(runtime->stack, (s32) readCount);
@@ -298,7 +331,11 @@ int org_mini_media_MiniAudio_ma_decoder_uninit(Runtime *runtime, JClass *clazz) 
     ma_decoder *handle_decoder = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
 
-    if (handle_decoder)ma_decoder_uninit(handle_decoder);
+    if (handle_decoder) {
+        env->jthread_block_enter(runtime);
+        ma_decoder_uninit(handle_decoder);
+        env->jthread_block_exit(runtime);
+    }
     env->jvm_free(handle_decoder);
     return 0;
 }
@@ -371,6 +408,7 @@ void setupCallback(Runtime *runtime, JClass *clazz) {
 int org_mini_media_MiniAudio_ma_device_init(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
+    ma_result result;
 
     ma_context *handle_context = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
@@ -396,7 +434,10 @@ int org_mini_media_MiniAudio_ma_device_init(Runtime *runtime, JClass *clazz) {
     dev_cfg.pUserData = handle_userdata;
 
     ma_device *handle_device = env->jvm_calloc(sizeof(ma_device));
-    if (ma_device_init(handle_context, &dev_cfg, handle_device) != MA_SUCCESS) {
+    env->jthread_block_enter(runtime);
+    result = ma_device_init(handle_context, &dev_cfg, handle_device);
+    env->jthread_block_exit(runtime);
+    if (result != MA_SUCCESS) {
         env->jvm_free(handle_device);
         env->push_long(runtime->stack, 0);
     } else {
@@ -412,7 +453,10 @@ int org_mini_media_MiniAudio_ma_device_uninit(Runtime *runtime, JClass *clazz) {
     ma_device *handle_device = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
 
+    /* Device teardown joins backend workers, which may be running VM callbacks. */
+    env->jthread_block_enter(runtime);
     ma_device_uninit(handle_device);
+    env->jthread_block_exit(runtime);
     releaseRuntimeForAudioDevice(env, handle_device);
     env->jvm_free(handle_device);
     return 0;
@@ -424,7 +468,10 @@ int org_mini_media_MiniAudio_ma_device_start(Runtime *runtime, JClass *clazz) {
     ma_device *handle_device = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
 
+    /* Start waits for the audio worker; its initial data callback can enter the VM. */
+    env->jthread_block_enter(runtime);
     ma_device_start(handle_device);
+    env->jthread_block_exit(runtime);
     return 0;
 }
 
@@ -434,7 +481,10 @@ int org_mini_media_MiniAudio_ma_device_stop(Runtime *runtime, JClass *clazz) {
     ma_device *handle_device = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
 
+    /* Stop waits for the worker's onStop callback, which executes Java code. */
+    env->jthread_block_enter(runtime);
     ma_device_stop(handle_device);
+    env->jthread_block_exit(runtime);
     return 0;
 }
 
@@ -452,10 +502,15 @@ int org_mini_media_MiniAudio_ma_device_is_started(Runtime *runtime, JClass *claz
 int org_mini_media_MiniAudio_ma_engine_init(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
+    ma_result result;
 
     ma_engine *handle_engine = env->jvm_calloc(sizeof(ma_engine));
 
-    if (ma_engine_init(NULL, handle_engine) != MA_SUCCESS) {
+    /* Default engine initialization starts its device and waits for the backend. */
+    env->jthread_block_enter(runtime);
+    result = ma_engine_init(NULL, handle_engine);
+    env->jthread_block_exit(runtime);
+    if (result != MA_SUCCESS) {
         env->jvm_free(handle_engine);
         env->push_long(runtime->stack, 0);
     } else {
@@ -471,7 +526,10 @@ int org_mini_media_MiniAudio_ma_engine_uninit(Runtime *runtime, JClass *clazz) {
     ma_engine *handle_engine = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
 
+    /* Engine teardown stops its device and joins resource-manager workers. */
+    env->jthread_block_enter(runtime);
     ma_engine_uninit(handle_engine);
+    env->jthread_block_exit(runtime);
     env->jvm_free(handle_engine);
     return 0;
 }
@@ -494,7 +552,9 @@ int org_mini_media_MiniAudio_ma_engine_start(Runtime *runtime, JClass *clazz) {
     ma_engine *handle_engine = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
 
+    env->jthread_block_enter(runtime);
     ma_result r = ma_engine_start(handle_engine);
+    env->jthread_block_exit(runtime);
     env->push_int(runtime->stack, r);
     return 0;
 }
@@ -505,7 +565,9 @@ int org_mini_media_MiniAudio_ma_engine_stop(Runtime *runtime, JClass *clazz) {
     ma_engine *handle_engine = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
 
+    env->jthread_block_enter(runtime);
     ma_result r = ma_engine_stop(handle_engine);
+    env->jthread_block_exit(runtime);
     env->push_int(runtime->stack, r);
     return 0;
 }
@@ -641,7 +703,11 @@ int org_mini_media_MiniAudio_ma_sound_init_from_file(Runtime *runtime, JClass *c
 
     ma_sound *handle_sound = env->jvm_calloc(sizeof(ma_sound));
 
-    if (ma_sound_init_from_file(handle_engine, jarray_body(path), pflag, handle_group, pDoneFence, handle_sound) != MA_SUCCESS) {
+    /* A non-async sound load can synchronously wait for file/resource loading. */
+    env->jthread_block_enter(runtime);
+    ma_result result = ma_sound_init_from_file(handle_engine, jarray_body(path), pflag, handle_group, pDoneFence, handle_sound);
+    env->jthread_block_exit(runtime);
+    if (result != MA_SUCCESS) {
         env->jvm_free(handle_sound);
         env->push_long(runtime->stack, 0);
     } else {
@@ -702,7 +768,10 @@ int org_mini_media_MiniAudio_ma_sound_uninit(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     ma_sound *handle_sound = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
+    /* Detaching a sound waits until the mixer no longer references its node. */
+    env->jthread_block_enter(runtime);
     ma_sound_uninit(handle_sound);
+    env->jthread_block_exit(runtime);
     env->jvm_free(handle_sound);
     return 0;
 }
