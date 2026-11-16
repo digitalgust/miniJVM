@@ -9,6 +9,7 @@ package org.mini.media;
 
 import org.mini.reflect.DirectMemObj;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -25,7 +26,7 @@ public class MaDevice extends MaNativeObject {
     public int format;
     public int channels;
     public int sampleRate;
-    public MaDeviceListener listener;
+    public volatile MaDeviceListener listener;
     Object userdata;
 
     public MaDevice(int deviceType, int format, int channels, int sampleRate) {
@@ -71,6 +72,10 @@ public class MaDevice extends MaNativeObject {
             throw new RuntimeException("MiniAL: init device error");
         } else {
             devices.put(handle, this);
+            synchronized (callbackDevices) {
+                callbackDevices.add(this);
+                callbackDeviceSnapshot = callbackDevices.toArray(new MaDevice[callbackDevices.size()]);
+            }
         }
         //System.out.println("audio init " + Long.toHexString(handle_device));
     }
@@ -110,6 +115,10 @@ public class MaDevice extends MaNativeObject {
             }
             MiniAudio.ma_device_uninit(handle);
             devices.remove(handle);
+            synchronized (callbackDevices) {
+                callbackDevices.remove(this);
+                callbackDeviceSnapshot = callbackDevices.toArray(new MaDevice[callbackDevices.size()]);
+            }
             handle = 0;
         }
         if (context != null) {
@@ -162,7 +171,23 @@ public class MaDevice extends MaNativeObject {
      * =================================================================================================
      */
     static Map<Long, MaDevice> devices = new HashMap();
-    static Thread curThread;
+    // Native audio callbacks run through MiniJVM's JNI bridge. Avoid map key
+    // boxing/hash operations there and resolve the native handle by primitive
+    // comparison instead.
+    static final ArrayList<MaDevice> callbackDevices = new ArrayList<MaDevice>();
+    private static volatile MaDevice[] callbackDeviceSnapshot = new MaDevice[0];
+    static volatile Thread curThread;
+
+    private static MaDevice findCallbackDevice(long deviceHandle) {
+        MaDevice[] snapshot = callbackDeviceSnapshot;
+        for (int i = 0; i < snapshot.length; i++) {
+            MaDevice device = snapshot[i];
+            if (device != null && device.handle == deviceHandle) {
+                return device;
+            }
+        }
+        return null;
+    }
 
     /**
      * @param pDevice
@@ -172,15 +197,22 @@ public class MaDevice extends MaNativeObject {
     static void onReceiveFrames(long pDevice, int frameCount, long pSamples) {
         //System.out.println("audio onReceiveFrames : " + Long.toHexString(pDevice));
         curThread = Thread.currentThread();
-        MaDevice dev = devices.get(pDevice);
-        if (dev != null && pSamples != 0) {
-            if (dev.listener != null) {
-
-                int sampleCount = frameCount * dev.channels;
-                int len = sampleCount * getFormatBytes(dev.format);
-                DirectMemObj dmo = new DirectMemObj(pSamples, len);
-                dev.listener.onCapture(dev, frameCount, dmo);
+        try {
+            if (pDevice != 0 && pSamples != 0 && frameCount > 0) {
+                MaDevice dev = findCallbackDevice(pDevice);
+                if (dev != null) {
+                    MaDeviceListener callback = dev.listener;
+                    int bytesPerSample = getFormatBytes(dev.format);
+                    long len = (long) frameCount * dev.channels * bytesPerSample;
+                    if (callback != null && dev.channels > 0 && bytesPerSample > 0
+                            && len > 0 && len <= Integer.MAX_VALUE) {
+                        DirectMemObj dmo = new DirectMemObj(pSamples, (int) len);
+                        callback.onCapture(dev, frameCount, dmo);
+                    }
+                }
             }
+        } catch (Throwable ignored) {
+            // A Java callback must never unwind through MiniAudio's native thread.
         }
         curThread = null;
     }
@@ -188,33 +220,40 @@ public class MaDevice extends MaNativeObject {
     static int onSendFrames(long pDevice, int frameCount, long pSamples) {
         //System.out.println("audio onSendFrames : " + Long.toHexString(pDevice));
         curThread = Thread.currentThread();
-        MaDevice dev = devices.get(pDevice);
-        if (dev != null) {
-            if (dev.listener != null) {
-                int samplesToRead = frameCount * dev.channels;
-                if (samplesToRead == 0) {
-                    curThread = null;
-                    return 0;
+        int result = 0;
+        try {
+            if (pDevice != 0 && pSamples != 0 && frameCount > 0) {
+                MaDevice dev = findCallbackDevice(pDevice);
+                if (dev != null) {
+                    MaDeviceListener callback = dev.listener;
+                    int bytesPerSample = getFormatBytes(dev.format);
+                    long len = (long) frameCount * dev.channels * bytesPerSample;
+                    if (callback != null && dev.channels > 0 && bytesPerSample > 0
+                            && len > 0 && len <= Integer.MAX_VALUE) {
+                        result = callback.onPlayback(dev, frameCount, new DirectMemObj(pSamples, (int) len));
+                    }
                 }
-                int len = samplesToRead * getFormatBytes(dev.format);
-                DirectMemObj dmo = new DirectMemObj(pSamples, len);
-                int v = dev.listener.onPlayback(dev, frameCount, dmo);
-                curThread = null;
-                return v;
             }
+        } catch (Throwable ignored) {
+            // Do not allow Java exceptions to escape into MiniAudio's native callback.
         }
         curThread = null;
-        return 0;
+        return result;
     }
 
     static void onStop(long pDevice) {
         //System.out.println("audio onStop : " + Long.toHexString(pDevice));
         curThread = Thread.currentThread();
-        MaDevice dev = devices.get(pDevice);
-        if (dev != null) {
-            if (dev.listener != null) {
-                dev.listener.onStop(dev);
+        try {
+            if (pDevice != 0) {
+                MaDevice dev = findCallbackDevice(pDevice);
+                if (dev != null) {
+                    MaDeviceListener callback = dev.listener;
+                    if (callback != null) callback.onStop(dev);
+                }
             }
+        } catch (Throwable ignored) {
+            // Do not allow Java exceptions to escape into MiniAudio's native callback.
         }
         curThread = null;
     }

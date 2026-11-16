@@ -88,7 +88,7 @@ void scaleSample(void *pSamples, ma_format format, s32 channels, s32 len, float 
 void on_recv_frames(ma_device *pDevice, ma_uint32 frameCount, const void *pSamples) {
     if (refers._callback_minial_on_recv_frames) {
         Runtime *runtime;
-        runtime = getRuntimeCurThread(refers.env);
+        runtime = getRuntimeForAudioDevice(refers.env, pDevice);
         if (runtime) {
             //scaleSample(pSamples,pDevice->format,pDevice->channels,frameCount,1.f);
 
@@ -112,7 +112,7 @@ void on_recv_frames(ma_device *pDevice, ma_uint32 frameCount, const void *pSampl
 ma_uint32 on_send_frames(ma_device *pDevice, ma_uint32 frameCount, void *pSamples) {
     if (refers._callback_minial_on_send_frames) {
         Runtime *runtime;
-        runtime = getRuntimeCurThread(refers.env);
+        runtime = getRuntimeForAudioDevice(refers.env, pDevice);
         if (runtime) {
             JniEnv *env = refers.env;
             env->push_long(runtime->stack, (s64) (intptr_t)
@@ -138,7 +138,7 @@ ma_uint32 on_send_frames(ma_device *pDevice, ma_uint32 frameCount, void *pSample
 void on_stop(ma_device *pDevice) {
     if (refers._callback_minial_on_stop) {
         Runtime *runtime;
-        runtime = getRuntimeCurThread(refers.env);
+        runtime = getRuntimeForAudioDevice(refers.env, pDevice);
         if (runtime) {
             JniEnv *env = refers.env;
             env->push_long(runtime->stack, (s64) (intptr_t) pDevice);
@@ -413,6 +413,7 @@ int org_mini_media_MiniAudio_ma_device_uninit(Runtime *runtime, JClass *clazz) {
     pos += 2;
 
     ma_device_uninit(handle_device);
+    releaseRuntimeForAudioDevice(env, handle_device);
     env->jvm_free(handle_device);
     return 0;
 }

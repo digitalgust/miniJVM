@@ -11,7 +11,10 @@
 
 #define NUTIL_API extern
 
+#include <minial/miniaudio.h>
+
 typedef struct _GlobeRefer GlobeRefer;
+typedef struct _CallbackRuntimeEntry CallbackRuntimeEntry;
 extern GlobeRefer refers;
 
 
@@ -33,6 +36,8 @@ s32 count_MiniAudioFuncTable();
 
 //
 Runtime *getRuntimeCurThread(JniEnv *env);
+Runtime *getRuntimeForAudioDevice(JniEnv *env, void *device);
+void releaseRuntimeForAudioDevice(JniEnv *env, void *device);
 
 s64 get_gl_proc(const char *namez);
 
@@ -65,7 +70,17 @@ struct _GlobeRefer {
     MethodInfo *_callback_minial_on_stop;
 
     //
-    Pairlist *runtime_list;
+    CallbackRuntimeEntry *runtime_list;
+    CallbackRuntimeEntry *audio_runtime_list;
+    ma_mutex runtime_list_lock;
+    s8 runtime_list_lock_initialized;
+    s8 runtime_registry_shutting_down;
+};
+
+struct _CallbackRuntimeEntry {
+    intptr_t key;
+    Runtime *runtime;
+    CallbackRuntimeEntry *next;
 };
 
 

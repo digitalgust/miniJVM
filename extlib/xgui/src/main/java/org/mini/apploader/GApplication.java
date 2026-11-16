@@ -278,6 +278,17 @@ public abstract class GApplication implements FormHolder {
     }
 
     public String getJarConfig(String key) {
+        // Read the config from this application's own JAR. The application
+        // class loader also contains dependency JARs, and more than one may
+        // have a root-level config.txt. A classpath resource lookup can then
+        // return a dependency's config before this app's config.
+        if (jarName != null && jarName.length() > 0) {
+            String value = AppLoader.getAppConfig(jarName, key);
+            return value == null ? "" : value;
+        }
+
+        // Keep the classpath fallback for applications not launched through
+        // AppLoader (for example, embedded/test applications without a JAR name).
         String configStr = GToolkit.readFileFromJarAsString("/config.txt", "utf-8");
         //System.out.println("b=" + configStr);
         if (configStr != null) {
