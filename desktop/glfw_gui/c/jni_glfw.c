@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include "deps/include/glad/glad.h"
 #include "deps/include/GLFW/glfw3.h"
 #include "deps/include/linmath.h"
@@ -855,6 +856,58 @@ typedef struct Box2d {
     s32 y2;
 } Box2d;
 
+static void gutil_img_draw_source_bounds(s32 imgWidth, s32 imgHeight, Bound2d clip,
+                                          f32 M00, f32 M01, f32 M02,
+                                          f32 M10, f32 M11, f32 M12,
+                                          s32 *srcX0, s32 *srcY0, s32 *srcX1, s32 *srcY1) {
+    *srcX0 = 0;
+    *srcY0 = 0;
+    *srcX1 = imgWidth;
+    *srcY1 = imgHeight;
+
+    f64 det = (f64) M00 * M11 - (f64) M01 * M10;
+    if (!isfinite(det) || fabs(det) < 1.0e-12 ||
+        !isfinite(M00) || !isfinite(M01) || !isfinite(M02) ||
+        !isfinite(M10) || !isfinite(M11) || !isfinite(M12)) {
+        return;
+    }
+
+    f64 tx = (f64) M02 + (M00 < -0.0f ? M00 : 0.0f);
+    f64 ty = (f64) M12 + (M11 < -0.0f ? M11 : 0.0f);
+    f64 dstX[4] = {(f64) clip.x - 1.0, (f64) clip.x + clip.w,
+                   (f64) clip.x - 1.0, (f64) clip.x + clip.w};
+    f64 dstY[4] = {(f64) clip.y - 1.0, (f64) clip.y - 1.0,
+                   (f64) clip.y + clip.h, (f64) clip.y + clip.h};
+    f64 minX = 0.0, maxX = 0.0, minY = 0.0, maxY = 0.0;
+    s32 i;
+    for (i = 0; i < 4; i++) {
+        f64 dx = dstX[i] - tx;
+        f64 dy = dstY[i] - ty;
+        f64 sx = (dx * M11 - dy * M01) / det;
+        f64 sy = (dy * M00 - dx * M10) / det;
+        if (!isfinite(sx) || !isfinite(sy)) {
+            return;
+        }
+        if (i == 0 || sx < minX) minX = sx;
+        if (i == 0 || sx > maxX) maxX = sx;
+        if (i == 0 || sy < minY) minY = sy;
+        if (i == 0 || sy > maxY) maxY = sy;
+    }
+
+    if (maxX < 0.0 || minX >= imgWidth || maxY < 0.0 || minY >= imgHeight) {
+        *srcX0 = *srcX1 = 0;
+        *srcY0 = *srcY1 = 0;
+        return;
+    }
+
+    // Expand the inverse clip by a pixel so rounding at transformed edges
+    // cannot omit a source pixel that the original forward scan would draw.
+    *srcX0 = minX <= 1.0 ? 0 : (s32) (floor(minX) - 1.0);
+    *srcY0 = minY <= 1.0 ? 0 : (s32) (floor(minY) - 1.0);
+    *srcX1 = maxX >= (f64) imgWidth - 2.0 ? imgWidth : (s32) (ceil(maxX) + 2.0);
+    *srcY1 = maxY >= (f64) imgHeight - 2.0 ? imgHeight : (s32) (ceil(maxY) + 2.0);
+}
+
 s32 org_mini_glfw_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
     static const s32 CELL_BYTES = 4;
     JniEnv *env = runtime->jnienv;
@@ -974,10 +1027,14 @@ s32 org_mini_glfw_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
 
             s32 imgRowBytes = imgWidth * CELL_BYTES;
             s32 cvsRowBytes = canvasWidth * CELL_BYTES;
+            s32 srcX0, srcY0, srcX1, srcY1;
             s32 imgy, imgx;
-            for (imgy = 0; imgy < imgHeight; imgy++) {
+            gutil_img_draw_source_bounds(imgWidth, imgHeight, clip,
+                                         M00, M01, M02, M10, M11, M12,
+                                         &srcX0, &srcY0, &srcX1, &srcY1);
+            for (imgy = srcY0; imgy < srcY1; imgy++) {
                 s32 imgRowByteStart = imgy * imgRowBytes;
-                for (imgx = 0; imgx < imgWidth; imgx++) {
+                for (imgx = srcX0; imgx < srcX1; imgx++) {
                     s32 dx = round(imgx * M00 + imgy * M01 + M02 + (M00 < -0.0f ? M00 : 0));//fix negative scale
                     s32 dy = round(imgx * M10 + imgy * M11 + M12 + (M11 < -0.0f ? M11 : 0));
                     if (dx >= clip.x && dx < clip.x + clip.w && dy >= clip.y && dy < clip.y + clip.h) {
