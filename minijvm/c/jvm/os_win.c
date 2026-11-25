@@ -23,6 +23,16 @@
 #include <direct.h>
 #include <io.h>
 
+#if defined(__JVM_OS_MINGW__) || defined(__JVM_OS_VS__)
+s32 os_socket_available(s32 fd) {
+    u_long bytes_available = 0;
+    if (fd >= 0 && ioctlsocket(fd, FIONREAD, &bytes_available) == 0) {
+        return (s32) bytes_available;
+    }
+    return 0;
+}
+#endif
+
 static inline wchar_t *mini_utf8_to_wide(const char *text) {
     int count;
     wchar_t *wide;

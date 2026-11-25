@@ -530,11 +530,17 @@ s32 org_mini_net_SocketNative_writeByte(Runtime *runtime, JClass *clazz) {
 }
 
 s32 org_mini_net_SocketNative_available0(Runtime *runtime, JClass *clazz) {
+    Instance *vmarr = localvar_getRefer(runtime->localvar, 0);
+    s32 available = 0;
+    if (vmarr) {
+        VmSock *vmsock = (VmSock *) jarray_body(vmarr);
+        available = os_socket_available(vmsock->contex.fd);
+    }
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_available0  \n");
 #endif
-    push_int(runtime->stack, 0);
+    push_int(runtime->stack, available);
     return 0;
 }
 

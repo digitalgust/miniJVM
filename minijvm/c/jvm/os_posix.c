@@ -8,6 +8,20 @@
 #include "jvm.h"
 #include "jvm_util.h"
 
+/* Cygwin uses POSIX socket descriptors even though its other OS services
+ * are selected from os_win.c. */
+#if !defined(__JVM_OS_MINGW__) && !defined(__JVM_OS_VS__)
+#include <sys/ioctl.h>
+
+s32 os_socket_available(s32 fd) {
+    int bytes_available = 0;
+    if (fd >= 0 && ioctl(fd, FIONREAD, &bytes_available) == 0 && bytes_available > 0) {
+        return bytes_available;
+    }
+    return 0;
+}
+#endif
+
 #if defined(__JVM_OS_MINGW__) || defined(__JVM_OS_CYGWIN__) || defined(__JVM_OS_VS__)
 #else
 

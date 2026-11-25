@@ -464,6 +464,9 @@ s32 classes_remove(MiniJVM *jvm, JClass *clazz);
 
 Instance *build_stack_element(Runtime *runtime, Runtime *target);
 
+/* Return readable socket bytes, or 0 for an invalid socket or query failure. */
+s32 os_socket_available(s32 fd);
+
 void os_get_lang(Utf8String *buf);
 
 void os_get_uuid(MiniJVM *jvm, Utf8String *buf);
