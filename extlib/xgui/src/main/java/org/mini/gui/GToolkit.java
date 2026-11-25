@@ -458,16 +458,27 @@ public class GToolkit {
      * @return
      */
     public static float[] getTextBoundle(long vg, String s, float width, float fontSize, boolean multiline) {
-        return getTextBoundle(vg, s, width, fontSize, GToolkit.getFontWord(), multiline);
+        return getTextBoundle(vg, s, width, fontSize, GToolkit.getFontWord(), multiline, 0f);
+    }
+
+    public static float[] getTextBoundle(long vg, String s, float width, float fontSize, boolean multiline, float lineSpacing) {
+        return getTextBoundle(vg, s, width, fontSize, GToolkit.getFontWord(), multiline, lineSpacing);
     }
 
     public static float[] getTextBoundle(long vg, String s, float width, float fontSize, byte[] font, boolean multiline) {
+        return getTextBoundle(vg, s, width, fontSize, font, multiline, 0f);
+    }
 
+    public static float[] getTextBoundle(long vg, String s, float width, float fontSize, byte[] font, boolean multiline, float lineSpacing) {
         byte[] b = toCstyleBytes(s);
-        return getTextBoundle(vg, b, width, fontSize, font, multiline);
+        return getTextBoundle(vg, b, width, fontSize, font, multiline, lineSpacing);
     }
 
     public static float[] getTextBoundle(long vg, byte[] b, float width, float fontSize, byte[] font, boolean multiline) {
+        return getTextBoundle(vg, b, width, fontSize, font, multiline, 0f);
+    }
+
+    public static float[] getTextBoundle(long vg, byte[] b, float width, float fontSize, byte[] font, boolean multiline, float lineSpacing) {
         float[] bond = bounds.get();
         nvgSave(vg);
         try {
@@ -475,6 +486,11 @@ public class GToolkit {
             nvgFontFace(vg, font);
             nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
             nvgTextLineHeight(vg, 1f);
+            float[] line = new float[1];
+            nvgTextMetrics(vg, null, null, line);
+            if (multiline && line[0] > 0f) {
+                nvgTextLineHeight(vg, (line[0] + lineSpacing) / line[0]);
+            }
             if (multiline) {
                 nvgTextBoxBoundsJni(vg, 0, 0, Math.max(1, width), b, 0, b.length - 1, bond);
             } else {
@@ -484,8 +500,6 @@ public class GToolkit {
             bond[GObject.WIDTH] -= bond[GObject.LEFT];
             bond[GObject.HEIGHT] -= bond[GObject.TOP];
             bond[GObject.LEFT] = bond[GObject.TOP] = 0;
-            float[] line = new float[1];
-            nvgTextMetrics(vg, null, null, line);
             bond[GObject.HEIGHT] = Math.max(bond[GObject.HEIGHT], line[0]);
             return bond;
         } finally {
@@ -508,11 +522,11 @@ public class GToolkit {
         if (shadowColor != null) {
             nvgFontBlur(vg, shadowBlur);
             nvgFillColor(vg, color);
-            Nanovg.nvgTextJni(vg, tx, ty + 1.5f, b, 0, b.length);
+            Nanovg.nvgTextJni(vg, tx, ty, b, 0, b.length);
             nvgFontBlur(vg, 0);
         }
         nvgFillColor(vg, color);
-        Nanovg.nvgTextJni(vg, tx, ty + 1.5f, b, 0, b.length);
+        Nanovg.nvgTextJni(vg, tx, ty, b, 0, b.length);
     }
 
     public static void drawTextLineInBoundle(long vg, float tx, float ty, float pw, float ph, String s, float fontSize, float[] color) {
@@ -555,11 +569,11 @@ public class GToolkit {
             if (shadowColor != null) {
                 nvgFontBlur(vg, shadowBlur);
                 nvgFillColor(vg, shadowColor);
-                nvgTextBoxJni(vg, x + 1, y + 2, w, text_arr, 0, text_arr.length);
+                nvgTextBoxJni(vg, x + 1, y + 1, w, text_arr, 0, text_arr.length);
                 nvgFontBlur(vg, 0);
             }
             nvgFillColor(vg, color);
-            nvgTextBoxJni(vg, x, y + 1, w, text_arr, 0, text_arr.length);
+            nvgTextBoxJni(vg, x, y, w, text_arr, 0, text_arr.length);
         }
     }
 

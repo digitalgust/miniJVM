@@ -134,8 +134,12 @@ public class XUtil {
      * @return
      */
     public static int measureHeight(int width, String str, int fontSize, boolean multiline) {
+        return measureHeight(width, str, fontSize, multiline, 0f);
+    }
+
+    public static int measureHeight(int width, String str, int fontSize, boolean multiline, float lineSpacing) {
         long vg = GCallBack.getInstance().getNvContext();
-        float[] boundle = GToolkit.getTextBoundle(vg, str, width, fontSize, multiline);
+        float[] boundle = GToolkit.getTextBoundle(vg, str, width, fontSize, multiline, lineSpacing);
         return (int) Math.ceil(boundle[GObject.HEIGHT] - boundle[GObject.TOP]) + 2;
     }
 

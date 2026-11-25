@@ -23,14 +23,19 @@ final class XFlow {
     final XContainer parent;
     final List<Row> rows = new ArrayList<Row>();
     Row row = new Row();
-    int height;
+    int height, minY;
 
     XFlow(XContainer parent) { this.parent = parent; }
 
     void next() {
+        next(0f);
+    }
+
+    void next(float lineSpacing) {
         rows.add(row);
         Row next = new Row();
-        next.y = row.y + row.h;
+        int gap = lineSpacing < 0f ? (int) (lineSpacing - 0.5f) : (int) (lineSpacing + 0.5f);
+        next.y = row.y + row.h + gap;
         row = next;
     }
 
@@ -68,7 +73,7 @@ final class XFlow {
                 if (end < 0) end = text.length();
                 if (pos == end) {
                     row.h = Math.max(row.h, (int) Math.ceil(metrics[0]) + 2);
-                    next(); pos++; trailingNewline = true; continue;
+                    next(label.lineSpacing); pos++; trailingNewline = true; continue;
                 }
                 int available = Math.max(1, parent.viewW - row.w);
                 int fit = fit(vg, text, pos, end, available);
@@ -97,8 +102,8 @@ final class XFlow {
                 label.parts.add(p); row.parts.add(p);
                 row.w += p.w; row.h = Math.max(row.h, p.h);
                 pos = fit; trailingNewline = false;
-                if (pos < end) next();
-                else if (pos < text.length()) { next(); pos++; trailingNewline = true; }
+                if (pos < end) next(label.lineSpacing);
+                else if (pos < text.length()) { next(label.lineSpacing); pos++; trailingNewline = true; }
             }
             if (trailingNewline || text.length() == 0) row.h = Math.max(row.h, (int) Math.ceil(metrics[0]) + 2);
         } finally { nvgRestore(vg); }
@@ -145,15 +150,22 @@ final class XFlow {
 
     void finish() {
         if (!row.parts.isEmpty() || row.h > 0) rows.add(row);
-        height = row.y + row.h;
-        place(0, false);
+        int maxY = 0;
+        minY = 0;
+        for (int i = 0; i < rows.size(); i++) {
+            Row current = rows.get(i);
+            minY = Math.min(minY, current.y);
+            maxY = Math.max(maxY, current.y + current.h);
+        }
+        height = maxY - minY;
+        place(-minY, false);
     }
 
     void align() {
         int extra = Math.max(0, parent.viewH - height);
         int offset = (parent.align & NVG_ALIGN_BOTTOM) != 0 ? extra
                 : (parent.align & NVG_ALIGN_MIDDLE) != 0 ? extra / 2 : 0;
-        place(offset, true);
+        place(-minY + offset, true);
     }
 
     private void place(int offset, boolean aligned) {

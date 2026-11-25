@@ -32,6 +32,8 @@ public abstract class XContainer
     public int actionType = ACTION_TYPE_BOTH;
     private int depth = -1;
     private XFlow flow;
+    private int layoutParentViewW = XDef.NODEF;
+    private int layoutParentViewH = XDef.NODEF;
 
     protected XEventHandler eventHandler;
 
@@ -272,6 +274,8 @@ public abstract class XContainer
     }
 
     void setParentSize(int parentW, int parentH) {
+        layoutParentViewW = parentW;
+        layoutParentViewH = parentH;
         resetBoundle();
         if (width == XDef.NODEF) {
             if (raw_widthPercent == XDef.NODEF) {
@@ -326,6 +330,7 @@ public abstract class XContainer
         preAlignVertical();
 
         align();
+        cacheChildParentSizes();
     }
 
 
@@ -353,6 +358,36 @@ public abstract class XContainer
         x = tx;
         y = ty;
         if (getGui() != null) getGui().setLocation(x, y);
+        cacheChildParentSizes();
+    }
+
+    /**
+     * Re-layout this container against the parent viewport used by its last
+     * layout pass. Its current width/height are resolved sizes and must not be
+     * reused as the parent size for percentage-based bounds.
+     */
+    void reflow() {
+        int parentW = layoutParentViewW;
+        int parentH = layoutParentViewH;
+        if (parent != null) {
+            if (parentW == XDef.NODEF) parentW = parent.getTrialViewW();
+            if (parentH == XDef.NODEF) parentH = parent.getTrialViewH();
+        }
+        if (parentW != XDef.NODEF && parentH != XDef.NODEF) {
+            reSize(parentW, parentH);
+        }
+    }
+
+    private void cacheChildParentSizes() {
+        for (int i = 0; i < children.size(); i++) {
+            XObject child = children.get(i);
+            if (child instanceof XContainer) {
+                XContainer childContainer = (XContainer) child;
+                childContainer.layoutParentViewW = viewW;
+                childContainer.layoutParentViewH = viewH;
+                childContainer.cacheChildParentSizes();
+            }
+        }
     }
 
 

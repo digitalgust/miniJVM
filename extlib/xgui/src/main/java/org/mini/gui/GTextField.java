@@ -546,7 +546,7 @@ public class GTextField extends GTextObject {
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
-            nvgTextJni(vg, x + FONT_WIDTH, y + h * 0.55f, ICON_SEARCH_BYTE, 0, ICON_SEARCH_BYTE.length);
+            nvgTextJni(vg, x + FONT_WIDTH, y + h * 0.5f, ICON_SEARCH_BYTE, 0, ICON_SEARCH_BYTE.length);
         } else {
             GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, getCornerRadius(), bgColor);
         }
@@ -556,13 +556,13 @@ public class GTextField extends GTextObject {
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-            nvgTextJni(vg, x + w - resetWidth * 0.25f, y + h * 0.55f, ICON_EYES_BYTE, 0, ICON_CIRCLED_CROSS_BYTE.length);
+            nvgTextJni(vg, x + w - resetWidth * 0.25f, y + h * 0.5f, ICON_EYES_BYTE, 0, ICON_CIRCLED_CROSS_BYTE.length);
         } else if (isResetEnable()) {
             nvgFontSize(vg, getFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-            nvgTextJni(vg, x + w - resetWidth * 0.25f, y + h * 0.55f, ICON_CIRCLED_CROSS_BYTE, 0, ICON_CIRCLED_CROSS_BYTE.length);
+            nvgTextJni(vg, x + w - resetWidth * 0.25f, y + h * 0.5f, ICON_CIRCLED_CROSS_BYTE, 0, ICON_CIRCLED_CROSS_BYTE.length);
         }
 
         nvgFontSize(vg, getFontSize());
@@ -582,7 +582,7 @@ public class GTextField extends GTextObject {
             }
         }
         float wordx = x + searchWidth + PAD;
-        float wordy = y + boundle[HEIGHT] * 0.5f + 2f;
+        float wordy = y + h * 0.5f;
         float text_show_area_x = wordx;
         float text_show_area_w = boundle[WIDTH] - PAD * 2 - searchWidth - resetWidth;
         float text_width = Nanovg.nvgTextBoundsJni(vg, 0, 0, text_arr, 0, text_arr.length, null);

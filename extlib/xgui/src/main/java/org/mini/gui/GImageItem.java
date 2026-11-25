@@ -21,10 +21,12 @@ public class GImageItem extends GObject {
     protected GImage img;
     protected float alpha = 1.f;
     protected float alphaFly = alpha * .5f;
+    protected float lineSpacing;
     protected boolean drawBorder = true;
     protected long blinkPeriod = 0;       //呼吸边框周期ms, 0=关闭
     protected float[] blinkColor = null;  //呼吸边框颜色, null=用getColor()
     protected final float[] blinkStroke = new float[4]; //渲染时复用, 避免每帧分配
+    private final float[] textLineHeight = new float[1];
 
     public GImageItem(GForm form) {
         this(form, null);
@@ -46,6 +48,17 @@ public class GImageItem extends GObject {
     public void setBlink(long periodMs, float[] color) {
         this.blinkPeriod = periodMs;
         this.blinkColor = color;
+    }
+
+    /**
+     * Sets the extra vertical spacing between lines in the item's text.
+     */
+    public void setLineSpacing(float lineSpacing) {
+        this.lineSpacing = lineSpacing;
+    }
+
+    public float getLineSpacing() {
+        return lineSpacing;
     }
 
     /**
@@ -159,7 +172,19 @@ public class GImageItem extends GObject {
         }
         //画字
         if (getText() != null) {
-            GToolkit.drawTextWithShadow(vg, x + 3, y + 3, w - 6, h - 6, getText(), getFontSize(), getColor(), GToolkit.getStyle().getTextShadowColor(), 1f);
+            nvgSave(vg);
+            try {
+                nvgFontSize(vg, getFontSize());
+                nvgFontFace(vg, GToolkit.getFontWord());
+                nvgTextMetrics(vg, null, null, textLineHeight);
+                float lineHeightScale = textLineHeight[0] > 0f
+                        ? (textLineHeight[0] + lineSpacing) / textLineHeight[0] : 1f;
+                nvgTextLineHeight(vg, lineHeightScale);
+                GToolkit.drawTextWithShadow(vg, x + 3, y + 3, w - 6, h - 6,
+                        getText(), getFontSize(), getColor(), GToolkit.getStyle().getTextShadowColor(), 1f);
+            } finally {
+                nvgRestore(vg);
+            }
         }
         return true;
     }

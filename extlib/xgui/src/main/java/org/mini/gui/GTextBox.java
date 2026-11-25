@@ -35,7 +35,8 @@ public class GTextBox extends GTextObject {
 
     static final int SCROLLBAR_WIDTH = 20;
     static final int PAD = 1;
-    static final float LINE_SCALE = 1.2f;
+    // Use the font's measured line height without extra interline spacing.
+    static final float LINE_SCALE = 1.0f;
 
     protected int curCaretRow;//以回车为换行符的行数
     protected int curCaretCol;//以回车为换行符的列数

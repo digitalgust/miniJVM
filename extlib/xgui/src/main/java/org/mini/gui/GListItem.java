@@ -267,7 +267,7 @@ public class GListItem extends GContainer {
             pc = enable ? pc : getDisabledColor();
             nvgFillColor(vg, pc);
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-            nvgTextJni(vg, x + thumb * 0.5f, y + thumb * 0.5f + 2, preicon_arr, 0, preicon_arr.length);
+            nvgTextJni(vg, x + thumb * 0.5f, y + thumb * 0.5f, preicon_arr, 0, preicon_arr.length);
         }
         nvgFillColor(vg, c);
         GToolkit.drawTextLine(vg, tx + leadingWidth() + pad, ty + thumb / 2, getText(), list.getFontSize(), c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);

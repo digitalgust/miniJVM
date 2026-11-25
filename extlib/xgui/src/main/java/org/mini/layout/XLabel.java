@@ -22,6 +22,7 @@ public class XLabel
     protected int align = Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP;
     protected int addon = XDef.SPACING_LABEL_ADD;
     protected boolean multiLine = false;
+    protected float lineSpacing;
 
     GLabel label;
     List<XFlow.Part> parts;
@@ -64,6 +65,8 @@ public class XLabel
             addon = Integer.parseInt(attValue);
         } else if (attName.equals("multiline")) {
             multiLine = "0".equals(attValue) ? false : true;
+        } else if (attName.equals("linespace")) {
+            lineSpacing = Float.parseFloat(attValue);
         }
     }
 
@@ -89,7 +92,7 @@ public class XLabel
     }
 
     protected int getDefaultHeight(int parentViewH) {
-        return XUtil.measureHeight(viewW - GLabel.TEXT_BOUND_DEC, text, getFontSize(), multiLine);
+        return XUtil.measureHeight(viewW - GLabel.TEXT_BOUND_DEC, text, getFontSize(), multiLine, lineSpacing);
     }
 
     protected <T extends GObject> T createGuiImpl() {
@@ -100,7 +103,7 @@ public class XLabel
                     GObject rootGui = root.getGui();
                     float left = rootGui.getLocationLeft();
                     float top = rootGui.getLocationTop();
-                    root.reSize(root.width, root.height);
+                    root.reflow();
                     // Reflow updates the contents, not the runtime position of
                     // a frame that has been centered or dragged after build.
                     rootGui.setLocation(left, top);
@@ -126,6 +129,16 @@ public class XLabel
                 boolean autoWidth = raw_width == XDef.NODEF && raw_widthPercent == XDef.NODEF;
                 boolean autoHeight = raw_height == XDef.NODEF && raw_heightPercent == XDef.NODEF;
                 if (initialized && getFontSize() != previous && (autoWidth || autoHeight)) reflow();
+            }
+
+            @Override
+            public void setLineSpacing(float value) {
+                float previous = getLineSpacing();
+                super.setLineSpacing(value);
+                XLabel.this.lineSpacing = value;
+                boolean autoWidth = raw_width == XDef.NODEF && raw_widthPercent == XDef.NODEF;
+                boolean autoHeight = raw_height == XDef.NODEF && raw_heightPercent == XDef.NODEF;
+                if (initialized && value != previous && (autoWidth || autoHeight)) reflow();
             }
 
             @Override
@@ -170,6 +183,7 @@ public class XLabel
             initGuiMore();
             label.setAlign(align);
             label.setShowMode(multiLine ? GLabel.MODE_MULTI_SHOW : GLabel.MODE_SINGLE_SHOW);
+            label.setLineSpacing(lineSpacing);
             initialized = true;
 
         } else {

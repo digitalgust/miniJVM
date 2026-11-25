@@ -17,6 +17,7 @@ public class XImageItem extends XObject {
     protected GImageItem imgItem = null;
     protected boolean border;
     protected float alpha = 1.f;
+    protected float lineSpacing;
 
     public XImageItem(XContainer xc) {
         super(xc);
@@ -36,6 +37,8 @@ public class XImageItem extends XObject {
             onClick = attValue;
         } else if (attName.equals("alpha")) {
             alpha = (float) Integer.parseInt(attValue) / 255;
+        } else if (attName.equals("linespace")) {
+            lineSpacing = Float.parseFloat(attValue);
         }
     }
 
@@ -80,9 +83,11 @@ public class XImageItem extends XObject {
             imgItem.setSize(width, height);
             imgItem.setAlpha(alpha);
             imgItem.setDrawBorder(border);
+            imgItem.setLineSpacing(lineSpacing);
         } else {
             imgItem.setLocation(x, y);
             imgItem.setSize(width, height);
+            imgItem.setLineSpacing(lineSpacing);
         }
     }
 

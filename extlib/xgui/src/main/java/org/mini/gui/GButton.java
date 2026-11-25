@@ -238,8 +238,8 @@ public class GButton extends GObject {
             icony = y + h - 2 - iconWidth;
             texty = y + h - 2 - lineh * 0.2f - iconWidth;
         } else {
-            icony = y + h * 0.5f + move + 0.5f;
-            texty = y + h * 0.5f + move + 1.6f;
+            icony = y + h * 0.5f + move;
+            texty = y + h * 0.5f + move;
         }
 
         //draw preicon

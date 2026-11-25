@@ -23,6 +23,7 @@ public class GLabel extends GObject {
     protected char preicon;
     protected float[] lineh = {0};
     private final float[] textBounds = new float[4];
+    protected float lineSpacing;
     protected boolean touched;
 
     int align = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
@@ -65,6 +66,18 @@ public class GLabel extends GObject {
 
     public int getAlign() {
         return align;
+    }
+
+    /**
+     * Sets the extra vertical spacing between wrapped or explicit text lines.
+     * Negative values make lines overlap more closely.
+     */
+    public void setLineSpacing(float lineSpacing) {
+        this.lineSpacing = lineSpacing;
+    }
+
+    public float getLineSpacing() {
+        return lineSpacing;
     }
 
     public void setText(String text) {
@@ -152,7 +165,16 @@ public class GLabel extends GObject {
     boolean paintFlying(long vg, float x, float y) {
         nvgSave(vg);
         try {
-            nvgTextLineHeight(vg, 1f);
+            float lineHeightScale = 1f;
+            if (showMode == MODE_MULTI_SHOW && lineSpacing != 0f) {
+                nvgFontSize(vg, getFontSize());
+                nvgFontFace(vg, GToolkit.getFontWord());
+                nvgTextMetrics(vg, null, null, lineh);
+                if (lineh[0] > 0f) {
+                    lineHeightScale = (lineh[0] + lineSpacing) / lineh[0];
+                }
+            }
+            nvgTextLineHeight(vg, lineHeightScale);
             nvgIntersectScissor(vg, x, y, getW(), getH());
             float w = getW();
             float h = getH();
