@@ -1574,8 +1574,12 @@ static void gutil_img_draw_source_bounds(s32 imgWidth, s32 imgHeight, Bound2d cl
         return;
     }
 
-    f64 tx = (f64) M02 + (M00 < -0.0f ? M00 : 0.0f);
-    f64 ty = (f64) M12 + (M11 < -0.0f ? M11 : 0.0f);
+    f64 xPixelOffset = M00 < -0.0f ? M00 :
+                       (M00 == 0.0f && M01 < -0.0f ? M01 : 0.0f);
+    f64 yPixelOffset = M10 < -0.0f ? M10 :
+                       (M10 == 0.0f && M11 < -0.0f ? M11 : 0.0f);
+    f64 tx = (f64) M02 + xPixelOffset;
+    f64 ty = (f64) M12 + yPixelOffset;
     f64 dstX[4] = {(f64) clip.x - 1.0, (f64) clip.x + clip.w,
                    (f64) clip.x - 1.0, (f64) clip.x + clip.w};
     f64 dstY[4] = {(f64) clip.y - 1.0, (f64) clip.y - 1.0,
@@ -1734,11 +1738,18 @@ s32 org_mini_glfm_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
             gutil_img_draw_source_bounds(imgWidth, imgHeight, clip,
                                          M00, M01, M02, M10, M11, M12,
                                          &srcX0, &srcY0, &srcX1, &srcY1);
+            // Pixel-center compensation for reflected axes. For quarter-turn
+            // rotations the negative coefficient may be in a shear term
+            // (M01/M10), not the scale term.
+            f32 xPixelOffset = M00 < -0.0f ? M00 :
+                               (M00 == 0.0f && M01 < -0.0f ? M01 : 0.0f);
+            f32 yPixelOffset = M10 < -0.0f ? M10 :
+                               (M10 == 0.0f && M11 < -0.0f ? M11 : 0.0f);
             for (imgy = srcY0; imgy < srcY1; imgy++) {
                 s32 imgRowByteStart = imgy * imgRowBytes;
                 for (imgx = srcX0; imgx < srcX1; imgx++) {
-                    s32 dx = round(imgx * M00 + imgy * M01 + M02 + (M00 < -0.0f ? M00 : 0));//fix negative scale
-                    s32 dy = round(imgx * M10 + imgy * M11 + M12 + (M11 < -0.0f ? M11 : 0));
+                    s32 dx = round(imgx * M00 + imgy * M01 + M02 + xPixelOffset);
+                    s32 dy = round(imgx * M10 + imgy * M11 + M12 + yPixelOffset);
                     if (dx >= clip.x && dx < clip.x + clip.w && dy >= clip.y && dy < clip.y + clip.h) {
                         s32 imgColByteStart = imgRowByteStart + imgx * CELL_BYTES;
                         u8 srcA = gutil_apply_global_alpha(img[imgColByteStart + 3], alpha);
