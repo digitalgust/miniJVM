@@ -1966,6 +1966,7 @@ public class GToolkit {
      * 当imagecache中的key没有强引用时,其value(图象)会被自动回收
      */
     static Map<String, GImage> imageCache = Collections.synchronizedMap(new WeakHashMap<>());
+    static Map<String, GImage> fileImageCache = Collections.synchronizedMap(new WeakHashMap<>());
 
     /**
      * 从缓存中取得图象,如果缓存中没有,则加载
@@ -1979,18 +1980,22 @@ public class GToolkit {
         if (filepath == null || "".equals(filepath.trim())) {
             return null;
         }
-        GImage img = imageCache.get(filepath);
-        try {
+        synchronized (imageCache) {
+            GImage img = imageCache.get(filepath);
             if (img == null) {
-                img = GImage.createImageFromJar(filepath);
+                try {
+                    img = GImage.createImageFromJar(filepath);
+                } catch (Exception e) {
+                    SysLog.error("Failed to load image from jar: " + filepath);
+                    return null;
+                }
                 if (img != null) {
                     imageCache.put(filepath, img);
                 }
                 SysLog.getLogger().fine("load image cache " + filepath + " " + img);
             }
-        } catch (Exception e) {
+            return img;
         }
-        return img;
     }
 
     static public GImage getCachedImageFromFile(String filepath) {
@@ -2001,25 +2006,25 @@ public class GToolkit {
         if (filepath == null || "".equals(filepath.trim())) {
             return null;
         }
-        filepath = new String(filepath);//for holder,must new
-        GImage img = imageCache.get(filepath);
-        if (img == null) {
-            SysLog.info("load image cache " + filepath);
-            img = GImage.createImage(filepath);
-            if (img != null) {
-                if (holder != null) holder.setAttachment(filepath);
-                imageCache.put(filepath, img);
-            }
-        } else {
-            //System.out.println("hit image from cache " + filepath);
-            if (holder != null) {
-                for (Map.Entry e : imageCache.entrySet()) {
-                    if (filepath.equals(e.getKey())) { //虽然两个字符串字面相同,但不是同一对象
-                        holder.setAttachment(e.getKey());
+        synchronized (fileImageCache) {
+            GImage img = fileImageCache.get(filepath);
+            if (img == null) {
+                SysLog.info("load image cache " + filepath);
+                img = GImage.createImage(filepath);
+                if (img != null) {
+                    String key = new String(filepath);
+                    fileImageCache.put(key, img);
+                    if (holder != null) holder.setAttachment(key);
+                }
+            } else if (holder != null) {
+                for (String key : fileImageCache.keySet()) {
+                    if (filepath.equals(key)) {
+                        holder.setAttachment(key);
+                        break;
                     }
                 }
             }
+            return img;
         }
-        return img;
     }
 }

@@ -72,13 +72,16 @@ public class GLUtil {
 
 
     public static byte[] image_parse_from_file_content(byte[] fileCont, int[] w_h_d) {
-        return image_parse_from_file_content(fileCont, 0, fileCont.length, w_h_d);
+        return image_parse_from_file_content(fileCont, 0, fileCont == null ? 0 : fileCont.length, w_h_d);
     }
 
     public static byte[] image_parse_from_file_content(byte[] fileCont, int start, int len, int[] w_h_d) {
         if (fileCont == null || fileCont.length <= 0) {
             SysLog.error("image_parse_from_file_content fileCont is null");
             return null;
+        }
+        if (start < 0 || len < 0 || start > fileCont.length || len > fileCont.length - start) {
+            throw new IndexOutOfBoundsException();
         }
         int[] x = {0}, y = {0}, n = {0};
         long ptr = ReflectArray.getBodyPtr(fileCont);
@@ -92,15 +95,17 @@ public class GLUtil {
         w_h_d[1] = y[0];
         w_h_d[2] = n[0];
 
-        byte[] b = image_parse(raw_data_handle, w_h_d);
-        Nanovg.stbi_image_free(raw_data_handle);
-        return b;
+        try {
+            return image_parse(raw_data_handle, w_h_d);
+        } finally {
+            Nanovg.stbi_image_free(raw_data_handle);
+        }
     }
 
     public static byte[] image_parse_from_file_path(String filename, int[] w_h_d) {
         int[] x = {0}, y = {0}, n = {0};
         byte[] fb = toCstyleBytes(filename);
-        long raw_data_handle = stbi_load(fb, x, y, n, 4);
+        long raw_data_handle = stbi_load(fb, x, y, n, 0);
         if (raw_data_handle == 0) {
             SysLog.error("failed to load image: " + filename);
             return null;
@@ -109,9 +114,11 @@ public class GLUtil {
         w_h_d[1] = y[0];
         w_h_d[2] = n[0];
 
-        byte[] b = image_parse(raw_data_handle, w_h_d);
-        Nanovg.stbi_image_free(raw_data_handle);
-        return b;
+        try {
+            return image_parse(raw_data_handle, w_h_d);
+        } finally {
+            Nanovg.stbi_image_free(raw_data_handle);
+        }
     }
 
     public static byte[] image_parse(long raw_data_handle, int[] w_h_d) {
@@ -150,15 +157,30 @@ public class GLUtil {
 
         byte[] d = image_parse_from_file_path(filename, w_h_d);
 
-        int format = w_h_d[2] < 4 ? GL_RGB : GL_RGBA;
-        return genTexture2D(d, w_h_d[0], w_h_d[1], format, format);
+        if (d == null) return 0;
+        return genTexture2D(toRgba(d, w_h_d[2]), w_h_d[0], w_h_d[1], GL_RGBA, GL_RGBA);
     }
 
     public static int gl_image_load(byte[] fileCont, int[] w_h_d) {
 
         byte[] d = image_parse_from_file_content(fileCont, w_h_d);
-        int format = w_h_d[2] < 4 ? GL_RGB : GL_RGBA;
-        return genTexture2D(d, w_h_d[0], w_h_d[1], format, format);
+        if (d == null) return 0;
+        return genTexture2D(toRgba(d, w_h_d[2]), w_h_d[0], w_h_d[1], GL_RGBA, GL_RGBA);
+    }
+
+    private static byte[] toRgba(byte[] pixels, int channels) {
+        if (channels == 4) return pixels;
+        if (channels < 1 || channels > 4 || pixels.length % channels != 0) {
+            throw new IllegalArgumentException("Invalid image channel count: " + channels);
+        }
+        byte[] rgba = new byte[(pixels.length / channels) * 4];
+        for (int src = 0, dst = 0; src < pixels.length; src += channels, dst += 4) {
+            rgba[dst] = pixels[src];
+            rgba[dst + 1] = channels < 3 ? pixels[src] : pixels[src + 1];
+            rgba[dst + 2] = channels < 3 ? pixels[src] : pixels[src + 2];
+            rgba[dst + 3] = channels == 2 ? pixels[src + 1] : (byte) 0xff;
+        }
+        return rgba;
     }
 
     public static void image_get_size(byte[] fileCont, int[] w_h_d) {

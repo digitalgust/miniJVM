@@ -13,6 +13,7 @@ import org.mini.http.MiniHttpClient;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -64,24 +65,49 @@ public abstract class GImage implements GAttachable {
     }
 
     /**
-     * 异步加载图片
+     * 加载 URL 图片；重定向时可能先返回占位图。
      *
      * @param url
      * @return
      */
     static public GImage createImage(URL url) {
-        ImageMutable preimg = createImageMutable(IMAGE_PER_INIT_WIDTH, IMAGE_PER_INIT_HEIGHT);
+        if (url == null) return null;
+        UrlImage result = new UrlImage();
         MiniHttpClient client = new MiniHttpClient(url.toString(), null, (client1, url1, data) -> {
-            int[] whd = {0, 0, 0};
-            byte[] rgb = GLUtil.image_parse_from_file_content(data, whd);
-            preimg.init(whd[0], whd[1]);
-            preimg.setPix(rgb, 0, whd[0], 0, 0, whd[0], whd[1]);
-            preimg.updateImage();
+            GImage decoded = createImage(data);
+            if (decoded != null) {
+                result.image = decoded;
+                GForm.flush();
+            }
         });
         client.run();//同步
-        return preimg;
+        return result;
     }
 
+    private static final class UrlImage extends GImage {
+        private volatile GImage image = createImageMutable(IMAGE_PER_INIT_WIDTH, IMAGE_PER_INIT_HEIGHT);
+        public int getWidth() { return image.getWidth(); }
+        public int getHeight() { return image.getHeight(); }
+        public int getNvgTextureId() { return image.getNvgTextureId(); }
+        public int getNvgTextureId(long vg) { return image.getNvgTextureId(vg); }
+        public int getGLTextureId() { return image.getGLTextureId(); }
+    }
+
+    private static byte[] readImageData(InputStream input) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int count;
+        while ((count = input.read(buffer)) != -1) {
+            if (count == 0) {
+                int value = input.read();
+                if (value == -1) break;
+                output.write(value);
+            } else {
+                output.write(buffer, 0, count);
+            }
+        }
+        return output.toByteArray();
+    }
 
     static public GImage createImage(String filepath) {
         return createImage(filepath, 0);
@@ -91,26 +117,12 @@ public abstract class GImage implements GAttachable {
         if (filepath == null) {
             return null;
         }
-        byte[] b = null;
         File f = new File(filepath);
-        if (f.exists()) {
-            FileInputStream fis = null;
-            try {
-                b = new byte[(int) f.length()];
-                fis = new FileInputStream(f);
-                fis.read(b);
-            } catch (IOException ex) {
-            } finally {
-                try {
-                    if (fis != null) {
-                        fis.close();
-                    }
-                } catch (IOException ex) {
-                }
-            }
-
+        try (InputStream input = new FileInputStream(f)) {
+            return createImage(readImageData(input), imageflag);
+        } catch (IOException ex) {
+            return null;
         }
-        return createImage(b, imageflag);
     }
 
     static public GImage createImage(byte[] data) {
@@ -126,6 +138,7 @@ public abstract class GImage implements GAttachable {
         img.image_init_flag = imageflag;
         int[] whd = {0, 0, 0};
         GLUtil.image_get_size(data, whd);
+        if (whd[0] <= 0 || whd[1] <= 0) return null;
         img.w[0] = whd[0];
         img.h[0] = whd[1];
         return img;
@@ -141,18 +154,11 @@ public abstract class GImage implements GAttachable {
                 return null;
             }
             //System.out.println("jar img path: " + filepath);
-            InputStream is = GCallBack.getInstance().getResourceAsStream(filepath);
-            //System.out.println("GImage createImageFromJar:" + is);
-            if (is != null && is.available() > 0) {
-                byte[] data = new byte[is.available()];
-                int read = 0;
-                while (read < data.length) {
-                    read += is.read(data, read, data.length - read);
-                }
-                //System.out.println("GImage createImageFromJar data read success " + data.length);
-                return createImage(data, imageflag);
+            InputStream resource = GCallBack.getInstance().getResourceAsStream(filepath);
+            if (resource == null) return null;
+            try (InputStream is = resource) {
+                return createImage(readImageData(is), imageflag);
             }
-            is.close();
         } catch (IOException ex) {
             ex.printStackTrace();
         }

@@ -67,15 +67,19 @@ public class ImageMutable extends GImage {
         shadow.put(pos, ((a & 0xff) << 24) | ((b & 0xff) << 16) | ((g & 0xff) << 8) | (r & 0xff));
     }
 
+    /** Copies RGBA pixels; offset and scanlength are measured in bytes. */
     public void setPix(byte[] rgbaData, int offset, int scanlength, int x, int y, int w, int h) {
-        ByteBuffer buffer = ByteBuffer.wrap(rgbaData, offset, scanlength * h);
-        IntBuffer intbuf = buffer.asIntBuffer();
-        for (int j = 0; j < h; j++) {
-            int imgFirst = ((y + j) * width) + x;
-            shadow.position(imgFirst);
-            intbuf.limit((w + imgFirst));
-            shadow.put(intbuf);
-            buffer.position(buffer.position() + scanlength);
+        if (rgbaData == null) throw new NullPointerException("RGBA data is null");
+        if (x < 0 || y < 0 || w < 0 || h < 0 || x > width - w || y > heigh - h
+                || offset < 0 || scanlength < 0 || (long) w * BYTE_PER_PIXEL > scanlength
+                || (h > 0 && (long) offset + (long) (h - 1) * scanlength + (long) w * BYTE_PER_PIXEL > rgbaData.length)
+                || offset > rgbaData.length) {
+            throw new IndexOutOfBoundsException();
+        }
+        byte[] destination = data.array();
+        for (int row = 0; row < h; row++) {
+            System.arraycopy(rgbaData, offset + row * scanlength, destination,
+                    ((y + row) * width + x) * BYTE_PER_PIXEL, w * BYTE_PER_PIXEL);
         }
     }
 
