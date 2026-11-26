@@ -14,6 +14,7 @@ import org.mini.gui.*;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
 import org.mini.gui.callback.GDesktop;
+import org.mini.gui.event.GFlyListener;
 import org.mini.gui.gscript.*;
 import org.mini.http.MiniHttpClient;
 import org.mini.json.JsonParser;
@@ -27,6 +28,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -96,6 +98,10 @@ public class GuiScriptLib extends Lib {
             methodNames.put("getH".toLowerCase(), this::getH);//
             methodNames.put("setXY".toLowerCase(), this::setXY);//
             methodNames.put("setWH".toLowerCase(), this::setWH);//
+            methodNames.put("setDragEnabled".toLowerCase(), this::setDragEnabled);//
+            methodNames.put("setDragCallbacks".toLowerCase(), this::setDragCallbacks);//
+            methodNames.put("isDragging".toLowerCase(), this::isDragging);//
+            methodNames.put("getComponentAt".toLowerCase(), this::getComponentAt);//
             methodNames.put("loadXmlUI".toLowerCase(), this::loadXmlUI);//
             methodNames.put("uiExist".toLowerCase(), this::uiExist);//
             methodNames.put("getListText".toLowerCase(), this::getListText);//
@@ -418,6 +424,208 @@ public class GuiScriptLib extends Lib {
             gobj.setSize(w, h);
         }
         return null;
+    }
+
+    /**
+     * setDragEnabled(componentName, enabled): toggle the existing fly drag behavior.
+     * GFrame title-bar dragging is handled by GFrame and is intentionally not changed here.
+     */
+    public DataType setDragEnabled(ArrayList<DataType> para) {
+        String componentName = Interpreter.popBackStr(para);
+        int enabled = Interpreter.popBackInt(para);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), componentName);
+        if (gobj != null && !(gobj instanceof GFrame)) {
+            gobj.setFlyable(enabled != 0);
+        }
+        return null;
+    }
+
+    /**
+     * setDragCallbacks(componentName, beginCallback, moveCallback, endCallback).
+     * Callback names use the existing CONTAINER.function convention and receive
+     * (componentName, pointerX, pointerY).
+     */
+    public DataType setDragCallbacks(ArrayList<DataType> para) {
+        String componentName = Interpreter.popBackStr(para);
+        String beginCallback = Interpreter.popBackStr(para);
+        String moveCallback = Interpreter.popBackStr(para);
+        String endCallback = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), componentName);
+        if (gobj == null || gobj instanceof GFrame) {
+            return null;
+        }
+
+        GFlyListener current = gobj.getFlyListener();
+        if (isEmpty(beginCallback) && isEmpty(moveCallback) && isEmpty(endCallback)) {
+            if (current instanceof ScriptDragListener) {
+                gobj.setFlyListener(((ScriptDragListener) current).delegate);
+            }
+            return null;
+        }
+
+        String actualName = gobj.getName() == null ? componentName : gobj.getName();
+        ScriptDragCallback begin = new ScriptDragCallback(gobj.getForm(), actualName, beginCallback);
+        ScriptDragCallback move = new ScriptDragCallback(gobj.getForm(), actualName, moveCallback);
+        ScriptDragCallback end = new ScriptDragCallback(gobj.getForm(), actualName, endCallback);
+        if (current instanceof ScriptDragListener) {
+            ((ScriptDragListener) current).setCallbacks(begin, move, end);
+        } else {
+            gobj.setFlyListener(new ScriptDragListener(current, begin, move, end));
+        }
+        return null;
+    }
+
+    /**
+     * isDragging(componentName): returns 1 while xgui is showing this object as
+     * the active flying object, otherwise 0.
+     */
+    public DataType isDragging(ArrayList<DataType> para) {
+        String componentName = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), componentName);
+        return Interpreter.getCachedInt(gobj != null && gobj.isFlying() ? 1 : 0);
+    }
+
+    /**
+     * getComponentAt(x, y): returns the name of the topmost visible component
+     * under the given pointer position, or an empty string if it has no name.
+     */
+    public DataType getComponentAt(ArrayList<DataType> para) {
+        int x = Interpreter.popBackInt(para);
+        int y = Interpreter.popBackInt(para);
+        GObject gobj = findVisibleComponentAt(formHolder.getForm(), x, y);
+        String name = gobj == null || gobj.getName() == null ? "" : gobj.getName();
+        return Interpreter.getCachedStr(name);
+    }
+
+    private static boolean isEmpty(String value) {
+        return value == null || value.trim().length() == 0;
+    }
+
+    private static GObject findVisibleComponentAt(GContainer container, float x, float y) {
+        if (container == null) return null;
+        List<GObject> elements = container.getElements();
+        for (int i = elements.size() - 1; i >= 0; i--) {
+            GObject child = elements.get(i);
+            if (!child.isVisible() || !child.isInArea(x, y)) continue;
+            if (child instanceof GContainer) {
+                GObject nested = findVisibleComponentAt((GContainer) child, x, y);
+                if (nested != null) return nested;
+            }
+            return child;
+        }
+        return null;
+    }
+
+    private static GContainer findScriptContainer(GForm form, String name) {
+        GObject gobj = GToolkit.getComponent(form, name);
+        if (gobj instanceof GContainer) return (GContainer) gobj;
+
+        if (GCallBack.getInstance().getApplication() != null) {
+            GForm appForm = GCallBack.getInstance().getApplication().getForm();
+            if (appForm != form) {
+                gobj = GToolkit.getComponent(appForm, name);
+                if (gobj instanceof GContainer) return (GContainer) gobj;
+            }
+        }
+        return null;
+    }
+
+    private static String quoteScriptString(String value) {
+        StringBuilder quoted = new StringBuilder(value.length() + 2);
+        quoted.append('"');
+        for (int i = 0; i < value.length(); i++) {
+            char ch = value.charAt(i);
+            if (ch == '\\' || ch == '"') {
+                quoted.append('\\').append(ch);
+            } else if (ch == '\n') {
+                quoted.append("\\n");
+            } else if (ch == '\r') {
+                quoted.append("\\r");
+            } else if (ch == '\t') {
+                quoted.append("\\t");
+            } else {
+                quoted.append(ch);
+            }
+        }
+        quoted.append('"');
+        return quoted.toString();
+    }
+
+    private static final class ScriptDragCallback {
+        private final GForm form;
+        private final String containerName;
+        private final String callPrefix;
+        private final StringBuilder callBuilder = new StringBuilder(80);
+        private Interpreter interpreter;
+
+        ScriptDragCallback(GForm form, String componentName, String callback) {
+            this.form = form;
+            String value = callback == null ? "" : callback.trim();
+            int dot = value.indexOf('.');
+            if (dot <= 0 || dot >= value.length() - 1) {
+                containerName = null;
+                callPrefix = null;
+                return;
+            }
+            containerName = value.substring(0, dot).trim();
+            String functionName = value.substring(dot + 1).trim();
+            if (containerName.length() == 0 || functionName.length() == 0) {
+                callPrefix = null;
+            } else {
+                callPrefix = functionName + "(" + quoteScriptString(componentName) + ",";
+            }
+        }
+
+        void invoke(float x, float y) {
+            if (callPrefix == null) return;
+            if (interpreter == null) {
+                GContainer scriptContainer = findScriptContainer(form, containerName);
+                if (scriptContainer == null) return;
+                interpreter = scriptContainer.getInterpreter();
+                if (interpreter == null) return;
+            }
+            callBuilder.setLength(0);
+            callBuilder.append(callPrefix).append((int) x).append(',').append((int) y).append(')');
+            interpreter.callSub(callBuilder.toString());
+        }
+    }
+
+    private static final class ScriptDragListener implements GFlyListener {
+        private final GFlyListener delegate;
+        private ScriptDragCallback beginCallback;
+        private ScriptDragCallback moveCallback;
+        private ScriptDragCallback endCallback;
+
+        ScriptDragListener(GFlyListener delegate, ScriptDragCallback beginCallback,
+                           ScriptDragCallback moveCallback, ScriptDragCallback endCallback) {
+            this.delegate = delegate;
+            setCallbacks(beginCallback, moveCallback, endCallback);
+        }
+
+        void setCallbacks(ScriptDragCallback beginCallback, ScriptDragCallback moveCallback,
+                          ScriptDragCallback endCallback) {
+            this.beginCallback = beginCallback;
+            this.moveCallback = moveCallback;
+            this.endCallback = endCallback;
+        }
+
+        @Override
+        public void flyBegin(GObject gObject, float x, float y) {
+            if (delegate != null) delegate.flyBegin(gObject, x, y);
+            if (beginCallback != null) beginCallback.invoke(x, y);
+        }
+
+        @Override
+        public void flying(GObject gObject, float x, float y) {
+            if (delegate != null) delegate.flying(gObject, x, y);
+            if (moveCallback != null) moveCallback.invoke(x, y);
+        }
+
+        @Override
+        public void flyEnd(GObject gObject, float x, float y) {
+            if (delegate != null) delegate.flyEnd(gObject, x, y);
+            if (endCallback != null) endCallback.invoke(x, y);
+        }
     }
 
 
