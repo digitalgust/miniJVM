@@ -56,24 +56,40 @@ public class ReflectClass {
 
     }
 
-    private void loadFields() {
-        if (fields != null) {
-            return;
+    private ReflectField[] loadFields() {
+        ReflectField[] result;
+        synchronized (this) {
+            result = fields;
         }
-        fields = new ReflectField[fieldIds.length];
-        for (int i = 0; i < fieldIds.length; i++) {
-            fields[i] = new ReflectField(this, fieldIds[i]);
+        if (result == null) {
+            ReflectField[] loaded = new ReflectField[fieldIds.length];
+            for (int i = 0; i < fieldIds.length; i++) {
+                loaded[i] = new ReflectField(this, fieldIds[i]);
+            }
+            synchronized (this) {
+                if (fields == null) fields = loaded;
+                result = fields;
+            }
         }
+        return result;
     }
 
-    private void loadMethods() {
-        if (methods != null) {
-            return;
+    private ReflectMethod[] loadMethods() {
+        ReflectMethod[] result;
+        synchronized (this) {
+            result = methods;
         }
-        methods = new ReflectMethod[methodIds.length];
-        for (int i = 0; i < methodIds.length; i++) {
-            methods[i] = new ReflectMethod(classObj, methodIds[i]);
+        if (result == null) {
+            ReflectMethod[] loaded = new ReflectMethod[methodIds.length];
+            for (int i = 0; i < methodIds.length; i++) {
+                loaded[i] = new ReflectMethod(classObj, methodIds[i]);
+            }
+            synchronized (this) {
+                if (methods == null) methods = loaded;
+                result = methods;
+            }
         }
+        return result;
     }
 
     public Class getClassObj() {
@@ -81,12 +97,11 @@ public class ReflectClass {
     }
 
     public ReflectMethod[] getMethods() {
-        loadMethods();
-        return methods;
+        return loadMethods();
     }
 
     public ReflectMethod getMethod(String methodName, String methodSignature) {
-        loadMethods();
+        ReflectMethod[] methods = loadMethods();
         for (int i = 0; i < methods.length; i++) {
             ReflectMethod m = methods[i];
             if (m.methodName.equals(methodName) && m.descriptor.equals(methodSignature)) {
@@ -97,7 +112,7 @@ public class ReflectClass {
     }
 
     public ReflectMethod getMethod(String methodName, Class<?>... parameterTypes) {
-        loadMethods();
+        ReflectMethod[] methods = loadMethods();
         for (int i = 0; i < methods.length; i++) {
             ReflectMethod m = methods[i];
             if (m.methodName.equals(methodName)) {
@@ -121,7 +136,7 @@ public class ReflectClass {
     }
 
     public ReflectMethod getMethod(long methodId) {
-        loadMethods();
+        ReflectMethod[] methods = loadMethods();
         for (int i = 0; i < methodIds.length; i++) {
             if (methods[i].methodId == methodId) {
                 return methods[i];
@@ -131,12 +146,11 @@ public class ReflectClass {
     }
 
     public ReflectField[] getFields() {
-        loadFields();
-        return fields;
+        return loadFields();
     }
 
     public ReflectField getField(String name) {
-        loadFields();
+        ReflectField[] fields = loadFields();
         for (int i = 0; i < fields.length; i++) {
             ReflectField f = fields[i];
             if (f.fieldName.equals(name)) {
@@ -147,7 +161,7 @@ public class ReflectClass {
     }
 
     public ReflectField getField(long fieldId) {
-        loadFields();
+        ReflectField[] fields = loadFields();
         for (int i = 0; i < fieldIds.length; i++) {
             if (fields[i].fieldId == fieldId) {
                 return fields[i];
@@ -273,11 +287,16 @@ public class ReflectClass {
             int pos = sign.indexOf('<');
             if (sign.equals("*")) {
                 return "?";
-            } else if (sign.startsWith("L") && pos < 0) {
-                return sign.substring(1, sign.length() - 1);
+            } else if (sign.startsWith("+")) {
+                return "? extends " + getNameByDescriptor(sign.substring(1));
+            } else if (sign.startsWith("-")) {
+                return "? super " + getNameByDescriptor(sign.substring(1));
             } else if (sign.startsWith("[")) {
-                String s = sign.substring(1);
-                return convertReference2name(s) + "[]";
+                return getNameByDescriptor(sign.substring(1)) + "[]";
+            } else if (!sign.startsWith("L")) {
+                return getNameByDescriptor(sign);
+            } else if (pos < 0) {
+                return sign.substring(1, sign.length() - 1);
             } else {
                 //System.out.println("----:" + sign);
                 String s = sign.substring(pos + 1, sign.length() - 2);//get content in < >
@@ -471,6 +490,11 @@ public class ReflectClass {
                     token.pos++; // 跳过;
                 }
                 return signature.substring(start, token.pos);
+            }
+            case '+':
+            case '-': {
+                token.pos++;
+                return ch + getNextGenericType(signature, token);
             }
             case '[': {
                 token.pos++;

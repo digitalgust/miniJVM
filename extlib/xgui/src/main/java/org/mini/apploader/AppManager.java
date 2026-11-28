@@ -553,6 +553,76 @@ public final class AppManager extends GApplication implements XuiAppHolder {
         return runningApps.values().toArray(new GApplication[0]);
     }
 
+    /** Returns a snapshot of installed JAR file names, including the .jar suffix. */
+    public List<String> getInstalledApps() {
+        List<String> installed = new ArrayList<>();
+        for (String jarName : AppLoader.getAppList()) {
+            if (AppLoader.isJarExists(jarName)) {
+                installed.add(jarName);
+            }
+        }
+        return installed;
+    }
+
+    /** Checks the installed application list and the corresponding JAR file. */
+    public boolean isAppInstalled(String jarName) {
+        return jarName != null && AppLoader.getAppList().contains(jarName)
+                && AppLoader.isJarExists(jarName);
+    }
+
+    /** Returns the version in the installed JAR, or an empty string if absent. */
+    public String getAppVersion(String jarName) {
+        return isAppInstalled(jarName) ? AppLoader.getApplicationVersion(jarName) : "";
+    }
+
+    /** Returns a running or paused application, or null if it is not running. */
+    public GApplication getRunningApp(String jarName) {
+        GApplication app = jarName == null ? null : runningApps.get(jarName);
+        return app != null && app.getState() != AppState.STATE_CLOSED ? app : null;
+    }
+
+    /** A paused application is still considered running. */
+    public boolean isAppRunning(String jarName) {
+        return getRunningApp(jarName) != null;
+    }
+
+    /**
+     * Requests that an installed application be started or resumed on the desktop.
+     * Call on the UI thread. The return value indicates that the request was accepted,
+     * not that the asynchronous launch has completed.
+     */
+    public boolean openApp(String jarName) {
+        if (appList == null || !isAppInstalled(jarName)
+                || getGListItemByAttachment(jarName) == null) {
+            return false;
+        }
+        GApplication current = GCallBack.getInstance().getApplication();
+        if (current != null && current != this && current.getState() == AppState.STATE_RUNNING) {
+            if (current == getRunningApp(jarName)) return true;
+            current.pauseApp();
+        }
+        curSelectedJarName = jarName;
+        runApp();
+        return true;
+    }
+
+    /**
+     * Closes a running or paused application using its normal lifecycle.
+     * Call on the UI thread. Returns false when the application is not running.
+     */
+    public boolean closeApp(String jarName) {
+        GApplication app = getRunningApp(jarName);
+        if (app == null) return false;
+        app.closeApp();
+        if (appList != null) {
+            setListItemColor(getGListItemByAttachment(jarName), null);
+        }
+        if (contentView != null && jarName.equals(curSelectedJarName)) {
+            updateContentViewInfo(jarName);
+        }
+        return true;
+    }
+
 
     void startWebServer() {
 
@@ -593,8 +663,9 @@ public final class AppManager extends GApplication implements XuiAppHolder {
     }
 
     void runApp() {
-        if (curSelectedJarName != null) {
-            GListItem gli = getGListItemByAttachment(curSelectedJarName);
+        final String jarName = curSelectedJarName;
+        if (jarName != null) {
+            GListItem gli = getGListItemByAttachment(jarName);
             setListItemColor(gli, RUNNING_ITEM_COLOR);
 
             GDesktop.addCmd(new Runnable() {
@@ -604,7 +675,7 @@ public final class AppManager extends GApplication implements XuiAppHolder {
                 public void run() {
                     GForm.flush();
 
-                    String fullscreen = AppLoader.getApplicationFullscreen(curSelectedJarName);
+                    String fullscreen = AppLoader.getApplicationFullscreen(jarName);
                     int fullflag;
                     if ("1".equalsIgnoreCase(fullscreen)) {
                         fullflag = Glfm.GLFMUserInterfaceChromeFullscreen;
@@ -612,7 +683,7 @@ public final class AppManager extends GApplication implements XuiAppHolder {
                         fullflag = Glfm.GLFMUserInterfaceChromeNavigationAndStatusBar;
                     }
                     Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), fullflag);
-                    String orientation = AppLoader.getApplicationOrientation(curSelectedJarName);
+                    String orientation = AppLoader.getApplicationOrientation(jarName);
                     int targetOrientation;
                     if ("h".equalsIgnoreCase(orientation)) {
                         //System.out.println("[INFO] orientation h");
@@ -659,7 +730,6 @@ public final class AppManager extends GApplication implements XuiAppHolder {
                         }
                     }
 
-                    String jarName = curSelectedJarName;
                     if (jarName != null) {
                         GApplication app = runningApps.get(jarName);
                         if (app != null && app.getState() != AppState.STATE_CLOSED) {
@@ -669,7 +739,9 @@ public final class AppManager extends GApplication implements XuiAppHolder {
                             app = AppLoader.runApp(jarName);
                             if (app != AppManager.this) {
                                 runningApps.put(jarName, app);
-                                updateContentViewInfo(jarName);
+                                if (jarName.equals(curSelectedJarName)) {
+                                    updateContentViewInfo(jarName);
+                                }
                                 setListItemColor(gli, RUNNING_ITEM_COLOR);
                             } else {
                                 GForm.addMessage(getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
